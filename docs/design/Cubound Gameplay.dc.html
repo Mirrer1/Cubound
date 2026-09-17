@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #E9E7E2; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+  @keyframes shkA { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-3px) } 75% { transform: translateX(3px) } }
+  @keyframes shkB { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-3px) } 75% { transform: translateX(3px) } }
+</style>
+</helmet>
+<div style="background:#E9E7E2;color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 72px;min-height:100vh">
+  <div style="max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:36px">
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>CUBOUND</span>
+      <span>Gameplay screen · desktop</span>
+    </div>
+
+    <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:22px;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding:30px 34px 6px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">STAGE 02</span>
+          <span style="font-size:27px;font-weight:400;letter-spacing:-0.01em">낮은 계단</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:28px">
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">MOVES</span>
+            <span style="font-size:32px;font-weight:300;line-height:1;font-variant-numeric:tabular-nums">{{ moves }}</span>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button type="button" onClick="{{ restart }}" title="재시작" style="width:44px;height:44px;border:1px solid #CFCCC6;border-radius:13px;background:transparent;color:#3A3936;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#E3E1DC">↺</button>
+            <button type="button" title="스테이지 선택" style="width:44px;height:44px;border:1px solid #CFCCC6;border-radius:13px;background:transparent;color:#3A3936;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#E3E1DC">≡</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:center;padding:0 34px 8px">
+        <div style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.16em;color:#8A8781;min-height:16px">{{ statusLine }}</div>
+      </div>
+
+      <div style="display:flex;justify-content:center;padding:4px 34px 40px">
+        <svg viewBox="0 0 560 430" style="width:100%;max-width:660px;height:auto;display:block">
+          <sc-for list="{{ field }}" as="s" hint-placeholder-count="18">
+            <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+          </sc-for>
+          <g style="{{ playerPos }}">
+            <g style="{{ playerShake }}">
+              <sc-for list="{{ player }}" as="s" hint-placeholder-count="3">
+                <polygon points="{{ s.d }}" fill="{{ s.f }}"></polygon>
+              </sc-for>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">게임 오브젝트 · 상태별</span>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0">SVG polygons · 2:1 isometric</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px">
+        <sc-for list="{{ cards }}" as="card" hint-placeholder-count="7">
+          <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:20px 20px 16px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:17px;font-weight:400">{{ card.label }}</span>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;color:#8A8781;letter-spacing:0.04em">{{ card.note }}</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+              <sc-for list="{{ card.states }}" as="st" hint-placeholder-count="2">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1 1 0;min-width:0">
+                  <svg viewBox="{{ st.vb }}" style="width:100%;height:auto;display:block">
+                    <sc-for list="{{ st.shapes }}" as="s" hint-placeholder-count="3">
+                      <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+                    </sc-for>
+                  </svg>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0;letter-spacing:0.06em;text-align:center">{{ st.name }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>01 · TITLE</span>
+      <span>Desktop</span>
+    </div>
+    <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:22px;overflow:hidden;position:relative;min-height:600px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px">
+      <svg viewBox="0 0 260 200" style="position:absolute;right:26px;bottom:18px;width:300px;height:auto;opacity:0.5">
+        <sc-for list="{{ titleField }}" as="s" hint-placeholder-count="9">
+          <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+        </sc-for>
+      </svg>
+      <svg viewBox="0 0 260 200" style="position:absolute;left:-40px;top:40px;width:190px;height:auto;opacity:0.28">
+        <sc-for list="{{ titleField }}" as="s" hint-placeholder-count="9">
+          <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+        </sc-for>
+      </svg>
+      <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:30px">
+        <div style="display:flex;align-items:center;font-size:72px;font-weight:300;letter-spacing:0.01em;line-height:1">
+          <span>Cub</span>
+          <svg viewBox="0 0 52 34" style="width:50px;height:33px;margin:0 3px">
+            <polygon points="26,4 48,17 26,30 4,17" fill="#4A4845"></polygon>
+            <polygon points="26,11 40,19 26,27 12,19" fill="#2F2E2C"></polygon>
+          </svg>
+          <span>und</span>
+        </div>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.28em;color:#8A8781">ISOMETRIC PUZZLE</span>
+        <button type="button" style="margin-top:8px;padding:16px 62px;border:none;border-radius:14px;background:#3A3936;color:#F2F1EE;font-family:Jost, sans-serif;font-size:18px;letter-spacing:0.04em;cursor:pointer" style-hover="background:#4A4845">시작</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>02 · STAGE SELECT</span>
+      <span>10 stages · 1 world</span>
+    </div>
+    <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:22px;padding:32px 34px 38px;display:flex;flex-direction:column;gap:26px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">WORLD 1</span>
+          <span style="font-size:27px;font-weight:400">낮은 계단의 땅</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.16em;color:#8A8781">8 / 30 ★</span>
+          <button type="button" title="타이틀로" style="width:44px;height:44px;border:1px solid #CFCCC6;border-radius:13px;background:transparent;color:#3A3936;font-size:16px;line-height:1;cursor:pointer" style-hover="background:#E3E1DC">←</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5, minmax(0,1fr));gap:14px">
+        <div style="aspect-ratio:1/1;border:1px solid #CFCCC6;border-radius:16px;background:#F7F6F4;padding:16px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer" style-hover="background:#EFEDE9">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">CLEAR</span>
+          <span style="font-size:36px;font-weight:300;line-height:1;align-self:center">01</span>
+          <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+            <polygon points="8,2 14,8 8,14 2,8" fill="#3A3936"></polygon>
+            <polygon points="26,2 32,8 26,14 20,8" fill="#3A3936"></polygon>
+            <polygon points="44,2 50,8 44,14 38,8" fill="#3A3936"></polygon>
+          </svg>
+        </div>
+        <div style="aspect-ratio:1/1;border:1px solid #CFCCC6;border-radius:16px;background:#F7F6F4;padding:16px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer" style-hover="background:#EFEDE9">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">CLEAR</span>
+          <span style="font-size:36px;font-weight:300;line-height:1;align-self:center">02</span>
+          <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+            <polygon points="8,2 14,8 8,14 2,8" fill="#3A3936"></polygon>
+            <polygon points="26,2 32,8 26,14 20,8" fill="#3A3936"></polygon>
+            <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#CFCCC6"></polygon>
+          </svg>
+        </div>
+        <div style="aspect-ratio:1/1;border:1px solid #CFCCC6;border-radius:16px;background:#F7F6F4;padding:16px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer" style-hover="background:#EFEDE9">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">CLEAR</span>
+          <span style="font-size:36px;font-weight:300;line-height:1;align-self:center">03</span>
+          <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+            <polygon points="8,2 14,8 8,14 2,8" fill="#3A3936"></polygon>
+            <polygon points="26,2 32,8 26,14 20,8" fill="#3A3936"></polygon>
+            <polygon points="44,2 50,8 44,14 38,8" fill="#3A3936"></polygon>
+          </svg>
+        </div>
+        <div style="aspect-ratio:1/1;border:1.5px solid #3A3936;border-radius:16px;background:#F7F6F4;padding:16px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer" style-hover="background:#EFEDE9">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#3A3936">NOW</span>
+          <span style="font-size:36px;font-weight:300;line-height:1;align-self:center">04</span>
+          <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+            <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#CFCCC6"></polygon>
+            <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#CFCCC6"></polygon>
+            <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#CFCCC6"></polygon>
+          </svg>
+        </div>
+        <div style="aspect-ratio:1/1;border:1px solid #E1DED8;border-radius:16px;background:#ECEAE6;padding:16px;display:flex;flex-direction:column;justify-content:space-between">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#A9A6A0">잠김</span>
+          <span style="font-size:36px;font-weight:300;line-height:1;align-self:center;color:#B5B2AB">05</span>
+          <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+            <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#DCD9D3"></polygon>
+            <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#DCD9D3"></polygon>
+            <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#DCD9D3"></polygon>
+          </svg>
+        </div>
+        <div style="aspect-ratio:1/1;border:1px solid #E1DED8;border-radius:16px;background:#ECEAE6;padding:16px;display:flex;flex-direction:column;justify-content:space-between">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#A9A6A0">잠김</span>
+          <span style="font-size:36px;font-weight:300;line-height:1;align-self:center;color:#B5B2AB">06</span>
+          <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+            <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#DCD9D3"></polygon>
+            <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#DCD9D3"></polygon>
+            <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#DCD9D3"></polygon>
+          </svg>
+        </div>
+        <div style="aspect-ratio:1/1;border:1px solid #E1DED8;border-radius:16px;background:#ECEAE6;padding:16px;display:flex;flex-direction:column;justify-content:space-between">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#A9A6A0">잠김</span>
+          <span style="font-size:36px;font-weight:300;line-height:1;align-self:center;color:#B5B2AB">07</span>
+          <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+            <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#DCD9D3"></polygon>
+            <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#DCD9D3"></polygon>
+            <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#DCD9D3"></polygon>
+          </svg>
+        </div>
+        <div style="aspect-ratio:1/1;border:1px solid #E1DED8;border-radius:16px;background:#ECEAE6;padding:16px;display:flex;flex-direction:column;justify-content:space-between">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#A9A6A0">잠김</span>
+          <span style="font-size:36px;font-weight:300;line-height:1;align-self:center;color:#B5B2AB">08</span>
+          <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+            <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#DCD9D3"></polygon>
+            <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#DCD9D3"></polygon>
+            <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#DCD9D3"></polygon>
+          </svg>
+        </div>
+        <div style="aspect-ratio:1/1;border:1px solid #E1DED8;border-radius:16px;background:#ECEAE6;padding:16px;display:flex;flex-direction:column;justify-content:space-between">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#A9A6A0">잠김</span>
+          <span style="font-size:36px;font-weight:300;line-height:1;align-self:center;color:#B5B2AB">09</span>
+          <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+            <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#DCD9D3"></polygon>
+            <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#DCD9D3"></polygon>
+            <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#DCD9D3"></polygon>
+          </svg>
+        </div>
+        <div style="aspect-ratio:1/1;border:1px solid #3A3936;border-radius:16px;background:#3A3936;padding:16px;display:flex;flex-direction:column;justify-content:space-between">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#E3CD8E">BOSS</span>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#8A8781">잠김</span>
+          </div>
+          <span style="font-size:36px;font-weight:300;line-height:1;align-self:center;color:#F2F1EE">10</span>
+          <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+            <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#6E6C68"></polygon>
+            <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#6E6C68"></polygon>
+            <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#6E6C68"></polygon>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>03 · CLEAR</span>
+      <span>큐브가 구멍에 들어간 뒤</span>
+    </div>
+    <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:22px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:620px">
+      <svg viewBox="0 0 560 430" style="width:100%;max-width:620px;height:auto;opacity:0.42;padding:20px 34px">
+        <sc-for list="{{ clearField }}" as="s" hint-placeholder-count="18">
+          <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+        </sc-for>
+      </svg>
+      <div style="position:absolute;width:360px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:20px;padding:34px 34px 30px;display:flex;flex-direction:column;align-items:center;gap:22px;box-shadow:0 20px 44px rgba(58,57,54,0.10)">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.24em;color:#8A8781">STAGE 02 · CLEAR</span>
+        <svg viewBox="0 0 104 28" style="width:104px;height:28px">
+          <polygon points="16,2 28,14 16,26 4,14" fill="#3A3936"></polygon>
+          <polygon points="52,2 64,14 52,26 40,14" fill="#3A3936"></polygon>
+          <polygon points="88,2 100,14 88,26 76,14" fill="none" stroke="#CFCCC6"></polygon>
+        </svg>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span style="font-size:34px;font-weight:300;line-height:1;font-variant-numeric:tabular-nums">17</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.16em;color:#8A8781">MOVES</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;width:100%;margin-top:4px">
+          <button type="button" style="padding:15px 0;border:none;border-radius:13px;background:#3A3936;color:#F2F1EE;font-family:Jost, sans-serif;font-size:16px;cursor:pointer" style-hover="background:#4A4845">다음 스테이지</button>
+          <div style="display:flex;gap:10px">
+            <button type="button" style="flex:1;padding:14px 0;border:1px solid #CFCCC6;border-radius:13px;background:transparent;color:#3A3936;font-family:Jost, sans-serif;font-size:15px;cursor:pointer" style-hover="background:#E3E1DC">다시 하기</button>
+            <button type="button" style="flex:1;padding:14px 0;border:1px solid #CFCCC6;border-radius:13px;background:transparent;color:#3A3936;font-family:Jost, sans-serif;font-size:15px;cursor:pointer" style-hover="background:#E3E1DC">스테이지 선택</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>04 · BOSS INTRO</span>
+      <span>진입 시 1회 안내</span>
+    </div>
+    <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:22px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:520px">
+      <svg viewBox="0 0 560 430" style="width:100%;max-width:560px;height:auto;opacity:0.22;padding:20px 34px">
+        <sc-for list="{{ bossField }}" as="s" hint-placeholder-count="18">
+          <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+        </sc-for>
+      </svg>
+      <div style="position:absolute;display:flex;flex-direction:column;align-items:center;gap:26px;text-align:center;padding:0 40px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.28em;color:#8A8781">STAGE 10 · BOSS</span>
+        <span style="font-size:30px;font-weight:400;line-height:1.45;text-wrap:pretty;word-break:keep-all;max-width:600px">이번 판은 24번 안에 집에 도착해야 합니다</span>
+        <button type="button" style="margin-top:6px;padding:15px 52px;border:none;border-radius:14px;background:#3A3936;color:#F2F1EE;font-family:Jost, sans-serif;font-size:17px;cursor:pointer" style-hover="background:#4A4845">시작</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>05 · BOSS STAGE</span>
+      <span>남은 이동 횟수 · 기본 / 0</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(420px, 1fr));gap:18px">
+      <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:22px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:26px 28px 4px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">STAGE 10 · BOSS</span>
+            <span style="font-size:24px;font-weight:400">마지막 계단</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:20px">
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">남은 이동</span>
+              <span style="font-size:56px;font-weight:300;line-height:0.95;font-variant-numeric:tabular-nums">07</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button type="button" title="재시작" style="width:42px;height:42px;border:1px solid #CFCCC6;border-radius:13px;background:transparent;color:#3A3936;font-size:17px;line-height:1;cursor:pointer" style-hover="background:#E3E1DC">↺</button>
+              <button type="button" title="스테이지 선택" style="width:42px;height:42px;border:1px solid #CFCCC6;border-radius:13px;background:transparent;color:#3A3936;font-size:15px;line-height:1;cursor:pointer" style-hover="background:#E3E1DC">≡</button>
+            </div>
+          </div>
+        </div>
+        <div style="padding:0 24px 26px;display:flex;justify-content:center">
+          <svg viewBox="0 0 560 430" style="width:100%;max-width:520px;height:auto">
+            <sc-for list="{{ bossField }}" as="s" hint-placeholder-count="18">
+              <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+            </sc-for>
+          </svg>
+        </div>
+      </div>
+      <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:22px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:26px 28px 4px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">STAGE 10 · BOSS</span>
+            <span style="font-size:24px;font-weight:400">마지막 계단</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:20px">
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#6E6C68">남은 이동</span>
+              <span style="font-size:56px;font-weight:300;line-height:0.95;color:#3A3936;font-variant-numeric:tabular-nums">00</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button type="button" title="재시작" style="width:42px;height:42px;border:none;border-radius:13px;background:#3A3936;color:#F2F1EE;font-size:17px;line-height:1;cursor:pointer;box-shadow:0 0 0 4px rgba(58,57,54,0.12)" style-hover="background:#4A4845">↺</button>
+              <button type="button" title="스테이지 선택" style="width:42px;height:42px;border:1px solid #CFCCC6;border-radius:13px;background:transparent;color:#3A3936;font-size:15px;line-height:1;cursor:pointer" style-hover="background:#E3E1DC">≡</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;padding:6px 28px 0">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.14em;color:#6E6C68;white-space:nowrap">이동 횟수를 모두 썼습니다 · 재시작</span>
+        </div>
+        <div style="padding:0 24px 26px;display:flex;justify-content:center">
+          <svg viewBox="0 0 560 430" style="width:100%;max-width:520px;height:auto;opacity:0.55">
+            <sc-for list="{{ bossField }}" as="s" hint-placeholder-count="18">
+              <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+            </sc-for>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>06 · WIDE MAP</span>
+      <span style="white-space:nowrap">10 × 10 · 칸 폭 약 60px</span>
+    </div>
+    <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:22px;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding:30px 34px 6px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">STAGE 07</span>
+          <span style="font-size:27px;font-weight:400;letter-spacing:-0.01em">돌아가는 길</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:28px">
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">MOVES</span>
+            <span style="font-size:32px;font-weight:300;line-height:1;font-variant-numeric:tabular-nums">31</span>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button type="button" title="재시작" style="width:44px;height:44px;border:1px solid #CFCCC6;border-radius:13px;background:transparent;color:#3A3936;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#E3E1DC">↺</button>
+            <button type="button" title="스테이지 선택" style="width:44px;height:44px;border:1px solid #CFCCC6;border-radius:13px;background:transparent;color:#3A3936;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:#E3E1DC">≡</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:center;padding:10px 28px 34px">
+        <svg viewBox="0 0 740 388" style="width:100%;max-width:1060px;height:auto;display:block">
+          <sc-for list="{{ wideField }}" as="s" hint-placeholder-count="60">
+            <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+          </sc-for>
+        </svg>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>07 · CLEAR SEQUENCE</span>
+      <span>4 frames · 약 900ms</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));gap:16px">
+      <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">FRAME 1</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0">0ms</span>
+        </div>
+        <svg viewBox="0 0 180 170" style="width:100%;height:auto;display:block">
+          <sc-for list="{{ holeF1 }}" as="s" hint-placeholder-count="6">
+            <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+          </sc-for>
+        </svg>
+        <span style="font-size:14px;color:#5F5D59;text-wrap:pretty;word-break:keep-all">구멍 위에 올라선 큐브가 천천히 가라앉기 시작</span>
+      </div>
+      <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">FRAME 2</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0">260ms</span>
+        </div>
+        <svg viewBox="0 0 180 170" style="width:100%;height:auto;display:block">
+          <sc-for list="{{ holeF2 }}" as="s" hint-placeholder-count="6">
+            <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+          </sc-for>
+          <ellipse cx="90" cy="78" rx="46" ry="23" fill="none" stroke="#8FB3C9" strokeWidth="1.2" opacity="0.5"></ellipse>
+        </svg>
+        <span style="font-size:14px;color:#5F5D59;text-wrap:pretty;word-break:keep-all">윗면만 남은 상태. 첫 번째 빛 고리가 얇게 번짐</span>
+      </div>
+      <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">FRAME 3</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0">520ms</span>
+        </div>
+        <svg viewBox="0 0 180 170" style="width:100%;height:auto;display:block">
+          <sc-for list="{{ holeF3 }}" as="s" hint-placeholder-count="6">
+            <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+          </sc-for>
+          <ellipse cx="90" cy="78" rx="62" ry="31" fill="none" stroke="#8FB3C9" strokeWidth="1" opacity="0.28"></ellipse>
+          <ellipse cx="90" cy="78" rx="38" ry="19" fill="none" stroke="#8FB3C9" strokeWidth="1.2" opacity="0.5"></ellipse>
+          <polygon points="90,44 96,50 90,56 84,50" fill="#8FB3C9" opacity="0.75"></polygon>
+          <polygon points="62,58 67,63 62,68 57,63" fill="#E3CD8E" opacity="0.6"></polygon>
+          <polygon points="118,60 123,65 118,70 113,65" fill="#E3CD8E" opacity="0.6"></polygon>
+        </svg>
+        <span style="font-size:14px;color:#5F5D59;text-wrap:pretty;word-break:keep-all">고리가 퍼지며 블루·옐로 조각이 구멍에서 떠오름</span>
+      </div>
+      <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">FRAME 4</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0">900ms</span>
+        </div>
+        <svg viewBox="0 0 180 170" style="width:100%;height:auto;display:block">
+          <sc-for list="{{ holeF3 }}" as="s" hint-placeholder-count="6">
+            <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+          </sc-for>
+          <ellipse cx="90" cy="78" rx="78" ry="39" fill="none" stroke="#8FB3C9" strokeWidth="1" opacity="0.14"></ellipse>
+          <polygon points="90,22 95,27 90,32 85,27" fill="#8FB3C9" opacity="0.35"></polygon>
+          <polygon points="52,38 56,42 52,46 48,42" fill="#E3CD8E" opacity="0.3"></polygon>
+          <polygon points="128,42 132,46 128,50 124,46" fill="#E3CD8E" opacity="0.3"></polygon>
+          <polygon points="106,30 109,33 106,36 103,33" fill="#8FB3C9" opacity="0.28"></polygon>
+        </svg>
+        <span style="font-size:14px;color:#5F5D59;text-wrap:pretty;word-break:keep-all">조각이 위로 흩어져 사라지고, 클리어 패널이 올라옴</span>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>08 · MOBILE</span>
+      <span style="white-space:nowrap">390 × 844 · 스와이프 조작</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:24px">
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:40px;overflow:hidden;position:relative;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;padding:16px 26px 0;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+          <svg viewBox="0 0 260 200" style="position:absolute;left:-30px;bottom:150px;width:290px;height:auto;opacity:0.42">
+            <sc-for list="{{ titleField }}" as="s" hint-placeholder-count="9">
+              <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+            </sc-for>
+          </svg>
+          <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding-bottom:120px">
+            <div style="display:flex;align-items:center;font-size:52px;font-weight:300;line-height:1">
+              <span>Cub</span>
+              <svg viewBox="0 0 52 34" style="width:36px;height:24px;margin:0 2px">
+                <polygon points="26,4 48,17 26,30 4,17" fill="#4A4845"></polygon>
+                <polygon points="26,11 40,19 26,27 12,19" fill="#2F2E2C"></polygon>
+              </svg>
+              <span>und</span>
+            </div>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.28em;color:#8A8781">ISOMETRIC PUZZLE</span>
+          </div>
+          <div style="position:relative;padding:0 26px 42px;display:flex;flex-direction:column;gap:14px">
+            <button type="button" style="padding:20px 0;border:none;border-radius:16px;background:#3A3936;color:#F2F1EE;font-family:Jost, sans-serif;font-size:18px;cursor:pointer" style-hover="background:#4A4845">시작</button>
+            <span style="text-align:center;font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#A9A6A0">SWIPE TO MOVE</span>
+          </div>
+        </div>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#8A8781">TITLE</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:40px;overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;padding:16px 26px 0;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+          <div style="display:flex;align-items:center;gap:14px;padding:18px 22px 14px">
+            <button type="button" title="타이틀로" style="width:44px;height:44px;flex:none;border:1px solid #CFCCC6;border-radius:13px;background:transparent;color:#3A3936;font-size:16px;cursor:pointer" style-hover="background:#E3E1DC">←</button>
+            <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">WORLD 1</span>
+              <span style="font-size:20px;font-weight:400;white-space:nowrap">낮은 계단의 땅</span>
+            </div>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;color:#8A8781;white-space:nowrap">8 / 30 ★</span>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:4px 22px 22px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="height:112px;box-sizing:border-box;border:1px solid #CFCCC6;border-radius:18px;background:#F7F6F4;padding:13px 16px;display:flex;flex-direction:column;justify-content:space-between">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">CLEAR</span>
+                <span style="font-size:32px;font-weight:300;line-height:1;align-self:center">01</span>
+                <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+                  <polygon points="8,2 14,8 8,14 2,8" fill="#3A3936"></polygon>
+                  <polygon points="26,2 32,8 26,14 20,8" fill="#3A3936"></polygon>
+                  <polygon points="44,2 50,8 44,14 38,8" fill="#3A3936"></polygon>
+                </svg>
+              </div>
+              <div style="height:112px;box-sizing:border-box;border:1px solid #CFCCC6;border-radius:18px;background:#F7F6F4;padding:13px 16px;display:flex;flex-direction:column;justify-content:space-between">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">CLEAR</span>
+                <span style="font-size:32px;font-weight:300;line-height:1;align-self:center">02</span>
+                <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+                  <polygon points="8,2 14,8 8,14 2,8" fill="#3A3936"></polygon>
+                  <polygon points="26,2 32,8 26,14 20,8" fill="#3A3936"></polygon>
+                  <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#CFCCC6"></polygon>
+                </svg>
+              </div>
+              <div style="height:112px;box-sizing:border-box;border:1px solid #CFCCC6;border-radius:18px;background:#F7F6F4;padding:13px 16px;display:flex;flex-direction:column;justify-content:space-between">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">CLEAR</span>
+                <span style="font-size:32px;font-weight:300;line-height:1;align-self:center">03</span>
+                <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+                  <polygon points="8,2 14,8 8,14 2,8" fill="#3A3936"></polygon>
+                  <polygon points="26,2 32,8 26,14 20,8" fill="#3A3936"></polygon>
+                  <polygon points="44,2 50,8 44,14 38,8" fill="#3A3936"></polygon>
+                </svg>
+              </div>
+              <div style="height:112px;box-sizing:border-box;border:1.5px solid #3A3936;border-radius:18px;background:#F7F6F4;padding:13px 16px;display:flex;flex-direction:column;justify-content:space-between">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#3A3936">NOW</span>
+                <span style="font-size:32px;font-weight:300;line-height:1;align-self:center">04</span>
+                <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+                  <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#CFCCC6"></polygon>
+                  <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#CFCCC6"></polygon>
+                  <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#CFCCC6"></polygon>
+                </svg>
+              </div>
+              <div style="height:112px;box-sizing:border-box;border:1px solid #E1DED8;border-radius:18px;background:#ECEAE6;padding:13px 16px;display:flex;flex-direction:column;justify-content:space-between">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#A9A6A0">잠김</span>
+                <span style="font-size:32px;font-weight:300;line-height:1;align-self:center;color:#B5B2AB">05</span>
+                <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+                  <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#DCD9D3"></polygon>
+                  <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#DCD9D3"></polygon>
+                  <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#DCD9D3"></polygon>
+                </svg>
+              </div>
+              <div style="height:112px;box-sizing:border-box;border:1px solid #E1DED8;border-radius:18px;background:#ECEAE6;padding:13px 16px;display:flex;flex-direction:column;justify-content:space-between">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#A9A6A0">잠김</span>
+                <span style="font-size:32px;font-weight:300;line-height:1;align-self:center;color:#B5B2AB">06</span>
+                <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+                  <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#DCD9D3"></polygon>
+                  <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#DCD9D3"></polygon>
+                  <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#DCD9D3"></polygon>
+                </svg>
+              </div>
+              <div style="height:112px;box-sizing:border-box;border:1px solid #E1DED8;border-radius:18px;background:#ECEAE6;padding:13px 16px;display:flex;flex-direction:column;justify-content:space-between">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#A9A6A0">잠김</span>
+                <span style="font-size:32px;font-weight:300;line-height:1;align-self:center;color:#B5B2AB">07</span>
+                <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+                  <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#DCD9D3"></polygon>
+                  <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#DCD9D3"></polygon>
+                  <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#DCD9D3"></polygon>
+                </svg>
+              </div>
+              <div style="height:112px;box-sizing:border-box;border:1px solid #E1DED8;border-radius:18px;background:#ECEAE6;padding:13px 16px;display:flex;flex-direction:column;justify-content:space-between">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#A9A6A0">잠김</span>
+                <span style="font-size:32px;font-weight:300;line-height:1;align-self:center;color:#B5B2AB">08</span>
+                <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+                  <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#DCD9D3"></polygon>
+                  <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#DCD9D3"></polygon>
+                  <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#DCD9D3"></polygon>
+                </svg>
+              </div>
+              <div style="height:112px;box-sizing:border-box;border:1px solid #E1DED8;border-radius:18px;background:#ECEAE6;padding:13px 16px;display:flex;flex-direction:column;justify-content:space-between">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#A9A6A0">잠김</span>
+                <span style="font-size:32px;font-weight:300;line-height:1;align-self:center;color:#B5B2AB">09</span>
+                <svg viewBox="0 0 52 16" style="width:52px;height:16px;align-self:center">
+                  <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#DCD9D3"></polygon>
+                  <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#DCD9D3"></polygon>
+                  <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#DCD9D3"></polygon>
+                </svg>
+              </div>
+            </div>
+            <div style="border:1px solid #3A3936;border-radius:18px;background:#3A3936;padding:18px 20px;display:flex;align-items:center;gap:16px">
+              <span style="font-size:40px;font-weight:300;line-height:1;color:#F2F1EE">10</span>
+              <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#E3CD8E">BOSS STAGE</span>
+                <span style="font-size:15px;color:#DCD9D3;white-space:nowrap">24번 안에 도착</span>
+              </div>
+              <svg viewBox="0 0 52 16" style="width:48px;height:15px;flex:none">
+                <polygon points="8,2 14,8 8,14 2,8" fill="none" stroke="#6E6C68"></polygon>
+                <polygon points="26,2 32,8 26,14 20,8" fill="none" stroke="#6E6C68"></polygon>
+                <polygon points="44,2 50,8 44,14 38,8" fill="none" stroke="#6E6C68"></polygon>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#8A8781">STAGE SELECT</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:40px;overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;padding:16px 26px 0;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:20px 24px 0">
+            <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">STAGE 02</span>
+              <span style="font-size:22px;font-weight:400;white-space:nowrap">낮은 계단</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">MOVES</span>
+              <span style="font-size:30px;font-weight:300;line-height:1;font-variant-numeric:tabular-nums">12</span>
+            </div>
+          </div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:0 10px">
+            <svg viewBox="0 0 560 430" style="width:100%;height:auto;display:block">
+              <sc-for list="{{ mobileField }}" as="s" hint-placeholder-count="18">
+                <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+              </sc-for>
+            </svg>
+          </div>
+          <div style="padding:0 24px 40px;display:flex;flex-direction:column;gap:16px">
+            <span style="text-align:center;font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#A9A6A0">SWIPE TO MOVE</span>
+            <div style="display:flex;gap:12px">
+              <button type="button" style="flex:1;height:58px;border:1px solid #CFCCC6;border-radius:16px;background:transparent;color:#3A3936;font-family:Jost, sans-serif;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#E3E1DC"><span style="font-size:18px">↺</span><span>다시</span></button>
+              <button type="button" style="flex:1;height:58px;border:1px solid #CFCCC6;border-radius:16px;background:transparent;color:#3A3936;font-family:Jost, sans-serif;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#E3E1DC"><span style="font-size:16px">≡</span><span>메뉴</span></button>
+            </div>
+          </div>
+        </div>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#8A8781">GAMEPLAY</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:40px;overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;padding:16px 26px 0;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:20px 24px 0">
+            <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">STAGE 10 · BOSS</span>
+              <span style="font-size:22px;font-weight:400;white-space:nowrap">마지막 계단</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">남은 이동</span>
+              <span style="font-size:52px;font-weight:300;line-height:0.95;font-variant-numeric:tabular-nums">07</span>
+            </div>
+          </div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:0 10px">
+            <svg viewBox="0 0 560 430" style="width:100%;height:auto;display:block">
+              <sc-for list="{{ bossField }}" as="s" hint-placeholder-count="18">
+                <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+              </sc-for>
+            </svg>
+          </div>
+          <div style="padding:0 24px 40px;display:flex;flex-direction:column;gap:16px">
+            <span style="text-align:center;font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#A9A6A0">SWIPE TO MOVE</span>
+            <div style="display:flex;gap:12px">
+              <button type="button" style="flex:1;height:58px;border:1px solid #CFCCC6;border-radius:16px;background:transparent;color:#3A3936;font-family:Jost, sans-serif;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#E3E1DC"><span style="font-size:18px">↺</span><span>다시</span></button>
+              <button type="button" style="flex:1;height:58px;border:1px solid #CFCCC6;border-radius:16px;background:transparent;color:#3A3936;font-family:Jost, sans-serif;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#E3E1DC"><span style="font-size:16px">≡</span><span>메뉴</span></button>
+            </div>
+          </div>
+        </div>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#8A8781">BOSS · 기본</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:40px;overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;padding:16px 26px 0;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:20px 24px 0">
+            <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">STAGE 10 · BOSS</span>
+              <span style="font-size:22px;font-weight:400;white-space:nowrap">마지막 계단</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#6E6C68">남은 이동</span>
+              <span style="font-size:52px;font-weight:300;line-height:0.95;color:#3A3936;font-variant-numeric:tabular-nums">00</span>
+            </div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 10px">
+            <svg viewBox="0 0 560 430" style="width:100%;height:auto;display:block;opacity:0.5">
+              <sc-for list="{{ bossField }}" as="s" hint-placeholder-count="18">
+                <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+              </sc-for>
+            </svg>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.12em;color:#6E6C68;white-space:nowrap">이동 횟수를 모두 썼습니다</span>
+          </div>
+          <div style="padding:0 24px 40px;display:flex;flex-direction:column;gap:12px">
+            <button type="button" style="height:60px;border:none;border-radius:16px;background:#3A3936;color:#F2F1EE;font-family:Jost, sans-serif;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 0 0 4px rgba(58,57,54,0.12)" style-hover="background:#4A4845"><span style="font-size:19px">↺</span><span>다시 하기</span></button>
+            <button type="button" style="height:54px;border:1px solid #CFCCC6;border-radius:16px;background:transparent;color:#3A3936;font-family:Jost, sans-serif;font-size:16px;cursor:pointer" style-hover="background:#E3E1DC">스테이지 선택</button>
+          </div>
+        </div>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#8A8781">BOSS · 0</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:40px;overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="display:flex;justify-content:space-between;padding:16px 26px 0;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:0 10px 180px">
+            <svg viewBox="0 0 560 430" style="width:100%;height:auto;display:block;opacity:0.4">
+              <sc-for list="{{ clearField }}" as="s" hint-placeholder-count="18">
+                <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+              </sc-for>
+            </svg>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;background:#F2F1EE;border-top:1px solid #DCD9D3;border-radius:28px 28px 40px 40px;padding:28px 24px 38px;display:flex;flex-direction:column;align-items:center;gap:20px;box-shadow:0 -18px 40px rgba(58,57,54,0.08)">
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.24em;color:#8A8781">STAGE 02 · CLEAR</span>
+            <svg viewBox="0 0 104 28" style="width:112px;height:30px">
+              <polygon points="16,2 28,14 16,26 4,14" fill="#3A3936"></polygon>
+              <polygon points="52,2 64,14 52,26 40,14" fill="#3A3936"></polygon>
+              <polygon points="88,2 100,14 88,26 76,14" fill="none" stroke="#CFCCC6"></polygon>
+            </svg>
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-size:32px;font-weight:300;line-height:1;font-variant-numeric:tabular-nums">17</span>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#8A8781">MOVES</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;width:100%;margin-top:2px">
+              <button type="button" style="height:58px;border:none;border-radius:16px;background:#3A3936;color:#F2F1EE;font-family:Jost, sans-serif;font-size:17px;cursor:pointer" style-hover="background:#4A4845">다음 스테이지</button>
+              <div style="display:flex;gap:10px">
+                <button type="button" style="flex:1;height:52px;border:1px solid #CFCCC6;border-radius:16px;background:transparent;color:#3A3936;font-family:Jost, sans-serif;font-size:15px;cursor:pointer" style-hover="background:#E3E1DC">다시 하기</button>
+                <button type="button" style="flex:1;height:52px;border:1px solid #CFCCC6;border-radius:16px;background:transparent;color:#3A3936;font-family:Jost, sans-serif;font-size:15px;cursor:pointer" style-hover="background:#E3E1DC">스테이지 선택</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#8A8781">CLEAR</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="width:390px;height:844px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:40px;overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="display:flex;justify-content:space-between;padding:16px 26px 0;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+          <svg viewBox="0 0 560 430" style="position:absolute;left:0;top:210px;width:100%;height:auto;opacity:0.2">
+            <sc-for list="{{ bossField }}" as="s" hint-placeholder-count="18">
+              <polygon points="{{ s.d }}" fill="{{ s.f }}" stroke="{{ s.k }}" strokeWidth="{{ s.w }}" opacity="{{ s.o }}"></polygon>
+            </sc-for>
+          </svg>
+          <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:0 34px 80px;text-align:center">
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.28em;color:#8A8781">STAGE 10 · BOSS</span>
+            <span style="font-size:26px;font-weight:400;line-height:1.5;word-break:keep-all;text-wrap:pretty">이번 판은 24번 안에 집에 도착해야 합니다</span>
+          </div>
+          <div style="position:relative;padding:0 24px 42px">
+            <button type="button" style="width:100%;height:60px;border:none;border-radius:16px;background:#3A3936;color:#F2F1EE;font-family:Jost, sans-serif;font-size:18px;cursor:pointer" style-hover="background:#4A4845">시작</button>
+          </div>
+        </div>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#8A8781">BOSS INTRO</span>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;playerColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#8FB3C9&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#8FB3C9&quot;,&quot;#9AAEC0&quot;,&quot;#A3B6A8&quot;,&quot;#B0A8C0&quot;],&quot;section&quot;:&quot;색&quot;},&quot;toolColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#E3CD8E&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#E3CD8E&quot;,&quot;#D9C08A&quot;,&quot;#E0BE9B&quot;,&quot;#CFC79A&quot;],&quot;section&quot;:&quot;색&quot;}}">
+class Component extends DCLogic {
+  TW = 104; TH = 52; HU = 30; LIP = 16;
+  grid = [[1,1,2,2,2],[0,0,1,2,2],[0,1,0,1,1],[0,0,0,0,1],[0,0,0,0,0]];
+  goal = { x: 3, y: 0 };
+  box = { x: 2, y: 3 };
+  sw = { x: 1, y: 3 };
+  lad = { x: 3, y: 3 };
+  start = { x: 0, y: 4 };
+  door = { x: 2, y: 2 };
+  state = { px: 0, py: 4, moves: 0, shake: 0, cleared: false, doorOpen: false };
+
+  // ---- color utils ----
+  mix(hex, t, a) {
+    const p = h => [1,3,5].map(i => parseInt(h.slice(i, i + 2), 16));
+    const A = p(hex), B = p(t);
+    return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * a).toString(16).padStart(2, '0')).join('');
+  }
+  pal(base) {
+    return { t: this.mix(base, '#FFFFFF', 0.14), l: this.mix(base, '#000000', 0.26), r: this.mix(base, '#000000', 0.10) };
+  }
+  get C() {
+    const blue = this.props.playerColor || '#8FB3C9';
+    const yellow = this.props.toolColor || '#E3CD8E';
+    return {
+      tile: { t: '#E3E1DC', l: '#B5B2AB', r: '#CBC8C2' },
+      hole: { t: '#4A4845', l: '#3E3C39', r: '#454340' },
+      blue: this.pal(blue), yellow: this.pal(yellow),
+      mono: { t: '#D8D5CF', l: '#ADAAA3', r: '#C3C0BA' },
+      ink: '#3A3936', mute: '#8A8781'
+    };
+  }
+
+  // ---- geometry ----
+  iso(x, y, h, ox, oy) { return [ox + (x - y) * this.TW / 2, oy + (x + y) * this.TH / 2 - h * this.HU]; }
+  n(v) { return Math.round(v * 10) / 10; }
+  P(pts) { return pts.map(p => this.n(p[0]) + ',' + this.n(p[1])).join(' '); }
+  sh(d, f, o) { return { d, f, k: 'none', w: 0, o: o === undefined ? 1 : o }; }
+
+  cube(px, py, w, ch, cols, o) {
+    const hh = w / 4, hw = w / 2, out = [];
+    out.push(this.sh(this.P([[px, py - hh], [px + hw, py], [px, py + hh], [px - hw, py]]), cols.t, o));
+    out.push(this.sh(this.P([[px - hw, py], [px, py + hh], [px, py + hh + ch], [px - hw, py + ch]]), cols.l, o));
+    out.push(this.sh(this.P([[px, py + hh], [px + hw, py], [px + hw, py + ch], [px, py + hh + ch]]), cols.r, o));
+    return out;
+  }
+  // flat quad lying on a top plane; lx/ly in tile units
+  flat(px, py, lx, ly, f, o) {
+    const c = (u, v) => [px + (u - v) * this.TW / 2, py + (u + v) * this.TH / 2];
+    return this.sh(this.P([c(-lx / 2, -ly / 2), c(lx / 2, -ly / 2), c(lx / 2, ly / 2), c(-lx / 2, ly / 2)]), f, o);
+  }
+  // upright quad in the plane of the x axis; z measured up from (px,py)
+  wall(px, py, lu, z0, z1, f, o) {
+    const p = u => [px + u * this.TW / 2, py + u * this.TH / 2];
+    const a = p(-lu / 2), b = p(lu / 2);
+    return this.sh(this.P([[a[0], a[1] - z0], [b[0], b[1] - z0], [b[0], b[1] - z1], [a[0], a[1] - z1]]), f, o);
+  }
+  offX(px, py, du) { return [px + du * this.TW / 2, py + du * this.TH / 2]; }
+  offY(px, py, dv) { return [px - dv * this.TW / 2, py + dv * this.TH / 2]; }
+
+  // ---- object builders (sx,sy = centre of the tile top face) ----
+  oTile(sx, sy, h, parity) {
+    const C = this.C.tile;
+    const top = parity ? this.mix(C.t, '#000000', 0.028) : C.t;
+    const out = this.cube(sx, sy, this.TW, h * this.HU + this.LIP, { t: top, l: C.l, r: C.r });
+    out[0].k = '#D6D3CD'; out[0].w = 0.8;
+    return out;
+  }
+  oHole(sx, sy, h) {
+    const C = this.C, out = this.cube(sx, sy, this.TW, h * this.HU + this.LIP, { t: C.hole.t, l: C.tile.l, r: C.tile.r });
+    out.push(this.flat(sx, sy + 7, 0.62, 0.62, C.hole.l));
+    out.push(this.flat(sx, sy + 1, 0.62, 0.62, '#2F2E2C'));
+    return out;
+  }
+  oPlayer(sx, sy, o) { const k = this.TW / 104; return this.cube(sx, sy - this.HU, 60 * k, this.HU, this.C.blue, o); }
+  oBox(sx, sy, rise) {
+    const C = this.C, k = this.TW / 104, out = this.cube(sx, sy - this.HU - (rise || 0), 60 * k, this.HU, C.yellow);
+    const d = this.mix(this.props.toolColor || '#E3CD8E', '#000000', 0.34);
+    const inner = this.flat(sx, sy - this.HU - (rise || 0), 0.44, 0.44, 'none');
+    inner.k = d; inner.w = 1.1;
+    out.push(inner);
+    out.push(this.wall(this.offY(sx, sy - (rise || 0), 0.29)[0], this.offY(sx, sy - (rise || 0), 0.29)[1], 0.58, 4, 5.2, d, 0.65));
+    return out;
+  }
+  oSwitch(sx, sy, pressed) {
+    const C = this.C, k = this.TW / 104, ch = (pressed ? 4 : 11) * k;
+    const ring = this.flat(sx, sy, 0.78, 0.78, 'none'); ring.k = '#B5B2AB'; ring.w = 1;
+    return [ring].concat(this.cube(sx, sy - ch, 56 * k, ch, C.yellow));
+  }
+  oLadderFlat(sx, sy, k) {
+    const C = this.C, s = k || 1, out = [], py = sy - 4;
+    [-0.24, 0.24].forEach(v => { const p = this.offY(sx, py, v * s); out.push(this.flat(p[0], p[1], 0.86 * s, 0.08 * s, C.yellow.t)); });
+    [-0.3, -0.1, 0.1, 0.3].forEach(u => { const p = this.offX(sx, py, u * s); out.push(this.flat(p[0], p[1], 0.07 * s, 0.5 * s, C.yellow.r)); });
+    return out;
+  }
+  // ladder leaning on the side face of a tile one level higher
+  oLadderLean(mx, my, bx, by) {
+    const C = this.C, out = [];
+    const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    const rail = v => ({ T: this.offY(mx, my, v), B: this.offY(bx, by, v) });
+    const r1 = rail(-0.17), r2 = rail(0.17);
+    [r1, r2].forEach(r => out.push(this.sh(this.P([[r.B[0] - 3, r.B[1]], [r.B[0] + 3, r.B[1]], [r.T[0] + 3, r.T[1]], [r.T[0] - 3, r.T[1]]]), C.yellow.l)));
+    [0.14, 0.38, 0.62, 0.86].forEach(t => {
+      const a = lerp(r1.B, r1.T, t), b = lerp(r2.B, r2.T, t);
+      out.push(this.sh(this.P([[a[0], a[1]], [b[0], b[1]], [b[0], b[1] + 4.5], [a[0], a[1] + 4.5]]), C.yellow.t));
+    });
+    return out;
+  }
+  // full-tile block: closed = one level high, open = sunk to floor level
+  oDoor(sx, sy, open) {
+    const C = this.C, h = open ? 7 : this.HU;
+    const cols = {
+      t: this.mix(C.mono.t, this.props.toolColor || '#E3CD8E', 0.22),
+      l: this.mix(C.mono.l, this.props.toolColor || '#E3CD8E', 0.16),
+      r: this.mix(C.mono.r, this.props.toolColor || '#E3CD8E', 0.18)
+    };
+    const out = this.cube(sx, sy - h, this.TW, h, cols);
+    out.push(this.flat(sx, sy - h, 0.46, 0.46, C.yellow.t, open ? 0.95 : 0.85));
+    if (!open) {
+      const p = this.offY(sx, sy, 0.36);
+      out.push(this.wall(p[0], p[1], 0.56, h - 11, h - 5, C.yellow.t, 0.95));
+    }
+    return out;
+  }
+
+  // ---- field ----
+  buildField() {
+    const out = [], cells = [];
+    for (let y = 0; y < 5; y++) for (let x = 0; x < 5; x++) cells.push({ x, y });
+    cells.sort((a, b) => (a.x + a.y) - (b.x + b.y));
+    for (const { x, y } of cells) {
+      const h = this.grid[y][x];
+      const [sx, sy] = this.iso(x, y, h, 280, 118);
+      const isGoal = this.goal.x === x && this.goal.y === y;
+      out.push.apply(out, isGoal ? this.oHole(sx, sy, h) : this.oTile(sx, sy, h, (x + y) % 2));
+      if (this.box.x === x && this.box.y === y) out.push.apply(out, this.oBox(sx, sy, 0));
+      if (this.sw.x === x && this.sw.y === y) out.push.apply(out, this.oSwitch(sx, sy, this.state.doorOpen));
+      if (this.lad.x === x && this.lad.y === y) out.push.apply(out, this.oLadderFlat(sx, sy, 1));
+      if (this.door.x === x && this.door.y === y) out.push.apply(out, this.oDoor(sx, sy, this.state.doorOpen));
+    }
+    return out;
+  }
+
+  // generic static scene builder used by the other screens
+  scene(g, objs, ox, oy) {
+    const out = [], cells = [];
+    for (let y = 0; y < g.length; y++) for (let x = 0; x < g[y].length; x++) cells.push({ x, y });
+    cells.sort((a, b) => (a.x + a.y) - (b.x + b.y));
+    for (const { x, y } of cells) {
+      const h = g[y][x], p = this.iso(x, y, h, ox, oy), sx = p[0], sy = p[1];
+      const here = objs.filter(o => o.x === x && o.y === y);
+      const isGoal = here.some(o => o.t === 'goal' || o.t === 'sunk');
+      out.push.apply(out, isGoal ? this.oHole(sx, sy, h) : this.oTile(sx, sy, h, (x + y) % 2));
+      for (const o of here) {
+        if (o.t === 'player') out.push.apply(out, this.oPlayer(sx, sy));
+        else if (o.t === 'box') out.push.apply(out, this.oBox(sx, sy, 0));
+        else if (o.t === 'switch') out.push.apply(out, this.oSwitch(sx, sy, false));
+        else if (o.t === 'switchOn') out.push.apply(out, this.oSwitch(sx, sy, true));
+        else if (o.t === 'ladder') out.push.apply(out, this.oLadderFlat(sx, sy, 1));
+        else if (o.t === 'door') out.push.apply(out, this.oDoor(sx, sy, false));
+        else if (o.t === 'doorOpen') out.push.apply(out, this.oDoor(sx, sy, true));
+        else if (o.t === 'sunk') out.push(this.flat(sx, sy - 2, 0.42, 0.42, this.C.blue.t));
+      }
+    }
+    return out;
+  }
+
+  sceneScaled(g, objs, ox, oy, k) {
+    const save = [this.TW, this.TH, this.HU, this.LIP];
+    this.TW = 104 * k; this.TH = 52 * k; this.HU = 30 * k; this.LIP = 16 * k;
+    const out = this.scene(g, objs, ox, oy);
+    this.TW = save[0]; this.TH = save[1]; this.HU = save[2]; this.LIP = save[3];
+    return out;
+  }
+
+  wideMap() {
+    const g = [
+      [1,1,1,1,1,1,1,1,2,2],
+      [1,0,0,0,0,0,1,1,1,2],
+      [1,0,0,1,1,0,0,0,1,1],
+      [1,0,1,2,1,1,1,0,0,1],
+      [1,0,1,1,1,0,1,1,0,1],
+      [1,0,0,0,0,0,0,1,0,1],
+      [1,1,1,1,1,1,0,1,0,1],
+      [2,1,0,0,0,0,0,1,0,1],
+      [2,1,0,1,1,1,1,1,0,0],
+      [2,2,0,0,0,0,0,0,0,1]
+    ];
+    const objs = [
+      { x: 1, y: 1, t: 'goal' },
+      { x: 8, y: 9, t: 'player' },
+      { x: 4, y: 5, t: 'box' },
+      { x: 2, y: 7, t: 'box' },
+      { x: 6, y: 5, t: 'switch' },
+      { x: 5, y: 2, t: 'door' },
+      { x: 8, y: 4, t: 'ladder' },
+      { x: 2, y: 9, t: 'switchOn' },
+      { x: 7, y: 3, t: 'ladder' }
+    ];
+    return this.sceneScaled(g, objs, 370, 62, 0.58);
+  }
+
+  holeScene() { return this.sceneScaled([[0]], [{ x: 0, y: 0, t: 'goal' }], 90, 78, 0.95); }
+  holeWithCube(sink) {
+    const k = 0.95, base = this.holeScene();
+    const save = [this.TW, this.TH, this.HU];
+    this.TW = 104 * k; this.TH = 52 * k; this.HU = 30 * k;
+    const p = this.oPlayer(90, 78 + sink * this.HU);
+    this.TW = save[0]; this.TH = save[1]; this.HU = save[2];
+    return base.concat(p);
+  }
+
+  // ---- interaction ----
+  componentDidMount() {
+    this.onKey = e => {
+      const m = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+      if (e.key === 'r' || e.key === 'R') { this.restartFn(); return; }
+      if (!m[e.key]) return;
+      e.preventDefault();
+      this.move(m[e.key][0], m[e.key][1]);
+    };
+    window.addEventListener('keydown', this.onKey);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+
+  blockedAt(x, y) {
+    if (x < 0 || y < 0 || x > 4 || y > 4) return true;
+    if (this.box.x === x && this.box.y === y) return true;
+    if (this.door.x === x && this.door.y === y && !this.state.doorOpen) return true;
+    return Math.abs(this.grid[y][x] - this.grid[this.state.py][this.state.px]) > 1;
+  }
+  move(dx, dy) {
+    if (this.state.cleared) return;
+    const x = this.state.px + dx, y = this.state.py + dy;
+    if (this.blockedAt(x, y)) { this.setState(s => ({ shake: s.shake + 1 })); return; }
+    const done = this.goal.x === x && this.goal.y === y;
+    const opens = this.sw.x === x && this.sw.y === y;
+    this.setState(s => ({ px: x, py: y, moves: s.moves + 1, cleared: done, doorOpen: s.doorOpen || opens }));
+  }
+  restartFn = () => this.setState({ px: this.start.x, py: this.start.y, moves: 0, shake: 0, cleared: false, doorOpen: false });
+
+  // ---- object style cards ----
+  buildCards() {
+    const C = this.C, cx = 70, base = 104, s = (w, h, name, shapes) => ({ name, vb: '0 0 ' + w + ' ' + h, shapes });
+    const tileAt = (x, y, h) => this.oTile(x, y - h * this.HU, h);
+    const at = (x, y, h) => [x, y - h * this.HU];
+
+    const floor = h => {
+      const [px, py] = at(cx, base, h);
+      return s(140, 158, 'height ' + h, this.oTile(px, py, h));
+    };
+
+    const twoTile = (h1, h2) => {
+      const a = at(58, 92, h1), b = at(110, 118, h2);
+      return { a, b, shapes: this.oTile(a[0], a[1], h1).concat(this.oTile(b[0], b[1], h2)) };
+    };
+
+    const playerMove = (() => {
+      const t = twoTile(0, 0);
+      const sh = t.shapes.concat(this.oPlayer(t.a[0], t.a[1], 0.28), this.oPlayer(t.b[0], t.b[1]));
+      return s(180, 158, '이동 중', sh);
+    })();
+
+    const ladderLean = (() => {
+      const A = [54, 70], B = [106, 126];
+      const M = [A[0] + this.TW / 4, A[1] + this.TH / 4];
+      const B0 = [M[0] + 0.35 * this.TW / 2, M[1] + 0.35 * this.TH / 2 + this.HU];
+      const shp = this.oTile(A[0], A[1], 1).concat(this.oTile(B[0], B[1], 0), this.oLadderLean(M[0], M[1], B0[0], B0[1]));
+      return s(170, 175, '한 층 높은 칸에 기댐', shp);
+    })();
+
+    const one = (h, extra, name, w, ht) => {
+      const [px, py] = at(cx, base, h);
+      return s(w || 140, ht || 158, name, this.oTile(px, py, h).concat(extra(px, py)));
+    };
+
+    return [
+      { label: '바닥 칸', note: 'monotone · 높이에 따라 옆면 길이 변화', states: [floor(0), floor(1), floor(2)] },
+      { label: '플레이어 큐브', note: 'blue · 바닥 칸보다 작은 1×1×1', states: [one(0, (x, y) => this.oPlayer(x, y), '기본'), playerMove] },
+      { label: '상자', note: 'yellow · 모서리 선으로 큐브와 구분', states: [one(0, (x, y) => this.oBox(x, y, 0), '기본'), one(0, (x, y) => this.oSwitch(x, y, true).concat(this.oBox(x, y, 4)), '스위치 위')] },
+      { label: '스위치', note: 'yellow · 납작한 버튼, 눌림 상태', states: [one(0, (x, y) => this.oSwitch(x, y, false), '기본'), one(0, (x, y) => this.oSwitch(x, y, true), '눌림')] },
+      { label: '문', note: 'monotone + yellow · 칸 하나를 채우는 블록', states: [one(0, (x, y) => this.oDoor(x, y, false), '닫힘 (1층 높이)', 140, 175), one(0, (x, y) => this.oDoor(x, y, true), '열림 (바닥 높이)', 140, 175)] },
+      { label: '사다리', note: 'yellow · 놓인 / 기댄 / 든 상태', states: [one(0, (x, y) => this.oLadderFlat(x, y, 1), '바닥', 140, 175), ladderLean, one(0, (x, y) => this.oPlayer(x, y).concat(this.oLadderFlat(x, y - this.HU - 4, 0.72)), '든 상태', 140, 175)] },
+      { label: '목표 구멍', note: 'dark grey · 파인 마름모', states: [s(140, 158, '기본', this.oHole(cx, base, 0)), s(140, 158, '진입', this.oHole(cx, base, 0).concat([this.flat(cx, base - 2, 0.42, 0.42, C.blue.t)]))] }
+    ];
+  }
+
+  renderVals() {
+    const st = this.state;
+    const [px, py] = this.iso(st.px, st.py, this.grid[st.py][st.px], 280, 118);
+    return {
+      field: this.buildField(),
+      player: this.oPlayer(0, 0),
+      playerPos: {
+        transform: 'translate(' + px + 'px,' + (py + (st.cleared ? 14 : 0)) + 'px) scale(' + (st.cleared ? 0.18 : 1) + ')',
+        opacity: st.cleared ? 0 : 1,
+        transition: 'transform 200ms cubic-bezier(.34,1.1,.64,1), opacity 260ms ease-in'
+      },
+      playerShake: st.shake ? { animation: (st.shake % 2 ? 'shkA' : 'shkB') + ' 240ms ease-in-out' } : {},
+      moves: st.moves,
+      statusLine: st.cleared ? '집에 도착 · R 로 다시 하기' : (st.doorOpen ? '스위치 작동 · 문 열림' : ''),
+      restart: this.restartFn,
+      cards: this.buildCards(),
+      titleField: this.scene([[0, 1, 1], [0, 0, 1], [0, 0, 0]], [{ x: 0, y: 2, t: 'player' }, { x: 2, y: 0, t: 'goal' }], 130, 64),
+      clearField: this.scene(this.grid, [
+        { x: 3, y: 0, t: 'sunk' }, { x: 2, y: 3, t: 'box' }, { x: 1, y: 3, t: 'switchOn' },
+        { x: 3, y: 3, t: 'ladder' }, { x: 2, y: 2, t: 'doorOpen' }
+      ], 280, 118),
+      bossField: this.scene([[0, 1, 2, 2, 1], [0, 0, 1, 1, 0], [1, 0, 0, 0, 0], [2, 1, 0, 0, 1], [2, 1, 0, 0, 0]], [
+        { x: 0, y: 0, t: 'goal' }, { x: 4, y: 4, t: 'player' }, { x: 2, y: 2, t: 'box' },
+        { x: 3, y: 1, t: 'switch' }, { x: 1, y: 1, t: 'door' }, { x: 3, y: 3, t: 'ladder' }
+      ], 280, 118),
+      wideField: this.wideMap(),
+      holeF1: this.holeWithCube(0.42),
+      holeF2: this.holeWithCube(0.92),
+      holeF3: this.holeScene(),
+      mobileField: this.scene(this.grid, [
+        { x: 3, y: 0, t: 'goal' }, { x: 0, y: 4, t: 'player' }, { x: 2, y: 3, t: 'box' },
+        { x: 1, y: 3, t: 'switch' }, { x: 3, y: 3, t: 'ladder' }, { x: 2, y: 2, t: 'door' }
+      ], 280, 118)
+    };
+  }
+}
+</script>
+</body>
+</html>
