@@ -105,12 +105,12 @@ docs/           # 기획, 설계, 디자인 브리프
 
 규칙 파일과 적용 범위:
 
-| 파일            | 적용 범위                     | 내용                                               |
-| --------------- | ----------------------------- | -------------------------------------------------- |
-| `general.md`    | 항상                          | 버전 주의, 협업 방식, 주석, 명명, 위치, 포맷, 커밋 |
-| `components.md` | `apps/web/src/**/*.tsx`       | 컴포넌트 구조, 게임 화면, 모션, useEffect, 커서    |
-| `game.md`       | `game/`, `stages/`            | 순수 로직, 규칙 추가, 스테이지 데이터              |
-| `testing.md`    | `*.test.ts`, `vite.config.ts` | Vitest 범위와 작성 방식                            |
+| 파일            | 적용 범위                        | 내용                                               |
+| --------------- | -------------------------------- | -------------------------------------------------- |
+| `general.md`    | 항상                             | 버전 주의, 협업 방식, 주석, 명명, 위치, 포맷, 커밋 |
+| `components.md` | `apps/web/src/**/*.tsx`          | 컴포넌트 구조, 게임 화면, 모션, useEffect, 커서    |
+| `game.md`       | `game/`, `stages/`               | 순수 로직, 규칙 추가, 스테이지 데이터              |
+| `testing.md`    | `*.test.ts`, `e2e/`, 테스트 설정 | Vitest와 Playwright 범위, 화면 캡처 확인           |
 
 작업을 마치면 `/update-docs`로 이력과 문서를 갱신한다. 기존 기능을 고치기 전엔 `.claude/history.md`에서 해당 항목을 먼저 찾아본다.
 
@@ -122,6 +122,8 @@ pnpm build                        # 전체 빌드 (타입 검사 포함)
 pnpm test                         # 전체 테스트
 pnpm lint                         # 전체 린트
 pnpm format                       # Prettier 정리
+pnpm e2e                          # Playwright 스모크 테스트
+pnpm shot                         # 화면 캡처 (apps/web/e2e/.screenshots)
 pnpm --filter @cubound/web add <pkg>   # web에 패키지 추가
 ```
 
@@ -136,6 +138,6 @@ pnpm --filter @cubound/web add <pkg>   # web에 패키지 추가
 | 애니메이션    | Motion                                                                                          |
 | 상태          | Zustand                                                                                         |
 | 스타일        | Tailwind CSS v4                                                                                 |
-| 테스트        | Vitest                                                                                          |
+| 테스트        | Vitest (단위) + Playwright (스모크, 화면 캡처)                                                  |
 | 코드 퀄리티   | oxlint + Prettier (import 정렬, Tailwind 클래스 정렬) + Husky와 lint-staged (커밋 전 자동 검사) |
 | 배포          | Vercel                                                                                          |

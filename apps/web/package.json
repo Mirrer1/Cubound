@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "lint": "oxlint",
     "test": "vitest run --passWithNoTests",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e": "playwright test --grep-invert @shot",
+    "shot": "playwright test --grep @shot"
   },
   "dependencies": {
     "motion": "^13.4.0",
@@ -18,6 +20,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "catalog:",
     "@types/react": "^19.3.0",

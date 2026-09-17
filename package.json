@@ -12,7 +12,9 @@
     "lint": "pnpm -r lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "e2e": "pnpm --filter @cubound/web e2e",
+    "shot": "pnpm --filter @cubound/web shot"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",

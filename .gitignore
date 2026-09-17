@@ -30,3 +30,7 @@ dist-ssr
 # Claude personal
 CLAUDE.local.md
 .claude/settings.local.json
+
+# Playwright
+**/e2e/.results
+**/e2e/.screenshots

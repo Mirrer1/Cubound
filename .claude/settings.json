@@ -6,6 +6,8 @@
       "Bash(pnpm lint)",
       "Bash(pnpm format)",
       "Bash(pnpm format:check)",
+      "Bash(pnpm e2e)",
+      "Bash(pnpm shot)",
       "Bash(pnpm --filter @cubound/web test *)",
       "Bash(pnpm --filter @cubound/web exec vitest run *)",
       "Bash(pnpm --filter @cubound/web exec tsc -b)",

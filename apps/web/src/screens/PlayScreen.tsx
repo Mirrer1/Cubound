@@ -25,8 +25,8 @@ const PlayScreen = () => {
   }, [move, restart])
 
   return (
-    <main className="flex min-h-dvh p-4 sm:p-8">
-      <section className="flex flex-1 flex-col rounded-[22px] border border-line bg-base-bg">
+    <main className="flex h-dvh p-4 sm:p-8">
+      <section className="flex min-h-0 flex-1 flex-col rounded-[22px] border border-line bg-base-bg">
         <header className="flex items-start justify-between gap-6 px-6 pt-6 sm:px-9 sm:pt-8">
           <div className="flex flex-col gap-1.5">
             <span className="font-mono text-[11px] tracking-[0.22em] text-mute">
