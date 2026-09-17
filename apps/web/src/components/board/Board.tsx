@@ -1,153 +1,142 @@
-import BoardBlock from './BoardBlock'
-import BoardLadder from './BoardLadder'
-import { darken, shade, tint } from './shade'
-import { TILE, blockFaces, toScreen } from '@/game/iso'
-import { isDoorOpen } from '@/game/rules'
-import type { GameState, Point } from '@/game/types'
+import { useMemo } from 'react'
 
-const MARGIN = 40
-const CUBE_WIDTH = TILE.width * (60 / 104)
+import BoardBox from './BoardBox'
+import BoardCell from './BoardCell'
+import BoardLadder from './BoardLadder'
+import ClearEffect from './ClearEffect'
+import { rollingCubeFaces } from './cube'
+import { movingBox, playerFrame } from './frame'
+import { shade } from './shade'
+import { useBoardAnimation } from './useBoardAnimation'
+import { useCamera } from './useCamera'
+import { TILE, toScreen } from '@/game/iso'
+import { occludingCells } from '@/game/occlusion'
+import { isDoorOpen, standHeight } from '@/game/rules'
+import type { GameEvent, GameState, Point } from '@/game/types'
 
 interface BoardProps {
   game: GameState
+  prevGame: GameState | null
+  events: GameEvent[]
+  turn: number
+  onAnimationEnd: () => void
+  queued: number // 기다리는 입력 수
+  chained: boolean // 앞 이동에서 바로 이어짐
 }
 
-const Board = ({ game }: BoardProps) => {
+const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y
+const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+
+const Board = ({ game, prevGame, events, turn, onAnimationEnd, queued, chained }: BoardProps) => {
+  const { t, chain } = useBoardAnimation(turn, events, onAnimationEnd, queued, chained)
+  const viewBox = useCamera(game)
+  const moving = t < 1 && prevGame !== null
+  const before = moving ? prevGame : game
+
   const { stage, heights, boxes, ladders, leaningLadders, player } = game
-  const at = (list: Point[], x: number, y: number) => list.some((p) => p.x === x && p.y === y)
+  const cube = playerFrame(prevGame, game, events, t, chain)
+  const box = movingBox(prevGame, events, t, chain)
+  const pickedUp = moving ? events.find((e) => e.type === 'pickedUp') : undefined
+  const placed = moving ? events.find((e) => e.type === 'placed') : undefined
 
-  const cells = heights
-    .flatMap((row, y) =>
-      row.map((h, x) => {
-        const screen = toScreen({ x, y }, h)
-        return { x, y, h, sx: screen.x, sy: screen.y }
-      }),
-    )
-    .filter((cell) => cell.h >= 0)
-    .sort((a, b) => a.x + a.y - (b.x + b.y))
+  const faded = [
+    ...occludingCells(heights, player, standHeight(game, player)),
+    ...leaningLadders
+      .filter((l) => (l.direction === 'right' || l.direction === 'down') && same(l, player))
+      .flatMap((l) => occludingCells(heights, l, heights[l.y][l.x])),
+  ]
 
-  const xs = cells.flatMap((c) => [c.sx - TILE.width / 2, c.sx + TILE.width / 2])
-  const ys = cells.flatMap((c) => [
-    c.sy - TILE.height / 2 - TILE.layer * 2,
-    c.sy + TILE.height / 2 + c.h * TILE.layer + TILE.lip,
-  ])
-  const minX = Math.min(...xs) - MARGIN
-  const minY = Math.min(...ys) - MARGIN
-  const viewBox = `${minX} ${minY} ${Math.max(...xs) - minX + MARGIN} ${Math.max(...ys) - minY + MARGIN}`
+  // x, y는 화면 좌표, p는 칸 좌표
+  const cells = useMemo(
+    () =>
+      heights
+        .flatMap((row, y) =>
+          row.map((h, x) => ({ ...toScreen({ x, y }, h), h, p: { x, y }, key: `${x}-${y}` })),
+        )
+        .filter((cell) => cell.h >= 0)
+        .sort((a, b) => a.p.x + a.p.y - (b.p.x + b.p.y)),
+    [heights],
+  )
+
+  const cubeScreen = toScreen({ x: cube.x, y: cube.y }, cube.level)
+  const carriedOpacity =
+    pickedUp && !game.carrying ? 0 : pickedUp ? t : placed ? 1 - t : game.carrying ? 1 : 0
+  const progress = moving ? t : 1
 
   return (
     <svg viewBox={viewBox} className="h-full w-full">
       {cells.map((cell) => {
-        const isGoal = cell.x === stage.goal.x && cell.y === stage.goal.y
-        const isFilled = stage.heights[cell.y][cell.x] < 0
-        const hasBox = at(boxes, cell.x, cell.y)
-        const hasPlayer = cell.x === player.x && cell.y === player.y && !game.cleared
-        const floorTop =
-          (cell.x + cell.y) % 2 === 1 ? darken('floor-top', 2.8) : 'var(--color-floor-top)'
-        const boxY = cell.sy - TILE.layer
-        const playerY = cell.sy - TILE.layer * (hasBox ? 2 : 1)
-        const entity = stage.entities.find((e) => e.x === cell.x && e.y === cell.y)
-        const switchPressed = hasBox || hasPlayer
-        const switchDepth = switchPressed ? 4 : 11
-        const doorOpen = entity?.type === 'door' && isDoorOpen(game, entity.id)
-        const doorDepth = doorOpen ? 7 : TILE.layer
+        const entity = stage.entities.find((e) => same(e, cell.p))
+        const isFilled = stage.heights[cell.p.y][cell.p.x] < 0
+        const pressed = (state: GameState) => same(state.player, cell.p) || has(state.boxes, cell.p)
+        const doorDepth = (state: GameState) =>
+          entity?.type === 'door' && isDoorOpen(state, entity.id) ? 7 : TILE.layer
+        const pickedHere = pickedUp?.type === 'pickedUp' && same(pickedUp.at, cell.p)
+        const flatLadder = has(ladders, cell.p)
+          ? 1
+          : pickedHere && has(before.ladders, cell.p)
+            ? 1 - t
+            : 0
+        const placedOpacity = (l: Point) =>
+          placed?.type === 'placed' && same(placed.ladder, l) ? t : 1
+        const leaning = [
+          ...leaningLadders
+            .filter((l) => same(l, cell.p))
+            .map((l) => `${l.direction}:${placedOpacity(l)}`),
+          ...(pickedHere
+            ? before.leaningLadders
+                .filter((l) => same(l, cell.p))
+                .map((l) => `${l.direction}:${1 - t}`)
+            : []),
+        ].join('|')
+
+        const drawCube = same(cube.cell, cell.p) && !(game.cleared && !moving)
+        const drawBox = box !== null && same(box.cell, cell.p)
+        const boxScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
+        const goalEffect = same(cell.p, stage.goal) && game.cleared && !moving
+        const overlay = drawBox || drawCube || goalEffect
 
         return (
-          <g key={`${cell.x}-${cell.y}`}>
-            <BoardBlock
-              x={cell.sx}
-              y={cell.sy}
-              width={TILE.width}
-              depth={cell.h * TILE.layer + TILE.lip}
-              top={isGoal ? 'var(--color-goal)' : isFilled ? shade('tool', 'top') : floorTop}
-              left={isFilled ? shade('tool', 'left') : 'var(--color-floor-left)'}
-              right={isFilled ? shade('tool', 'right') : 'var(--color-floor-right)'}
-              stroke={isGoal ? undefined : darken('floor-top', 6)}
-            />
-            {isGoal && (
+          <BoardCell
+            key={cell.key}
+            x={cell.x}
+            y={cell.y}
+            h={cell.h}
+            parity={(cell.p.x + cell.p.y) % 2 === 1}
+            goal={same(cell.p, stage.goal)}
+            filled={isFilled}
+            hidden={isFilled && box !== null && same(box.to, cell.p)}
+            faded={has(faded, cell.p)}
+            entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
+            switchDepth={lerp(pressed(before) ? 4 : 11, pressed(game) ? 4 : 11, progress)}
+            doorDepth={lerp(doorDepth(before), doorDepth(game), progress)}
+            box={has(boxes, cell.p) && !(box && same(box.to, cell.p))}
+            flatLadder={flatLadder}
+            leaning={leaning}
+          >
+            {overlay ? (
               <>
-                <polygon
-                  points={blockFaces(cell.sx, cell.sy + 7, TILE.width * 0.62, 0).top}
-                  style={{ fill: darken('goal', 16) }}
-                />
-                <polygon
-                  points={blockFaces(cell.sx, cell.sy + 1, TILE.width * 0.62, 0).top}
-                  style={{ fill: darken('goal', 36) }}
-                />
+                {drawBox && boxScreen && <BoardBox x={boxScreen.x} y={boxScreen.y - TILE.layer} />}
+                {drawCube &&
+                  rollingCubeFaces(cube.x, cube.y, cube.level, cube.direction, cube.angle).map(
+                    (f) => (
+                      <polygon
+                        key={f.face}
+                        points={f.points}
+                        style={{ fill: shade('player', f.face) }}
+                      />
+                    ),
+                  )}
+                {drawCube && carriedOpacity > 0 && (
+                  <g opacity={carriedOpacity}>
+                    <BoardLadder x={cubeScreen.x} y={cubeScreen.y - TILE.layer - 2} />
+                  </g>
+                )}
+                {goalEffect && <ClearEffect x={cell.x} y={cell.y} />}
               </>
-            )}
-            {entity?.type === 'switch' && (
-              <>
-                <polygon
-                  points={blockFaces(cell.sx, cell.sy, TILE.width * 0.78, 0).top}
-                  style={{ fill: 'none', stroke: 'var(--color-floor-left)', strokeWidth: 1 }}
-                />
-                <BoardBlock
-                  x={cell.sx}
-                  y={cell.sy - switchDepth}
-                  width={TILE.width * (56 / 104)}
-                  depth={switchDepth}
-                  top={shade('tool', 'top')}
-                  left={shade('tool', 'left')}
-                  right={shade('tool', 'right')}
-                />
-              </>
-            )}
-            {entity?.type === 'door' && (
-              <>
-                <BoardBlock
-                  x={cell.sx}
-                  y={cell.sy - doorDepth}
-                  width={TILE.width}
-                  depth={doorDepth}
-                  top={tint('var(--color-door)', 22)}
-                  left={tint(darken('door', 20), 16)}
-                  right={tint(darken('door', 10), 18)}
-                />
-                <polygon
-                  points={blockFaces(cell.sx, cell.sy - doorDepth, TILE.width * 0.46, 0).top}
-                  style={{ fill: shade('tool', 'top'), opacity: doorOpen ? 0.95 : 0.85 }}
-                />
-              </>
-            )}
-            {hasBox && (
-              <>
-                <BoardBlock
-                  x={cell.sx}
-                  y={boxY}
-                  width={CUBE_WIDTH}
-                  depth={TILE.layer}
-                  top={shade('tool', 'top')}
-                  left={shade('tool', 'left')}
-                  right={shade('tool', 'right')}
-                />
-                <polygon
-                  points={blockFaces(cell.sx, boxY, TILE.width * 0.44, 0).top}
-                  style={{ fill: 'none', stroke: darken('tool', 34), strokeWidth: 1.1 }}
-                />
-              </>
-            )}
-            {at(ladders, cell.x, cell.y) && <BoardLadder x={cell.sx} y={cell.sy} />}
-            {leaningLadders
-              .filter((l) => l.x === cell.x && l.y === cell.y)
-              .map((l) => (
-                <BoardLadder key={l.direction} x={cell.sx} y={cell.sy} direction={l.direction} />
-              ))}
-            {hasPlayer && (
-              <>
-                <BoardBlock
-                  x={cell.sx}
-                  y={playerY}
-                  width={CUBE_WIDTH}
-                  depth={TILE.layer}
-                  top={shade('player', 'top')}
-                  left={shade('player', 'left')}
-                  right={shade('player', 'right')}
-                />
-                {game.carrying && <BoardLadder x={cell.sx} y={playerY - 2} scale={0.45} />}
-              </>
-            )}
-          </g>
+            ) : undefined}
+          </BoardCell>
         )
       })}
     </svg>

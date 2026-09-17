@@ -2,6 +2,8 @@ import { shade } from './shade'
 import { TILE, isoDelta } from '@/game/iso'
 import type { Direction, Point } from '@/game/types'
 
+// 높은 칸 위로 살짝 솟아 가려져도 보이게 한다
+const TIP = 10
 const RUNGS = [-0.3, -0.1, 0.1, 0.3]
 const LEAN_RUNGS = [0.2, 0.45, 0.7, 0.92]
 const DIRECTION_DELTA: Record<Direction, Point> = {
@@ -40,7 +42,7 @@ const flatSegments = (center: Point, s: number) => ({
 const leaningSegments = (center: Point, direction: Direction) => {
   const d = DIRECTION_DELTA[direction]
   const bottom = add(center, isoDelta(d.x * 0.3, d.y * 0.3))
-  const top = add(center, add(isoDelta(d.x * 0.5, d.y * 0.5), { x: 0, y: -TILE.layer }))
+  const top = add(center, add(isoDelta(d.x * 0.5, d.y * 0.5), { x: 0, y: -TILE.layer - TIP }))
   const rails = [-0.17, 0.17].map((w): Segment => {
     const offset = isoDelta(-d.y * w, d.x * w)
     return [add(bottom, offset), add(top, offset)]
