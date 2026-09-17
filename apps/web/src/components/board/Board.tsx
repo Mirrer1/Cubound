@@ -29,6 +29,8 @@ const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y
 const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
+const GUIDE_MARGIN = 12
+
 const Board = ({
   game,
   prevGame,
@@ -73,9 +75,15 @@ const Board = ({
   const carriedOpacity =
     pickedUp && !game.carrying ? 0 : pickedUp ? t : placed ? 1 - t : game.carrying ? 1 : 0
   const progress = moving ? t : 1
-  const guideScreen = guideCell
-    ? toScreen(guideCell, Math.max(0, heights[guideCell.y][guideCell.x]))
-    : null
+  const guideLevel = guideCell ? Math.max(0, heights[guideCell.y][guideCell.x]) : 0
+  const guideScreen = guideCell ? toScreen(guideCell, guideLevel) : null
+  // 칸 위에 선 것은 한 층보다 높이 솟아서 위쪽을 더 잡는다
+  const guideStanding =
+    guideCell !== undefined &&
+    (same(player, guideCell) ||
+      has(boxes, guideCell) ||
+      leaningLadders.some((l) => same(l, guideCell)))
+  const guideTop = guideStanding ? TILE.layer * 2 : 0
 
   return (
     <svg viewBox={viewBox} className="h-full w-full">
@@ -155,10 +163,10 @@ const Board = ({
       {guideScreen && (
         <rect
           data-guide="cell"
-          x={guideScreen.x - TILE.width / 2}
-          y={guideScreen.y - TILE.height / 2 - TILE.layer * 2}
-          width={TILE.width}
-          height={TILE.height + TILE.layer * 2 + TILE.lip}
+          x={guideScreen.x - TILE.width / 2 - GUIDE_MARGIN}
+          y={guideScreen.y - TILE.height / 2 - GUIDE_MARGIN - guideTop}
+          width={TILE.width + GUIDE_MARGIN * 2}
+          height={TILE.height + TILE.lip + guideLevel * TILE.layer + GUIDE_MARGIN * 2 + guideTop}
           fill="none"
         />
       )}

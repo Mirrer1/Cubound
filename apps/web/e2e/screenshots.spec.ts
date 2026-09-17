@@ -7,17 +7,11 @@ const KEYS = {
   left: 'ArrowLeft',
 } as const
 
-// 임시 스테이지 1-1의 풀이와 캡처할 이동 번호
-const SOLUTION =
-  'right up right right right right left left left up left left up right right right right right right right right right'
+// 스테이지 1-1의 풀이와 캡처할 이동 번호
+const SOLUTION = 'up up right right right down down left'
 const PLAY_SHOTS: Record<number, string> = {
   0: 'start',
-  1: 'ladder-carried',
-  6: 'switch-pressed',
-  15: 'box-climbed',
-  17: 'gap-filled',
-  21: 'ladder-placed',
-  22: 'cleared',
+  8: 'cleared',
 }
 
 const shot = async (page: Page, name: string) => {
@@ -75,14 +69,13 @@ test('@shot 데스크톱 화면', async ({ page }) => {
   await page.getByRole('button', { name: /01/ }).click()
   await page.getByText('STAGE 01').waitFor()
   await shootGuide(page, 'desktop')
-  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('ArrowUp')
   await page.waitForTimeout(90)
   await page.screenshot({ path: 'e2e/.screenshots/desktop-rolling-mid.png' })
   await page.keyboard.press('r')
 
   await solve(page, async (i) => {
-    if (i === 16) await shot(page, 'desktop-camera-zone-b')
-    if (i === 22) {
+    if (i === 8) {
       await page.waitForTimeout(450)
       await page.screenshot({ path: 'e2e/.screenshots/desktop-clear-effect.png' })
     }
