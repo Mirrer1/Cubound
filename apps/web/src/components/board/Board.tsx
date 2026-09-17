@@ -1,6 +1,7 @@
 import BoardBlock from './BoardBlock'
-import { darken, shade } from './shade'
+import { darken, shade, tint } from './shade'
 import { TILE, blockFaces, toScreen } from '@/game/iso'
+import { isDoorOpen } from '@/game/rules'
 import type { GameState, Point } from '@/game/types'
 
 const MARGIN = 40
@@ -43,6 +44,11 @@ const Board = ({ game }: BoardProps) => {
         const floorTop =
           (cell.x + cell.y) % 2 === 1 ? darken('floor-top', 2.8) : 'var(--color-floor-top)'
         const boxY = cell.sy - TILE.layer
+        const entity = stage.entities.find((e) => e.x === cell.x && e.y === cell.y)
+        const switchPressed = hasBox || hasPlayer
+        const switchDepth = switchPressed ? 4 : 11
+        const doorOpen = entity?.type === 'door' && isDoorOpen(game, entity.id)
+        const doorDepth = doorOpen ? 7 : TILE.layer
 
         return (
           <g key={`${cell.x}-${cell.y}`}>
@@ -65,6 +71,40 @@ const Board = ({ game }: BoardProps) => {
                 <polygon
                   points={blockFaces(cell.sx, cell.sy + 1, TILE.width * 0.62, 0).top}
                   style={{ fill: darken('goal', 36) }}
+                />
+              </>
+            )}
+            {entity?.type === 'switch' && (
+              <>
+                <polygon
+                  points={blockFaces(cell.sx, cell.sy, TILE.width * 0.78, 0).top}
+                  style={{ fill: 'none', stroke: 'var(--color-floor-left)', strokeWidth: 1 }}
+                />
+                <BoardBlock
+                  x={cell.sx}
+                  y={cell.sy - switchDepth}
+                  width={TILE.width * (56 / 104)}
+                  depth={switchDepth}
+                  top={shade('tool', 'top')}
+                  left={shade('tool', 'left')}
+                  right={shade('tool', 'right')}
+                />
+              </>
+            )}
+            {entity?.type === 'door' && (
+              <>
+                <BoardBlock
+                  x={cell.sx}
+                  y={cell.sy - doorDepth}
+                  width={TILE.width}
+                  depth={doorDepth}
+                  top={tint('var(--color-door)', 22)}
+                  left={tint(darken('door', 20), 16)}
+                  right={tint(darken('door', 10), 18)}
+                />
+                <polygon
+                  points={blockFaces(cell.sx, cell.sy - doorDepth, TILE.width * 0.46, 0).top}
+                  style={{ fill: shade('tool', 'top'), opacity: doorOpen ? 0.95 : 0.85 }}
                 />
               </>
             )}

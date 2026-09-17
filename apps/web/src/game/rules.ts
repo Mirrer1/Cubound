@@ -24,6 +24,21 @@ const floorAt = (state: GameState, p: Point) => {
 
 const hasBox = (state: GameState, p: Point) => state.boxes.some((box) => same(box, p))
 
+const doors = (stage: Stage) => stage.entities.filter((e) => e.type === 'door')
+
+const isPressed = (state: GameState, p: Point) => same(state.player, p) || hasBox(state, p)
+
+// 연결된 스위치가 하나라도 눌렸거나 문 위에 무언가 있으면 열림
+export const isDoorOpen = (state: GameState, id: string) =>
+  state.stage.entities.some(
+    (e) =>
+      (e.type === 'switch' && e.target === id && isPressed(state, e)) ||
+      (e.type === 'door' && e.id === id && isPressed(state, e)),
+  )
+
+const isClosedDoor = (state: GameState, p: Point) =>
+  doors(state.stage).some((door) => same(door, p) && !isDoorOpen(state, door.id))
+
 // 상자 위에 서 있으면 한 층 높다
 const standHeight = (state: GameState, p: Point) =>
   (floorAt(state, p) ?? 0) + (hasBox(state, p) ? 1 : 0)
@@ -40,15 +55,10 @@ export const createState = (stage: Stage): GameState => ({
 const walk = (state: GameState, to: Point, toHeight: number, pre: GameEvent[] = []): MoveResult => {
   const from = state.player
   const drop = standHeight(state, from) - toHeight
-  const cleared = same(to, state.stage.goal)
 
   return {
-    state: { ...state, player: to, moves: state.moves + 1, cleared },
-    events: [
-      ...pre,
-      drop > 0 ? { type: 'fell', from, to, drop } : { type: 'moved', from, to },
-      ...(cleared ? [{ type: 'cleared' } as const] : []),
-    ],
+    state: { ...state, player: to, moves: state.moves + 1, cleared: same(to, state.stage.goal) },
+    events: [...pre, drop > 0 ? { type: 'fell', from, to, drop } : { type: 'moved', from, to }],
   }
 }
 
@@ -58,7 +68,8 @@ const pushBox = (state: GameState, box: Point, direction: Direction): MoveResult
   const boxFloor = floorAt(state, box) ?? 0
 
   if (targetHeight === undefined || targetHeight > boxFloor) return null
-  if (hasBox(state, target) || same(target, state.stage.goal)) return null
+  if (hasBox(state, target) || same(target, state.stage.goal) || isClosedDoor(state, target))
+    return null
 
   const others = state.boxes.filter((b) => !same(b, box))
   const filled = targetHeight < 0
@@ -77,16 +88,14 @@ const pushBox = (state: GameState, box: Point, direction: Direction): MoveResult
   return walk(next, box, boxFloor, [{ type: 'pushed', from: box, to: target, result }])
 }
 
-export const move = (state: GameState, direction: Direction): MoveResult => {
-  if (state.cleared) return { state, events: [] }
-
+const moveOnce = (state: GameState, direction: Direction): MoveResult => {
   const blocked: MoveResult = { state, events: [{ type: 'blocked', direction }] }
   const from = state.player
   const to = step(from, direction)
   const fromHeight = standHeight(state, from)
   const toFloor = floorAt(state, to)
 
-  if (toFloor === null) return blocked
+  if (toFloor === null || isClosedDoor(state, to)) return blocked
 
   if (!hasBox(state, to)) return toFloor > fromHeight ? blocked : walk(state, to, toFloor)
 
@@ -99,5 +108,30 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
   return {
     state: { ...state, player: to, moves: state.moves + 1 },
     events: [{ type: 'climbed', from, to }],
+  }
+}
+
+export const move = (state: GameState, direction: Direction): MoveResult => {
+  if (state.cleared) return { state, events: [] }
+
+  const result = moveOnce(state, direction)
+  if (result.state === state) return result
+
+  const doorEvents: GameEvent[] = doors(state.stage)
+    .map((door) => ({
+      id: door.id,
+      before: isDoorOpen(state, door.id),
+      after: isDoorOpen(result.state, door.id),
+    }))
+    .filter(({ before, after }) => before !== after)
+    .map(({ id, after }) => ({ type: 'door', id, open: after }))
+
+  return {
+    state: result.state,
+    events: [
+      ...result.events,
+      ...doorEvents,
+      ...(result.state.cleared ? [{ type: 'cleared' } as const] : []),
+    ],
   }
 }

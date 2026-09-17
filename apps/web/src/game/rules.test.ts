@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createState, move } from './rules'
+import { createState, isDoorOpen, move } from './rules'
 import type { Stage } from './types'
 
 const FLAT_STAGE: Stage = {
@@ -276,5 +276,102 @@ describe('move 상자', () => {
     expect(start.boxes).toEqual([{ x: 1, y: 1 }])
     expect(start.heights[1][2]).toBe(-1)
     expect(stage.heights[1][2]).toBe(-1)
+  })
+})
+
+const SWITCH_STAGE: Stage = {
+  id: 'test-switch',
+  name: '스위치 테스트',
+  heights: [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+  ],
+  start: { x: 0, y: 0 },
+  goal: { x: 4, y: 1 },
+  entities: [
+    { type: 'switch', x: 1, y: 0, target: 'a' },
+    { type: 'door', x: 3, y: 1, id: 'a' },
+  ],
+}
+
+describe('move 스위치와 문', () => {
+  it('닫힌 문으로는 이동하지 않는다', () => {
+    const stage: Stage = { ...SWITCH_STAGE, start: { x: 2, y: 1 } }
+    const { events } = move(createState(stage), 'right')
+
+    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+  })
+
+  it('스위치를 밟으면 문이 열리고 내려오면 닫힌다', () => {
+    const on = move(createState(SWITCH_STAGE), 'right')
+    const off = move(on.state, 'down')
+
+    expect(isDoorOpen(on.state, 'a')).toBe(true)
+    expect(on.events).toContainEqual({ type: 'door', id: 'a', open: true })
+    expect(isDoorOpen(off.state, 'a')).toBe(false)
+    expect(off.events).toContainEqual({ type: 'door', id: 'a', open: false })
+  })
+
+  it('상자로 스위치를 눌러 두면 열린 문을 지나 클리어한다', () => {
+    const stage: Stage = {
+      ...SWITCH_STAGE,
+      start: { x: 1, y: 2 },
+      entities: [...SWITCH_STAGE.entities, { type: 'box', x: 1, y: 1 }],
+    }
+    const pushed = move(createState(stage), 'up')
+    const end = (['right', 'right', 'right'] as const).reduce(
+      (s, d) => move(s, d).state,
+      pushed.state,
+    )
+
+    expect(pushed.events).toContainEqual({ type: 'door', id: 'a', open: true })
+    expect(end.cleared).toBe(true)
+  })
+
+  it('닫힌 문 쪽으로는 상자를 밀지 못해 상자 위로 올라간다', () => {
+    const stage: Stage = {
+      ...SWITCH_STAGE,
+      start: { x: 1, y: 1 },
+      entities: [...SWITCH_STAGE.entities, { type: 'box', x: 2, y: 1 }],
+    }
+    const { events } = move(createState(stage), 'right')
+
+    expect(events[0].type).toBe('climbed')
+  })
+
+  it('스위치에서 벗어나도 문 위에 무언가 있으면 열려 있고 비면 닫힌다', () => {
+    const stage: Stage = {
+      ...SWITCH_STAGE,
+      start: { x: 0, y: 1 },
+      goal: { x: 4, y: 0 },
+      entities: [
+        { type: 'switch', x: 0, y: 1, target: 'a' },
+        { type: 'door', x: 2, y: 1, id: 'a' },
+        { type: 'box', x: 1, y: 1 },
+      ],
+    }
+    const boxOnDoor = move(createState(stage), 'right')
+    const playerOnDoor = move(boxOnDoor.state, 'right')
+    const offDoor = move(playerOnDoor.state, 'right')
+
+    expect(boxOnDoor.state.boxes).toEqual([{ x: 2, y: 1 }])
+    expect(isDoorOpen(boxOnDoor.state, 'a')).toBe(true)
+    expect(boxOnDoor.events.some((e) => e.type === 'door')).toBe(false)
+    expect(playerOnDoor.state.player).toEqual({ x: 2, y: 1 })
+    expect(isDoorOpen(playerOnDoor.state, 'a')).toBe(true)
+    expect(offDoor.state.player).toEqual({ x: 3, y: 1 })
+    expect(isDoorOpen(offDoor.state, 'a')).toBe(false)
+    expect(offDoor.events).toContainEqual({ type: 'door', id: 'a', open: false })
+  })
+
+  it('연결된 스위치 중 하나만 눌려도 문이 열린다', () => {
+    const stage: Stage = {
+      ...SWITCH_STAGE,
+      entities: [...SWITCH_STAGE.entities, { type: 'switch', x: 0, y: 2, target: 'a' }],
+    }
+    const { state } = move(createState(stage), 'right')
+
+    expect(isDoorOpen(state, 'a')).toBe(true)
   })
 })

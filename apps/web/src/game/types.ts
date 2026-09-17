@@ -5,7 +5,10 @@ export interface Point {
   y: number
 }
 
-export type Entity = { type: 'box' } & Point
+export type Entity = (
+  { type: 'box' } | { type: 'switch'; target: string } | { type: 'door'; id: string }
+) &
+  Point
 
 export interface Stage {
   id: string
@@ -30,6 +33,7 @@ export type GameEvent =
   | { type: 'fell'; from: Point; to: Point; drop: number } // drop은 층 수
   | { type: 'climbed'; from: Point; to: Point }
   | { type: 'pushed'; from: Point; to: Point; result: 'slid' | 'fell' | 'filled' }
+  | { type: 'door'; id: string; open: boolean }
   | { type: 'blocked'; direction: Direction }
   | { type: 'cleared' }
 
