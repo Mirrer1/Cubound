@@ -22,7 +22,15 @@ export interface Stage {
   goal: Point
   entities: Entity[]
   best?: number // 풀이 검사기가 구한 최소 이동 수
+  guides?: Guide[] // 스텝 가이드 단계
   zones?: Zone[] // 카메라 구역, 없으면 맵 전체
+}
+
+export type GuideTarget = Point | 'restart' | 'moves' // 칸 좌표나 화면 요소 이름
+
+export interface Guide {
+  id: string // 문구 모음의 키
+  target: GuideTarget
 }
 
 export interface Zone {

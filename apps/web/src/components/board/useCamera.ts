@@ -3,12 +3,13 @@ import { useEffect, useRef, useState } from 'react'
 
 import { type ViewBox, viewBoxFor } from './camera'
 import { zoneIndexAt } from '@/game/camera'
-import type { GameState } from '@/game/types'
+import type { GameState, Point } from '@/game/types'
 
-export const useCamera = (game: GameState) => {
+// focus가 있으면 큐브 대신 그 칸이 속한 구역을 비춘다
+export const useCamera = (game: GameState, focus?: Point) => {
   const zones = game.stage.zones ?? []
   const [zoneIndex, setZoneIndex] = useState(0)
-  const nextIndex = zones.length > 0 ? zoneIndexAt(zones, game.player, zoneIndex) : 0
+  const nextIndex = zones.length > 0 ? zoneIndexAt(zones, focus ?? game.player, zoneIndex) : 0
   if (nextIndex !== zoneIndex) setZoneIndex(nextIndex)
 
   const target = viewBoxFor(game.heights, zones[nextIndex])

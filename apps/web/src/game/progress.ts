@@ -1,4 +1,5 @@
 import { stars } from './solver'
+import type { Stage } from './types'
 
 export interface StageRecord {
   bestMoves: number
@@ -54,6 +55,10 @@ export const isUnlocked = (progress: Progress, stageIds: string[], stageId: stri
   const index = stageIds.indexOf(stageId)
   return index === 0 || (index > 0 && stageIds[index - 1] in progress.stages)
 }
+
+// 클리어 기록이 없고 가이드가 있는 스테이지만 자동으로 띄운다
+export const shouldShowGuide = (stage: Stage, progress: Progress) =>
+  (stage.guides?.length ?? 0) > 0 && !(stage.id in progress.stages)
 
 export const totalStars = (progress: Progress, stageIds: string[]) =>
   stageIds.reduce((sum, id) => sum + (progress.stages[id]?.stars ?? 0), 0)

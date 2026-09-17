@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { GUIDE_TEXTS } from '@/components/guide/guideTexts'
 import { solve } from '@/game/solver'
 import type { Stage } from '@/game/types'
 import { validateStage } from '@/game/validate'
@@ -26,5 +27,11 @@ describe('스테이지 데이터', () => {
     const [, world, file] = path.match(/world-(\d+)\/(\d+)\.json$/) ?? []
 
     expect(stage.id).toBe(`${Number(world)}-${Number(file)}`)
+  })
+
+  it.each(STAGES)('%s의 가이드 문구가 문구 모음에 있다', (_, stage) => {
+    const missing = (stage.guides ?? []).map((g) => g.id).filter((id) => !(id in GUIDE_TEXTS))
+
+    expect(missing).toEqual([])
   })
 })

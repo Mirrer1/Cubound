@@ -1,8 +1,28 @@
 import { describe, expect, it } from 'vitest'
 
-import { EMPTY_PROGRESS, isUnlocked, migrateProgress, recordClear, totalStars } from './progress'
+import {
+  EMPTY_PROGRESS,
+  isUnlocked,
+  migrateProgress,
+  recordClear,
+  shouldShowGuide,
+  totalStars,
+} from './progress'
+import type { Stage } from './types'
 
 const IDS = ['1-1', '1-2', '1-3']
+
+const STAGE: Stage = {
+  version: 1,
+  id: '1-1',
+  name: '테스트',
+  heights: [[0, 0]],
+  start: { x: 0, y: 0 },
+  goal: { x: 1, y: 0 },
+  entities: [],
+  best: 1,
+  guides: [{ id: 'goal', target: { x: 1, y: 0 } }],
+}
 
 describe('recordClear', () => {
   it('처음 클리어하면 이동 수와 별을 기록한다', () => {
@@ -41,6 +61,25 @@ describe('isUnlocked', () => {
 
   it('목록에 없는 스테이지는 잠겨 있다', () => {
     expect(isUnlocked(EMPTY_PROGRESS, IDS, '1-9')).toBe(false)
+  })
+})
+
+describe('shouldShowGuide', () => {
+  it('클리어하지 않은 스테이지에 가이드가 있으면 띄운다', () => {
+    expect(shouldShowGuide(STAGE, EMPTY_PROGRESS)).toBe(true)
+  })
+
+  it('클리어한 스테이지면 띄우지 않는다', () => {
+    expect(shouldShowGuide(STAGE, recordClear(EMPTY_PROGRESS, '1-1', 3, 1))).toBe(false)
+  })
+
+  it('다른 스테이지만 클리어했으면 띄운다', () => {
+    expect(shouldShowGuide(STAGE, recordClear(EMPTY_PROGRESS, '1-2', 3, 1))).toBe(true)
+  })
+
+  it('가이드가 없거나 비어 있으면 띄우지 않는다', () => {
+    expect(shouldShowGuide({ ...STAGE, guides: undefined }, EMPTY_PROGRESS)).toBe(false)
+    expect(shouldShowGuide({ ...STAGE, guides: [] }, EMPTY_PROGRESS)).toBe(false)
   })
 })
 

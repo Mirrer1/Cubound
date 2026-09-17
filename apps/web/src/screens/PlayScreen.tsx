@@ -1,7 +1,8 @@
 import { AnimatePresence } from 'motion/react'
-import { useEffect } from 'react'
+import { type MouseEvent, useEffect, useRef } from 'react'
 
 import Board from '@/components/board/Board'
+import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
 import { directionFromKey, isRestartKey } from '@/platform/input'
@@ -21,14 +22,28 @@ const PlayScreen = () => {
   const finishAnimation = useGameStore((s) => s.finishAnimation)
   const queued = useGameStore((s) => s.queue.length)
   const chained = useGameStore((s) => s.chained)
+  const guideStep = useGameStore((s) => s.guideStep)
+  const openGuide = useGameStore((s) => s.openGuide)
+  const nextGuide = useGameStore((s) => s.nextGuide)
+  const closeGuide = useGameStore((s) => s.closeGuide)
+  const sectionRef = useRef<HTMLElement>(null)
 
   const { world, stage: stageNumber } = parseStageId(game?.stage.id ?? '0-0')
   const nextId = stageId(world, stageNumber + 1)
   const hasNext = nextId in STAGES
   const record = game ? progress.stages[game.stage.id] : undefined
+  const guides = game?.stage.guides ?? []
+  const hasGuide = guides.length > 0
+  const guideTarget = guideStep !== null ? guides[guideStep]?.target : undefined
+  const guideCell = typeof guideTarget === 'object' ? guideTarget : undefined
 
   const handleNext = () => play(nextId)
   const handleSelect = () => goTo('select')
+  // 포커스가 남으면 Enter나 Space로 가이드가 다시 열려서 버튼 포커스를 뺀다
+  const handleOpenGuide = (e: MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.blur()
+    openGuide()
+  }
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -48,7 +63,10 @@ const PlayScreen = () => {
   return (
     <main className="flex h-dvh p-4 sm:p-8">
       {game && (
-        <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-line bg-base-bg">
+        <section
+          ref={sectionRef}
+          className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-line bg-base-bg"
+        >
           <header className="flex items-start justify-between gap-6 px-6 pt-6 sm:px-9 sm:pt-8">
             <div className="flex flex-col gap-1.5">
               <span className="font-mono text-[11px] tracking-[0.22em] text-mute">
@@ -57,14 +75,19 @@ const PlayScreen = () => {
               <span className="text-2xl tracking-tight sm:text-[27px]">{game.stage.name}</span>
             </div>
             <div className="flex items-center gap-5 sm:gap-7">
-              <div className="flex flex-col items-end gap-0.5">
+              <div data-guide="moves" className="flex flex-col items-end gap-0.5">
                 <span className="font-mono text-[10px] tracking-[0.22em] text-mute">MOVES</span>
                 <span className="text-[32px] leading-none font-light tabular-nums">
                   {game.moves}
                 </span>
               </div>
               <div className="hidden gap-2.5 sm:flex">
-                <Button variant="icon" onClick={restart} title="다시 하기 (R)">
+                {hasGuide && (
+                  <Button variant="icon" onClick={handleOpenGuide} title="가이드 다시 보기">
+                    ?
+                  </Button>
+                )}
+                <Button variant="icon" onClick={restart} title="다시 하기 (R)" data-guide="restart">
                   ↺
                 </Button>
                 <Button variant="icon" onClick={handleSelect} title="스테이지 선택">
@@ -83,10 +106,16 @@ const PlayScreen = () => {
               onAnimationEnd={finishAnimation}
               queued={queued}
               chained={chained}
+              guideCell={guideCell}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3 p-4 sm:hidden">
-            <Button onClick={restart}>↺ 다시</Button>
+          <div
+            className={`grid gap-3 p-4 whitespace-nowrap sm:hidden ${hasGuide ? 'grid-cols-3' : 'grid-cols-2'}`}
+          >
+            <Button onClick={restart} data-guide="restart">
+              ↺ 다시
+            </Button>
+            {hasGuide && <Button onClick={handleOpenGuide}>? 가이드</Button>}
             <Button onClick={handleSelect}>≡ 메뉴</Button>
           </div>
           <AnimatePresence>
@@ -98,6 +127,17 @@ const PlayScreen = () => {
                 onNext={hasNext ? handleNext : undefined}
                 onRetry={restart}
                 onSelect={handleSelect}
+              />
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {guideStep !== null && (
+              <GuideOverlay
+                guides={guides}
+                step={guideStep}
+                containerRef={sectionRef}
+                onNext={nextGuide}
+                onSkip={closeGuide}
               />
             )}
           </AnimatePresence>

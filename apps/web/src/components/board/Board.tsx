@@ -22,15 +22,25 @@ interface BoardProps {
   onAnimationEnd: () => void
   queued: number // 기다리는 입력 수
   chained: boolean // 앞 이동에서 바로 이어짐
+  guideCell?: Point // 가이드가 비추는 칸
 }
 
 const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y
 const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
-const Board = ({ game, prevGame, events, turn, onAnimationEnd, queued, chained }: BoardProps) => {
+const Board = ({
+  game,
+  prevGame,
+  events,
+  turn,
+  onAnimationEnd,
+  queued,
+  chained,
+  guideCell,
+}: BoardProps) => {
   const { t, chain } = useBoardAnimation(turn, events, onAnimationEnd, queued, chained)
-  const viewBox = useCamera(game)
+  const viewBox = useCamera(game, guideCell)
   const moving = t < 1 && prevGame !== null
   const before = moving ? prevGame : game
 
@@ -63,6 +73,9 @@ const Board = ({ game, prevGame, events, turn, onAnimationEnd, queued, chained }
   const carriedOpacity =
     pickedUp && !game.carrying ? 0 : pickedUp ? t : placed ? 1 - t : game.carrying ? 1 : 0
   const progress = moving ? t : 1
+  const guideScreen = guideCell
+    ? toScreen(guideCell, Math.max(0, heights[guideCell.y][guideCell.x]))
+    : null
 
   return (
     <svg viewBox={viewBox} className="h-full w-full">
@@ -139,6 +152,16 @@ const Board = ({ game, prevGame, events, turn, onAnimationEnd, queued, chained }
           </BoardCell>
         )
       })}
+      {guideScreen && (
+        <rect
+          data-guide="cell"
+          x={guideScreen.x - TILE.width / 2}
+          y={guideScreen.y - TILE.height / 2 - TILE.layer * 2}
+          width={TILE.width}
+          height={TILE.height + TILE.layer * 2 + TILE.lip}
+          fill="none"
+        />
+      )}
     </svg>
   )
 }

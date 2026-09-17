@@ -3,6 +3,8 @@ import type { Stage } from './types'
 export const STAGE_VERSION = 1
 
 const ENTITY_TYPES = ['box', 'switch', 'door', 'ladder']
+const GUIDE_TARGETS = ['restart', 'moves']
+const MAX_GUIDES = 3
 
 export type ValidateResult = { ok: true; stage: Stage } | { ok: false; errors: string[] }
 
@@ -85,6 +87,25 @@ export const validateStage = (data: unknown): ValidateResult => {
 
   if (data.best !== undefined && !(isInt(data.best) && data.best > 0)) {
     add('best는 양의 정수여야 한다')
+  }
+
+  if (data.guides !== undefined) {
+    const guides = Array.isArray(data.guides) ? data.guides : []
+    if (guides.length === 0 || guides.length > MAX_GUIDES) add('guides는 1~3단계여야 한다')
+
+    guides.forEach((guide, i) => {
+      if (!isObject(guide) || typeof guide.id !== 'string' || guide.id === '') {
+        add(`guides[${i}]의 id가 비어 있다`)
+      }
+      const target = isObject(guide) ? guide.target : undefined
+      if (isObject(target)) {
+        const inside =
+          isInt(target.x) && isInt(target.y) && grid[target.y]?.[target.x] !== undefined
+        if (!inside) add(`guides[${i}]의 target이 맵 밖이다`)
+      } else if (!GUIDE_TARGETS.includes(target as string)) {
+        add(`guides[${i}]의 target을 알 수 없다`)
+      }
+    })
   }
 
   if (data.zones !== undefined) {
