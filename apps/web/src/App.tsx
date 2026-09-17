@@ -1,7 +1,35 @@
+import { AnimatePresence, MotionConfig, motion } from 'motion/react'
+
 import PlayScreen from '@/screens/PlayScreen'
+import StageSelectScreen from '@/screens/StageSelectScreen'
+import TitleScreen from '@/screens/TitleScreen'
+import { type Screen, useGameStore } from '@/store/gameStore'
+
+const SCREENS: Record<Screen, () => React.JSX.Element> = {
+  title: TitleScreen,
+  select: StageSelectScreen,
+  play: PlayScreen,
+}
 
 const App = () => {
-  return <PlayScreen />
+  const screen = useGameStore((s) => s.screen)
+  const Current = SCREENS[screen]
+
+  return (
+    <MotionConfig reducedMotion="user">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={screen}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4, transition: { duration: 0.15 } }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+        >
+          <Current />
+        </motion.div>
+      </AnimatePresence>
+    </MotionConfig>
+  )
 }
 
 export default App

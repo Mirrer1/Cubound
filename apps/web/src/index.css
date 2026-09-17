@@ -1,15 +1,20 @@
 @import 'tailwindcss';
 
 @theme static {
+  --ease-soft: cubic-bezier(0.37, 0, 0.63, 1);
   --font-sans: 'Jost', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
   --color-page-bg: #e9e7e2;
   --color-base-bg: #f2f1ee;
+  --color-surface: #f7f6f4;
+  --color-locked: #eceae6;
   --color-line: #dcd9d3;
+  --color-hover: #ebe9e5;
   --color-line-strong: #cfccc6;
   --color-ink: #3a3936;
   --color-mute: #8a8781;
+  --color-faint: #a9a6a0;
   --color-floor-top: #e3e1dc;
   --color-floor-left: #b5b2ab;
   --color-floor-right: #cbc8c2;
@@ -19,8 +24,61 @@
   --color-door: #d8d5cf;
 }
 
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   background: var(--color-page-bg);
   color: var(--color-ink);
+}
+
+/* 호버와 누름 전환. 색은 천천히, 누름 크기는 빠르게 */
+@utility transition-soft {
+  transition:
+    color 200ms var(--ease-soft),
+    background-color 200ms var(--ease-soft),
+    border-color 200ms var(--ease-soft),
+    box-shadow 200ms var(--ease-soft),
+    opacity 200ms var(--ease-soft),
+    transform 120ms var(--ease-soft);
+}
+
+/* Motion이 transform을 움직이는 요소용. transform은 전환에서 뺀다 */
+@utility transition-soft-colors {
+  transition:
+    color 200ms var(--ease-soft),
+    background-color 200ms var(--ease-soft),
+    border-color 200ms var(--ease-soft),
+    box-shadow 200ms var(--ease-soft),
+    opacity 200ms var(--ease-soft);
+}
+
+/* 스크롤바가 생겨도 레이아웃이 밀리지 않게 양쪽 자리를 미리 비워둔다 */
+@utility scroll-area {
+  overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
+
+  /* 크롬과 사파리는 상태별 색을 직접 정한다 */
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+  &::-webkit-scrollbar-track {
+    margin-block: 18px;
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: var(--color-line) padding-box;
+  }
+
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line) transparent;
+  }
 }
