@@ -1,4 +1,12 @@
-import type { Direction, GameEvent, GameState, MoveResult, Point, Stage } from './types'
+import type {
+  Direction,
+  GameEvent,
+  GameState,
+  LeaningLadder,
+  MoveResult,
+  Point,
+  Stage,
+} from './types'
 
 const OFFSETS: Record<Direction, Point> = {
   up: { x: 0, y: -1 },
@@ -47,18 +55,79 @@ export const createState = (stage: Stage): GameState => ({
   stage,
   heights: stage.heights,
   boxes: stage.entities.filter((e) => e.type === 'box').map(({ x, y }) => ({ x, y })),
+  ladders: stage.entities.filter((e) => e.type === 'ladder').map(({ x, y }) => ({ x, y })),
+  leaningLadders: [],
+  carrying: false,
   player: stage.start,
   moves: 0,
   cleared: false,
 })
 
-const walk = (state: GameState, to: Point, toHeight: number, pre: GameEvent[] = []): MoveResult => {
+// 빈손이면 바닥의 사다리나 타고 내려온 사다리를 줍는다
+const arrive = (
+  state: GameState,
+  to: Point,
+  event: GameEvent,
+  pre: GameEvent[] = [],
+): MoveResult => {
+  const from = state.player
+  const next: GameState = {
+    ...state,
+    player: to,
+    moves: state.moves + 1,
+    cleared: same(to, state.stage.goal),
+  }
+  const events = [...pre, event]
+  if (state.carrying) return { state: next, events }
+
+  const pickedUp: GameEvent = { type: 'pickedUp', at: to }
+
+  if (state.ladders.some((l) => same(l, to))) {
+    const ladders = state.ladders.filter((l) => !same(l, to))
+    return { state: { ...next, ladders, carrying: true }, events: [...events, pickedUp] }
+  }
+
+  const climbedDown = (l: LeaningLadder) => same(l, to) && same(step(l, l.direction), from)
+  if (state.leaningLadders.some(climbedDown)) {
+    const leaningLadders = state.leaningLadders.filter((l) => !climbedDown(l))
+    return { state: { ...next, leaningLadders, carrying: true }, events: [...events, pickedUp] }
+  }
+
+  return { state: next, events }
+}
+
+const walk = (state: GameState, to: Point, toHeight: number, pre: GameEvent[] = []) => {
   const from = state.player
   const drop = standHeight(state, from) - toHeight
+  const event: GameEvent = drop > 0 ? { type: 'fell', from, to, drop } : { type: 'moved', from, to }
+  return arrive(state, to, event, pre)
+}
 
+// 한 층 높은 칸 앞에서 기대 놓인 사다리로 오르거나 들고 있던 사다리를 놓는다
+const climbOrPlaceLadder = (
+  state: GameState,
+  to: Point,
+  direction: Direction,
+): MoveResult | null => {
+  const from = state.player
+  const toFloor = floorAt(state, to)
+  if (hasBox(state, from) || toFloor !== standHeight(state, from) + 1) return null
+
+  if (state.leaningLadders.some((l) => same(l, from) && l.direction === direction)) {
+    return arrive(state, to, { type: 'climbed', from, to, via: 'ladder' })
+  }
+
+  if (!state.carrying) return null
+
+  const ladder = { ...from, direction }
   return {
-    state: { ...state, player: to, moves: state.moves + 1, cleared: same(to, state.stage.goal) },
-    events: [...pre, drop > 0 ? { type: 'fell', from, to, drop } : { type: 'moved', from, to }],
+    state: {
+      ...state,
+      carrying: false,
+      leaningLadders: [...state.leaningLadders, ladder],
+      moves: state.moves + 1,
+    },
+    events: [{ type: 'placed', ladder }],
   }
 }
 
@@ -68,7 +137,12 @@ const pushBox = (state: GameState, box: Point, direction: Direction): MoveResult
   const boxFloor = floorAt(state, box) ?? 0
 
   if (targetHeight === undefined || targetHeight > boxFloor) return null
-  if (hasBox(state, target) || same(target, state.stage.goal) || isClosedDoor(state, target))
+  if (
+    hasBox(state, target) ||
+    state.ladders.some((l) => same(l, target)) ||
+    same(target, state.stage.goal) ||
+    isClosedDoor(state, target)
+  )
     return null
 
   const others = state.boxes.filter((b) => !same(b, box))
@@ -97,7 +171,10 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
 
   if (toFloor === null || isClosedDoor(state, to)) return blocked
 
-  if (!hasBox(state, to)) return toFloor > fromHeight ? blocked : walk(state, to, toFloor)
+  if (!hasBox(state, to)) {
+    if (toFloor <= fromHeight) return walk(state, to, toFloor)
+    return climbOrPlaceLadder(state, to, direction) ?? blocked
+  }
 
   if (toFloor + 1 <= fromHeight) return walk(state, to, toFloor + 1)
   if (toFloor > fromHeight) return blocked
@@ -105,10 +182,7 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
   const pushed = pushBox(state, to, direction)
   if (pushed) return pushed
 
-  return {
-    state: { ...state, player: to, moves: state.moves + 1 },
-    events: [{ type: 'climbed', from, to }],
-  }
+  return arrive(state, to, { type: 'climbed', from, to, via: 'box' })
 }
 
 export const move = (state: GameState, direction: Direction): MoveResult => {

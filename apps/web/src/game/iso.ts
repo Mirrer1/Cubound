@@ -2,11 +2,17 @@ import type { Point } from './types'
 
 export const TILE = { width: 104, height: 52, layer: 30, lip: 16 }
 
-// 칸 윗면 중심의 화면 좌표
-export const toScreen = ({ x, y }: Point, h: number): Point => ({
-  x: ((x - y) * TILE.width) / 2,
-  y: ((x + y) * TILE.height) / 2 - h * TILE.layer,
+// 칸 단위 이동량의 화면 이동량
+export const isoDelta = (dx: number, dy: number): Point => ({
+  x: ((dx - dy) * TILE.width) / 2,
+  y: ((dx + dy) * TILE.height) / 2,
 })
+
+// 칸 윗면 중심의 화면 좌표
+export const toScreen = ({ x, y }: Point, h: number): Point => {
+  const { x: sx, y: sy } = isoDelta(x, y)
+  return { x: sx, y: sy - h * TILE.layer }
+}
 
 const points = (list: [number, number][]) => list.map(([x, y]) => `${x},${y}`).join(' ')
 

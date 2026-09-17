@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createState, isDoorOpen, move } from './rules'
-import type { Stage } from './types'
+import type { Direction, MoveResult, Stage } from './types'
 
 const FLAT_STAGE: Stage = {
   id: 'test',
@@ -183,7 +183,9 @@ describe('move 상자', () => {
       { x: 2, y: 1 },
     ])
     expect(state.player).toEqual({ x: 1, y: 1 })
-    expect(events).toEqual([{ type: 'climbed', from: { x: 0, y: 1 }, to: { x: 1, y: 1 } }])
+    expect(events).toEqual([
+      { type: 'climbed', from: { x: 0, y: 1 }, to: { x: 1, y: 1 }, via: 'box' },
+    ])
   })
 
   it('상자 뒤가 필드 밖이면 상자 위로 올라간다', () => {
@@ -373,5 +375,124 @@ describe('move 스위치와 문', () => {
     const { state } = move(createState(stage), 'right')
 
     expect(isDoorOpen(state, 'a')).toBe(true)
+  })
+})
+
+const LADDER_STAGE: Stage = {
+  id: 'test-ladder',
+  name: '사다리 테스트',
+  heights: [
+    [0, 0, 0, 1, 1],
+    [0, 0, 0, 1, 1],
+    [0, 0, 0, 1, 1],
+  ],
+  start: { x: 0, y: 1 },
+  goal: { x: 4, y: 0 },
+  entities: [{ type: 'ladder', x: 1, y: 1 }],
+}
+
+const play = (stage: Stage, directions: Direction[]) =>
+  directions.reduce<MoveResult>((result, d) => move(result.state, d), {
+    state: createState(stage),
+    events: [],
+  })
+
+describe('move 사다리', () => {
+  it('바닥의 사다리 칸으로 이동하면 사다리를 줍는다', () => {
+    const { state, events } = move(createState(LADDER_STAGE), 'right')
+
+    expect(state.carrying).toBe(true)
+    expect(state.ladders).toEqual([])
+    expect(state.moves).toBe(1)
+    expect(events).toEqual([
+      { type: 'moved', from: { x: 0, y: 1 }, to: { x: 1, y: 1 } },
+      { type: 'pickedUp', at: { x: 1, y: 1 } },
+    ])
+  })
+
+  it('사다리를 들고 있으면 다른 사다리는 줍지 않고 지나간다', () => {
+    const stage: Stage = {
+      ...LADDER_STAGE,
+      entities: [...LADDER_STAGE.entities, { type: 'ladder', x: 2, y: 1 }],
+    }
+    const { state, events } = play(stage, ['right', 'right'])
+
+    expect(state.ladders).toEqual([{ x: 2, y: 1 }])
+    expect(events).toEqual([{ type: 'moved', from: { x: 1, y: 1 }, to: { x: 2, y: 1 } }])
+  })
+
+  it('들고 있을 때 한 층 높은 칸 쪽으로 가면 제자리에서 사다리를 기대 놓는다', () => {
+    const { state, events } = play(LADDER_STAGE, ['right', 'right', 'right'])
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(state.carrying).toBe(false)
+    expect(state.moves).toBe(3)
+    expect(state.leaningLadders).toEqual([{ x: 2, y: 1, direction: 'right' }])
+    expect(events).toEqual([{ type: 'placed', ladder: { x: 2, y: 1, direction: 'right' } }])
+  })
+
+  it('기대 놓은 사다리 쪽으로 한 번 더 가면 올라간다', () => {
+    const { state, events } = play(LADDER_STAGE, ['right', 'right', 'right', 'right'])
+
+    expect(state.player).toEqual({ x: 3, y: 1 })
+    expect(state.leaningLadders).toEqual([{ x: 2, y: 1, direction: 'right' }])
+    expect(events).toEqual([
+      { type: 'climbed', from: { x: 2, y: 1 }, to: { x: 3, y: 1 }, via: 'ladder' },
+    ])
+  })
+
+  it('사다리를 타고 내려오면 사다리를 다시 든다', () => {
+    const { state, events } = play(LADDER_STAGE, ['right', 'right', 'right', 'right', 'left'])
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(state.carrying).toBe(true)
+    expect(state.leaningLadders).toEqual([])
+    expect(events).toEqual([
+      { type: 'fell', from: { x: 3, y: 1 }, to: { x: 2, y: 1 }, drop: 1 },
+      { type: 'pickedUp', at: { x: 2, y: 1 } },
+    ])
+  })
+
+  it('사다리가 없는 곳으로 내려오면 사다리는 제자리에 남는다', () => {
+    const { state } = play(LADDER_STAGE, ['right', 'right', 'right', 'right', 'up', 'left'])
+
+    expect(state.player).toEqual({ x: 2, y: 0 })
+    expect(state.carrying).toBe(false)
+    expect(state.leaningLadders).toEqual([{ x: 2, y: 1, direction: 'right' }])
+  })
+
+  it('두 층 이상 높은 칸에는 사다리를 놓지 않는다', () => {
+    const stage: Stage = {
+      ...LADDER_STAGE,
+      heights: [
+        [0, 0, 0, 2, 2],
+        [0, 0, 0, 2, 2],
+        [0, 0, 0, 2, 2],
+      ],
+    }
+    const { state, events } = play(stage, ['right', 'right', 'right'])
+
+    expect(state.carrying).toBe(true)
+    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+  })
+
+  it('사다리가 없으면 한 층 높은 칸으로 올라가지 못한다', () => {
+    const stage: Stage = { ...LADDER_STAGE, entities: [] }
+    const { events } = play(stage, ['right', 'right', 'right'])
+
+    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+  })
+
+  it('상자를 바닥의 사다리 칸으로 밀지 못해 상자 위로 올라간다', () => {
+    const stage: Stage = {
+      ...LADDER_STAGE,
+      entities: [
+        { type: 'box', x: 1, y: 1 },
+        { type: 'ladder', x: 2, y: 1 },
+      ],
+    }
+    const { events } = move(createState(stage), 'right')
+
+    expect(events[0].type).toBe('climbed')
   })
 })

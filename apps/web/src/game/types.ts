@@ -6,7 +6,10 @@ export interface Point {
 }
 
 export type Entity = (
-  { type: 'box' } | { type: 'switch'; target: string } | { type: 'door'; id: string }
+  | { type: 'box' }
+  | { type: 'switch'; target: string }
+  | { type: 'door'; id: string }
+  | { type: 'ladder' }
 ) &
   Point
 
@@ -19,10 +22,16 @@ export interface Stage {
   entities: Entity[]
 }
 
+// (x, y) 칸에서 direction 쪽 높은 칸에 기대 놓인 사다리
+export type LeaningLadder = Point & { direction: Direction }
+
 export interface GameState {
   stage: Stage
   heights: number[][] // 상자로 메운 칸이 반영된 높이
   boxes: Point[]
+  ladders: Point[] // 바닥에 놓인 사다리
+  leaningLadders: LeaningLadder[]
+  carrying: boolean
   player: Point
   moves: number
   cleared: boolean
@@ -31,8 +40,10 @@ export interface GameState {
 export type GameEvent =
   | { type: 'moved'; from: Point; to: Point }
   | { type: 'fell'; from: Point; to: Point; drop: number } // drop은 층 수
-  | { type: 'climbed'; from: Point; to: Point }
+  | { type: 'climbed'; from: Point; to: Point; via: 'box' | 'ladder' }
   | { type: 'pushed'; from: Point; to: Point; result: 'slid' | 'fell' | 'filled' }
+  | { type: 'pickedUp'; at: Point }
+  | { type: 'placed'; ladder: LeaningLadder }
   | { type: 'door'; id: string; open: boolean }
   | { type: 'blocked'; direction: Direction }
   | { type: 'cleared' }

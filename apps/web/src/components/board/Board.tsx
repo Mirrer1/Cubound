@@ -1,4 +1,5 @@
 import BoardBlock from './BoardBlock'
+import BoardLadder from './BoardLadder'
 import { darken, shade, tint } from './shade'
 import { TILE, blockFaces, toScreen } from '@/game/iso'
 import { isDoorOpen } from '@/game/rules'
@@ -12,7 +13,7 @@ interface BoardProps {
 }
 
 const Board = ({ game }: BoardProps) => {
-  const { stage, heights, boxes, player } = game
+  const { stage, heights, boxes, ladders, leaningLadders, player } = game
   const at = (list: Point[], x: number, y: number) => list.some((p) => p.x === x && p.y === y)
 
   const cells = heights
@@ -44,6 +45,7 @@ const Board = ({ game }: BoardProps) => {
         const floorTop =
           (cell.x + cell.y) % 2 === 1 ? darken('floor-top', 2.8) : 'var(--color-floor-top)'
         const boxY = cell.sy - TILE.layer
+        const playerY = cell.sy - TILE.layer * (hasBox ? 2 : 1)
         const entity = stage.entities.find((e) => e.x === cell.x && e.y === cell.y)
         const switchPressed = hasBox || hasPlayer
         const switchDepth = switchPressed ? 4 : 11
@@ -125,16 +127,25 @@ const Board = ({ game }: BoardProps) => {
                 />
               </>
             )}
+            {at(ladders, cell.x, cell.y) && <BoardLadder x={cell.sx} y={cell.sy} />}
+            {leaningLadders
+              .filter((l) => l.x === cell.x && l.y === cell.y)
+              .map((l) => (
+                <BoardLadder key={l.direction} x={cell.sx} y={cell.sy} direction={l.direction} />
+              ))}
             {hasPlayer && (
-              <BoardBlock
-                x={cell.sx}
-                y={cell.sy - TILE.layer * (hasBox ? 2 : 1)}
-                width={CUBE_WIDTH}
-                depth={TILE.layer}
-                top={shade('player', 'top')}
-                left={shade('player', 'left')}
-                right={shade('player', 'right')}
-              />
+              <>
+                <BoardBlock
+                  x={cell.sx}
+                  y={playerY}
+                  width={CUBE_WIDTH}
+                  depth={TILE.layer}
+                  top={shade('player', 'top')}
+                  left={shade('player', 'left')}
+                  right={shade('player', 'right')}
+                />
+                {game.carrying && <BoardLadder x={cell.sx} y={playerY - 2} scale={0.45} />}
+              </>
             )}
           </g>
         )
