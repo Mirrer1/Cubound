@@ -4,6 +4,7 @@ import { createState, isDoorOpen, move } from './rules'
 import type { Direction, MoveResult, Stage } from './types'
 
 const FLAT_STAGE: Stage = {
+  version: 1,
   id: 'test',
   name: '테스트',
   heights: [
@@ -141,6 +142,7 @@ describe('move', () => {
 })
 
 const BOX_STAGE: Stage = {
+  version: 1,
   id: 'test-box',
   name: '상자 테스트',
   heights: [
@@ -282,6 +284,7 @@ describe('move 상자', () => {
 })
 
 const SWITCH_STAGE: Stage = {
+  version: 1,
   id: 'test-switch',
   name: '스위치 테스트',
   heights: [
@@ -379,6 +382,7 @@ describe('move 스위치와 문', () => {
 })
 
 const LADDER_STAGE: Stage = {
+  version: 1,
   id: 'test-ladder',
   name: '사다리 테스트',
   heights: [

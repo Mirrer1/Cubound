@@ -14,12 +14,22 @@ export type Entity = (
   Point
 
 export interface Stage {
+  version: 1
   id: string
   name: string
   heights: number[][] // 행(y) 먼저, -1은 바닥 없음
   start: Point
   goal: Point
   entities: Entity[]
+  best?: number // 풀이 검사기가 구한 최소 이동 수
+  zones?: Zone[] // 카메라 구역, 없으면 맵 전체
+}
+
+export interface Zone {
+  x: number
+  y: number
+  w: number
+  h: number
 }
 
 // (x, y) 칸에서 direction 쪽 높은 칸에 기대 놓인 사다리

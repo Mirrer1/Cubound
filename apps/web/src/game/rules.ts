@@ -48,7 +48,7 @@ const isClosedDoor = (state: GameState, p: Point) =>
   doors(state.stage).some((door) => same(door, p) && !isDoorOpen(state, door.id))
 
 // 상자 위에 서 있으면 한 층 높다
-const standHeight = (state: GameState, p: Point) =>
+export const standHeight = (state: GameState, p: Point) =>
   (floorAt(state, p) ?? 0) + (hasBox(state, p) ? 1 : 0)
 
 export const createState = (stage: Stage): GameState => ({
