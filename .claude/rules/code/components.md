@@ -28,9 +28,10 @@ return <>{isCleared ? <ClearScreen /> : <Board />}</>
 
 - 컴포넌트는 상태를 그리기만 한다. 이동 가능 여부, 상자 밀기, 클리어 판정 같은 규칙은 `game/`의 함수를 호출해서 얻는다
 - 아이소메트릭 좌표 계산은 `game/iso.ts`를 쓰고 컴포넌트 안에서 공식을 다시 쓰지 않는다
-- 색은 Tailwind 토큰(`fill-player`, `fill-tool`)으로 쓴다. 16진수 색을 직접 쓰지 않는다
+- 색은 `index.css`의 토큰으로 쓴다. SVG는 `var(--color-...)`와 `components/board/shade.ts`의 `shade`, `darken`, `tint`로 칠하고 16진수 색을 직접 쓰지 않는다
 - 큐브와 도구의 세 면 색은 기본색(토큰이나 스킨 데이터)에서 `docs/ARCHITECTURE.md` "디자인 기준값"의 명암 공식으로 계산한다
-- 연출은 `game/`이 돌려준 이벤트(`moved`, `blocked`, `cleared` 등)를 보고 Motion으로 처리한다
+- 연출은 `game/`이 돌려준 이벤트를 보고 `components/board/frame.ts`의 순수 함수로 그 순간의 위치를 계산한다. 진행도는 `useBoardAnimation`이 Motion으로 재생한다
+- 연출 중에도 바뀌지 않는 칸은 `BoardCell`(memo)이 다시 그리지 않게 props를 원시값으로 넘긴다
 
 ## 모션
 
@@ -40,11 +41,11 @@ return <>{isCleared ? <ClearScreen /> : <Board />}</>
 - 톤: 짧고 절제된 모션. 과장된 튕김과 흔들림은 쓰지 않는다
 - 나타남: 투명도 0에서 1로 페이드하며 아주 살짝 떠오르거나(몇 px) 커진다(0.98에서 1). 튀어나오지 않는다
 - 사라짐: 나타남의 반대로 조용히 페이드한다. 나타남보다 조금 빠르게 한다
-- 나타남과 사라짐 적용 대상: 모달, 팝업, 클리어 카드, 보스 안내, 가이드 말풍선, 토스트 문구, 메뉴
+- 나타남과 사라짐 적용 대상: 모달, 팝업, 클리어 카드, 스텝 가이드, 토스트 문구, 메뉴
 - 모달 배경: 뒤 화면을 서서히 흐리고 어둡게 한다. 닫힐 때도 서서히 돌아온다
 - 여러 요소가 함께 나올 때(스테이지 카드, 별): 짧은 간격으로 차례대로 나타난다
 - 게임 연출 속도와 방식은 `docs/ARCHITECTURE.md` "애니메이션"이 기준이다
-- 애니메이션은 Motion으로 하고, hover처럼 단순한 전환은 Tailwind `transition`으로 한다
+- 애니메이션은 Motion으로 하고, hover와 누름 같은 단순한 전환은 `transition-soft` 유틸리티로 한다. Motion이 transform을 움직이는 요소에는 `transition-soft-colors`를 쓴다. 전환 시간과 곡선을 요소마다 따로 정하지 않는다
 - `prefers-reduced-motion`이 켜져 있으면 이동 거리와 시간을 줄인다
 
 ## useEffect
@@ -57,6 +58,21 @@ return <>{isCleared ? <ClearScreen /> : <Board />}</>
 - 기본은 쓰지 않는다. 성능 문제를 측정한 뒤 적용한다
 - `useMemo`는 무거운 계산에만 (예: 풀이 검사기 결과)
 - `useCallback`은 `memo`된 자식에 넘기거나 effect 의존성으로 쓰는 함수일 때만
+
+## 호버 색
+
+호버 색은 요소 종류마다 하나로 통일한다. 새 요소도 이 규칙을 따르고 그림자나 밝기 필터로 호버를 표현하지 않는다. 스크롤바는 브라우저가 전환을 지원하지 않아 호버 색 변화를 두지 않는다.
+
+| 요소                                            | 호버                   |
+| ----------------------------------------------- | ---------------------- |
+| 밝은 면 (일반 버튼, 아이콘 버튼, 스테이지 카드) | 배경을 `bg-hover`로    |
+| 진한 면 (주요 버튼, 보스 카드)                  | 배경을 `bg-ink/90`으로 |
+
+## 스크롤
+
+- 페이지 바깥은 스크롤하지 않는다. 화면은 `h-dvh`에 맞추고 `html`, `body`는 `overflow: hidden`이다
+- 넘칠 수 있는 안쪽 영역에만 `scroll-area` 유틸리티를 쓴다. 얇은 모노톤 스크롤바이고 `scrollbar-gutter: stable both-edges`로 자리를 미리 비워 스크롤바가 생겨도 레이아웃이 밀리지 않는다
+- `overflow-y-auto`를 직접 쓰지 않는다
 
 ## 클릭 요소 커서
 

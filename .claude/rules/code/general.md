@@ -47,7 +47,7 @@
 - 컴포넌트 `PascalCase.tsx`, 훅 `useXxx.ts`, 유틸과 타입과 로직 `camelCase.ts`
 - 스테이지 데이터는 `world-1/01.json`처럼 월드 폴더와 두 자리 번호
 - 폴더는 한 단어면 소문자, 합성 단어면 `camelCase`
-- 기능에 종속된 컴포넌트는 스코프 접두어를 붙인다 (필드 `BoardTile`, 스테이지 선택 `StageCard`). 공용 컴포넌트는 접두어 없음
+- 기능에 종속된 컴포넌트는 스코프 접두어를 붙인다 (필드 `BoardCell`, 스테이지 선택 `StageCard`). 공용 컴포넌트는 접두어 없음
 
 ## 위치
 
