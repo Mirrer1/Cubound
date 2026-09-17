@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+  - packages/*
+
+# 여러 패키지가 함께 쓰는 의존성 버전. 각 package.json에서 "catalog:"로 참조한다
+catalog:
+  typescript: ~6.0.3
+  vitest: ^4.1.11
+  '@types/node': ^24.13.5
