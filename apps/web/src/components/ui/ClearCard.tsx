@@ -18,14 +18,14 @@ const ClearCard = ({ stageNumber, moves, stars, onNext, onRetry, onSelect }: Cle
 
   return (
     <motion.div
-      className="absolute inset-0 flex items-end justify-center bg-base-bg/40 backdrop-blur-[2px] sm:items-center"
+      className="absolute inset-0 flex items-end justify-center bg-base-bg/40 backdrop-blur-[2px] short:items-center short:justify-end short:p-4 wide:items-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.2 } }}
       transition={{ duration: 0.35, delay: 1.3 }}
     >
       <motion.div
-        className="flex w-full flex-col items-center gap-5 rounded-t-[22px] border border-line bg-base-bg p-7 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.18)] sm:w-[440px] sm:rounded-[22px] sm:p-9"
+        className="flex w-full flex-col items-center gap-5 rounded-t-[22px] border border-line bg-base-bg p-7 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.18)] short:w-[320px] short:gap-3 short:rounded-[22px] short:p-5 wide:w-[440px] wide:rounded-[22px] wide:p-9"
         initial={{ y: 12, scale: 0.98 }}
         animate={{ y: 0, scale: 1 }}
         transition={{ duration: 0.4, delay: 1.3, ease: 'easeOut' }}
@@ -35,7 +35,7 @@ const ClearCard = ({ stageNumber, moves, stars, onNext, onRetry, onSelect }: Cle
         </span>
         <Stars count={stars} size={26} />
         <span className="flex items-baseline gap-2">
-          <span className="text-5xl font-light tabular-nums">{moves}</span>
+          <span className="text-5xl font-light tabular-nums short:text-4xl">{moves}</span>
           <span className="font-mono text-[11px] tracking-[0.22em] text-mute">MOVES</span>
         </span>
         <div className="flex w-full flex-col gap-3">

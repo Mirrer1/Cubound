@@ -10,7 +10,7 @@ const TitleScreen = () => {
   const t = useText()
 
   return (
-    <main className="flex h-dvh p-4 sm:p-8">
+    <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
       <section className="relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[22px] border border-line bg-base-bg">
         <TitleScene
           opacity={0.4}

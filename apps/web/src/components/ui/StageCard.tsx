@@ -38,15 +38,19 @@ const StageCard = ({ number, state, stars, boss, bossHint, index, onSelect }: St
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.04 }}
-      className={`flex cursor-pointer flex-col justify-between rounded-[18px] border p-4 text-left transition-soft-colors disabled:cursor-default sm:aspect-square sm:p-5 ${tone} ${boss ? 'col-span-2 sm:col-span-1' : 'aspect-[4/3]'} ${locked ? '' : boss ? 'hover:bg-ink/90' : 'hover:bg-hover'}`}
+      className={`@container flex cursor-pointer flex-col justify-between rounded-[18px] border p-4 text-left transition-soft-colors disabled:cursor-default sm:aspect-square sm:p-5 ${tone} ${boss ? 'col-span-2 sm:col-span-1' : 'aspect-[3/2]'} ${locked ? '' : boss ? 'hover:bg-ink/90' : 'hover:bg-hover'}`}
     >
-      <span className="flex justify-between font-mono text-[11px] tracking-[0.2em]">
+      <span className="flex justify-between gap-2 font-mono text-[11px] tracking-[0.2em]">
         {boss ? (
           <span className="text-tool">BOSS</span>
         ) : (
           <span className={locked ? '' : 'text-mute'}>{LABELS[state]}</span>
         )}
-        {boss && <span className={locked ? 'text-mute' : 'text-faint'}>{LABELS[state]}</span>}
+        {boss && (
+          <span className={`@max-[6.25rem]:hidden ${locked ? 'text-mute' : 'text-faint'}`}>
+            {LABELS[state]}
+          </span>
+        )}
       </span>
       <span className="flex items-center justify-center gap-4 sm:flex-col">
         <span className={`text-4xl font-light sm:text-5xl ${locked && !boss ? 'text-faint' : ''}`}>

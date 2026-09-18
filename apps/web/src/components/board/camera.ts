@@ -4,7 +4,8 @@ import type { Zone } from '@/game/types'
 
 const HEADROOM = TILE.layer // 칸 위에 선 큐브와 든 사다리 몫으로 위아래에 같이 두는 여유
 const PAD = 0.04 // 필드 한 변에서 여백이 차지하는 비율
-const MAX_TILE = 145 // 화면에 그려지는 칸 폭의 상한 px. 작은 구역이 지나치게 확대되는 것을 막는다
+const BASE_MAX_TILE = 145 // 작은 화면에서 쓰는 칸 폭 상한 px
+const VIEW_PER_TILE = 6 // 상한이 화면 짧은 변의 몇 분의 1인지
 
 export type ViewBox = [number, number, number, number]
 
@@ -19,6 +20,10 @@ export interface ViewSize {
   width: number
   height: number
 }
+
+// 작은 구역이 지나치게 확대되는 것을 막는 칸 폭 상한. 큰 화면에서는 함께 커진다
+export const maxTile = (view: ViewSize) =>
+  Math.max(BASE_MAX_TILE, Math.min(view.width, view.height) / VIEW_PER_TILE)
 
 // 구역 칸이 그려지는 범위, 구역이 없으면 맵 전체
 export const zoneBox = (heights: number[][], zone?: Zone): Box => {
@@ -49,7 +54,7 @@ export const viewBoxFor = (box: Box, view: ViewSize): ViewBox => {
   const scale = Math.min(
     (view.width * (1 - PAD * 2)) / width,
     (view.height * (1 - PAD * 2)) / height,
-    MAX_TILE / TILE.width,
+    maxTile(view) / TILE.width,
   )
   const vw = view.width / scale
   const vh = view.height / scale

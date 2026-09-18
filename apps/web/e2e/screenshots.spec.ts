@@ -116,6 +116,26 @@ const playStage = async (page: Page, id: keyof typeof SOLUTIONS, prefix: string)
   await shot(page, `${prefix}-clear-card`)
 }
 
+// 배치가 갈라지는 화면 크기
+const SIZES = [
+  { name: '320x568', width: 320, height: 568, mobile: true },
+  { name: '844x390', width: 844, height: 390, mobile: true },
+  { name: '768x1024', width: 768, height: 1024, mobile: true },
+  { name: '2560x1440', width: 2560, height: 1440, mobile: false },
+  { name: '3440x1440', width: 3440, height: 1440, mobile: false },
+]
+
+// 1~4를 클리어한 진행. 5까지 열리고 가이드가 자동으로 뜨지 않는다
+const OPENED = {
+  version: 1,
+  stages: {
+    '1-1': { bestMoves: 8, stars: 3 },
+    '1-2': { bestMoves: 13, stars: 3 },
+    '1-3': { bestMoves: 14, stars: 3 },
+    '1-4': { bestMoves: 14, stars: 3 },
+  },
+}
+
 test('@shot 데스크톱 화면', async ({ page }) => {
   test.setTimeout(300_000)
   await page.goto('/')
@@ -259,3 +279,37 @@ test.describe('영어', () => {
     })
   })
 })
+
+for (const size of SIZES) {
+  test.describe(size.name, () => {
+    test.use({
+      viewport: { width: size.width, height: size.height },
+      hasTouch: size.mobile,
+      isMobile: size.mobile,
+    })
+
+    test(`@shot ${size.name} 화면`, async ({ page }) => {
+      test.setTimeout(120_000)
+      await page.addInitScript((progress) => {
+        localStorage.setItem('cubound:progress', JSON.stringify(progress))
+      }, OPENED)
+      await page.goto('/')
+
+      await page.getByRole('button', { name: LABELS.ko.start }).click()
+      await shot(page, `size-${size.name}-select`)
+
+      await page.getByRole('button', { name: /01/ }).click()
+      await page.getByText('STAGE 01').waitFor()
+      await shot(page, `size-${size.name}-play`)
+
+      await page.getByRole('button', { name: /^\?/ }).click()
+      await page.getByText('GUIDE 1 / 2').waitFor()
+      await shot(page, `size-${size.name}-guide`)
+
+      await page.getByRole('button', { name: LABELS.ko.skip }).click()
+      await solve(page, SOLUTIONS['1-1'])
+      await page.waitForTimeout(1600)
+      await shot(page, `size-${size.name}-clear-card`)
+    })
+  })
+}

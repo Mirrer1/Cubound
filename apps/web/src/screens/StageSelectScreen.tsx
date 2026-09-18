@@ -35,25 +35,25 @@ const StageSelectScreen = () => {
   })
 
   return (
-    <main className="flex h-dvh p-4 sm:p-8">
+    <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
       <section className="scroll-area flex min-h-0 flex-1 flex-col gap-6 rounded-[22px] border border-line bg-base-bg p-5 sm:gap-8 sm:p-9">
-        <header className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <Button variant="icon" onClick={() => goTo('title')} aria-label={t('select.back')}>
-              ←
-            </Button>
-            <div className="flex flex-col gap-1">
-              <span className="font-mono text-[11px] tracking-[0.22em] text-mute">
-                WORLD {WORLD}
+        <header className="flex items-start gap-4">
+          <Button variant="icon" onClick={() => goTo('title')} aria-label={t('select.back')}>
+            ←
+          </Button>
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="flex items-baseline justify-between gap-3 font-mono text-mute">
+              <span className="text-[11px] tracking-[0.22em]">WORLD {WORLD}</span>
+              <span className="text-xs tracking-[0.15em] whitespace-nowrap">
+                {totalStars(progress, ids)} / {STAGES_PER_WORLD * 3} ◆
               </span>
-              <span className="text-2xl tracking-tight sm:text-3xl">{t(worldTextKey(WORLD))}</span>
-            </div>
+            </span>
+            <span className="text-2xl tracking-tight break-keep sm:text-3xl">
+              {t(worldTextKey(WORLD))}
+            </span>
           </div>
-          <span className="flex items-center gap-1.5 pt-1 font-mono text-xs tracking-[0.15em] text-mute">
-            {totalStars(progress, ids)} / {STAGES_PER_WORLD * 3} ◆
-          </span>
         </header>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 sm:gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(5,minmax(0,240px))] sm:justify-center sm:gap-4">
           {cards.map((card, i) => (
             <StageCard key={card.id} {...card} index={i} onSelect={() => play(card.id)} />
           ))}

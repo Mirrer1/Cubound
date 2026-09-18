@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+/* 폰 가로처럼 높이가 낮은 화면 */
+@custom-variant short (@media (height < 500px));
+/* 높이가 넉넉한 넓은 화면. short와 겹치지 않아 적용 순서에 기대지 않는다 */
+@custom-variant wide (@media (width >= 40rem) and (height >= 500px));
+
 @theme static {
   --ease-soft: cubic-bezier(0.37, 0, 0.63, 1);
   --font-sans: 'Jost', ui-sans-serif, system-ui, sans-serif;
@@ -35,6 +40,21 @@ body {
   margin: 0;
   background: var(--color-page-bg);
   color: var(--color-ink);
+}
+
+/* 화면 가장자리 여백. 노치와 홈 바가 있는 기기는 안전 영역만큼 띄운다 */
+@utility screen-pad {
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
+
+  @media (width >= 40rem) and (height >= 500px) {
+    padding-top: max(2rem, env(safe-area-inset-top));
+    padding-right: max(2rem, env(safe-area-inset-right));
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+    padding-left: max(2rem, env(safe-area-inset-left));
+  }
 }
 
 /* 호버와 누름 전환. 색은 천천히, 누름 크기는 빠르게 */

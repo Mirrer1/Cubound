@@ -39,7 +39,7 @@ const LanguageMenu = () => {
     <div ref={ref} className="relative">
       <button
         type="button"
-        className="cursor-pointer rounded-[13px] border border-line-strong px-3 py-1.5 text-sm text-mute transition-soft hover:bg-hover"
+        className="relative cursor-pointer rounded-[13px] border border-line-strong px-3 py-1.5 text-sm text-mute transition-soft after:absolute after:-inset-x-1 after:-inset-y-2 hover:bg-hover"
         onClick={handleToggle}
       >
         {current?.label}
@@ -47,7 +47,7 @@ const LanguageMenu = () => {
       <AnimatePresence>
         {open && (
           <motion.ul
-            className="absolute top-full right-0 mt-2 flex min-w-32 flex-col rounded-[13px] border border-line bg-base-bg p-1 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.18)]"
+            className="absolute top-full right-0 mt-2 flex min-w-32 flex-col gap-2 rounded-[13px] border border-line bg-base-bg p-1 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.18)]"
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -2, transition: { duration: 0.15 } }}
@@ -57,7 +57,7 @@ const LanguageMenu = () => {
               <li key={item.code}>
                 <button
                   type="button"
-                  className={`w-full cursor-pointer rounded-[9px] px-3 py-2 text-left text-sm transition-soft hover:bg-hover ${item.code === language ? '' : 'text-mute'}`}
+                  className={`relative w-full cursor-pointer rounded-[9px] px-3 py-2 text-left text-sm transition-soft after:absolute after:inset-x-0 after:-inset-y-1 hover:bg-hover ${item.code === language ? '' : 'text-mute'}`}
                   onClick={() => handleSelect(item.code)}
                 >
                   {item.label}

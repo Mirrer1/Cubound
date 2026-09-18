@@ -84,27 +84,30 @@ const PlayScreen = () => {
   }, [move, restart])
 
   return (
-    <main className="flex h-dvh p-4 sm:p-8">
+    <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
       {game && (
         <section
           ref={sectionRef}
           className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-line bg-base-bg"
         >
-          <header className="flex items-start justify-between gap-6 px-6 pt-6 sm:px-9 sm:pt-8">
-            <div className="flex flex-col gap-1.5">
+          <header className="flex items-start justify-between gap-6 px-6 pt-6 short:items-center short:pt-3 wide:px-9 wide:pt-8">
+            <div className="flex flex-col gap-1.5 short:flex-row short:items-baseline short:gap-3">
               <span className="font-mono text-[11px] tracking-[0.22em] text-mute">
                 STAGE {String(stageNumber).padStart(2, '0')}
               </span>
-              <span className="text-2xl tracking-tight sm:text-[27px]">
+              <span className="text-2xl tracking-tight short:text-xl wide:text-[27px]">
                 {t(stageTextKey(game.stage.id))}
               </span>
             </div>
-            <div className="flex items-center gap-5 sm:gap-7">
-              <div data-guide="moves" className="flex flex-col items-end gap-0.5">
+            <div className="flex items-center gap-5 wide:gap-7">
+              <div
+                data-guide="moves"
+                className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"
+              >
                 <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
                   {left === null ? 'MOVES' : 'LEFT'}
                 </span>
-                <span className="text-[32px] leading-none font-light tabular-nums">
+                <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl">
                   {left ?? game.moves}
                 </span>
               </div>
@@ -130,7 +133,7 @@ const PlayScreen = () => {
             </div>
           </header>
           <div
-            className="min-h-0 flex-1 touch-none p-2 select-none sm:p-6"
+            className="min-h-0 flex-1 touch-none p-2 select-none wide:p-6"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerEnd}

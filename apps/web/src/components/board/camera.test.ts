@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { type Box, type ViewBox, type ViewSize, viewBoxFor, zoneBox } from './camera'
+import { type Box, type ViewBox, type ViewSize, maxTile, viewBoxFor, zoneBox } from './camera'
 import { rollingCubeFaces } from './cube'
 import { TILE } from '@/game/iso'
 import type { Direction } from '@/game/types'
@@ -9,6 +9,8 @@ const VIEWS = [
   { width: 1806, height: 876 }, // 1920x1080 데스크톱
   { width: 1326, height: 596 }, // 1440x800 노트북
   { width: 324, height: 612 }, // 390x844 폰
+  { width: 778, height: 234 }, // 844x390 폰 가로
+  { width: 1856, height: 1284 }, // 3440x1440, 판 최대 폭이 걸린 크기
   { width: 600, height: 600 },
 ]
 
@@ -82,6 +84,19 @@ describe('zoneBox', () => {
   })
 })
 
+describe('maxTile', () => {
+  it('폰과 노트북에서는 145 그대로다', () => {
+    expect(maxTile({ width: 356, height: 644 })).toBe(145)
+    expect(maxTile({ width: 778, height: 234 })).toBe(145)
+    expect(maxTile({ width: 1374, height: 744 })).toBe(145)
+  })
+
+  it('큰 화면에서는 짧은 변에 비례해 커진다', () => {
+    expect(maxTile({ width: 2494, height: 1284 })).toBe(214)
+    expect(maxTile({ width: 3374, height: 1284 })).toBe(214)
+  })
+})
+
 describe('viewBoxFor', () => {
   it('구역을 화면 한가운데에 놓는다', () => {
     const box = zoneBox(flat(6, 4, 1), { x: 0, y: 0, w: 6, h: 4 })
@@ -145,14 +160,32 @@ describe('viewBoxFor', () => {
     }
   })
 
-  it('작은 구역은 화면이 커져도 칸이 더 커지지 않는다', () => {
+  it('작은 구역은 화면이 옆으로만 넓어지면 칸이 더 커지지 않는다', () => {
     const small = zoneBox(flat(3, 3, 1))
-    const wide = viewBoxFor(small, { width: 1806, height: 876 })
-    const wider = viewBoxFor(small, { width: 3612, height: 1752 })
+    const wide = { width: 1806, height: 876 }
+    const wider = { width: 3612, height: 876 }
 
-    expect(tilePx(wide, { width: 1806, height: 876 })).toBeCloseTo(
-      tilePx(wider, { width: 3612, height: 1752 }),
+    expect(tilePx(viewBoxFor(small, wide), wide)).toBeCloseTo(
+      tilePx(viewBoxFor(small, wider), wider),
     )
+  })
+
+  it('작은 구역도 큰 화면에서는 올라간 상한만큼 커진다', () => {
+    const small = zoneBox(flat(3, 3, 1))
+    const laptop = { width: 1374, height: 744 }
+    const monitor = { width: 2494, height: 1284 }
+
+    expect(tilePx(viewBoxFor(small, laptop), laptop)).toBeCloseTo(145)
+    expect(tilePx(viewBoxFor(small, monitor), monitor)).toBeCloseTo(214)
+  })
+
+  it('판 최대 폭이 걸린 큰 화면에서도 구역 전체가 들어온다', () => {
+    const view = { width: 1856, height: 1284 }
+    const big = zoneBox(flat(10, 9, 2))
+    const small = zoneBox(flat(3, 3, 1))
+
+    expect(inside(viewBoxFor(big, view), big)).toBe(true)
+    expect(inside(viewBoxFor(small, view), small)).toBe(true)
   })
 
   it('상한이 걸려도 구역 전체가 들어온다', () => {
