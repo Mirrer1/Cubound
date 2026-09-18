@@ -85,6 +85,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         game.stage.id,
         result.state.moves,
         game.stage.best ?? result.state.moves,
+        game.stage.rules?.moveLimit,
       )
       localProgressStorage.save(cleared)
       return { ...next, progress: cleared }

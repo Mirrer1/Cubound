@@ -120,7 +120,7 @@ src/
     { "type": "ladder", "x": 3, "y": 4 }
   ],
   "best": 14,
-  "rules": { "moveLimit": null },
+  "rules": { "moveLimit": 17 },
   "guides": [
     { "id": "box", "target": { "x": 1, "y": 1 } },
     { "id": "restart", "target": "restart" }
@@ -133,7 +133,7 @@ src/
 - `name`: 선택 필드다. 공식 스테이지 이름은 사전의 `stage.<id>` 문구로 두고 JSON에 넣지 않는다. 나중에 유저가 만든 맵이 자기가 지은 이름 하나를 이 자리에 넣는다
 - `version`: 스테이지 형식 버전. 지금은 1이다. `game/validate.ts`의 `validateStage`가 형식을 검사하고, 공식 스테이지와 나중에 링크로 받은 유저 맵을 같은 기준으로 거른다
 - `best`: 최소 이동 수. `stages.test.ts`가 풀이 검사기 결과와 같은지 검사한다
-- `rules.moveLimit`: 보스 제약. 월드가 늘면 제약 종류를 여기에 추가한다. **보스 구현 때 추가 예정**
+- `rules.moveLimit`: 보스 이동 제한. 선택 필드이고 없으면 제한 없음이다. 검사는 양의 정수와 `best` 이상이다. 막는 곳은 `game/rules.ts`의 `move`라서 화면과 풀이 검사기, 나중의 서버 검증이 같은 결과를 낸다. 남은 이동이 0이면 움직이지 않고 막힘 이벤트를 돌려준다. 제한이 있는 스테이지는 이 값이 ★★ 기준도 된다. 월드가 늘면 제약 종류를 `rules` 안에 추가한다
 - `guides`: 스텝 가이드 단계 목록. 단계마다 비출 대상(칸 좌표나 `restart`, `moves` 같은 화면 요소 이름)과 문구 `id`를 둔다. 문구는 스테이지 JSON이 아니라 사전의 `guide.<id>`에 둔다 (언어와 기기마다 달라서). 클리어한 스테이지면 자동으로 띄우지 않는다. 형식 버전은 그대로 1이고 선택 필드다. 검사는 단계 수 1~3, 칸 좌표는 맵 안, 화면 요소 이름은 `restart`, `moves`만 허용한다. 모든 가이드 `id`가 사전에 있는지 `stages.test.ts`가 확인한다
 - `zones`: 카메라 구역 사각형 목록. 모든 칸은 하나 이상의 구역에 속한다. 화면 표시에만 쓰고 게임 규칙에는 영향이 없다
 
@@ -152,8 +152,9 @@ move(state: GameState, dir: Direction): MoveResult // { state, events }
 
 - `solve(stage)`: 게임과 같은 `move`로 상태 공간 BFS를 돌려 최소 이동 수와 경로를 구한다. 결과는 `solved`, `unsolvable`, 탐색 한도 초과 `limit` 중 하나
 - 상태 키는 큐브 위치, 상자, 바닥 사다리, 메운 칸, 기댄 사다리, 들고 있음. 문은 이들로 계산되어 키에 넣지 않는다
-- `moveLimit(best)`: 최소 이동 수 + 20% 올림. 보스 제한과 ★★ 기준
-- `stars(moves, best)`: 최소 이동이면 3, 제한 안이면 2, 그 밖은 1
+- 탐색은 `rules`를 뺀 스테이지로 한다. 제한을 모르는 채 맵을 먼저 만들다 너무 작게 적어도 못 푸는 맵과 헷갈리지 않고 진짜 최소 이동 수가 나온다
+- `moveLimit(best)`: 최소 이동 수 + 20% 올림. 보스 제한을 정할 때 쓰는 값이고 제한이 없는 스테이지의 ★★ 기준
+- `stars(moves, best, limit)`: 최소 이동이면 3, `limit` 안이면 2, 그 밖은 1. `limit`은 스테이지의 `rules.moveLimit`이고 없으면 `moveLimit(best)`다
 - `stages/stages.test.ts`가 모든 스테이지 JSON이 풀리는지 검사한다
 - 넓은 스테이지를 만들면 탐색 시간을 다시 재고, 느려지면 상태 키 계산을 최적화한다
 - 용도
@@ -168,7 +169,7 @@ move(state: GameState, dir: Direction): MoveResult // { state, events }
 
 ```ts
 text(language, key, n?) // 'guide.move' → 그 언어의 문구, {n}은 넘긴 숫자로
-guideText(language, id, touch) // 터치 기기면 guide.<id>.touch를 먼저 본다
+guideText(language, id, touch, n?) // 터치 기기면 guide.<id>.touch를 먼저 본다
 ```
 
 - 사전은 언어마다 파일 하나다 (`i18n/en.ts`, `i18n/ko.ts`). 언어를 늘리면 파일과 `LANGUAGES` 한 줄만 는다
@@ -176,7 +177,7 @@ guideText(language, id, touch) // 터치 기기면 guide.<id>.touch를 먼저 �
 - 키는 `guide.move`처럼 점으로 구분한 문자열이다. 스테이지 이름은 `stage.<id>`, 월드 이름은 `world.<번호>`
 - 화면에서는 `useText`가 돌려주는 `t('clear.retry')`로 읽는다. `text`는 순수 함수라 테스트와 스토어 밖에서도 쓴다
 - 가이드 문구는 `guide.move.touch`처럼 터치 기기용 변형을 둘 수 있다. 변형이 없으면 기본 문구를 쓴다
-- `STAGE`, `MOVES`, `CLEAR` 같은 영어 대문자 라벨은 디자인 요소라 사전에 두지 않는다
+- `STAGE`, `MOVES`, `LEFT`, `CLEAR` 같은 영어 대문자 라벨은 디자인 요소라 사전에 두지 않는다
 - 처음 언어는 기기 언어를 따르고(`languageFrom`), 타이틀 화면 구석에서 바꾼다. 고른 언어는 `cubound:language`에 저장하고 `<html lang>`도 함께 바꾼다
 - `i18n.test.ts`가 빠진 번역과 없는 언어의 대체를, `stages.test.ts`가 모든 스테이지 이름과 가이드 문구가 사전에 있는지 검사한다
 

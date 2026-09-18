@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createState, isDoorOpen, move } from './rules'
+import { createState, isDoorOpen, move, movesLeft } from './rules'
 import type { Direction, MoveResult, Stage } from './types'
 
 const FLAT_STAGE: Stage = {
@@ -498,5 +498,53 @@ describe('move 사다리', () => {
     const { events } = move(createState(stage), 'right')
 
     expect(events[0].type).toBe('climbed')
+  })
+})
+
+describe('move 이동 제한', () => {
+  const LIMITED_STAGE: Stage = { ...FLAT_STAGE, rules: { moveLimit: 2 } }
+
+  it('제한이 없으면 이동 수에 상관없이 계속 움직인다', () => {
+    const { state } = play(FLAT_STAGE, ['left', 'right', 'left', 'right'])
+
+    expect(state.moves).toBe(4)
+    expect(state.player).toEqual({ x: 1, y: 1 })
+  })
+
+  it('제한 안에서는 그대로 움직인다', () => {
+    const { state } = play(LIMITED_STAGE, ['left', 'right'])
+
+    expect(state.moves).toBe(2)
+    expect(state.player).toEqual({ x: 1, y: 1 })
+  })
+
+  it('남은 이동을 다 쓰면 움직이지 않고 blocked 이벤트를 돌려준다', () => {
+    const used = play(LIMITED_STAGE, ['left', 'right']).state
+    const { state, events } = move(used, 'up')
+
+    expect(state).toBe(used)
+    expect(events).toEqual([{ type: 'blocked', direction: 'up' }])
+  })
+
+  it('제한을 다 쓰면 목표 칸을 바로 앞에 두고도 클리어하지 못한다', () => {
+    const stage: Stage = { ...FLAT_STAGE, start: { x: 1, y: 0 }, rules: { moveLimit: 1 } }
+    const { state } = play(stage, ['left', 'right'])
+
+    expect(state.moves).toBe(1)
+    expect(state.cleared).toBe(false)
+  })
+})
+
+describe('movesLeft', () => {
+  it('제한이 없으면 null을 돌려준다', () => {
+    expect(movesLeft(createState(FLAT_STAGE))).toBe(null)
+  })
+
+  it('제한이 있으면 남은 이동 수를 돌려준다', () => {
+    const stage: Stage = { ...FLAT_STAGE, rules: { moveLimit: 2 } }
+
+    expect(movesLeft(createState(stage))).toBe(2)
+    expect(movesLeft(play(stage, ['left']).state)).toBe(1)
+    expect(movesLeft(play(stage, ['left', 'right']).state)).toBe(0)
   })
 })

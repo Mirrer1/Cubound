@@ -51,6 +51,12 @@ const isClosedDoor = (state: GameState, p: Point) =>
 export const standHeight = (state: GameState, p: Point) =>
   (floorAt(state, p) ?? 0) + (hasBox(state, p) ? 1 : 0)
 
+// 보스 이동 제한이 없으면 null
+export const movesLeft = (state: GameState) => {
+  const limit = state.stage.rules?.moveLimit
+  return limit === undefined ? null : Math.max(limit - state.moves, 0)
+}
+
 export const createState = (stage: Stage): GameState => ({
   stage,
   heights: stage.heights,
@@ -187,6 +193,7 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
 
 export const move = (state: GameState, direction: Direction): MoveResult => {
   if (state.cleared) return { state, events: [] }
+  if (movesLeft(state) === 0) return { state, events: [{ type: 'blocked', direction }] }
 
   const result = moveOnce(state, direction)
   if (result.state === state) return result

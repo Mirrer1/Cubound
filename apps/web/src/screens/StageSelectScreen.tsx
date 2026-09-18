@@ -1,7 +1,6 @@
 import Button from '@/components/ui/Button'
 import StageCard, { type StageCardState } from '@/components/ui/StageCard'
 import { isUnlocked, totalStars } from '@/game/progress'
-import { moveLimit } from '@/game/solver'
 import { worldTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
 import { STAGES, STAGES_PER_WORLD, WORLDS, isBossStage, stageIdsOf } from '@/stages'
@@ -31,7 +30,7 @@ const StageSelectScreen = () => {
       state,
       stars: record?.stars ?? 0,
       boss: isBossStage(id),
-      bossHint: stage?.best ? t('select.bossHint', moveLimit(stage.best)) : undefined,
+      bossHint: stage?.rules?.moveLimit ? t('select.bossHint', stage.rules.moveLimit) : undefined,
     }
   })
 

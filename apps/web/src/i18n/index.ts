@@ -16,14 +16,14 @@ const lookup = (language: Language, key: string) =>
   DICTIONARIES[language]?.[key as TextKey] ?? en[key as TextKey]
 
 // n을 넘기면 문구의 {n} 자리를 채운다
-export const text = (language: Language, key: TextKey, n?: number) => {
-  const value = lookup(language, key)
-  return n === undefined ? value : value.replace('{n}', String(n))
-}
+const fill = (value: string, n?: number) =>
+  n === undefined ? value : value.replace('{n}', String(n))
 
-export const guideText = (language: Language, id: string, touch: boolean) => {
+export const text = (language: Language, key: TextKey, n?: number) => fill(lookup(language, key), n)
+
+export const guideText = (language: Language, id: string, touch: boolean, n?: number) => {
   const touchKey = `guide.${id}.touch`
-  return lookup(language, touch && touchKey in en ? touchKey : `guide.${id}`)
+  return fill(lookup(language, touch && touchKey in en ? touchKey : `guide.${id}`), n)
 }
 
 export const stageTextKey = (id: string) => `stage.${id}` as TextKey

@@ -42,9 +42,10 @@ export const recordClear = (
   stageId: string,
   moves: number,
   best: number,
+  limit?: number, // 보스 이동 제한
 ): Progress => {
   const previous = progress.stages[stageId]
-  const record = { bestMoves: moves, stars: stars(moves, best) }
+  const record = { bestMoves: moves, stars: stars(moves, best, limit) }
   if (previous && previous.bestMoves <= moves) return progress
 
   return { ...progress, stages: { ...progress.stages, [stageId]: record } }

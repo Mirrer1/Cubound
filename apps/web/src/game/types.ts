@@ -13,6 +13,10 @@ export type Entity = (
 ) &
   Point
 
+export interface StageRules {
+  moveLimit?: number // 보스 이동 제한, 없으면 제한 없음
+}
+
 export interface Stage {
   version: 1
   id: string
@@ -22,6 +26,7 @@ export interface Stage {
   goal: Point
   entities: Entity[]
   best?: number // 풀이 검사기가 구한 최소 이동 수
+  rules?: StageRules // 보스 제약
   guides?: Guide[] // 스텝 가이드 단계
   zones?: Zone[] // 카메라 구역, 없으면 맵 전체
 }

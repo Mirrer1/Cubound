@@ -2,19 +2,32 @@ import type { ButtonHTMLAttributes } from 'react'
 
 const VARIANTS = {
   primary: 'h-14 rounded-2xl bg-ink px-8 text-lg text-base-bg hover:bg-ink/90',
-  secondary: 'h-14 rounded-2xl border border-line-strong px-6 text-lg hover:bg-hover',
-  icon: 'size-11 rounded-[13px] border border-line-strong text-lg hover:bg-hover',
+  secondary: 'h-14 rounded-2xl border px-6 text-lg',
+  icon: 'size-11 rounded-[13px] border text-lg',
+}
+
+const TONES = {
+  light: 'border-line-strong hover:bg-hover',
+  dark: 'border-ink bg-ink text-base-bg hover:bg-ink/90',
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: keyof typeof VARIANTS
+  strong?: boolean // 시선을 끌어야 할 때 진한 면으로
 }
 
-const Button = ({ variant = 'secondary', className = '', ...props }: ButtonProps) => {
+const Button = ({
+  variant = 'secondary',
+  strong = false,
+  className = '',
+  ...props
+}: ButtonProps) => {
+  const tone = variant === 'primary' ? '' : TONES[strong ? 'dark' : 'light']
+
   return (
     <button
       type="button"
-      className={`flex cursor-pointer items-center justify-center transition-soft active:scale-[0.97] disabled:cursor-default disabled:opacity-40 ${VARIANTS[variant]} ${className}`}
+      className={`flex cursor-pointer items-center justify-center transition-soft active:scale-[0.97] disabled:cursor-default disabled:opacity-40 ${VARIANTS[variant]} ${tone} ${className}`}
       {...props}
     />
   )

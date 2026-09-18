@@ -34,7 +34,8 @@ const stateKey = (state: GameState) => {
 
 // 너비 우선 탐색으로 최소 이동 경로를 찾는다
 export const solve = (stage: Stage, { maxStates = 1_000_000 } = {}): SolveResult => {
-  const start = createState(stage)
+  // 보스 이동 제한을 빼고 찾아야 제한이 너무 작을 때도 진짜 최소 이동 수가 나온다
+  const start = createState({ ...stage, rules: undefined })
   const seen = new Map<string, { parent: string | null; direction: Direction | null }>([
     [stateKey(start), { parent: null, direction: null }],
   ])
@@ -76,5 +77,6 @@ export const solve = (stage: Stage, { maxStates = 1_000_000 } = {}): SolveResult
 
 export const moveLimit = (best: number) => best + Math.ceil(best * SLACK)
 
-export const stars = (moves: number, best: number) =>
-  moves <= best ? 3 : moves <= moveLimit(best) ? 2 : 1
+// ★★ 기준은 스테이지가 정한 보스 이동 제한이고 없으면 best로 계산한 여유다
+export const stars = (moves: number, best: number, limit = moveLimit(best)) =>
+  moves <= best ? 3 : moves <= limit ? 2 : 1

@@ -89,6 +89,15 @@ export const validateStage = (data: unknown): ValidateResult => {
     add('best는 양의 정수여야 한다')
   }
 
+  if (data.rules !== undefined) {
+    if (!isObject(data.rules)) add('rules가 객체가 아니다')
+    else if (data.rules.moveLimit !== undefined) {
+      const limit = data.rules.moveLimit
+      if (!(isInt(limit) && limit > 0)) add('rules.moveLimit은 양의 정수여야 한다')
+      else if (isInt(data.best) && limit < data.best) add('rules.moveLimit이 best보다 작다')
+    }
+  }
+
   if (data.guides !== undefined) {
     const guides = Array.isArray(data.guides) ? data.guides : []
     if (guides.length === 0 || guides.length > MAX_GUIDES) add('guides는 1~3단계여야 한다')

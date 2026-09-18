@@ -38,6 +38,13 @@ describe('recordClear', () => {
     expect(second.stages['1-1']).toEqual({ bestMoves: 22, stars: 2 })
   })
 
+  it('보스 이동 제한이 있으면 그 제한을 별 기준으로 쓴다', () => {
+    const progress = recordClear(EMPTY_PROGRESS, '1-10', 22, 20, 22)
+
+    expect(progress.stages['1-10']).toEqual({ bestMoves: 22, stars: 2 })
+    expect(recordClear(EMPTY_PROGRESS, '1-10', 20, 20, 22).stages['1-10'].stars).toBe(3)
+  })
+
   it('기록보다 많거나 같은 이동이면 그대로 둔다', () => {
     const first = recordClear(EMPTY_PROGRESS, '1-1', 20, 20)
 

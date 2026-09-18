@@ -5,6 +5,7 @@ import Board from '@/components/board/Board'
 import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
+import { movesLeft } from '@/game/rules'
 import { stageTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
 import { directionFromKey, isRestartKey } from '@/platform/input'
@@ -39,6 +40,8 @@ const PlayScreen = () => {
   const hasGuide = guides.length > 0
   const guideTarget = guideStep !== null ? guides[guideStep]?.target : undefined
   const guideCell = typeof guideTarget === 'object' ? guideTarget : undefined
+  const left = game ? movesLeft(game) : null
+  const outOfMoves = left === 0 && !game?.cleared
 
   const handleNext = () => play(nextId)
   const handleSelect = () => goTo('select')
@@ -81,9 +84,11 @@ const PlayScreen = () => {
             </div>
             <div className="flex items-center gap-5 sm:gap-7">
               <div data-guide="moves" className="flex flex-col items-end gap-0.5">
-                <span className="font-mono text-[10px] tracking-[0.22em] text-mute">MOVES</span>
+                <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
+                  {left === null ? 'MOVES' : 'LEFT'}
+                </span>
                 <span className="text-[32px] leading-none font-light tabular-nums">
-                  {game.moves}
+                  {left ?? game.moves}
                 </span>
               </div>
               <div className="hidden gap-2.5 sm:flex">
@@ -94,6 +99,7 @@ const PlayScreen = () => {
                 )}
                 <Button
                   variant="icon"
+                  strong={outOfMoves}
                   onClick={restart}
                   title={t('play.restart')}
                   data-guide="restart"
@@ -122,7 +128,7 @@ const PlayScreen = () => {
           <div
             className={`grid gap-3 p-4 whitespace-nowrap sm:hidden ${hasGuide ? 'grid-cols-3' : 'grid-cols-2'}`}
           >
-            <Button onClick={restart} data-guide="restart">
+            <Button strong={outOfMoves} onClick={restart} data-guide="restart">
               ↺ {t('play.restartShort')}
             </Button>
             {hasGuide && <Button onClick={handleOpenGuide}>? {t('play.guideShort')}</Button>}
@@ -145,6 +151,7 @@ const PlayScreen = () => {
               <GuideOverlay
                 guides={guides}
                 step={guideStep}
+                moveLimit={game.stage.rules?.moveLimit}
                 containerRef={sectionRef}
                 onNext={nextGuide}
                 onSkip={closeGuide}

@@ -150,4 +150,26 @@ describe('validateStage', () => {
       'guides[0]의 target을 알 수 없다',
     )
   })
+
+  it('rules는 없어도 되고 객체가 아니면 실패한다', () => {
+    expect(errorsOf({ ...VALID, rules: undefined })).toEqual([])
+    expect(errorsOf({ ...VALID, rules: {} })).toEqual([])
+    expect(errorsOf({ ...VALID, rules: 24 })).toContain('rules가 객체가 아니다')
+  })
+
+  it('이동 제한은 양의 정수여야 한다', () => {
+    const limit = (value: unknown) => errorsOf({ ...VALID, rules: { moveLimit: value } })
+
+    expect(limit(6)).toEqual([])
+    expect(limit(0)).toContain('rules.moveLimit은 양의 정수여야 한다')
+    expect(limit(-1)).toContain('rules.moveLimit은 양의 정수여야 한다')
+    expect(limit(5.5)).toContain('rules.moveLimit은 양의 정수여야 한다')
+  })
+
+  it('이동 제한이 best보다 작으면 실패한다', () => {
+    expect(errorsOf({ ...VALID, rules: { moveLimit: 5 } })).toEqual([])
+    expect(errorsOf({ ...VALID, rules: { moveLimit: 4 } })).toContain(
+      'rules.moveLimit이 best보다 작다',
+    )
+  })
 })

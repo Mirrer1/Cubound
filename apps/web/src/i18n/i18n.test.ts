@@ -39,6 +39,11 @@ describe('guideText', () => {
   it('터치 문구가 없으면 기본 문구를 쓴다', () => {
     expect(guideText('en', 'goal', true)).toBe(text('en', 'guide.goal'))
   })
+
+  it('{n}을 넘긴 숫자로 바꾼다', () => {
+    expect(guideText('en', 'moveLimit', false, 24)).toBe('You have 24 moves to get home')
+    expect(guideText('ko', 'moveLimit', false, 24)).toBe('24번 안에 도착해야 해요')
+  })
 })
 
 describe('사전', () => {

@@ -65,6 +65,12 @@ describe('solve', () => {
   it('탐색 상태 수 한도를 넘으면 limit을 돌려준다', () => {
     expect(solve(STAGE, { maxStates: 2 }).status).toBe('limit')
   })
+
+  it('보스 이동 제한이 있어도 최소 이동 수는 달라지지 않는다', () => {
+    const limited: Stage = { ...STAGE, rules: { moveLimit: 1 } }
+
+    expect(solve(limited)).toEqual(solve(STAGE))
+  })
 })
 
 describe('moveLimit', () => {
@@ -79,5 +85,18 @@ describe('stars', () => {
     expect(stars(20, 20)).toBe(3)
     expect(stars(24, 20)).toBe(2)
     expect(stars(25, 20)).toBe(1)
+  })
+
+  it('보스 이동 제한을 넘기면 그 제한을 별 기준으로 쓴다', () => {
+    expect(stars(20, 20, 22)).toBe(3)
+    expect(stars(22, 20, 22)).toBe(2)
+    expect(stars(23, 20, 22)).toBe(1)
+  })
+
+  it('제한 안에 클리어하면 항상 별이 2개 이상이다', () => {
+    const limit = 22
+    const inside = Array.from({ length: limit - 20 + 1 }, (_, i) => stars(20 + i, 20, limit))
+
+    expect(inside.every((count) => count >= 2)).toBe(true)
   })
 })
