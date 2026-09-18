@@ -141,7 +141,7 @@ export const movingBox = (
 }
 
 // 재시작할 때 큐브와 상자가 처음 자리 위에서 내려앉는다
-const RESTART = { fall: 0.26, stagger: 0.05, steps: 2, lift: 1.5, fadeIn: 6 }
+const RESTART = { fall: 0.38, stagger: 0.06, steps: 2, lift: 1.5, fadeIn: 6 }
 
 // 늦게 출발하는 단계 수는 묶어서 화면 밖 상자가 전체를 늘리지 않게 한다
 const stepsOf = (boxes: number) => Math.min(boxes, RESTART.steps)
