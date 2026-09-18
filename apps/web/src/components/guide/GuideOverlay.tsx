@@ -1,10 +1,11 @@
 import { motion, useReducedMotion } from 'motion/react'
 import { type MouseEvent, type RefObject, useEffect, useState } from 'react'
 
-import { guideText } from './guideTexts'
 import Button from '@/components/ui/Button'
 import type { Guide } from '@/game/types'
+import { guideText, text } from '@/i18n'
 import { isTouchDevice } from '@/platform/input'
+import { useSettingsStore } from '@/store/settingsStore'
 
 interface GuideOverlayProps {
   guides: Guide[]
@@ -32,6 +33,7 @@ const stopClick = (e: MouseEvent) => e.stopPropagation()
 const GuideOverlay = ({ guides, step, containerRef, onNext, onSkip }: GuideOverlayProps) => {
   const [measured, setMeasured] = useState<{ hole: Hole; cardOnTop: boolean } | null>(null)
   const reduced = useReducedMotion()
+  const language = useSettingsStore((s) => s.language)
   const guide = guides[step]
   const targetName = typeof guide.target === 'string' ? guide.target : 'cell'
   const isLast = step === guides.length - 1
@@ -126,7 +128,7 @@ const GuideOverlay = ({ guides, step, containerRef, onNext, onSkip }: GuideOverl
             animate={{ opacity: 1 }}
             transition={{ duration: 0.25 * speed }}
           >
-            {guideText(guide.id, isTouchDevice())}
+            {guideText(language, guide.id, isTouchDevice())}
           </motion.p>
           <div className="flex items-center justify-between">
             <button
@@ -134,14 +136,14 @@ const GuideOverlay = ({ guides, step, containerRef, onNext, onSkip }: GuideOverl
               className="-ml-2 cursor-pointer rounded-lg px-2 py-1 text-sm text-mute transition-soft hover:bg-hover"
               onClick={onSkip}
             >
-              건너뛰기
+              {text(language, 'guide.skip')}
             </button>
             {isLast ? (
               <Button variant="primary" onClick={onNext}>
-                시작
+                {text(language, 'guide.start')}
               </Button>
             ) : (
-              <Button variant="icon" onClick={onNext} title="다음">
+              <Button variant="icon" onClick={onNext} title={text(language, 'guide.next')}>
                 &gt;
               </Button>
             )}

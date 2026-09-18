@@ -2,6 +2,7 @@ import { motion } from 'motion/react'
 
 import Button from './Button'
 import Stars from './Stars'
+import { useText } from '@/i18n/useText'
 
 interface ClearCardProps {
   stageNumber: number
@@ -13,6 +14,8 @@ interface ClearCardProps {
 }
 
 const ClearCard = ({ stageNumber, moves, stars, onNext, onRetry, onSelect }: ClearCardProps) => {
+  const t = useText()
+
   return (
     <motion.div
       className="absolute inset-0 flex items-end justify-center bg-base-bg/40 backdrop-blur-[2px] sm:items-center"
@@ -38,12 +41,12 @@ const ClearCard = ({ stageNumber, moves, stars, onNext, onRetry, onSelect }: Cle
         <div className="flex w-full flex-col gap-3">
           {onNext && (
             <Button variant="primary" className="w-full" onClick={onNext}>
-              다음 스테이지
+              {t('clear.next')}
             </Button>
           )}
           <div className="grid grid-cols-2 gap-3">
-            <Button onClick={onRetry}>다시 하기</Button>
-            <Button onClick={onSelect}>스테이지 선택</Button>
+            <Button onClick={onRetry}>{t('clear.retry')}</Button>
+            <Button onClick={onSelect}>{t('clear.select')}</Button>
           </div>
         </div>
       </motion.div>

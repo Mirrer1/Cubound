@@ -24,7 +24,7 @@ export const validateStage = (data: unknown): ValidateResult => {
 
   if (data.version !== STAGE_VERSION) add('version은 1이어야 한다')
   if (typeof data.id !== 'string' || data.id === '') add('id가 비어 있다')
-  if (typeof data.name !== 'string') add('name이 문자열이 아니다')
+  if (data.name !== undefined && typeof data.name !== 'string') add('name이 문자열이 아니다')
 
   const heights = data.heights
   const rows = Array.isArray(heights) ? heights : []

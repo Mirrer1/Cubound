@@ -67,16 +67,23 @@ src/
 │   ├── camera.ts          # 큐브가 속한 구역 고르기
 │   └── occlusion.ts       # 큐브를 가리는 앞쪽 칸 찾기
 ├── stages/
-│   ├── index.ts           # 스테이지 JSON 모음, 월드 정보
+│   ├── index.ts           # 스테이지 JSON 모음, 월드 번호
 │   └── world-1/01.json    # 스테이지 데이터
-├── store/gameStore.ts     # Zustand (화면, 게임 상태, 연출, 입력 대기열, 진행)
+├── i18n/
+│   ├── index.ts           # 언어 목록, 문구 가져오기, 기기 언어 판단
+│   ├── en.ts              # 영어 사전 (키의 기준)
+│   ├── ko.ts              # 한국어 사전
+│   └── useText.ts         # 고른 언어로 문구를 읽는 훅
+├── store/
+│   ├── gameStore.ts       # Zustand (화면, 게임 상태, 연출, 입력 대기열, 진행)
+│   └── settingsStore.ts   # Zustand (고른 언어)
 ├── platform/
-│   ├── storage.ts         # 진행 저장 (localStorage)
+│   ├── storage.ts         # 진행과 언어 저장 (localStorage)
 │   └── input.ts           # 키 → 방향, 터치 기기 확인
 ├── components/
 │   ├── board/             # 필드 그리기와 연출 (Board, BoardCell, 큐브 회전, 프레임 계산, 카메라)
-│   ├── guide/             # 스텝 가이드 (GuideOverlay, 문구 모음 guideTexts)
-│   └── ui/                # 버튼, 별, 로고, 스테이지 카드, 클리어 카드
+│   ├── guide/             # 스텝 가이드 (GuideOverlay)
+│   └── ui/                # 버튼, 별, 로고, 스테이지 카드, 클리어 카드, 언어 선택
 ├── screens/               # TitleScreen, StageSelectScreen, PlayScreen
 ├── App.tsx                # 화면 전환
 └── index.css              # Tailwind, 색 토큰, 전환과 스크롤 유틸리티
@@ -97,7 +104,6 @@ src/
 {
   "version": 1,
   "id": "1-3",
-  "name": "첫 상자",
   "heights": [
     [0, 0, 0, 1, 1, 1],
     [0, 0, 0, 1, 1, 1],
@@ -124,10 +130,11 @@ src/
 ```
 
 - `heights`: 행(y) → 열(x). `-1`은 빈 칸 (바닥 없음, 상자로 메울 수 있음)
+- `name`: 선택 필드다. 공식 스테이지 이름은 사전의 `stage.<id>` 문구로 두고 JSON에 넣지 않는다. 나중에 유저가 만든 맵이 자기가 지은 이름 하나를 이 자리에 넣는다
 - `version`: 스테이지 형식 버전. 지금은 1이다. `game/validate.ts`의 `validateStage`가 형식을 검사하고, 공식 스테이지와 나중에 링크로 받은 유저 맵을 같은 기준으로 거른다
 - `best`: 최소 이동 수. `stages.test.ts`가 풀이 검사기 결과와 같은지 검사한다
 - `rules.moveLimit`: 보스 제약. 월드가 늘면 제약 종류를 여기에 추가한다. **보스 구현 때 추가 예정**
-- `guides`: 스텝 가이드 단계 목록. 단계마다 비출 대상(칸 좌표나 `restart`, `moves` 같은 화면 요소 이름)과 문구 `id`를 둔다. 문구는 스테이지 JSON이 아니라 코드의 문구 모음에 둔다 (웹과 모바일 문구가 달라서). 클리어한 스테이지면 자동으로 띄우지 않는다. 형식 버전은 그대로 1이고 선택 필드다. 검사는 단계 수 1~3, 칸 좌표는 맵 안, 화면 요소 이름은 `restart`, `moves`만 허용한다. 모든 가이드 `id`가 `components/guide/guideTexts.ts`에 있는지 `stages.test.ts`가 확인한다
+- `guides`: 스텝 가이드 단계 목록. 단계마다 비출 대상(칸 좌표나 `restart`, `moves` 같은 화면 요소 이름)과 문구 `id`를 둔다. 문구는 스테이지 JSON이 아니라 사전의 `guide.<id>`에 둔다 (언어와 기기마다 달라서). 클리어한 스테이지면 자동으로 띄우지 않는다. 형식 버전은 그대로 1이고 선택 필드다. 검사는 단계 수 1~3, 칸 좌표는 맵 안, 화면 요소 이름은 `restart`, `moves`만 허용한다. 모든 가이드 `id`가 사전에 있는지 `stages.test.ts`가 확인한다
 - `zones`: 카메라 구역 사각형 목록. 모든 칸은 하나 이상의 구역에 속한다. 화면 표시에만 쓰고 게임 규칙에는 영향이 없다
 
 ### 상태와 규칙
@@ -154,6 +161,24 @@ move(state: GameState, dir: Direction): MoveResult // { state, events }
   - 별 기준 자동 계산. 월드의 별 기준(이동 수, 밟은 칸 수, 도구 사용 횟수 등)을 비용으로 두고 최솟값을 구한다. 이동 수가 아닌 기준은 비용이 다른 이동이 섞여 BFS 대신 가중치 탐색(0-1 BFS나 Dijkstra)을 쓴다
   - 보스 이동 제한 계산
   - 나중에 힌트 기능
+
+## 문구와 다국어
+
+라이브러리 없이 사전 파일로 한다. 지원 언어는 한국어(`ko`)와 영어(`en`)다.
+
+```ts
+text(language, key, n?) // 'guide.move' → 그 언어의 문구, {n}은 넘긴 숫자로
+guideText(language, id, touch) // 터치 기기면 guide.<id>.touch를 먼저 본다
+```
+
+- 사전은 언어마다 파일 하나다 (`i18n/en.ts`, `i18n/ko.ts`). 언어를 늘리면 파일과 `LANGUAGES` 한 줄만 는다
+- `en.ts`가 키의 기준이고 다른 언어는 `Partial`이다. **번역이 없는 문구는 영어로 보여준다.** 새 월드를 번역보다 먼저 낼 수 있게 하기 위함이다
+- 키는 `guide.move`처럼 점으로 구분한 문자열이다. 스테이지 이름은 `stage.<id>`, 월드 이름은 `world.<번호>`
+- 화면에서는 `useText`가 돌려주는 `t('clear.retry')`로 읽는다. `text`는 순수 함수라 테스트와 스토어 밖에서도 쓴다
+- 가이드 문구는 `guide.move.touch`처럼 터치 기기용 변형을 둘 수 있다. 변형이 없으면 기본 문구를 쓴다
+- `STAGE`, `MOVES`, `CLEAR` 같은 영어 대문자 라벨은 디자인 요소라 사전에 두지 않는다
+- 처음 언어는 기기 언어를 따르고(`languageFrom`), 타이틀 화면 구석에서 바꾼다. 고른 언어는 `cubound:language`에 저장하고 `<html lang>`도 함께 바꾼다
+- `i18n.test.ts`가 빠진 번역과 없는 언어의 대체를, `stages.test.ts`가 모든 스테이지 이름과 가이드 문구가 사전에 있는지 검사한다
 
 ## 렌더링
 
@@ -221,7 +246,7 @@ move(state: GameState, dir: Direction): MoveResult // { state, events }
 | 제목, 숫자, 버튼      | Jost (300, 400, 500)                |
 | 작은 영어 대문자 라벨 | IBM Plex Mono (400, 500), 자간 넓게 |
 
-한글은 Jost에 없어서 시스템 글꼴로 대체된다. 한글 글꼴은 구현하며 정한다.
+영어 문구는 Jost로 그려진다. 한글은 Jost에 없어서 시스템 글꼴로 대체된다. 한글 글꼴은 구현하며 정한다. 언어마다 같은 문구의 폭이 달라서 버튼 문구를 바꾸면 좁은 화면 캡처로 줄바꿈을 확인한다.
 
 ### 아이소메트릭 치수 (기본 배율)
 
@@ -250,6 +275,7 @@ interface Storage {
 
 - `Progress`: `version`과 스테이지별 최고 기록(이동 수, 별). 해금은 기록으로 계산한다
 - **버전:** 읽을 때 `migrateProgress`가 현재 버전으로 옮긴다. 버전이 없던 예전 기록도 읽고, 깨진 기록은 빼거나 빈 진행으로 시작한다. 나중에 로그인이 생기면 기기 기록을 계정으로 옮길 때도 같은 형식을 쓴다
+- 고른 언어는 `cubound:language`에 진행 기록과 다른 키로 저장한다. 저장된 값이 없으면 기기 언어를 따른다
 - 웹: localStorage
 - 앱: Capacitor Preferences (iOS WebView의 localStorage는 지워질 수 있음)
 - 나중에 서버 저장이 생기면 같은 인터페이스로 구현을 추가한다

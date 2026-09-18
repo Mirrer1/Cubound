@@ -44,6 +44,11 @@ describe('validateStage', () => {
     expect(errorsOf('stage')).toEqual(['스테이지가 객체가 아니다'])
   })
 
+  it('name은 없어도 되고 문자열이 아니면 실패한다', () => {
+    expect(errorsOf({ ...VALID, name: undefined })).toEqual([])
+    expect(errorsOf({ ...VALID, name: 1 })).toContain('name이 문자열이 아니다')
+  })
+
   it('지원하지 않는 버전은 실패한다', () => {
     expect(errorsOf({ ...VALID, version: 2 })).toContain('version은 1이어야 한다')
   })

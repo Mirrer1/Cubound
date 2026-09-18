@@ -2,7 +2,7 @@ import type { Stage } from '@/game/types'
 
 export const STAGES_PER_WORLD = 10
 
-export const WORLDS = [{ number: 1, name: '낮은 계단의 땅' }]
+export const WORLDS = [1]
 
 const modules = import.meta.glob<Stage>('./world-*/*.json', { eager: true, import: 'default' })
 

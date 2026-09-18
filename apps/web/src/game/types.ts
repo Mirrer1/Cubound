@@ -16,7 +16,7 @@ export type Entity = (
 export interface Stage {
   version: 1
   id: string
-  name: string
+  name?: string // 유저가 만든 맵의 이름. 공식 스테이지 이름은 사전에 둔다
   heights: number[][] // 행(y) 먼저, -1은 바닥 없음
   start: Point
   goal: Point

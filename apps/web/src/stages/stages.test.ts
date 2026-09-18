@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { GUIDE_TEXTS } from '@/components/guide/guideTexts'
+import { WORLDS } from '.'
 import { solve } from '@/game/solver'
 import type { Stage } from '@/game/types'
 import { validateStage } from '@/game/validate'
+import { stageTextKey, worldTextKey } from '@/i18n'
+import { en } from '@/i18n/en'
 
 const STAGES = Object.entries(
   import.meta.glob<Stage>('./**/*.json', { eager: true, import: 'default' }),
@@ -29,9 +31,13 @@ describe('스테이지 데이터', () => {
     expect(stage.id).toBe(`${Number(world)}-${Number(file)}`)
   })
 
-  it.each(STAGES)('%s의 가이드 문구가 문구 모음에 있다', (_, stage) => {
-    const missing = (stage.guides ?? []).map((g) => g.id).filter((id) => !(id in GUIDE_TEXTS))
+  it.each(STAGES)('%s의 이름과 가이드 문구가 사전에 있다', (_, stage) => {
+    const keys = [stageTextKey(stage.id), ...(stage.guides ?? []).map((g) => `guide.${g.id}`)]
 
-    expect(missing).toEqual([])
+    expect(keys.filter((key) => !(key in en))).toEqual([])
+  })
+
+  it('모든 월드 이름이 사전에 있다', () => {
+    expect(WORLDS.filter((world) => !(worldTextKey(world) in en))).toEqual([])
   })
 })

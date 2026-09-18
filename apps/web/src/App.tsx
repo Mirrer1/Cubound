@@ -1,9 +1,11 @@
 import { AnimatePresence, MotionConfig, motion } from 'motion/react'
+import { useEffect } from 'react'
 
 import PlayScreen from '@/screens/PlayScreen'
 import StageSelectScreen from '@/screens/StageSelectScreen'
 import TitleScreen from '@/screens/TitleScreen'
 import { type Screen, useGameStore } from '@/store/gameStore'
+import { useSettingsStore } from '@/store/settingsStore'
 
 const SCREENS: Record<Screen, () => React.JSX.Element> = {
   title: TitleScreen,
@@ -13,7 +15,12 @@ const SCREENS: Record<Screen, () => React.JSX.Element> = {
 
 const App = () => {
   const screen = useGameStore((s) => s.screen)
+  const language = useSettingsStore((s) => s.language)
   const Current = SCREENS[screen]
+
+  useEffect(() => {
+    document.documentElement.lang = language
+  }, [language])
 
   return (
     <MotionConfig reducedMotion="user">

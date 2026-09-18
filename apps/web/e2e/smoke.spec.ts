@@ -26,3 +26,16 @@ test('타이틀에서 스테이지를 골라 가이드를 넘기고 방향키로
   await page.keyboard.press('r')
   await expect(moves).toContainText('0')
 })
+
+test('타이틀에서 언어를 영어로 바꾸면 문구와 html lang이 바뀐다', async ({ page }) => {
+  await page.goto('/')
+
+  await page.getByRole('button', { name: '한국어' }).click()
+  await page.getByRole('button', { name: 'English' }).click()
+
+  await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
+})

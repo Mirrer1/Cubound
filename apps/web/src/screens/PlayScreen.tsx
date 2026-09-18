@@ -5,6 +5,8 @@ import Board from '@/components/board/Board'
 import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
+import { stageTextKey } from '@/i18n'
+import { useText } from '@/i18n/useText'
 import { directionFromKey, isRestartKey } from '@/platform/input'
 import { STAGES, parseStageId, stageId } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
@@ -27,6 +29,7 @@ const PlayScreen = () => {
   const nextGuide = useGameStore((s) => s.nextGuide)
   const closeGuide = useGameStore((s) => s.closeGuide)
   const sectionRef = useRef<HTMLElement>(null)
+  const t = useText()
 
   const { world, stage: stageNumber } = parseStageId(game?.stage.id ?? '0-0')
   const nextId = stageId(world, stageNumber + 1)
@@ -72,7 +75,9 @@ const PlayScreen = () => {
               <span className="font-mono text-[11px] tracking-[0.22em] text-mute">
                 STAGE {String(stageNumber).padStart(2, '0')}
               </span>
-              <span className="text-2xl tracking-tight sm:text-[27px]">{game.stage.name}</span>
+              <span className="text-2xl tracking-tight sm:text-[27px]">
+                {t(stageTextKey(game.stage.id))}
+              </span>
             </div>
             <div className="flex items-center gap-5 sm:gap-7">
               <div data-guide="moves" className="flex flex-col items-end gap-0.5">
@@ -83,14 +88,19 @@ const PlayScreen = () => {
               </div>
               <div className="hidden gap-2.5 sm:flex">
                 {hasGuide && (
-                  <Button variant="icon" onClick={handleOpenGuide} title="가이드 다시 보기">
+                  <Button variant="icon" onClick={handleOpenGuide} title={t('play.guide')}>
                     ?
                   </Button>
                 )}
-                <Button variant="icon" onClick={restart} title="다시 하기 (R)" data-guide="restart">
+                <Button
+                  variant="icon"
+                  onClick={restart}
+                  title={t('play.restart')}
+                  data-guide="restart"
+                >
                   ↺
                 </Button>
-                <Button variant="icon" onClick={handleSelect} title="스테이지 선택">
+                <Button variant="icon" onClick={handleSelect} title={t('play.select')}>
                   ≡
                 </Button>
               </div>
@@ -113,10 +123,10 @@ const PlayScreen = () => {
             className={`grid gap-3 p-4 whitespace-nowrap sm:hidden ${hasGuide ? 'grid-cols-3' : 'grid-cols-2'}`}
           >
             <Button onClick={restart} data-guide="restart">
-              ↺ 다시
+              ↺ {t('play.restartShort')}
             </Button>
-            {hasGuide && <Button onClick={handleOpenGuide}>? 가이드</Button>}
-            <Button onClick={handleSelect}>≡ 메뉴</Button>
+            {hasGuide && <Button onClick={handleOpenGuide}>? {t('play.guideShort')}</Button>}
+            <Button onClick={handleSelect}>≡ {t('play.menuShort')}</Button>
           </div>
           <AnimatePresence>
             {game.cleared && (
