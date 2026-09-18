@@ -53,6 +53,57 @@ test('타이틀에서 언어를 영어로 바꾸면 문구와 html lang이 바�
   await expect(page.getByRole('button', { name: 'Start' })).toBeVisible()
 })
 
+test('게임 중 새로고침하면 하던 상태로 돌아오고 뒤로 가기로 목록에 간다', async ({ page }) => {
+  await page.goto('/')
+
+  await page.getByRole('button', { name: '시작' }).click()
+  await page.getByRole('button', { name: /01/ }).click()
+  await page.getByRole('button', { name: '건너뛰기' }).click()
+
+  const moves = page.getByText('MOVES').locator('..')
+  await page.keyboard.press('ArrowUp')
+  await page.keyboard.press('ArrowUp')
+  await expect(moves).toContainText('2')
+
+  await page.reload()
+  await expect(page.getByText('STAGE 01')).toBeVisible()
+  await expect(moves).toContainText('2')
+  await expect(page.getByText(/GUIDE/)).toBeHidden()
+
+  await page.goBack()
+  await expect(page.getByText('WORLD 1')).toBeVisible()
+})
+
+test('키보드만으로 타이틀에서 스테이지를 클리어하고 다음 스테이지로 간다', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: '시작' }).waitFor()
+
+  // 타이틀은 첫 포커스를 두지 않아 언어 버튼을 지나 시작 버튼에 닿는다
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('WORLD 1')).toBeVisible()
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('STAGE 01')).toBeVisible()
+
+  await page.getByText('GUIDE 1 / 2').waitFor()
+  await page.keyboard.press('Enter')
+  await page.getByText('GUIDE 2 / 2').waitFor()
+  await page.keyboard.press('Enter')
+  await expect(page.getByText(/GUIDE/)).toBeHidden()
+
+  // WASD로 푼다
+  for (const key of ['w', 'w', 'd', 'd', 'd', 's', 's', 'a']) {
+    await page.keyboard.press(key)
+    await page.waitForTimeout(300)
+  }
+
+  await expect(page.getByText(/CLEAR/)).toBeVisible()
+  await page.waitForTimeout(1800)
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('STAGE 02')).toBeVisible()
+})
+
 test.describe('모바일', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
 

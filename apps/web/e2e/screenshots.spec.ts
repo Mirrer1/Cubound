@@ -315,3 +315,32 @@ for (const size of SIZES) {
     })
   })
 }
+
+// 키보드로 옮겨 다닐 때 포커스가 보이는 자리
+test('@shot 키보드 포커스', async ({ page }) => {
+  await page.addInitScript((progress) => {
+    localStorage.setItem('cubound:progress', JSON.stringify(progress))
+  }, OPENED)
+  await page.goto('/')
+  await page.getByRole('button', { name: LABELS.ko.start }).waitFor()
+
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Tab')
+  await shot(page, 'desktop-focus-title')
+
+  await page.keyboard.press('Enter')
+  await page.getByText('WORLD 1').waitFor()
+  await shot(page, 'desktop-focus-select-now')
+
+  await page.keyboard.press('ArrowLeft')
+  await shot(page, 'desktop-focus-select-moved')
+
+  await page.keyboard.press('Enter')
+  await page.getByText('STAGE 04').waitFor()
+  await page.keyboard.press('Tab')
+  await shot(page, 'desktop-focus-play')
+
+  await solve(page, SOLUTIONS['1-4'])
+  await page.waitForTimeout(1600)
+  await shot(page, 'desktop-focus-clear-card')
+})
