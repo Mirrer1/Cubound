@@ -13,7 +13,7 @@ export const en = {
 
   'clear.next': 'Next stage',
   'clear.retry': 'Retry',
-  'clear.select': 'Stages',
+  'clear.select': 'All stages',
 
   'stars.label': '{n} stars',
 
@@ -37,6 +37,9 @@ export const en = {
   'world.1': 'Land of Low Steps',
   'stage.1-1': 'First Steps',
   'stage.1-2': 'Downhill',
+  'stage.1-3': 'Stepping Stone',
+  'stage.1-4': 'The Crossing',
+  'stage.1-5': 'The Valley',
 }
 
 export type Texts = typeof en

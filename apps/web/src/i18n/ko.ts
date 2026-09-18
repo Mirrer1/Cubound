@@ -15,7 +15,7 @@ export const ko: Partial<Texts> = {
 
   'clear.next': '다음 스테이지',
   'clear.retry': '다시 하기',
-  'clear.select': '스테이지',
+  'clear.select': '목록',
 
   'stars.label': '별 {n}개',
 
@@ -38,4 +38,7 @@ export const ko: Partial<Texts> = {
   'world.1': '낮은 계단의 땅',
   'stage.1-1': '첫걸음',
   'stage.1-2': '내리막',
+  'stage.1-3': '디딤돌',
+  'stage.1-4': '건널목',
+  'stage.1-5': '골짜기',
 }
