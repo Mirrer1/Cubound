@@ -126,4 +126,37 @@ test.describe('모바일', () => {
     await swipe(page, 195, 420, 60, -60)
     await expect(moves).toContainText('1')
   })
+
+  test('아래 버튼 줄 위에서 스와이프하면 움직이고 탭하면 버튼이 눌린다', async ({ page }) => {
+    await page.goto('/')
+
+    await page.getByRole('button', { name: '시작' }).click()
+    await page.getByRole('button', { name: /01/ }).click()
+    await page.getByRole('button', { name: '건너뛰기' }).click()
+    // 사라지는 중인 가이드 카드가 아래 버튼 줄을 덮고 있어 다 사라진 뒤에 잰다
+    await expect(page.getByText(/GUIDE/)).toBeHidden()
+
+    const moves = page.getByText('MOVES').locator('..')
+    const box = await page.getByRole('button', { name: /다시/ }).boundingBox()
+    const x = box!.x + box!.width / 2
+    const y = box!.y + box!.height / 2
+
+    await page.keyboard.press('ArrowUp')
+    await expect(moves).toContainText('1')
+    await page.touchscreen.tap(x, y)
+    await expect(moves).toContainText('0')
+
+    // 재시작 내려앉기 연출 중에는 이동이 막혀서 끝나기를 기다린다
+    await page.waitForTimeout(600)
+    await swipe(page, x, y, 60, -60)
+    await expect(moves).toContainText('1')
+
+    // 버튼 안에서 끝나는 짧은 드래그는 클릭이 버튼에 떨어지는데, 스와이프라 재시작이 눌리지 않는다
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await page.mouse.move(x + 30, y - 20, { steps: 4 })
+    await page.mouse.up()
+    await page.waitForTimeout(400)
+    await expect(moves).toContainText('2')
+  })
 })

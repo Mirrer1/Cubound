@@ -36,6 +36,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const closeGuide = useGameStore((s) => s.closeGuide)
   const sectionRef = useRef<HTMLElement>(null)
   const swipeStart = useRef<{ x: number; y: number } | null>(null)
+  const swiped = useRef(false)
   const t = useText()
 
   // 주소가 바뀐 바로 다음 프레임에는 앞 스테이지가 남아 있어 지금 스테이지일 때만 그린다
@@ -58,21 +59,30 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     e.currentTarget.blur()
     openGuide()
   }
-  const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
+  // 가이드와 클리어 카드가 떠 있는 동안은 스와이프를 받지 않고 제스처마다 앞 판정을 지운다
+  const handlePointerDown = (e: PointerEvent<HTMLElement>) => {
+    swiped.current = false
+    if (guideStep !== null || game?.cleared) return
     swipeStart.current = { x: e.clientX, y: e.clientY }
-    e.currentTarget.setPointerCapture(e.pointerId)
   }
   // 최소 거리를 넘는 순간 판정하고, 시작점을 비워 한 제스처에 한 칸만 움직인다
-  const handlePointerMove = (e: PointerEvent<HTMLDivElement>) => {
+  const handlePointerMove = (e: PointerEvent<HTMLElement>) => {
     const start = swipeStart.current
     if (!start) return
     const direction = directionFromSwipe(e.clientX - start.x, e.clientY - start.y)
     if (!direction) return
     swipeStart.current = null
+    swiped.current = true
     move(direction)
   }
   const handlePointerEnd = () => {
     swipeStart.current = null
+  }
+  // 스와이프로 판정한 제스처는 이어지는 클릭을 버려서 버튼이 눌리지 않게 한다
+  const handleClickCapture = (e: MouseEvent<HTMLElement>) => {
+    if (!swiped.current) return
+    swiped.current = false
+    e.stopPropagation()
   }
 
   // 남아 있는 중간 상태가 있으면 이어서 시작하고 없으면 처음부터 시작한다
@@ -98,7 +108,15 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   }, [move, restart, guideStep])
 
   return (
-    <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
+    <main
+      className="mx-auto flex h-dvh max-w-[1920px] touch-none screen-pad select-none"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerEnd}
+      onPointerLeave={handlePointerEnd}
+      onPointerCancel={handlePointerEnd}
+      onClickCapture={handleClickCapture}
+    >
       {game && (
         <section
           ref={sectionRef}
@@ -146,13 +164,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
               </div>
             </div>
           </header>
-          <div
-            className="min-h-0 flex-1 touch-none p-2 select-none wide:p-6"
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerEnd}
-            onPointerCancel={handlePointerEnd}
-          >
+          <div className="min-h-0 flex-1 p-2 wide:p-6">
             <Board
               key={game.stage.id}
               game={game}
