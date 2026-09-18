@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'motion/react'
-import { type MouseEvent, useEffect, useRef } from 'react'
+import { type MouseEvent, type PointerEvent, useEffect, useRef } from 'react'
 
 import Board from '@/components/board/Board'
 import GuideOverlay from '@/components/guide/GuideOverlay'
@@ -8,7 +8,7 @@ import ClearCard from '@/components/ui/ClearCard'
 import { movesLeft } from '@/game/rules'
 import { stageTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
-import { directionFromKey, isRestartKey } from '@/platform/input'
+import { directionFromKey, directionFromSwipe, isRestartKey } from '@/platform/input'
 import { STAGES, parseStageId, stageId } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
 
@@ -30,6 +30,7 @@ const PlayScreen = () => {
   const nextGuide = useGameStore((s) => s.nextGuide)
   const closeGuide = useGameStore((s) => s.closeGuide)
   const sectionRef = useRef<HTMLElement>(null)
+  const swipeStart = useRef<{ x: number; y: number } | null>(null)
   const t = useText()
 
   const { world, stage: stageNumber } = parseStageId(game?.stage.id ?? '0-0')
@@ -49,6 +50,22 @@ const PlayScreen = () => {
   const handleOpenGuide = (e: MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.blur()
     openGuide()
+  }
+  const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    swipeStart.current = { x: e.clientX, y: e.clientY }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  // 최소 거리를 넘는 순간 판정하고, 시작점을 비워 한 제스처에 한 칸만 움직인다
+  const handlePointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    const start = swipeStart.current
+    if (!start) return
+    const direction = directionFromSwipe(e.clientX - start.x, e.clientY - start.y)
+    if (!direction) return
+    swipeStart.current = null
+    move(direction)
+  }
+  const handlePointerEnd = () => {
+    swipeStart.current = null
   }
 
   useEffect(() => {
@@ -112,7 +129,13 @@ const PlayScreen = () => {
               </div>
             </div>
           </header>
-          <div className="min-h-0 flex-1 p-4 sm:p-6">
+          <div
+            className="min-h-0 flex-1 touch-none p-4 select-none sm:p-6"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerEnd}
+            onPointerCancel={handlePointerEnd}
+          >
             <Board
               key={game.stage.id}
               game={game}

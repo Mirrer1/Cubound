@@ -79,7 +79,7 @@ src/
 │   └── settingsStore.ts   # Zustand (고른 언어)
 ├── platform/
 │   ├── storage.ts         # 진행과 언어 저장 (localStorage)
-│   └── input.ts           # 키 → 방향, 터치 기기 확인
+│   └── input.ts           # 키와 스와이프 → 방향, 터치 기기 확인
 ├── components/
 │   ├── board/             # 필드 그리기와 연출 (Board, BoardCell, 큐브 회전, 프레임 계산, 카메라)
 │   ├── guide/             # 스텝 가이드 (GuideOverlay)
@@ -180,6 +180,16 @@ guideText(language, id, touch, n?) // 터치 기기면 guide.<id>.touch를 먼�
 - `STAGE`, `MOVES`, `LEFT`, `CLEAR` 같은 영어 대문자 라벨은 디자인 요소라 사전에 두지 않는다
 - 처음 언어는 기기 언어를 따르고(`languageFrom`), 타이틀 화면 구석에서 바꾼다. 고른 언어는 `cubound:language`에 저장하고 `<html lang>`도 함께 바꾼다
 - `i18n.test.ts`가 빠진 번역과 없는 언어의 대체를, `stages.test.ts`가 모든 스테이지 이름과 가이드 문구가 사전에 있는지 검사한다
+
+## 입력
+
+키보드 방향키와 스와이프는 `platform/input.ts`의 순수 함수로 방향만 얻고, 둘 다 스토어의 `move`로 들어간다. 입력 대기열, 연달아 이동, 가이드 중 막기가 두 방식에 똑같이 적용된다.
+
+- **스와이프 방향:** `directionFromSwipe(dx, dy)`가 화면 좌표 변화량의 부호로 네 방향을 가른다. 오른쪽 위 `up`, 오른쪽 아래 `right`, 왼쪽 아래 `down`, 왼쪽 위 `left`
+- 아이소메트릭 네 축은 화면 가로축과 세로축 기준으로 대칭이라, 가장 가까운 축을 골라도 경계가 가로선과 세로선이 된다. 칸 가로세로 비율을 보정할 필요가 없다
+- **판정 값:** 최소 거리 28px(대각선 길이). 넘는 순간 바로 판정하고 시작점을 비워 한 제스처에 한 칸만 움직인다. 수평이나 수직에 가까운 애매한 각도도 무시하지 않고 부호대로 정한다
+- **마우스 드래그:** Pointer 이벤트 하나로 받아 터치와 마우스를 구분하지 않는다. 데스크톱에서도 같은 조작으로 확인할 수 있다
+- **브라우저 기본 동작:** 필드 영역에 `touch-none`과 `select-none`을 둬서 스와이프 중 화면이 끌리거나 당겨서 새로고침되지 않고, 드래그로 글자가 선택되지 않는다. 페이지 바깥 스크롤은 `html`, `body`의 `overflow: hidden`과 `overscroll-behavior: none`이 막는다
 
 ## 렌더링
 
