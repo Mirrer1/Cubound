@@ -30,13 +30,12 @@ const StageSelectScreen = () => {
       state,
       stars: record?.stars ?? 0,
       boss: isBossStage(id),
-      bossHint: stage?.rules?.moveLimit ? t('select.bossHint', stage.rules.moveLimit) : undefined,
     }
   })
 
   return (
     <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
-      <section className="scroll-area flex min-h-0 flex-1 flex-col gap-6 rounded-[22px] border border-line bg-base-bg p-5 sm:gap-8 sm:p-9">
+      <section className="scroll-area flex min-h-0 flex-1 flex-col gap-6 rounded-[22px] border border-line bg-base-bg panel-pad sm:gap-8">
         <header className="flex items-start gap-4">
           <Button variant="icon" onClick={() => goTo('title')} aria-label={t('select.back')}>
             ←
@@ -54,8 +53,8 @@ const StageSelectScreen = () => {
           </div>
         </header>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(5,minmax(0,240px))] sm:justify-center sm:gap-4">
-          {cards.map((card, i) => (
-            <StageCard key={card.id} {...card} index={i} onSelect={() => play(card.id)} />
+          {cards.map((card) => (
+            <StageCard key={card.id} {...card} onSelect={() => play(card.id)} />
           ))}
         </div>
       </section>

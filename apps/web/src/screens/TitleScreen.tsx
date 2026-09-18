@@ -20,14 +20,14 @@ const TitleScreen = () => {
           opacity={0.6}
           className="pointer-events-none absolute -right-10 bottom-40 w-72 sm:-bottom-8 sm:w-96"
         />
-        <div className="absolute top-4 right-4 z-10 sm:top-6 sm:right-6">
+        <div className="absolute top-0 right-0 z-10 panel-pad">
           <LanguageMenu />
         </div>
         <div className="relative flex flex-1 flex-col items-center justify-center gap-5 sm:flex-none">
           <Logo />
           <span className="font-mono text-xs tracking-[0.3em] text-mute">ISOMETRIC PUZZLE</span>
         </div>
-        <div className="relative flex w-full flex-col items-center gap-4 p-6 sm:mt-10 sm:w-auto sm:p-0">
+        <div className="relative flex w-full flex-col items-center gap-4 panel-pad sm:mt-10 sm:w-auto sm:p-0">
           <Button variant="primary" className="w-full sm:w-52" onClick={() => goTo('select')}>
             {t('title.start')}
           </Button>

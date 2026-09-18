@@ -57,6 +57,22 @@ body {
   }
 }
 
+/* 패널 안쪽 여백. 세 화면이 같은 값을 쓴다 */
+:root {
+  --panel-pad: 1.25rem;
+}
+
+@media (width >= 40rem) and (height >= 500px) {
+  :root {
+    --panel-pad: 2.25rem;
+  }
+}
+
+/* 스크롤 영역은 좌우에 스크롤바 자리가 더 붙어서 그만큼 뺀다 */
+@utility panel-pad {
+  padding: var(--panel-pad) calc(var(--panel-pad) - var(--panel-trim, 0px));
+}
+
 /* 호버와 누름 전환. 색은 천천히, 누름 크기는 빠르게 */
 @utility transition-soft {
   transition:
@@ -80,12 +96,15 @@ body {
 
 /* 스크롤바가 생겨도 레이아웃이 밀리지 않게 양쪽 자리를 미리 비워둔다 */
 @utility scroll-area {
+  --scrollbar: 10px;
+  --panel-trim: var(--scrollbar);
+
   overflow-y: auto;
   scrollbar-gutter: stable both-edges;
 
   /* 크롬과 사파리는 상태별 색을 직접 정한다 */
   &::-webkit-scrollbar {
-    width: 10px;
+    width: var(--scrollbar);
   }
   &::-webkit-scrollbar-track {
     margin-block: 18px;
