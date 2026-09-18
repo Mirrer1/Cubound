@@ -1,6 +1,32 @@
 import { describe, expect, it } from 'vitest'
 
-import { directionFromSwipe } from './input'
+import { directionFromKey, directionFromSwipe } from './input'
+
+describe('directionFromKey', () => {
+  it('방향키를 네 방향으로 읽는다', () => {
+    expect(directionFromKey('ArrowUp')).toBe('up')
+    expect(directionFromKey('ArrowRight')).toBe('right')
+    expect(directionFromKey('ArrowDown')).toBe('down')
+    expect(directionFromKey('ArrowLeft')).toBe('left')
+  })
+
+  it('WASD는 방향키와 같다', () => {
+    expect(directionFromKey('w')).toBe('up')
+    expect(directionFromKey('d')).toBe('right')
+    expect(directionFromKey('s')).toBe('down')
+    expect(directionFromKey('a')).toBe('left')
+  })
+
+  it('큰 글자로 눌러도 같게 읽는다', () => {
+    expect(directionFromKey('W')).toBe('up')
+    expect(directionFromKey('A')).toBe('left')
+  })
+
+  it('방향과 상관없는 키는 방향이 없다', () => {
+    expect(directionFromKey('q')).toBeNull()
+    expect(directionFromKey('Enter')).toBeNull()
+  })
+})
 
 describe('directionFromSwipe', () => {
   it('오른쪽 위로 밀면 up이다', () => {

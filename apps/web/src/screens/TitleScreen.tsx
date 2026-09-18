@@ -3,11 +3,12 @@ import LanguageMenu from '@/components/ui/LanguageMenu'
 import Logo from '@/components/ui/Logo'
 import TitleScene from '@/components/ui/TitleScene'
 import { useText } from '@/i18n/useText'
-import { useGameStore } from '@/store/gameStore'
+import { goTo } from '@/platform/route'
 
 const TitleScreen = () => {
-  const goTo = useGameStore((s) => s.goTo)
   const t = useText()
+
+  const handleStart = () => goTo({ screen: 'select' })
 
   return (
     <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
@@ -28,7 +29,7 @@ const TitleScreen = () => {
           <span className="font-mono text-xs tracking-[0.3em] text-mute">ISOMETRIC PUZZLE</span>
         </div>
         <div className="relative flex w-full flex-col items-center gap-4 panel-pad sm:mt-10 sm:w-auto sm:p-0">
-          <Button variant="primary" className="w-full sm:w-52" onClick={() => goTo('select')}>
+          <Button variant="primary" className="w-full sm:w-52" onClick={handleStart}>
             {t('title.start')}
           </Button>
           <span className="font-mono text-[11px] tracking-[0.25em] text-faint sm:hidden">

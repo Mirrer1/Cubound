@@ -6,7 +6,7 @@ const store = () => useGameStore.getState()
 
 describe('재시작 연출', () => {
   beforeEach(() => {
-    store().play('1-3')
+    store().enter('1-3')
     store().closeGuide()
   })
 

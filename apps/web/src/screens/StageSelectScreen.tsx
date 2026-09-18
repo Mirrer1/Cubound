@@ -1,17 +1,35 @@
+import { useEffect, useRef } from 'react'
+
 import Button from '@/components/ui/Button'
 import StageCard, { type StageCardState } from '@/components/ui/StageCard'
 import { isUnlocked, totalStars } from '@/game/progress'
 import { worldTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
+import { goTo } from '@/platform/route'
 import { STAGES, STAGES_PER_WORLD, WORLDS, isBossStage, stageIdsOf } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
 
 const WORLD = WORLDS[0]
 
+const cardsIn = (grid: HTMLDivElement | null) =>
+  [...(grid?.querySelectorAll('button') ?? [])] as HTMLButtonElement[]
+
+// 한 줄에 놓인 카드 수. 화면 폭에 따라 달라져서 누를 때마다 잰다
+const columnsOf = (cards: HTMLButtonElement[]) =>
+  cards.filter((card) => card.offsetTop === cards[0].offsetTop).length
+
+// 잠긴 카드는 건너뛰고 같은 방향으로 이어서 찾는다
+const nextFocus = (cards: HTMLButtonElement[], from: number, delta: number) => {
+  const step = delta > 0 ? 1 : -1
+  for (let i = from + delta; i >= 0 && i < cards.length; i += step) {
+    if (!cards[i].disabled) return i
+  }
+  return from
+}
+
 const StageSelectScreen = () => {
   const progress = useGameStore((s) => s.progress)
-  const goTo = useGameStore((s) => s.goTo)
-  const play = useGameStore((s) => s.play)
+  const gridRef = useRef<HTMLDivElement>(null)
   const t = useText()
 
   const ids = stageIdsOf(WORLD)
@@ -32,12 +50,47 @@ const StageSelectScreen = () => {
       boss: isBossStage(id),
     }
   })
+  const now = Math.max(
+    0,
+    cards.findIndex((card) => card.state === 'open'),
+  )
+
+  const handleBack = () => goTo({ screen: 'title' })
+  const handleSelect = (stageId: string) => goTo({ screen: 'play', stageId })
+
+  // 첫 포커스는 지금 도전할 카드에 둔다
+  useEffect(() => {
+    cardsIn(gridRef.current)[now]?.focus()
+  }, [now])
+
+  // 방향키로 카드 사이를 옮겨 다니고 Esc로 타이틀로 돌아간다
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleBack()
+        return
+      }
+
+      const column = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
+      const row = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0
+      const cards = cardsIn(gridRef.current)
+      if ((!column && !row) || cards.length === 0) return
+
+      e.preventDefault()
+      const from = cards.indexOf(document.activeElement as HTMLButtonElement)
+      const to = from < 0 ? now : nextFocus(cards, from, column || row * columnsOf(cards))
+      cards[to]?.focus()
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [now])
 
   return (
     <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
       <section className="scroll-area flex min-h-0 flex-1 flex-col gap-6 rounded-[22px] border border-line bg-base-bg panel-pad sm:gap-8">
         <header className="flex items-start gap-4">
-          <Button variant="icon" onClick={() => goTo('title')} aria-label={t('select.back')}>
+          <Button variant="icon" onClick={handleBack} aria-label={t('select.back')}>
             ←
           </Button>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -52,9 +105,12 @@ const StageSelectScreen = () => {
             </span>
           </div>
         </header>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(5,minmax(0,240px))] sm:justify-center sm:gap-4">
+        <div
+          ref={gridRef}
+          className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(5,minmax(0,240px))] sm:justify-center sm:gap-4"
+        >
           {cards.map((card) => (
-            <StageCard key={card.id} {...card} onSelect={() => play(card.id)} />
+            <StageCard key={card.id} {...card} onSelect={() => handleSelect(card.id)} />
           ))}
         </div>
       </section>

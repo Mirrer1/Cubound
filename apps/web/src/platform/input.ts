@@ -5,11 +5,16 @@ const KEY_DIRECTIONS: Record<string, Direction> = {
   ArrowRight: 'right',
   ArrowDown: 'down',
   ArrowLeft: 'left',
+  w: 'up',
+  d: 'right',
+  s: 'down',
+  a: 'left',
 }
 
 const SWIPE_MIN_DISTANCE = 28
 
-export const directionFromKey = (key: string): Direction | null => KEY_DIRECTIONS[key] ?? null
+export const directionFromKey = (key: string): Direction | null =>
+  KEY_DIRECTIONS[key] ?? KEY_DIRECTIONS[key.toLowerCase()] ?? null
 
 // 아이소메트릭 네 축은 화면 가로세로축 기준으로 대칭이라 밀어낸 방향의 부호만으로 갈린다
 export const directionFromSwipe = (dx: number, dy: number): Direction | null => {

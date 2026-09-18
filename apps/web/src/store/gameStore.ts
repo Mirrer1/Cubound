@@ -2,16 +2,14 @@ import { create } from 'zustand'
 
 import { type Progress, recordClear, shouldShowGuide } from '@/game/progress'
 import { createState, move } from '@/game/rules'
+import { restoreSession, toSession } from '@/game/session'
 import type { Direction, GameEvent, GameState } from '@/game/types'
-import { localProgressStorage } from '@/platform/storage'
+import { localProgressStorage, localSessionStorage } from '@/platform/storage'
 import { STAGES } from '@/stages'
-
-export type Screen = 'title' | 'select' | 'play'
 
 const MAX_QUEUE = 2
 
 interface GameStore {
-  screen: Screen
   progress: Progress
   game: GameState | null
   prevGame: GameState | null // 연출 시작 전 상태
@@ -22,8 +20,7 @@ interface GameStore {
   queue: Direction[] // 연출 중 들어온 입력
   chained: boolean // 지금 연출이 대기열에서 이어진 이동
   guideStep: number | null // 보고 있는 가이드 단계
-  goTo: (screen: Screen) => void
-  play: (stageId: string) => void
+  enter: (stageId: string) => void
   move: (direction: Direction, repeat?: boolean, chained?: boolean) => void
   finishAnimation: () => void
   restart: () => void
@@ -44,7 +41,6 @@ const fresh = (game: GameState, turn: number) => ({
 })
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  screen: 'title',
   progress: localProgressStorage.load(),
   game: null,
   prevGame: null,
@@ -55,13 +51,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
   queue: [],
   chained: false,
   guideStep: null,
-  goTo: (screen) => set({ screen }),
-  play: (stageId) =>
-    set(({ turn, progress }) => ({
-      screen: 'play',
-      ...fresh(createState(STAGES[stageId]), turn),
-      guideStep: shouldShowGuide(STAGES[stageId], progress) ? 0 : null,
-    })),
+  // 중간 상태가 남아 있으면 이어서 시작하고 그때는 가이드를 띄우지 않는다
+  enter: (stageId) =>
+    set(({ turn, progress }) => {
+      const stage = STAGES[stageId]
+      const saved = restoreSession(localSessionStorage.load(), stage)
+      return {
+        ...fresh(saved ?? createState(stage), turn),
+        guideStep: !saved && shouldShowGuide(stage, progress) ? 0 : null,
+      }
+    }),
   move: (direction, repeat = false, chained = false) =>
     set(({ game, progress, animating, restarting, queue, turn, guideStep }) => {
       if (!game || guideStep !== null || restarting) return {}
@@ -81,6 +80,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         animating: true,
         chained,
       }
+      if (result.state.cleared) localSessionStorage.clear()
+      else localSessionStorage.save(toSession(result.state))
       if (!result.state.cleared || game.cleared) return next
 
       const cleared = recordClear(
@@ -100,11 +101,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   // 연출 중에 다시 눌러도 기다리지 않고 처음부터 다시 시작한다
   restart: () =>
-    set(({ game, turn, guideStep }) =>
-      game && guideStep === null
-        ? { ...fresh(createState(game.stage), turn), prevGame: game, restarting: true }
-        : {},
-    ),
+    set(({ game, turn, guideStep }) => {
+      if (!game || guideStep !== null) return {}
+      localSessionStorage.clear()
+      return { ...fresh(createState(game.stage), turn), prevGame: game, restarting: true }
+    }),
   openGuide: () =>
     set(({ game }) => (game?.stage.guides?.length ? { guideStep: 0, queue: [] } : {})),
   nextGuide: () =>
