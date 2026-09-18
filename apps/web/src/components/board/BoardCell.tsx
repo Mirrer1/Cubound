@@ -53,7 +53,7 @@ const BoardCell = ({
   return (
     <g>
       {!hidden && (
-        <g style={{ opacity: faded ? 0.35 : 1, transition: 'opacity 320ms var(--ease-soft)' }}>
+        <g style={{ opacity: faded ? 0.5 : 1, transition: 'opacity 320ms var(--ease-soft)' }}>
           <BoardBlock
             x={x}
             y={y}

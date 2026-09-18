@@ -130,7 +130,7 @@ const PlayScreen = () => {
             </div>
           </header>
           <div
-            className="min-h-0 flex-1 touch-none p-4 select-none sm:p-6"
+            className="min-h-0 flex-1 touch-none p-2 select-none sm:p-6"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerEnd}

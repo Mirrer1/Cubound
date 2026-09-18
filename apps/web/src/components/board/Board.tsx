@@ -42,7 +42,7 @@ const Board = ({
   guideCell,
 }: BoardProps) => {
   const { t, chain } = useBoardAnimation(turn, events, onAnimationEnd, queued, chained)
-  const viewBox = useCamera(game, guideCell)
+  const { ref, viewBox } = useCamera(game, guideCell)
   const moving = t < 1 && prevGame !== null
   const before = moving ? prevGame : game
 
@@ -86,7 +86,7 @@ const Board = ({
   const guideTop = guideStanding ? TILE.layer * 2 : 0
 
   return (
-    <svg viewBox={viewBox} className="h-full w-full">
+    <svg ref={ref} viewBox={viewBox} className="h-full w-full">
       {cells.map((cell) => {
         const entity = stage.entities.find((e) => same(e, cell.p))
         const isFilled = stage.heights[cell.p.y][cell.p.x] < 0

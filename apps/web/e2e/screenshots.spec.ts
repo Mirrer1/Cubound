@@ -33,7 +33,14 @@ const PLAY_SHOTS: Record<keyof typeof SOLUTIONS, Record<number, string>> = {
     8: 'occluded',
     13: 'box-stair',
   },
-  '1-4': { 0: 'start', 1: 'bridge-filled', 2: 'bridge-crossing', 9: 'box-climbed', 11: 'bridge-2' },
+  '1-4': {
+    0: 'start',
+    1: 'bridge-filled',
+    2: 'bridge-crossing',
+    3: 'zone-changed',
+    9: 'box-climbed',
+    11: 'bridge-2',
+  },
   '1-5': { 0: 'start', 9: 'high-bridge', 10: 'high-bridge-crossing', 13: 'box-stair' },
 }
 
