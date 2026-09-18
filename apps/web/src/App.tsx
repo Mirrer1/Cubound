@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 
 import { isUnlocked } from '@/game/progress'
 import { hashOf } from '@/platform/route'
+import { documentTitle } from '@/platform/title'
 import { useRoute } from '@/platform/useRoute'
 import PlayScreen from '@/screens/PlayScreen'
 import StageSelectScreen from '@/screens/StageSelectScreen'
@@ -29,7 +30,8 @@ const App = () => {
 
   useEffect(() => {
     document.documentElement.lang = language
-  }, [language])
+    document.title = documentTitle(route, language)
+  }, [language, route])
 
   return (
     <MotionConfig reducedMotion="user">

@@ -7,7 +7,7 @@
 
 @theme static {
   --ease-soft: cubic-bezier(0.37, 0, 0.63, 1);
-  --font-sans: 'Jost', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Jost', 'IBM Plex Sans KR', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
   --color-page-bg: #e9e7e2;

@@ -1,0 +1,16 @@
+{
+  "name": "Cubound",
+  "short_name": "Cubound",
+  "description": "작은 큐브가 한 칸씩 굴러 집을 찾아가는 조용한 아이소메트릭 퍼즐.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#E9E7E2",
+  "theme_color": "#E9E7E2",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

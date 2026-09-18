@@ -2,19 +2,57 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#F2F1EE" />
+    <title>Cubound — 작은 큐브의 집 찾기 여행</title>
+    <meta
+      name="description"
+      content="작은 큐브가 한 칸씩 굴러 집을 찾아가는 조용한 아이소메트릭 퍼즐."
+    />
+    <meta name="theme-color" content="#E9E7E2" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cubound" />
+    <meta property="og:url" content="https://cubound.vercel.app/" />
+    <meta property="og:title" content="Cubound" />
+    <meta
+      property="og:description"
+      content="작은 큐브가 한 칸씩 굴러 집을 찾아가는 조용한 아이소메트릭 퍼즐."
+    />
+    <meta property="og:image" content="https://cubound.vercel.app/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Cubound" />
+    <meta
+      name="twitter:description"
+      content="작은 큐브가 한 칸씩 굴러 집을 찾아가는 조용한 아이소메트릭 퍼즐."
+    />
+    <meta name="twitter:image" content="https://cubound.vercel.app/og.png" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Jost:wght@300;400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500&family=Jost:wght@300;400;500&display=swap"
       rel="stylesheet"
     />
-    <title>Cubound</title>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div
+        style="padding: 2rem; font-family: system-ui, sans-serif; line-height: 1.7; color: #3a3936"
+      >
+        <h1 style="font-weight: 400">Cubound</h1>
+        <p>작은 큐브가 한 칸씩 굴러 집을 찾아가는 조용한 아이소메트릭 퍼즐.</p>
+        <p>게임을 하려면 자바스크립트가 필요해요.</p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
