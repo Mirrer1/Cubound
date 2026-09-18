@@ -36,6 +36,7 @@ export const en = {
 
   'world.1': 'Land of Low Steps',
   'stage.1-1': 'First Steps',
+  'stage.1-2': 'Downhill',
 }
 
 export type Texts = typeof en

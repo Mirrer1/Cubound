@@ -294,6 +294,7 @@ interface Storage {
 ## 배포
 
 - **웹:** Vercel. Root Directory를 `apps/web`로 설정, `pnpm build` → `apps/web/dist/`
+  - 주소는 https://cubound.vercel.app 이고 `main`에 푸시하면 자동으로 배포된다
 - **앱 (나중에):** Capacitor
   - 안드로이드는 Windows에서 빌드 가능
   - iOS는 Mac 또는 클라우드 빌드(Codemagic 등) 필요

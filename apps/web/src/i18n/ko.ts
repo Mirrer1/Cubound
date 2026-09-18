@@ -37,4 +37,5 @@ export const ko: Partial<Texts> = {
 
   'world.1': '낮은 계단의 땅',
   'stage.1-1': '첫걸음',
+  'stage.1-2': '내리막',
 }

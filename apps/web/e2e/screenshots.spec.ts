@@ -13,8 +13,11 @@ const LABELS = {
   en: { start: 'Start', skip: 'Skip', select: 'Stages' },
 }
 
-// 스테이지 1-1의 풀이와 캡처할 이동 번호
-const SOLUTION = 'up up right right right down down left'
+// 스테이지별 풀이와 1-1에서 캡처할 이동 번호
+const SOLUTIONS = {
+  '1-1': 'up up right right right down down left',
+  '1-2': 'right right right right down down down left left left left down down',
+}
 const PLAY_SHOTS: Record<number, string> = {
   0: 'start',
   8: 'cleared',
@@ -49,8 +52,16 @@ const shootGuide = async (page: Page, prefix: string, skip: string) => {
   await shot(page, `${prefix}-guide-skipped`)
 }
 
-const solve = async (page: Page, onMove?: (index: number) => Promise<void>) => {
-  const moves = SOLUTION.split(' ') as (keyof typeof KEYS)[]
+// 스테이지 2의 한 단계짜리 높이 가이드를 찍고 시작한다
+const shootHeightGuide = async (page: Page, prefix: string, start: string) => {
+  await page.getByText('STAGE 02').waitFor()
+  await page.getByText('GUIDE 1 / 1').waitFor()
+  await shot(page, `${prefix}-stage-02-guide`)
+  await page.getByRole('button', { name: start, exact: true }).click()
+}
+
+const solve = async (page: Page, solution: string, onMove?: (index: number) => Promise<void>) => {
+  const moves = solution.split(' ') as (keyof typeof KEYS)[]
   for (let i = 0; i <= moves.length; i++) {
     await onMove?.(i)
     if (i < moves.length) {
@@ -61,7 +72,7 @@ const solve = async (page: Page, onMove?: (index: number) => Promise<void>) => {
 }
 
 test('@shot 데스크톱 화면', async ({ page }) => {
-  test.setTimeout(90_000)
+  test.setTimeout(150_000)
   await page.goto('/')
   await shot(page, 'desktop-title')
 
@@ -84,7 +95,7 @@ test('@shot 데스크톱 화면', async ({ page }) => {
   await page.screenshot({ path: 'e2e/.screenshots/desktop-rolling-mid.png' })
   await page.keyboard.press('r')
 
-  await solve(page, async (i) => {
+  await solve(page, SOLUTIONS['1-1'], async (i) => {
     if (i === 8) {
       await page.waitForTimeout(450)
       await page.screenshot({ path: 'e2e/.screenshots/desktop-clear-effect.png' })
@@ -94,6 +105,16 @@ test('@shot 데스크톱 화면', async ({ page }) => {
   })
   await page.waitForTimeout(1600)
   await shot(page, 'desktop-clear-card')
+
+  await page.getByRole('button', { name: '다음 스테이지' }).click()
+  await shootHeightGuide(page, 'desktop', LABELS.ko.start)
+  await shot(page, 'desktop-stage-02-start')
+  await solve(page, SOLUTIONS['1-2'], async (i) => {
+    // 앞쪽 둔덕이 큐브를 가리는 자리
+    if (i === 8) await shot(page, 'desktop-stage-02-occluded')
+  })
+  await page.waitForTimeout(1600)
+  await shot(page, 'desktop-stage-02-clear-card')
 
   await page.getByRole('button', { name: LABELS.ko.select, exact: true }).click()
   await shot(page, 'desktop-select-after-clear')
@@ -106,6 +127,7 @@ test.describe('모바일', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
 
   test('@shot 모바일 화면', async ({ page }) => {
+    test.setTimeout(120_000)
     await page.goto('/')
     await shot(page, 'mobile-title')
 
@@ -117,12 +139,19 @@ test.describe('모바일', () => {
     await shootGuide(page, 'mobile', LABELS.ko.skip)
     await shot(page, 'mobile-play')
 
-    await solve(page)
+    await solve(page, SOLUTIONS['1-1'])
     await page.waitForTimeout(1600)
     await shot(page, 'mobile-clear-card')
 
     await page.getByRole('button', { name: LABELS.ko.select, exact: true }).click()
     await shot(page, 'mobile-select')
+
+    await page.getByRole('button', { name: /02/ }).click()
+    await shootHeightGuide(page, 'mobile', LABELS.ko.start)
+    await shot(page, 'mobile-stage-02-play')
+    await solve(page, SOLUTIONS['1-2'])
+    await page.waitForTimeout(1600)
+    await shot(page, 'mobile-stage-02-clear-card')
   })
 })
 
@@ -139,7 +168,7 @@ test.describe('영어', () => {
     await shootGuide(page, 'en-desktop', LABELS.en.skip)
     await shot(page, 'en-desktop-play')
 
-    await solve(page)
+    await solve(page, SOLUTIONS['1-1'])
     await page.waitForTimeout(1600)
     await shot(page, 'en-desktop-clear-card')
 
@@ -159,7 +188,7 @@ test.describe('영어', () => {
       await shootGuide(page, 'en-mobile', LABELS.en.skip)
       await shot(page, 'en-mobile-play')
 
-      await solve(page)
+      await solve(page, SOLUTIONS['1-1'])
       await page.waitForTimeout(1600)
       await shot(page, 'en-mobile-clear-card')
 
