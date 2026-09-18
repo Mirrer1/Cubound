@@ -2,7 +2,6 @@ export const en = {
   'title.start': 'Start',
 
   'select.back': 'Back',
-  'select.bossHint': 'Arrive in {n} moves',
 
   'play.guide': 'Show guide again',
   'play.restart': 'Restart (R)',

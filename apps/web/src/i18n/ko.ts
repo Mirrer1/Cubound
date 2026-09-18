@@ -4,7 +4,6 @@ export const ko: Partial<Texts> = {
   'title.start': '시작',
 
   'select.back': '타이틀로',
-  'select.bossHint': '{n}번 안에 도착',
 
   'play.guide': '가이드 다시 보기',
   'play.restart': '다시 하기 (R)',

@@ -25,8 +25,8 @@ describe('text', () => {
   })
 
   it('{n}을 넘긴 숫자로 바꾼다', () => {
-    expect(text('en', 'select.bossHint', 24)).toBe('Arrive in 24 moves')
-    expect(text('ko', 'select.bossHint', 24)).toBe('24번 안에 도착')
+    expect(text('en', 'stars.label', 2)).toBe('2 stars')
+    expect(text('ko', 'stars.label', 2)).toBe('별 2개')
   })
 })
 
