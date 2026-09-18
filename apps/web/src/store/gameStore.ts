@@ -18,6 +18,7 @@ interface GameStore {
   events: GameEvent[]
   turn: number
   animating: boolean
+  restarting: boolean // 처음 자리로 내려앉는 연출 중
   queue: Direction[] // 연출 중 들어온 입력
   chained: boolean // 지금 연출이 대기열에서 이어진 이동
   guideStep: number | null // 보고 있는 가이드 단계
@@ -37,6 +38,7 @@ const fresh = (game: GameState, turn: number) => ({
   events: [],
   turn: turn + 1,
   animating: false,
+  restarting: false,
   queue: [],
   chained: false,
 })
@@ -49,6 +51,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   events: [],
   turn: 0,
   animating: false,
+  restarting: false,
   queue: [],
   chained: false,
   guideStep: null,
@@ -60,8 +63,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       guideStep: shouldShowGuide(STAGES[stageId], progress) ? 0 : null,
     })),
   move: (direction, repeat = false, chained = false) =>
-    set(({ game, progress, animating, queue, turn, guideStep }) => {
-      if (!game || guideStep !== null) return {}
+    set(({ game, progress, animating, restarting, queue, turn, guideStep }) => {
+      if (!game || guideStep !== null || restarting) return {}
       // 키를 누르고 있을 때는 1개만 기다리게 해 손을 뗀 뒤 밀려 움직이지 않게 한다
       if (animating) {
         return queue.length < (repeat ? 1 : MAX_QUEUE) ? { queue: [...queue, direction] } : {}
@@ -92,12 +95,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }),
   finishAnimation: () => {
     const [next, ...rest] = get().queue
-    set({ animating: false, queue: rest })
+    set({ animating: false, restarting: false, queue: rest })
     if (next) get().move(next, false, true)
   },
+  // 연출 중에 다시 눌러도 기다리지 않고 처음부터 다시 시작한다
   restart: () =>
     set(({ game, turn, guideStep }) =>
-      game && guideStep === null ? fresh(createState(game.stage), turn) : {},
+      game && guideStep === null
+        ? { ...fresh(createState(game.stage), turn), prevGame: game, restarting: true }
+        : {},
     ),
   openGuide: () =>
     set(({ game }) => (game?.stage.guides?.length ? { guideStep: 0, queue: [] } : {})),

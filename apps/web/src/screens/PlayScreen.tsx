@@ -25,6 +25,7 @@ const PlayScreen = () => {
   const finishAnimation = useGameStore((s) => s.finishAnimation)
   const queued = useGameStore((s) => s.queue.length)
   const chained = useGameStore((s) => s.chained)
+  const restarting = useGameStore((s) => s.restarting)
   const guideStep = useGameStore((s) => s.guideStep)
   const openGuide = useGameStore((s) => s.openGuide)
   const nextGuide = useGameStore((s) => s.nextGuide)
@@ -90,7 +91,7 @@ const PlayScreen = () => {
           ref={sectionRef}
           className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-line bg-base-bg"
         >
-          <header className="flex items-start justify-between gap-6 px-6 pt-6 short:items-center short:pt-3 wide:px-9 wide:pt-8">
+          <header className="flex items-start justify-between gap-6 px-(--panel-pad) pt-(--panel-pad) short:items-center short:pt-3">
             <div className="flex flex-col gap-1.5 short:flex-row short:items-baseline short:gap-3">
               <span className="font-mono text-[11px] tracking-[0.22em] text-mute">
                 STAGE {String(stageNumber).padStart(2, '0')}
@@ -148,11 +149,12 @@ const PlayScreen = () => {
               onAnimationEnd={finishAnimation}
               queued={queued}
               chained={chained}
+              restarting={restarting}
               guideCell={guideCell}
             />
           </div>
           <div
-            className={`grid gap-3 p-4 whitespace-nowrap sm:hidden ${hasGuide ? 'grid-cols-3' : 'grid-cols-2'}`}
+            className={`grid gap-3 panel-pad whitespace-nowrap sm:hidden ${hasGuide ? 'grid-cols-3' : 'grid-cols-2'}`}
           >
             <Button strong={outOfMoves} onClick={restart} data-guide="restart">
               ↺ {t('play.restartShort')}

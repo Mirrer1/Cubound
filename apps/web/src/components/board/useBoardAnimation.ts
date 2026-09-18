@@ -16,12 +16,13 @@ export const useBoardAnimation = (
   onEnd: () => void,
   queued: number,
   chained: boolean,
+  restartSeconds: number, // 재시작 연출 길이, 0이면 이동 연출
 ): { t: number; chain: Chain } => {
   const [progress, setProgress] = useState({ turn: -1, t: 1, out: false })
   const controls = useRef<AnimationPlaybackControls | null>(null)
   const queuedRef = useRef(queued)
   const reduced = useReducedMotion()
-  const duration = durationOf(events) * (reduced ? 0.35 : 1)
+  const duration = (restartSeconds || durationOf(events)) * (reduced ? 0.35 : 1)
   const hurry = queued >= CATCH_UP_QUEUE
 
   useEffect(() => {

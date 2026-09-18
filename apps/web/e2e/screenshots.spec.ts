@@ -159,6 +159,8 @@ test('@shot 데스크톱 화면', async ({ page }) => {
   await page.waitForTimeout(90)
   await page.screenshot({ path: 'e2e/.screenshots/desktop-rolling-mid.png' })
   await page.keyboard.press('r')
+  await page.waitForTimeout(110)
+  await page.screenshot({ path: 'e2e/.screenshots/desktop-restart-mid.png' })
 
   await solve(page, SOLUTIONS['1-1'], async (i) => {
     if (i === 8) {

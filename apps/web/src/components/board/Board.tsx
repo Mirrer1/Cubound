@@ -5,7 +5,7 @@ import BoardCell from './BoardCell'
 import BoardLadder from './BoardLadder'
 import ClearEffect from './ClearEffect'
 import { rollingCubeFaces } from './cube'
-import { movingBox, playerFrame } from './frame'
+import { movingBox, playerFrame, restartDrop, restartDuration } from './frame'
 import { shade } from './shade'
 import { useBoardAnimation } from './useBoardAnimation'
 import { useCamera } from './useCamera'
@@ -22,6 +22,7 @@ interface BoardProps {
   onAnimationEnd: () => void
   queued: number // 기다리는 입력 수
   chained: boolean // 앞 이동에서 바로 이어짐
+  restarting: boolean // 처음 자리로 내려앉는 연출 중
   guideCell?: Point // 가이드가 비추는 칸
 }
 
@@ -39,12 +40,22 @@ const Board = ({
   onAnimationEnd,
   queued,
   chained,
+  restarting,
   guideCell,
 }: BoardProps) => {
-  const { t, chain } = useBoardAnimation(turn, events, onAnimationEnd, queued, chained)
+  const restartSeconds = restarting ? restartDuration(game.boxes.length) : 0
+  const { t, chain } = useBoardAnimation(
+    turn,
+    events,
+    onAnimationEnd,
+    queued,
+    chained,
+    restartSeconds,
+  )
   const { ref, viewBox } = useCamera(game, guideCell)
   const moving = t < 1 && prevGame !== null
   const before = moving ? prevGame : game
+  const dropping = restarting && t < 1
 
   const { stage, heights, boxes, ladders, leaningLadders, player } = game
   const cube = playerFrame(prevGame, game, events, t, chain)
@@ -59,19 +70,24 @@ const Board = ({
       .flatMap((l) => occludingCells(heights, l, heights[l.y][l.x])),
   ]
 
-  // x, y는 화면 좌표, p는 칸 좌표
+  // x, y는 화면 좌표, p는 칸 좌표. 메운 칸이 다시 구멍이 될 때는 사라지기 전 높이로 그린다
   const cells = useMemo(
     () =>
       heights
         .flatMap((row, y) =>
-          row.map((h, x) => ({ ...toScreen({ x, y }, h), h, p: { x, y }, key: `${x}-${y}` })),
+          row.map((_, x) => {
+            const h = Math.max(heights[y][x], before.heights[y][x])
+            return { ...toScreen({ x, y }, h), h, p: { x, y }, key: `${x}-${y}` }
+          }),
         )
         .filter((cell) => cell.h >= 0)
         .sort((a, b) => a.p.x + a.p.y - (b.p.x + b.p.y)),
-    [heights],
+    [heights, before.heights],
   )
 
-  const cubeScreen = toScreen({ x: cube.x, y: cube.y }, cube.level)
+  const cubeDrop = dropping ? restartDrop(t, 0, boxes.length) : null
+  const cubeLevel = cube.level + (cubeDrop?.lift ?? 0)
+  const cubeScreen = toScreen({ x: cube.x, y: cube.y }, cubeLevel)
   const carriedOpacity =
     pickedUp && !game.carrying ? 0 : pickedUp ? t : placed ? 1 - t : game.carrying ? 1 : 0
   const progress = moving ? t : 1
@@ -116,7 +132,12 @@ const Board = ({
         const drawBox = box !== null && same(box.cell, cell.p)
         const boxScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
         const goalEffect = same(cell.p, stage.goal) && game.cleared && !moving
-        const overlay = drawBox || drawCube || goalEffect
+        const droppingBox = dropping ? boxes.findIndex((b) => same(b, cell.p)) : -1
+        const boxDrop = droppingBox >= 0 ? restartDrop(t, droppingBox + 1, boxes.length) : null
+        // 메운 칸이 다시 구멍으로 돌아갈 때는 제자리에서 사라진다
+        const restored =
+          dropping && before.heights[cell.p.y][cell.p.x] > heights[cell.p.y][cell.p.x]
+        const overlay = drawBox || drawCube || goalEffect || boxDrop !== null
 
         return (
           <BoardCell
@@ -132,23 +153,32 @@ const Board = ({
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
             switchDepth={lerp(pressed(before) ? 4 : 11, pressed(game) ? 4 : 11, progress)}
             doorDepth={lerp(doorDepth(before), doorDepth(game), progress)}
-            box={has(boxes, cell.p) && !(box && same(box.to, cell.p))}
+            box={has(boxes, cell.p) && !(box && same(box.to, cell.p)) && boxDrop === null}
+            blockOpacity={restored ? 1 - t : 1}
             flatLadder={flatLadder}
             leaning={leaning}
           >
             {overlay ? (
               <>
                 {drawBox && boxScreen && <BoardBox x={boxScreen.x} y={boxScreen.y - TILE.layer} />}
-                {drawCube &&
-                  rollingCubeFaces(cube.x, cube.y, cube.level, cube.direction, cube.angle).map(
-                    (f) => (
-                      <polygon
-                        key={f.face}
-                        points={f.points}
-                        style={{ fill: shade('player', f.face) }}
-                      />
-                    ),
-                  )}
+                {boxDrop && (
+                  <g opacity={boxDrop.opacity}>
+                    <BoardBox x={cell.x} y={cell.y - TILE.layer - boxDrop.lift * TILE.layer} />
+                  </g>
+                )}
+                {drawCube && (
+                  <g opacity={cubeDrop ? cubeDrop.opacity : 1}>
+                    {rollingCubeFaces(cube.x, cube.y, cubeLevel, cube.direction, cube.angle).map(
+                      (f) => (
+                        <polygon
+                          key={f.face}
+                          points={f.points}
+                          style={{ fill: shade('player', f.face) }}
+                        />
+                      ),
+                    )}
+                  </g>
+                )}
                 {drawCube && carriedOpacity > 0 && (
                   <g opacity={carriedOpacity}>
                     <BoardLadder x={cubeScreen.x} y={cubeScreen.y - TILE.layer - 2} />

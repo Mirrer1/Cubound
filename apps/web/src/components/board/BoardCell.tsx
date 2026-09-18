@@ -20,6 +20,7 @@ interface BoardCellProps {
   switchDepth: number
   doorDepth: number
   box: boolean
+  blockOpacity: number // 칸 블록 투명도
   flatLadder: number // 투명도, 0이면 없음
   leaning: string // "방향:투명도"를 |로 이은 값
   children?: ReactNode
@@ -38,6 +39,7 @@ const BoardCell = ({
   switchDepth,
   doorDepth,
   box,
+  blockOpacity,
   flatLadder,
   leaning,
   children,
@@ -54,28 +56,30 @@ const BoardCell = ({
     <g>
       {!hidden && (
         <g style={{ opacity: faded ? 0.5 : 1, transition: 'opacity 320ms var(--ease-soft)' }}>
-          <BoardBlock
-            x={x}
-            y={y}
-            width={TILE.width}
-            depth={h * TILE.layer + TILE.lip}
-            top={goal ? 'var(--color-goal)' : filled ? shade('tool', 'top') : floorTop}
-            left={filled ? shade('tool', 'left') : 'var(--color-floor-left)'}
-            right={filled ? shade('tool', 'right') : 'var(--color-floor-right)'}
-            stroke={goal ? undefined : darken('floor-top', 6)}
-          />
-          {goal && (
-            <>
-              <polygon
-                points={blockFaces(x, y + 7, TILE.width * 0.62, 0).top}
-                style={{ fill: darken('goal', 16) }}
-              />
-              <polygon
-                points={blockFaces(x, y + 1, TILE.width * 0.62, 0).top}
-                style={{ fill: darken('goal', 36) }}
-              />
-            </>
-          )}
+          <g opacity={blockOpacity}>
+            <BoardBlock
+              x={x}
+              y={y}
+              width={TILE.width}
+              depth={h * TILE.layer + TILE.lip}
+              top={goal ? 'var(--color-goal)' : filled ? shade('tool', 'top') : floorTop}
+              left={filled ? shade('tool', 'left') : 'var(--color-floor-left)'}
+              right={filled ? shade('tool', 'right') : 'var(--color-floor-right)'}
+              stroke={goal ? undefined : darken('floor-top', 6)}
+            />
+            {goal && (
+              <>
+                <polygon
+                  points={blockFaces(x, y + 7, TILE.width * 0.62, 0).top}
+                  style={{ fill: darken('goal', 16) }}
+                />
+                <polygon
+                  points={blockFaces(x, y + 1, TILE.width * 0.62, 0).top}
+                  style={{ fill: darken('goal', 36) }}
+                />
+              </>
+            )}
+          </g>
         </g>
       )}
       {entity === 'switch' && (
