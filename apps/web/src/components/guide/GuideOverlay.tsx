@@ -1,7 +1,8 @@
 import { motion, useReducedMotion } from 'motion/react'
-import { type MouseEvent, type RefObject, useEffect, useState } from 'react'
+import { type MouseEvent, type RefObject, useEffect, useRef, useState } from 'react'
 
 import Button from '@/components/ui/Button'
+import { useFocusTrap } from '@/components/ui/useFocusTrap'
 import type { Guide } from '@/game/types'
 import { guideText, text } from '@/i18n'
 import { isTouchDevice } from '@/platform/input'
@@ -62,6 +63,8 @@ const GuideOverlay = ({
   onSkip,
 }: GuideOverlayProps) => {
   const [measured, setMeasured] = useState<{ hole: Hole; place: Place } | null>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const nextRef = useRef<HTMLButtonElement>(null)
   const reduced = useReducedMotion()
   const language = useSettingsStore((s) => s.language)
   const guide = guides[step]
@@ -70,6 +73,13 @@ const GuideOverlay = ({
   const hole = measured?.hole
   const place = measured?.place ?? 'bottom'
   const speed = reduced ? 0.35 : 1
+
+  useFocusTrap(cardRef)
+
+  // 단계마다 넘기기 버튼에 포커스를 둬서 키보드로 이어서 넘길 수 있게 한다
+  useEffect(() => {
+    nextRef.current?.focus()
+  }, [step])
 
   // 대상은 카메라 이동과 화면 크기 변화로 움직여서 매 프레임 실제 위치를 잰다
   useEffect(() => {
@@ -104,17 +114,22 @@ const GuideOverlay = ({
     return () => cancelAnimationFrame(frame)
   }, [containerRef, targetName])
 
-  // Enter와 Space로 다음 단계로 넘긴다
+  // Enter와 Space로 다음 단계로 넘기고 Esc로 건너뛴다. 카드 안에 포커스가 있으면 버튼이 맡는다
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onSkip()
+        return
+      }
       if (e.key !== 'Enter' && e.key !== ' ') return
+      if (cardRef.current?.contains(document.activeElement)) return
       e.preventDefault()
       if (!e.repeat) onNext()
     }
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onNext])
+  }, [onNext, onSkip])
 
   return (
     <motion.div
@@ -142,6 +157,7 @@ const GuideOverlay = ({
         transition={{ duration: 0.35 * speed, ease: 'easeInOut' }}
       >
         <motion.div
+          ref={cardRef}
           className="flex w-full max-w-[420px] cursor-default flex-col gap-4 rounded-[22px] border border-line bg-base-bg p-6 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.18)] short:gap-3 short:p-4"
           onClick={stopClick}
           initial={{ y: 6, scale: 0.98 }}
@@ -169,11 +185,16 @@ const GuideOverlay = ({
               {text(language, 'guide.skip')}
             </button>
             {isLast ? (
-              <Button variant="primary" onClick={onNext}>
+              <Button ref={nextRef} variant="primary" onClick={onNext}>
                 {text(language, 'guide.start')}
               </Button>
             ) : (
-              <Button variant="icon" onClick={onNext} title={text(language, 'guide.next')}>
+              <Button
+                ref={nextRef}
+                variant="icon"
+                onClick={onNext}
+                title={text(language, 'guide.next')}
+              >
                 &gt;
               </Button>
             )}

@@ -121,3 +121,9 @@ body {
     scrollbar-color: var(--color-line) transparent;
   }
 }
+
+/* 키보드로 옮겨 다닐 때만 지금 어디에 있는지 보여준다 */
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}

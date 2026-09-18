@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from 'react'
+import type { ButtonHTMLAttributes, Ref } from 'react'
 
 const VARIANTS = {
   primary: 'h-14 rounded-2xl bg-ink px-8 text-lg text-base-bg hover:bg-ink/90',
@@ -14,6 +14,7 @@ const TONES = {
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: keyof typeof VARIANTS
   strong?: boolean // 시선을 끌어야 할 때 진한 면으로
+  ref?: Ref<HTMLButtonElement>
 }
 
 const Button = ({
