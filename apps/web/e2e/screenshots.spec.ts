@@ -19,6 +19,11 @@ const SOLUTIONS = {
   '1-3': 'up right down down down right down down down right right right right right',
   '1-4': 'right right right right right right down down down left right right right down',
   '1-5': 'up right down down down right down right right right right down down down',
+  '1-6': 'right right right right down down down down right right right down down left down',
+  '1-7':
+    'down down right right right left left left down down right down down right right right down',
+  '1-8':
+    'down down right right right right left left left left down down right right right right right right right down',
 }
 
 // 이동 번호마다 남길 장면 이름
@@ -42,6 +47,17 @@ const PLAY_SHOTS: Record<keyof typeof SOLUTIONS, Record<number, string>> = {
     11: 'bridge-2',
   },
   '1-5': { 0: 'start', 9: 'high-bridge', 10: 'high-bridge-crossing', 13: 'box-stair' },
+  '1-6': {
+    0: 'start',
+    1: 'on-switch',
+    2: 'on-door',
+    3: 'door-closed-behind',
+    9: 'fork',
+    12: 'zone-changed',
+    13: 'gate-2',
+  },
+  '1-7': { 0: 'start', 5: 'box-on-switch', 12: 'on-door', 13: 'zone-changed' },
+  '1-8': { 0: 'start', 6: 'box-on-switch', 16: 'box-on-door', 19: 'on-box' },
 }
 
 const shot = async (page: Page, name: string) => {
@@ -95,6 +111,20 @@ const shootBoxGuide = async (page: Page, prefix: string, start: string) => {
   await page.getByRole('button', { name: start, exact: true }).click()
 }
 
+// 스테이지 6의 두 단계짜리 스위치와 문 가이드를 찍고 시작한다
+const shootSwitchGuide = async (page: Page, prefix: string, start: string) => {
+  await page.getByText('STAGE 06').waitFor()
+  await page.getByText('GUIDE 1 / 2').waitFor()
+  await shot(page, `${prefix}-stage-06-guide-1-switch`)
+
+  if (prefix.includes('mobile')) await page.touchscreen.tap(60, 400)
+  else await page.mouse.click(60, 400)
+  await page.getByText('GUIDE 2 / 2').waitFor()
+  await shot(page, `${prefix}-stage-06-guide-2-door`)
+
+  await page.getByRole('button', { name: start, exact: true }).click()
+}
+
 const solve = async (page: Page, solution: string, onMove?: (index: number) => Promise<void>) => {
   const moves = solution.split(' ') as (keyof typeof KEYS)[]
   for (let i = 0; i <= moves.length; i++) {
@@ -114,6 +144,19 @@ const playStage = async (page: Page, id: keyof typeof SOLUTIONS, prefix: string)
   })
   await page.waitForTimeout(1600)
   await shot(page, `${prefix}-clear-card`)
+}
+
+// 스테이지 7에서 큐브가 스위치를 밟아도 문까지 닿지 못하는 것을 찍고 처음으로 되돌린다
+const shootFarDoor = async (page: Page, prefix: string) => {
+  await solve(page, 'down down down down right right right')
+  await shot(page, `${prefix}-stage-07-switch-pressed`)
+
+  await page.keyboard.press('ArrowRight')
+  await page.waitForTimeout(320)
+  await shot(page, `${prefix}-stage-07-door-closed`)
+
+  await page.keyboard.press('r')
+  await page.waitForTimeout(800)
 }
 
 // 배치가 갈라지는 화면 크기
@@ -137,7 +180,7 @@ const OPENED = {
 }
 
 test('@shot 데스크톱 화면', async ({ page }) => {
-  test.setTimeout(300_000)
+  test.setTimeout(480_000)
   await page.goto('/')
   await shot(page, 'desktop-title')
 
@@ -190,6 +233,19 @@ test('@shot 데스크톱 화면', async ({ page }) => {
   await page.getByText('STAGE 05').waitFor()
   await playStage(page, '1-5', 'desktop-stage-05')
 
+  await page.getByRole('button', { name: LABELS.ko.next }).click()
+  await shootSwitchGuide(page, 'desktop', LABELS.ko.start)
+  await playStage(page, '1-6', 'desktop-stage-06')
+
+  await page.getByRole('button', { name: LABELS.ko.next }).click()
+  await page.getByText('STAGE 07').waitFor()
+  await shootFarDoor(page, 'desktop')
+  await playStage(page, '1-7', 'desktop-stage-07')
+
+  await page.getByRole('button', { name: LABELS.ko.next }).click()
+  await page.getByText('STAGE 08').waitFor()
+  await playStage(page, '1-8', 'desktop-stage-08')
+
   await page.getByRole('button', { name: LABELS.ko.select, exact: true }).click()
   await shot(page, 'desktop-select-after-clear')
 
@@ -201,7 +257,7 @@ test.describe('모바일', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
 
   test('@shot 모바일 화면', async ({ page }) => {
-    test.setTimeout(300_000)
+    test.setTimeout(480_000)
     await page.goto('/')
     await shot(page, 'mobile-title')
 
@@ -236,6 +292,18 @@ test.describe('모바일', () => {
     await page.getByRole('button', { name: LABELS.ko.next }).click()
     await page.getByText('STAGE 05').waitFor()
     await playStage(page, '1-5', 'mobile-stage-05')
+
+    await page.getByRole('button', { name: LABELS.ko.next }).click()
+    await shootSwitchGuide(page, 'mobile', LABELS.ko.start)
+    await playStage(page, '1-6', 'mobile-stage-06')
+
+    await page.getByRole('button', { name: LABELS.ko.next }).click()
+    await page.getByText('STAGE 07').waitFor()
+    await playStage(page, '1-7', 'mobile-stage-07')
+
+    await page.getByRole('button', { name: LABELS.ko.next }).click()
+    await page.getByText('STAGE 08').waitFor()
+    await playStage(page, '1-8', 'mobile-stage-08')
   })
 })
 

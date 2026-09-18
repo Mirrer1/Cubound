@@ -39,6 +39,9 @@ export const en = {
   'stage.1-3': 'Stepping Stone',
   'stage.1-4': 'The Crossing',
   'stage.1-5': 'The Valley',
+  'stage.1-6': 'The Latch',
+  'stage.1-7': 'The Wedge',
+  'stage.1-8': 'The Carrier',
 }
 
 export type Texts = typeof en

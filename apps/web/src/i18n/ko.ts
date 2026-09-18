@@ -40,4 +40,7 @@ export const ko: Partial<Texts> = {
   'stage.1-3': '디딤돌',
   'stage.1-4': '건널목',
   'stage.1-5': '골짜기',
+  'stage.1-6': '빗장',
+  'stage.1-7': '고임돌',
+  'stage.1-8': '짐꾼',
 }
