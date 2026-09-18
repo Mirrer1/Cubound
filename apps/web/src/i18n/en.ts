@@ -1,6 +1,11 @@
 export const en = {
   'title.start': 'Start',
 
+  'tab.stages': 'Stages',
+
+  'error.message': 'Something went wrong',
+  'error.reload': 'Reload',
+
   'select.back': 'Back',
 
   'play.guide': 'Show guide again',
@@ -43,6 +48,7 @@ export const en = {
   'stage.1-7': 'The Wedge',
   'stage.1-8': 'The Carrier',
   'stage.1-9': 'Uphill',
+  'stage.1-10': 'The Long Way',
 }
 
 export type Texts = typeof en

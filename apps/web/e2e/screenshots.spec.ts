@@ -26,6 +26,8 @@ const SOLUTIONS = {
     'down down right right right right left left left left down down right right right right right right right down',
   '1-9':
     'left left left left right right right right down down left left left left left up up left left down down',
+  '1-10':
+    'right right down down right right right right right right right right down down down down left down down up left left left left left left left down up up left left down left',
 }
 
 // 이동 번호마다 남길 장면 이름
@@ -70,6 +72,20 @@ const PLAY_SHOTS: Record<keyof typeof SOLUTIONS, Record<number, string>> = {
     15: 'zone-kept',
     17: 'on-box-with-ladder',
     20: 'ladder-at-goal',
+  },
+  '1-10': {
+    0: 'start',
+    5: 'box-stair',
+    8: 'zone-2',
+    10: 'bridge',
+    13: 'bridge-2',
+    16: 'zone-3',
+    19: 'ladder-carried',
+    21: 'ladder-leaning',
+    22: 'ladder-climbed',
+    25: 'zone-4',
+    28: 'door-opened',
+    33: 'on-door',
   },
 }
 
@@ -152,6 +168,15 @@ const shootLadderGuide = async (page: Page, prefix: string, start: string) => {
   await page.getByRole('button', { name: start, exact: true }).click()
 }
 
+// 스테이지 10의 한 단계짜리 보스 가이드를 찍고 시작한다
+const shootBossGuide = async (page: Page, prefix: string, start: string) => {
+  await page.getByText('STAGE 10').waitFor()
+  await page.getByText('GUIDE 1 / 1').waitFor()
+  await shot(page, `${prefix}-stage-10-guide-moves`)
+
+  await page.getByRole('button', { name: start, exact: true }).click()
+}
+
 const solve = async (page: Page, solution: string, onMove?: (index: number) => Promise<void>) => {
   const moves = solution.split(' ') as (keyof typeof KEYS)[]
   for (let i = 0; i <= moves.length; i++) {
@@ -213,6 +238,14 @@ const SIZES = [
   { name: '2560x1440', width: 2560, height: 1440, mobile: false },
   { name: '3440x1440', width: 3440, height: 1440, mobile: false },
 ]
+
+// 1~9를 클리어한 진행. 보스가 열린다
+const BOSS_OPENED = {
+  version: 1,
+  stages: Object.fromEntries(
+    Array.from({ length: 9 }, (_, i) => [`1-${i + 1}`, { bestMoves: 8, stars: 3 }]),
+  ),
+}
 
 // 1~4를 클리어한 진행. 5까지 열리고 가이드가 자동으로 뜨지 않는다
 const OPENED = {
@@ -360,6 +393,63 @@ test.describe('모바일', () => {
     await shootLadderGuide(page, 'mobile', LABELS.ko.start)
     await shootLadderMid(page, 'mobile')
     await playStage(page, '1-9', 'mobile-stage-09')
+  })
+})
+
+// 보스는 한 판이 34수라 앞 스테이지 흐름과 묶지 않고 따로 찍는다
+test.describe('보스', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript((progress) => {
+      localStorage.setItem('cubound:progress', JSON.stringify(progress))
+    }, BOSS_OPENED)
+  })
+
+  test('@shot 보스 화면', async ({ page }) => {
+    test.setTimeout(600_000)
+    await page.goto('/')
+
+    await page.getByRole('button', { name: LABELS.ko.start }).click()
+    await shot(page, 'desktop-select-boss-open')
+
+    await page.getByRole('button', { name: /10/ }).click()
+    await shootBossGuide(page, 'desktop', LABELS.ko.start)
+    await playStage(page, '1-10', 'desktop-stage-10')
+
+    await page.getByRole('button', { name: LABELS.ko.select, exact: true }).click()
+    await shot(page, 'desktop-select-boss-cleared')
+  })
+
+  // 제한을 다 쓰면 큐브가 멈추고 재시작 버튼이 진해진다
+  test('@shot 보스 이동 제한', async ({ page }) => {
+    test.setTimeout(300_000)
+    await page.goto('/#/play/1-10')
+    await page.getByRole('button', { name: LABELS.ko.start, exact: true }).click()
+
+    const left = page.locator('[data-guide="moves"] span').last()
+    for (let i = 0; i < 80 && (await left.textContent()) !== '0'; i++) {
+      await page.keyboard.press(i % 2 === 0 ? 'ArrowRight' : 'ArrowLeft')
+      await page.waitForTimeout(300)
+    }
+    await shot(page, 'desktop-stage-10-moves-zero')
+
+    await page.keyboard.press('ArrowRight')
+    await shot(page, 'desktop-stage-10-moves-zero-blocked')
+  })
+
+  test.describe('모바일', () => {
+    test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+
+    test('@shot 보스 모바일 화면', async ({ page }) => {
+      test.setTimeout(600_000)
+      await page.goto('/')
+
+      await page.getByRole('button', { name: LABELS.ko.start }).click()
+      await shot(page, 'mobile-select-boss-open')
+
+      await page.getByRole('button', { name: /10/ }).click()
+      await shootBossGuide(page, 'mobile', LABELS.ko.start)
+      await playStage(page, '1-10', 'mobile-stage-10')
+    })
   })
 })
 

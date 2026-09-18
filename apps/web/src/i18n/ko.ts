@@ -3,6 +3,11 @@ import type { Texts } from './en'
 export const ko: Partial<Texts> = {
   'title.start': '시작',
 
+  'tab.stages': '스테이지 선택',
+
+  'error.message': '문제가 생겼어요',
+  'error.reload': '다시 불러오기',
+
   'select.back': '타이틀로',
 
   'play.guide': '가이드 다시 보기',
@@ -44,4 +49,5 @@ export const ko: Partial<Texts> = {
   'stage.1-7': '고임돌',
   'stage.1-8': '짐꾼',
   'stage.1-9': '오르막',
+  'stage.1-10': '먼 길',
 }
