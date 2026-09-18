@@ -24,6 +24,8 @@ const SOLUTIONS = {
     'down down right right right left left left down down right down down right right right down',
   '1-8':
     'down down right right right right left left left left down down right right right right right right right down',
+  '1-9':
+    'left left left left right right right right down down left left left left left up up left left down down',
 }
 
 // 이동 번호마다 남길 장면 이름
@@ -58,6 +60,17 @@ const PLAY_SHOTS: Record<keyof typeof SOLUTIONS, Record<number, string>> = {
   },
   '1-7': { 0: 'start', 5: 'box-on-switch', 12: 'on-door', 13: 'zone-changed' },
   '1-8': { 0: 'start', 6: 'box-on-switch', 16: 'box-on-door', 19: 'on-box' },
+  '1-9': {
+    0: 'start',
+    1: 'ladder-carried',
+    2: 'ladder-leaning',
+    3: 'ladder-climbed',
+    4: 'box-dropped',
+    6: 'ladder-taken-back',
+    15: 'zone-kept',
+    17: 'on-box-with-ladder',
+    20: 'ladder-at-goal',
+  },
 }
 
 const shot = async (page: Page, name: string) => {
@@ -125,6 +138,20 @@ const shootSwitchGuide = async (page: Page, prefix: string, start: string) => {
   await page.getByRole('button', { name: start, exact: true }).click()
 }
 
+// 스테이지 9의 두 단계짜리 사다리 가이드를 찍고 시작한다
+const shootLadderGuide = async (page: Page, prefix: string, start: string) => {
+  await page.getByText('STAGE 09').waitFor()
+  await page.getByText('GUIDE 1 / 2').waitFor()
+  await shot(page, `${prefix}-stage-09-guide-1-ladder`)
+
+  if (prefix.includes('mobile')) await page.touchscreen.tap(60, 400)
+  else await page.mouse.click(60, 400)
+  await page.getByText('GUIDE 2 / 2').waitFor()
+  await shot(page, `${prefix}-stage-09-guide-2-climb`)
+
+  await page.getByRole('button', { name: start, exact: true }).click()
+}
+
 const solve = async (page: Page, solution: string, onMove?: (index: number) => Promise<void>) => {
   const moves = solution.split(' ') as (keyof typeof KEYS)[]
   for (let i = 0; i <= moves.length; i++) {
@@ -159,6 +186,25 @@ const shootFarDoor = async (page: Page, prefix: string) => {
   await page.waitForTimeout(800)
 }
 
+// 스테이지 9에서 사다리를 타고 오르내리는 중간 프레임을 찍고 처음으로 되돌린다
+const shootLadderMid = async (page: Page, prefix: string) => {
+  await solve(page, 'left left')
+
+  await page.keyboard.press('ArrowLeft')
+  await page.waitForTimeout(120)
+  await page.screenshot({ path: `e2e/.screenshots/${prefix}-stage-09-climb-mid.png` })
+  await page.waitForTimeout(400)
+
+  await solve(page, 'left right')
+  await page.keyboard.press('ArrowRight')
+  await page.waitForTimeout(130)
+  await page.screenshot({ path: `e2e/.screenshots/${prefix}-stage-09-take-back-mid.png` })
+  await page.waitForTimeout(500)
+
+  await page.keyboard.press('r')
+  await page.waitForTimeout(900)
+}
+
 // 배치가 갈라지는 화면 크기
 const SIZES = [
   { name: '320x568', width: 320, height: 568, mobile: true },
@@ -180,7 +226,7 @@ const OPENED = {
 }
 
 test('@shot 데스크톱 화면', async ({ page }) => {
-  test.setTimeout(480_000)
+  test.setTimeout(600_000)
   await page.goto('/')
   await shot(page, 'desktop-title')
 
@@ -246,6 +292,11 @@ test('@shot 데스크톱 화면', async ({ page }) => {
   await page.getByText('STAGE 08').waitFor()
   await playStage(page, '1-8', 'desktop-stage-08')
 
+  await page.getByRole('button', { name: LABELS.ko.next }).click()
+  await shootLadderGuide(page, 'desktop', LABELS.ko.start)
+  await shootLadderMid(page, 'desktop')
+  await playStage(page, '1-9', 'desktop-stage-09')
+
   await page.getByRole('button', { name: LABELS.ko.select, exact: true }).click()
   await shot(page, 'desktop-select-after-clear')
 
@@ -257,7 +308,7 @@ test.describe('모바일', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
 
   test('@shot 모바일 화면', async ({ page }) => {
-    test.setTimeout(480_000)
+    test.setTimeout(600_000)
     await page.goto('/')
     await shot(page, 'mobile-title')
 
@@ -304,6 +355,11 @@ test.describe('모바일', () => {
     await page.getByRole('button', { name: LABELS.ko.next }).click()
     await page.getByText('STAGE 08').waitFor()
     await playStage(page, '1-8', 'mobile-stage-08')
+
+    await page.getByRole('button', { name: LABELS.ko.next }).click()
+    await shootLadderGuide(page, 'mobile', LABELS.ko.start)
+    await shootLadderMid(page, 'mobile')
+    await playStage(page, '1-9', 'mobile-stage-09')
   })
 })
 
