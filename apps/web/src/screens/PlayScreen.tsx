@@ -218,7 +218,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
               <GuideOverlay
                 guides={guides}
                 step={guideStep}
-                moveLimit={game.stage.rules?.moveLimit}
+                limit={game.stage.rules?.moveLimit ?? game.stage.rules?.pushLimit}
                 containerRef={sectionRef}
                 onNext={nextGuide}
                 onSkip={closeGuide}

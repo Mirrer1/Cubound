@@ -40,6 +40,7 @@ export const en = {
   'guide.climb':
     'Set the ladder against a tile one level up, then climb. Roll back down to pick it up again',
   'guide.moveLimit': 'You have {n} moves to get home',
+  'guide.pushLimit': 'You can push a box {n} times. Let the ice carry it',
   'guide.ice': 'You slide across ice until something stops you',
   'guide.lift': 'The switch lifts the plate while something holds it down',
 
@@ -65,6 +66,7 @@ export const en = {
   'stage.2-7': 'The Bucket',
   'stage.2-8': 'The Interlock',
   'stage.2-9': 'The Glacier',
+  'stage.2-10': 'The Blizzard',
 }
 
 export type Texts = typeof en

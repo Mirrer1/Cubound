@@ -11,7 +11,7 @@ import { useSettingsStore } from '@/store/settingsStore'
 interface GuideOverlayProps {
   guides: Guide[]
   step: number
-  moveLimit?: number // 보스 안내 문구의 {n}
+  limit?: number // 보스 제약 안내 문구의 {n}
   containerRef: RefObject<HTMLElement | null>
   onNext: () => void
   onSkip: () => void
@@ -54,14 +54,7 @@ const sameHole = (a: Hole, b: Hole) =>
 
 const stopClick = (e: MouseEvent) => e.stopPropagation()
 
-const GuideOverlay = ({
-  guides,
-  step,
-  moveLimit,
-  containerRef,
-  onNext,
-  onSkip,
-}: GuideOverlayProps) => {
+const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: GuideOverlayProps) => {
   const [measured, setMeasured] = useState<{ hole: Hole; place: Place } | null>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const nextRef = useRef<HTMLButtonElement>(null)
@@ -174,7 +167,7 @@ const GuideOverlay = ({
             animate={{ opacity: 1 }}
             transition={{ duration: 0.25 * speed }}
           >
-            {guideText(language, guide.id, isTouchDevice(), moveLimit)}
+            {guideText(language, guide.id, isTouchDevice(), limit)}
           </motion.p>
           <div className="flex items-center justify-between">
             <button

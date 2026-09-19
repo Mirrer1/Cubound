@@ -41,6 +41,7 @@ export const ko: Partial<Texts> = {
   'guide.ladder': '사다리 칸에 들어가면 사다리를 들어요',
   'guide.climb': '한 층 높은 칸에 사다리를 놓고 올라가요. 타고 내려오면 다시 들어요',
   'guide.moveLimit': '{n}번 안에 도착해야 해요',
+  'guide.pushLimit': '상자는 {n}번만 밀 수 있어요. 얼음에 태워 보내요',
   'guide.ice': '얼음에서는 멈출 때까지 미끄러져요',
   'guide.lift': '스위치를 누르는 동안 발판이 올라가요',
 
@@ -66,4 +67,5 @@ export const ko: Partial<Texts> = {
   'stage.2-7': '두레박',
   'stage.2-8': '맞물림',
   'stage.2-9': '빙하',
+  'stage.2-10': '눈보라',
 }

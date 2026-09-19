@@ -3,7 +3,7 @@ import type { Stage } from './types'
 export const STAGE_VERSION = 1
 
 const ENTITY_TYPES = ['box', 'switch', 'door', 'lift', 'ladder']
-const GUIDE_TARGETS = ['restart', 'moves']
+const GUIDE_TARGETS = ['restart', 'moves', 'pushes']
 const MAX_GUIDES = 3
 
 export type ValidateResult = { ok: true; stage: Stage } | { ok: false; errors: string[] }

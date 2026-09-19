@@ -289,6 +289,23 @@ const STAGES: Record<string, StageShots> = {
       32: 'cleared',
     },
   },
+  '2-10': {
+    solution:
+      'down down down right right right right right up up up right right right right down down down down down down down left left down up left left left left left left down down down down',
+    guide: ['guide-pushes'],
+    shots: {
+      0: 'start',
+      6: 'box-slid-to-gap',
+      8: 'zone-2',
+      14: 'box-on-switch',
+      17: 'on-lift',
+      22: 'zone-3',
+      25: 'box-on-door-switch',
+      31: 'box-slid-to-goal',
+      35: 'ladder-leaning',
+      36: 'cleared',
+    },
+  },
 }
 
 const stageNumber = (id: string) => String(Number(id.split('-')[1])).padStart(2, '0')
