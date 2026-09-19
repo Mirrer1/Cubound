@@ -87,7 +87,16 @@ describe('durationOf', () => {
     const { events } = move(prev, 'right')
 
     expect(events.some((e) => e.type === 'slid')).toBe(true)
-    expect(durationOf(events)).toBeCloseTo(0.24 + 0.14 * 3)
+    expect(durationOf(events)).toBeCloseTo(0.24 + 0.09 * 3)
+  })
+
+  it('미끄러지는 속도는 칸 수와 상관없이 같다', () => {
+    const slideSeconds = (ice: string) => {
+      const { events } = move(createState({ ...ICE_STAGE, ice: [ice] }), 'right')
+      return durationOf(events) - 0.24
+    }
+
+    expect(slideSeconds('.#...') / 1).toBeCloseTo(slideSeconds('.###.') / 3)
   })
 
   it('한 칸 미끄러지는 시간이 한 칸 걷는 시간보다 짧다', () => {

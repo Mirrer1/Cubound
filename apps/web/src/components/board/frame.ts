@@ -9,8 +9,8 @@ const SECONDS = {
   blocked: 0.2,
   placed: 0.22,
 }
-// 미끄러짐은 칸 수에 비례하되 걷기보다 빠르고 길어도 max를 넘지 않는다
-const SLIDE = { perCell: 0.14, max: 0.48 }
+// 미끄러짐은 칸 수에 상관없이 속도가 같아야 상자와 큐브가 나란히 간다. max는 아주 긴 미끄러짐만 잡는다
+const SLIDE = { perCell: 0.09, max: 0.9 }
 const TILT = 0.24
 
 const easeIn = (t: number) => t * t
@@ -80,7 +80,7 @@ interface Step {
   p: number
 }
 
-// 경과 시간이 들어 있는 구간. 구간 사이는 속도를 이어 붙이고 마지막 구간 뒤는 끝에 머문다
+// 경과 시간이 들어 있는 구간. 큐브와 상자가 각자 제 길이에 맞춰 늘어나 한 이동 안에서 같이 끝난다
 const stepAt = (path: PathEvent[], seconds: number, chain: Chain): Step | null => {
   let start = 0
   for (const [index, event] of path.entries()) {
@@ -132,7 +132,7 @@ export const playerFrame = (
   if (t >= 1) return still
 
   const path = playerPath(events)
-  const step = stepAt(path, t * durationOf(events), slideChain(events, chain))
+  const step = stepAt(path, t * totalSeconds(path), slideChain(events, chain))
   if (prev && step) {
     const { event, index, p } = step
     const fromLevel = path.slice(0, index).reduce(levelAfter, standHeight(prev, prev.player))
@@ -189,7 +189,7 @@ export const movingBox = (
   chain: Chain = NO_CHAIN,
 ): BoxFrame | null => {
   const path = boxPath(events)
-  const step = stepAt(path, t * durationOf(events), slideChain(events, chain))
+  const step = stepAt(path, t * totalSeconds(path), slideChain(events, chain))
   if (!prev || t >= 1 || !step) return null
 
   const { event, index, p } = step
