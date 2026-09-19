@@ -16,13 +16,36 @@ const GLOSS_SPOTS: [number, number][] = [
   [-0.3, 0.04],
 ]
 
-// 닳은 자국을 찍는 네 자리. 칸마다 다른 자리에서 시작해 나란히 놓여도 무늬로 보이지 않는다
-const CHIP_SPOTS: [number, number][] = [
-  [-0.27, -0.09],
-  [0.1, -0.29],
-  [0.29, 0.07],
-  [-0.09, 0.28],
+// 닳으면 칸의 사분면이 한 단계 내려앉아 디딜 면이 좁아진다. 자리는 칸마다 어긋난다
+const NOTCH_QUADS: [number, number][][] = [
+  [
+    [0, 0],
+    [0, -0.5],
+    [0.5, -0.5],
+    [0.5, 0],
+  ],
+  [
+    [0, 0],
+    [0.5, 0],
+    [0.5, 0.5],
+    [0, 0.5],
+  ],
+  [
+    [0, 0],
+    [0, 0.5],
+    [-0.5, 0.5],
+    [-0.5, 0],
+  ],
+  [
+    [0, 0],
+    [-0.5, 0],
+    [-0.5, -0.5],
+    [0, -0.5],
+  ],
 ]
+const NOTCH = { drop: 7, dim: 13 }
+const NOTCHES = [0, 1]
+
 // 무너질 때만 네 조각으로 갈라진다. 가만히 있을 때 갈라 두면 칸이 붙었을 때 줄눈처럼 보인다
 const SHARDS: [number, number][] = [
   [-0.25, -0.25],
@@ -31,10 +54,6 @@ const SHARDS: [number, number][] = [
   [-0.25, 0.25],
 ]
 const SHARD = { scale: 0.46, away: 0.72, sink: [0, 7, 3, 10], thin: 5 }
-
-const CHIP = { half: 10, rise: 5 }
-// 닳을수록 자국이 는다. 한 번 밟으면 둘, 다 닳으면 넷
-const CHIPS = [0, 1, 2, 3]
 
 const SURFACES = {
   hole: {
@@ -74,14 +93,8 @@ const spotPoints = (x: number, y: number, spots: [number, number][]) =>
     })
     .join(' ')
 
-const chipPoints = (x: number, y: number, seed: number, index: number) => {
-  const [u, v] = CHIP_SPOTS[(seed + index) % 4]
-  const d = isoDelta(u, v)
-  const cx = x + d.x
-  const cy = y + d.y
-
-  return `${cx},${cy - CHIP.rise} ${cx + CHIP.half},${cy} ${cx},${cy + CHIP.rise} ${cx - CHIP.half},${cy}`
-}
+const notchPoints = (x: number, y: number, seed: number, index: number) =>
+  spotPoints(x, y + NOTCH.drop, NOTCH_QUADS[(seed + index) % 4])
 
 interface BoardCellProps {
   x: number
@@ -160,11 +173,11 @@ const BoardCell = ({
   const evenOdd = crack || (surface !== null && surface !== 'hole')
   const faces = evenOdd ? { ...plain, top: checker(plain.top, parity) } : plain
   const depth = crack ? crackThickness(crackStage) + h * TILE.layer : h * TILE.layer + TILE.lip
-  const chips = crack
-    ? CHIPS.map((index) => ({
+  const notches = crack
+    ? NOTCHES.map((index) => ({
         index,
-        opacity: clamp01(crackStage * 2 - index) * (1 - crackBroken),
-      })).filter((chip) => chip.opacity > 0)
+        opacity: clamp01(crackStage - index) * (1 - crackBroken),
+      })).filter((notch) => notch.opacity > 0)
     : []
   const shards =
     crackBroken > 0
@@ -238,11 +251,11 @@ const BoardCell = ({
                 style={{ fill: 'var(--color-ice-gloss)' }}
               />
             )}
-            {chips.map(({ index, opacity }) => (
+            {notches.map(({ index, opacity }) => (
               <polygon
                 key={index}
-                points={chipPoints(x, y, crackSeed, index)}
-                style={{ fill: 'var(--color-crack-chip)', opacity }}
+                points={notchPoints(x, y, crackSeed, index)}
+                style={{ fill: darken('crack-chip', NOTCH.dim), opacity }}
               />
             ))}
             {goal &&
