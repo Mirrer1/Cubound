@@ -23,7 +23,7 @@ const QUARTERS: [number, number][] = [
   [0.25, 0.25],
   [-0.25, 0.25],
 ]
-const QUARTER = { scale: 0.44, depth: 5, rise: 7 }
+const QUARTER = { scale: 0.485, depth: 4, rise: 4 }
 
 // 무너질 때만 네 조각으로 갈라진다. 가만히 있을 때 갈라 두면 칸이 붙었을 때 줄눈처럼 보인다
 const SHARDS: [number, number][] = [
@@ -158,8 +158,8 @@ const BoardCell = ({
           const lifted = (i - crackSeed + 4) % 4 < Math.round(crackStage)
           return {
             key: i,
-            x: x + d.x * (1 + split * 0.08),
-            y: y + d.y * (1 + split * 0.08) - (lifted ? split * QUARTER.rise : 0),
+            x: x + d.x * (1 + split * 0.025),
+            y: y + d.y * (1 + split * 0.025) - (lifted ? split * QUARTER.rise : 0),
           }
         })
       : []
@@ -213,7 +213,7 @@ const BoardCell = ({
                 y={y}
                 width={TILE.width}
                 depth={depth}
-                top={split > 0 ? dim(faces.top, 18) : faces.top}
+                top={split > 0 ? dim(faces.top, 9) : faces.top}
                 left={faces.left}
                 right={faces.right}
               />

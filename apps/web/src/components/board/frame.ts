@@ -109,6 +109,8 @@ const playerSegments = (events: GameEvent[]): Segment[] => {
 
 // 칸이 무너지는 연출은 이동보다 길다. 큐브 뒤쪽 칸이라 진행을 막지 않는다
 const CRUMBLE_SECONDS = 0.46
+// 한 단계 닳는 변화도 이동 연출보다 길게 두어 천천히 갈라진다
+const WEAR_SECONDS = 0.4
 
 export const durationOf = (events: GameEvent[]) =>
   Math.max(
@@ -116,7 +118,7 @@ export const durationOf = (events: GameEvent[]) =>
     totalSeconds(playerSegments(events)),
     totalSeconds(segmentsOf(boxPath(events))),
     ...events.map((e) => (e.type === 'blocked' || e.type === 'placed' ? SECONDS[e.type] : 0)),
-    ...events.map((e) => (e.type === 'cracked' && e.gone ? CRUMBLE_SECONDS : 0)),
+    ...events.map((e) => (e.type === 'cracked' ? (e.gone ? CRUMBLE_SECONDS : WEAR_SECONDS) : 0)),
   )
 
 // 미끄러져 멈춘 이동은 다음 입력과 이어 붙이지 않는다
@@ -277,7 +279,7 @@ export const movingBox = (
 }
 
 // 단계가 오르는 앞부분과 가라앉아 사라지는 뒷부분. 가라앉음은 이동 연출을 거의 다 쓴다
-const CRUMBLE = { deepen: 0.6, fallFrom: 0.12, drop: 1.6, shadow: 0.9 }
+const CRUMBLE = { deepen: 0.9, fallFrom: 0.12, drop: 1.6, shadow: 0.9 }
 
 // 닳은 단계마다의 내려앉은 화면 거리와 옆면 두께
 const CRACK_SINK = [0, 13, 21]
