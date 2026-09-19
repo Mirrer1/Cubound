@@ -8,10 +8,14 @@ import { rollingCubeFaces } from './cube'
 import {
   crackFrame,
   crackSink,
+  frostAt,
   movingBox,
+  pickUpProgress,
   playerFrame,
   restartDrop,
   restartDuration,
+  switchCells,
+  switchProgress,
 } from './frame'
 import { shade } from './shade'
 import { useBoardAnimation } from './useBoardAnimation'
@@ -41,6 +45,18 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const crackLeft = (state: GameState, p: Point) => state.cracks.find((c) => same(c, p))?.left ?? -1
 
 const GUIDE_MARGIN = 12
+
+// 미끄러지는 큐브가 늘어나는 축. 아이소메트릭이라 화면에서는 대각선이다
+const SLIDE_DEG = (Math.atan2(TILE.height / 2, TILE.width / 2) * 180) / Math.PI
+const SQUASH_ALONG = 0.24
+const SQUASH_ACROSS = 0.16
+
+// (cx, cy)를 고정한 채 deg 축으로 늘이고 직각 방향으로 누른다
+const squashTransform = (cx: number, cy: number, deg: number, squash: number) => {
+  const scale = `scale(${1 + squash * SQUASH_ALONG} ${1 - squash * SQUASH_ACROSS})`
+  const pivot = `translate(${cx} ${cy})`
+  return `${pivot} rotate(${deg}) ${scale} rotate(${-deg}) translate(${-cx} ${-cy})`
+}
 
 const Board = ({
   game,
@@ -98,9 +114,24 @@ const Board = ({
   const cubeDrop = dropping ? restartDrop(t, 0, boxes.length) : null
   const cubeLevel = cube.level + (cubeDrop?.lift ?? 0)
   const cubeScreen = toScreen({ x: cube.x, y: cube.y }, cubeLevel)
+  // 큐브 가운데는 칸 윗면보다 반 층 위다
+  const cubeSquash =
+    cube.squash > 0
+      ? squashTransform(
+          cubeScreen.x,
+          cubeScreen.y - TILE.layer / 2,
+          cube.direction === 'up' || cube.direction === 'down' ? -SLIDE_DEG : SLIDE_DEG,
+          cube.squash,
+        )
+      : ''
+  // 사다리는 이동이 시작할 때가 아니라 큐브가 그 칸에 닿은 때부터 손으로 옮겨진다
+  const pickUpPhase = moving ? pickUpProgress(events, t) : 1
   const carriedOpacity =
-    pickedUp && !game.carrying ? 0 : pickedUp ? t : placed ? 1 - t : game.carrying ? 1 : 0
+    pickedUp && !game.carrying ? 0 : pickedUp ? pickUpPhase : placed ? 1 - t : game.carrying ? 1 : 0
   const progress = moving ? t : 1
+  // 문과 발판은 이동이 시작할 때가 아니라 스위치가 눌리거나 풀린 때부터 움직인다
+  const linkedPhase = (cells: Point[], pressed: boolean) =>
+    moving ? switchProgress(events, cells, pressed, t) : 1
 
   // 무너지는 칸은 닳을수록 내려앉아서 그 위에 선 것도 같은 만큼 내려간다
   const sinkAt = (p: Point) => {
@@ -152,14 +183,24 @@ const Board = ({
           game.heights[cell.p.y][cell.p.x] >= 0 &&
           (stage.heights[cell.p.y][cell.p.x] < 0 || (wasCrack && left < 0))
         const crumble = crackFrame(was, left, progress)
-        const raised = lerp(liftLevel(before), liftLevel(game), progress)
+        const liftPhase =
+          lift === undefined
+            ? 1
+            : linkedPhase(switchCells(stage, lift.id), isLiftRaised(game, lift.id))
+        const switchPhase =
+          entity?.type === 'switch' ? linkedPhase([cell.p], pressed(game)) : progress
+        const doorPhase =
+          entity?.type === 'door'
+            ? linkedPhase([...switchCells(stage, entity.id), cell.p], isDoorOpen(game, entity.id))
+            : progress
+        const raised = lerp(liftLevel(before), liftLevel(game), liftPhase)
         const crackFall = crumble.fall * TILE.layer
         const cellY = cell.y - raised * TILE.layer + sinkAt(cell.p) + crackFall
         const pickedHere = pickedUp?.type === 'pickedUp' && same(pickedUp.at, cell.p)
         const flatLadder = has(ladders, cell.p)
           ? 1
           : pickedHere && has(before.ladders, cell.p)
-            ? 1 - t
+            ? 1 - pickUpPhase
             : 0
         const placedOpacity = (l: Point) =>
           placed?.type === 'placed' && same(placed.ladder, l) ? t : 1
@@ -170,7 +211,7 @@ const Board = ({
           ...(pickedHere
             ? before.leaningLadders
                 .filter((l) => same(l, cell.p))
-                .map((l) => `${l.direction}:${1 - t}`)
+                .map((l) => `${l.direction}:${1 - pickUpPhase}`)
             : []),
         ].join('|')
 
@@ -196,6 +237,7 @@ const Board = ({
             goal={same(cell.p, stage.goal)}
             filled={isFilled}
             ice={isIce(game, cell.p)}
+            frost={frostAt(events, cell.p, t)}
             crack={Math.max(left, was) >= 0}
             crackStage={crumble.stage}
             crackBroken={crumble.broken}
@@ -206,8 +248,8 @@ const Board = ({
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
             lift={lift !== undefined}
-            switchDepth={lerp(pressed(before) ? 2 : 9, pressed(game) ? 2 : 9, progress)}
-            doorDepth={lerp(doorDepth(before), doorDepth(game), progress)}
+            switchDepth={lerp(pressed(before) ? 2 : 9, pressed(game) ? 2 : 9, switchPhase)}
+            doorDepth={lerp(doorDepth(before), doorDepth(game), doorPhase)}
             box={has(boxes, cell.p) && !(box && same(box.to, cell.p)) && boxDrop === null}
             blockOpacity={
               restored > 0 ? 1 - t : restored < 0 ? (cubeDrop?.opacity ?? 1) : crumble.opacity
@@ -228,7 +270,7 @@ const Board = ({
                 {drawCube && (
                   <g
                     opacity={cubeDrop ? cubeDrop.opacity : 1}
-                    transform={`translate(0 ${cubeSink})`}
+                    transform={`translate(0 ${cubeSink}) ${cubeSquash}`}
                   >
                     {rollingCubeFaces(cube.x, cube.y, cubeLevel, cube.direction, cube.angle).map(
                       (f) => (

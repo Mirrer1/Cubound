@@ -36,7 +36,7 @@ const SHARD = { scale: 0.46, away: 0.72, sink: [0, 7, 3, 10], thin: 5 }
 
 const SURFACES = {
   hole: {
-    top: 'var(--color-hole-rim)',
+    top: 'var(--color-goal)',
     left: 'var(--color-floor-left)',
     right: 'var(--color-floor-right)',
   },
@@ -53,14 +53,14 @@ const SURFACES = {
   },
 }
 
-// 승강 발판은 칸 크기의 틀 위에 얹힌 판이다
+// 미끄러져 지나간 자국. 칸보다 작게 그리면 칸 안에 뜬 액자처럼 보인다
+const FROST_OPACITY = 0.7
+
+// 승강 발판은 칸 크기의 틀 위에 얹힌 판이다. 틀과 판의 밝기 차이가 기계로 읽힌다
 const PLATE = { scale: 0.84, rise: 4, depth: 4 }
 const SWITCH_SCALE = 0.66
-// 구멍은 테두리 안쪽으로 판 두 장이 차례로 내려간다
-const HOLE = [
-  { scale: 0.64, drop: 3 },
-  { scale: 0.52, drop: 12 },
-]
+// 구멍은 같은 크기 판 두 장을 어긋나게 겹쳐 두께를 낸다
+const HOLE = { scale: 0.62, wall: 7 }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
@@ -80,6 +80,7 @@ interface BoardCellProps {
   goal: boolean
   filled: boolean
   ice: boolean
+  frost: number // 미끄러져 지나간 자국 진하기
   crack: boolean // 무너지는 칸
   crackStage: number // 닳은 단계 0~2
   crackBroken: number // 네 조각으로 갈라져 벌어진 정도
@@ -107,6 +108,7 @@ const BoardCell = ({
   goal,
   filled,
   ice,
+  frost,
   crack,
   crackStage,
   crackBroken,
@@ -235,6 +237,12 @@ const BoardCell = ({
                 style={{ fill: 'var(--color-ice-gloss)' }}
               />
             )}
+            {frost > 0 && (
+              <polygon
+                points={blockFaces(x, y, TILE.width, 0).top}
+                style={{ fill: 'var(--color-ice-gloss)', opacity: frost * FROST_OPACITY }}
+              />
+            )}
             {quarters.map((quarter) => (
               <BoardBlock
                 key={quarter.key}
@@ -247,14 +255,18 @@ const BoardCell = ({
                 right={faces.right}
               />
             ))}
-            {goal &&
-              HOLE.map(({ scale, drop }, i) => (
+            {goal && (
+              <>
                 <polygon
-                  key={scale}
-                  points={blockFaces(x, y + drop, TILE.width * scale, 0).top}
-                  style={{ fill: i === 0 ? 'var(--color-goal)' : darken('goal', 30) }}
+                  points={blockFaces(x, y + HOLE.wall, TILE.width * HOLE.scale, 0).top}
+                  style={{ fill: darken('goal', 16) }}
                 />
-              ))}
+                <polygon
+                  points={blockFaces(x, y + 1, TILE.width * HOLE.scale, 0).top}
+                  style={{ fill: darken('goal', 36) }}
+                />
+              </>
+            )}
           </g>
         </g>
       )}

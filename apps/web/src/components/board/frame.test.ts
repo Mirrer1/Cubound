@@ -5,11 +5,15 @@ import {
   crackSink,
   crackThickness,
   durationOf,
+  frostAt,
   moveEase,
   movingBox,
+  pickUpProgress,
   playerFrame,
   restartDrop,
   restartDuration,
+  switchCells,
+  switchProgress,
 } from './frame'
 import { TILE } from '@/game/iso'
 import { createState, move } from '@/game/rules'
@@ -34,6 +38,24 @@ const ICE_STAGE: Stage = {
   start: { x: 0, y: 0 },
   goal: { x: 4, y: 0 },
   entities: [],
+}
+
+const slide = (ice: string) => {
+  const prev = createState({ ...ICE_STAGE, ice: [ice] })
+  return { prev, ...move(prev, 'right') }
+}
+
+// 서리가 다 옅어질 때까지 연출이 이어져서 durationOf로는 큐브가 언제 멈추는지 알 수 없다
+const slideSeconds = (ice: string) => {
+  const { prev, state, events } = slide(ice)
+  let lo = 0
+  let hi = 1
+  for (let i = 0; i < 40; i += 1) {
+    const mid = (lo + hi) / 2
+    if (playerFrame(prev, state, events, mid).x >= state.player.x) hi = mid
+    else lo = mid
+  }
+  return hi * durationOf(events) - 0.24
 }
 
 describe('playerFrame', () => {
@@ -118,6 +140,90 @@ describe('playerFrame 발판', () => {
   })
 })
 
+// 밀린 상자가 얼음을 건너 스위치에 닿으면 큐브가 선 발판이 올라간다
+const SLIDE_SWITCH_STAGE: Stage = {
+  version: 1,
+  id: 'test-slide-switch',
+  name: '미끄러지는 스위치',
+  heights: [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+  ],
+  ice: ['..##.', '.....'],
+  start: { x: 0, y: 0 },
+  goal: { x: 4, y: 1 },
+  entities: [
+    { type: 'box', x: 1, y: 0 },
+    { type: 'lift', x: 1, y: 0, id: 'a' },
+    { type: 'switch', x: 4, y: 0, target: 'a' },
+  ],
+}
+
+describe('switchProgress', () => {
+  const push = () => {
+    const prev = createState(SLIDE_SWITCH_STAGE)
+    return { prev, ...move(prev, 'right') }
+  }
+  const cells = switchCells(SLIDE_SWITCH_STAGE, 'a')
+
+  it('상자가 스위치에 닿기 전에는 움직이지 않는다', () => {
+    const { prev, state, events } = push()
+
+    for (let t = 0; t <= 1; t += 0.02) {
+      if (movingBox(prev, state, events, t) !== null) {
+        expect(switchProgress(events, cells, true, t)).toBe(0)
+      }
+    }
+  })
+
+  it('상자가 닿은 뒤에 움직이기 시작해 이동이 끝나면 다 움직인다', () => {
+    const { prev, state, events } = push()
+    let started = 0
+    let last = 0
+    for (let t = 0; t <= 1; t += 0.02) {
+      const progress = switchProgress(events, cells, true, t)
+      expect(progress).toBeGreaterThanOrEqual(last)
+      if (progress > 0 && started === 0) started = t
+      last = progress
+    }
+
+    expect(movingBox(prev, state, events, started)).toBeNull()
+    expect(switchProgress(events, cells, true, 1)).toBeCloseTo(1)
+  })
+
+  it('이 이동과 상관없는 칸은 이동 전체에 걸쳐 섞는다', () => {
+    const { events } = push()
+
+    expect(switchProgress(events, [{ x: 0, y: 1 }], true, 0.3)).toBeCloseTo(0.3)
+    expect(switchProgress(events, [], true, 0.3)).toBeCloseTo(0.3)
+  })
+
+  it('큐브가 떠나서 풀리는 스위치는 이동이 시작할 때부터 움직인다', () => {
+    const prev = move(createState(LIFT_STAGE), 'down').state
+    const { events } = move(prev, 'right')
+    const cells = switchCells(LIFT_STAGE, 'a')
+
+    expect(switchProgress(events, cells, false, 0)).toBe(0)
+    expect(switchProgress(events, cells, false, 0.2)).toBeGreaterThan(0)
+    expect(switchProgress(events, cells, false, 1)).toBeCloseTo(1)
+  })
+})
+
+describe('playerFrame 발판 타이밍', () => {
+  it('큐브는 발판이 오르는 때에 맞춰 같이 오른다', () => {
+    const prev = createState(SLIDE_SWITCH_STAGE)
+    const { state, events } = move(prev, 'right')
+    const cells = switchCells(SLIDE_SWITCH_STAGE, 'a')
+
+    expect(state.player).toEqual({ x: 1, y: 0 })
+    for (let t = 0.5; t <= 1; t += 0.05) {
+      expect(playerFrame(prev, state, events, t).level).toBeCloseTo(
+        switchProgress(events, cells, true, t),
+      )
+    }
+  })
+})
+
 describe('movingBox', () => {
   it('밀린 상자는 두 칸 사이를 미끄러진다', () => {
     const stage: Stage = { ...STAGE, heights: [[0, 0, 0]], entities: [{ type: 'box', x: 1, y: 0 }] }
@@ -166,21 +272,17 @@ describe('durationOf', () => {
     expect(durationOf([])).toBe(0)
   })
 
-  it('미끄러지면 첫 칸 뒤에 미끄러진 칸 수만큼 시간이 더 붙는다', () => {
+  it('미끄러지면 칸 수가 늘수록 연출이 길어진다', () => {
     const prev = createState(ICE_STAGE)
     const { events } = move(prev, 'right')
 
     expect(events.some((e) => e.type === 'slid')).toBe(true)
-    expect(durationOf(events)).toBeCloseTo(0.24 + 0.09 * 3)
+    expect(durationOf(events)).toBeGreaterThan(durationOf(slide('.#...').events))
+    expect(durationOf(slide('.#...').events)).toBeGreaterThan(0.24)
   })
 
   it('미끄러지는 속도는 칸 수와 상관없이 같다', () => {
-    const slideSeconds = (ice: string) => {
-      const { events } = move(createState({ ...ICE_STAGE, ice: [ice] }), 'right')
-      return durationOf(events) - 0.24
-    }
-
-    expect(slideSeconds('.#...') / 1).toBeCloseTo(slideSeconds('.###.') / 3)
+    expect(slideSeconds('.#...')).toBeCloseTo(slideSeconds('.###.') / 3, 2)
   })
 
   it('한 칸 미끄러지는 시간이 한 칸 걷는 시간보다 짧다', () => {
@@ -249,6 +351,169 @@ describe('playerFrame 미끄러짐', () => {
   })
 })
 
+describe('playerFrame 눌림', () => {
+  it('미끄러지지 않는 이동에서는 눌리지 않는다', () => {
+    const prev = createState(STAGE)
+    const { state, events } = move(prev, 'right')
+
+    for (let t = 0; t <= 1; t += 0.05) {
+      expect(playerFrame(prev, state, events, t).squash).toBe(0)
+    }
+  })
+
+  it('미끄러지는 동안 눌리고 시작과 끝에서는 평소 모양이다', () => {
+    const prev = createState(ICE_STAGE)
+    const { state, events } = move(prev, 'right')
+    let deepest = 0
+    for (let t = 0; t <= 1; t += 0.02) {
+      deepest = Math.max(deepest, playerFrame(prev, state, events, t).squash)
+    }
+
+    expect(deepest).toBeGreaterThan(0)
+    expect(deepest).toBeLessThanOrEqual(1)
+    expect(playerFrame(prev, state, events, 0).squash).toBe(0)
+    expect(playerFrame(prev, state, events, 1).squash).toBe(0)
+  })
+
+  it('여러 칸을 미끄러지는 동안 중간에 풀렸다 다시 눌리지 않는다', () => {
+    const prev = createState(ICE_STAGE)
+    const { state, events } = move(prev, 'right')
+    let last = 0
+    let released = false
+    for (let t = 0; t <= 1; t += 0.02) {
+      const { squash } = playerFrame(prev, state, events, t)
+      if (squash < last) released = true
+      if (released) expect(squash).toBeLessThanOrEqual(last)
+      last = squash
+    }
+
+    expect(released).toBe(true)
+  })
+})
+
+describe('frostAt', () => {
+  const slidEvents = () => move(createState(ICE_STAGE), 'right').events
+
+  it('미끄러지지 않는 이동은 자국을 남기지 않는다', () => {
+    const { events } = move(createState(STAGE), 'right')
+
+    expect(frostAt(events, { x: 1, y: 0 }, 0.5)).toBe(0)
+  })
+
+  it('미끄러짐이 끝나는 칸에는 자국을 두지 않는다', () => {
+    const events = slidEvents()
+
+    for (let t = 0; t <= 1; t += 0.05) {
+      expect(frostAt(events, { x: 4, y: 0 }, t)).toBe(0)
+    }
+  })
+
+  it('아직 지나지 않은 칸에는 자국이 없다', () => {
+    expect(frostAt(slidEvents(), { x: 3, y: 0 }, 0)).toBe(0)
+  })
+
+  it('자국이 함께 보이는 동안에는 먼저 지나온 칸이 더 옅다', () => {
+    const events = slidEvents()
+    let together = 0
+    for (let t = 0; t <= 1; t += 0.02) {
+      const early = frostAt(events, { x: 1, y: 0 }, t)
+      const late = frostAt(events, { x: 2, y: 0 }, t)
+      if (early > 0 && late > 0) {
+        expect(early).toBeLessThan(late)
+        together += 1
+      }
+    }
+
+    expect(together).toBeGreaterThan(0)
+  })
+
+  it('자국은 진해졌다 옅어지고 연출이 끝나면 남지 않는다', () => {
+    const events = slidEvents()
+    let last = 0
+    let fading = false
+    for (let t = 0; t <= 1; t += 0.02) {
+      const frost = frostAt(events, { x: 1, y: 0 }, t)
+      if (frost < last) fading = true
+      if (fading) expect(frost).toBeLessThanOrEqual(last)
+      expect(frost).toBeLessThanOrEqual(1)
+      last = frost
+    }
+
+    expect(fading).toBe(true)
+    expect(frostAt(events, { x: 1, y: 0 }, 1)).toBe(0)
+  })
+
+  it('미끄러진 상자도 지나온 칸에 자국을 남긴다', () => {
+    const stage: Stage = {
+      ...ICE_STAGE,
+      heights: [[0, 0, 0, 0, 0, 0, 0]],
+      ice: ['..###..'],
+      goal: { x: 6, y: 0 },
+      entities: [{ type: 'box', x: 1, y: 0 }],
+    }
+    const { events } = move(createState(stage), 'right')
+    let deepest = 0
+    for (let t = 0; t <= 1; t += 0.02) {
+      deepest = Math.max(deepest, frostAt(events, { x: 3, y: 0 }, t))
+    }
+
+    expect(deepest).toBeGreaterThan(0)
+  })
+})
+
+// 얼음을 타고 여러 칸 미끄러져 사다리가 놓인 칸에 멈춘다
+const LADDER_ICE_STAGE: Stage = {
+  version: 1,
+  id: 'test-ladder-ice',
+  name: '미끄러지는 사다리',
+  heights: [[0, 0, 0, 0, 0, 0]],
+  ice: ['.###..'],
+  start: { x: 0, y: 0 },
+  goal: { x: 5, y: 0 },
+  entities: [{ type: 'ladder', x: 4, y: 0 }],
+}
+
+describe('pickUpProgress', () => {
+  const slideToLadder = () => {
+    const prev = createState(LADDER_ICE_STAGE)
+    return { prev, ...move(prev, 'right') }
+  }
+
+  it('미끄러져 도착하기 전에는 사다리가 그대로다', () => {
+    const { prev, state, events } = slideToLadder()
+
+    expect(state.carrying).toBe(true)
+    for (let t = 0; t <= 1; t += 0.02) {
+      if (playerFrame(prev, state, events, t).x < state.player.x) {
+        expect(pickUpProgress(events, t)).toBe(0)
+      }
+    }
+  })
+
+  it('도착한 뒤에 사라지기 시작해 이동이 끝나면 다 사라진다', () => {
+    const { prev, state, events } = slideToLadder()
+    let started = 0
+    let last = 0
+    for (let t = 0; t <= 1; t += 0.02) {
+      const progress = pickUpProgress(events, t)
+      expect(progress).toBeGreaterThanOrEqual(last)
+      if (progress > 0 && started === 0) started = t
+      last = progress
+    }
+
+    expect(playerFrame(prev, state, events, started).x).toBeCloseTo(state.player.x)
+    expect(pickUpProgress(events, 1)).toBeCloseTo(1)
+  })
+
+  it('사다리가 없는 이동은 값이 그대로다', () => {
+    const bare: Stage = { ...LADDER_ICE_STAGE, entities: [] }
+    const { events } = move(createState(bare), 'right')
+
+    expect(pickUpProgress(events, 0.3)).toBeCloseTo(0.3)
+    expect(durationOf(events)).toBeLessThan(durationOf(slideToLadder().events))
+  })
+})
+
 describe('movingBox 미끄러짐', () => {
   it('밀린 상자가 얼음 위를 이어서 미끄러진다', () => {
     const stage: Stage = {
@@ -262,8 +527,8 @@ describe('movingBox 미끄러짐', () => {
     const { state, events } = move(prev, 'right')
 
     expect(movingBox(prev, state, events, 0.2)?.x).toBeLessThanOrEqual(2)
-    expect(movingBox(prev, state, events, 0.9)?.x).toBeGreaterThan(3)
-    expect(movingBox(prev, state, events, 0.9)?.to).toEqual({ x: 5, y: 0 })
+    expect(movingBox(prev, state, events, 0.7)?.x).toBeGreaterThan(3)
+    expect(movingBox(prev, state, events, 0.7)?.to).toEqual({ x: 5, y: 0 })
   })
 })
 

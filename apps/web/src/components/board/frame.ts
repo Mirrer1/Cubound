@@ -1,5 +1,5 @@
-import { standHeight } from '@/game/rules'
-import type { Direction, GameEvent, GameState, Point } from '@/game/types'
+import { isLiftRaised, standHeight } from '@/game/rules'
+import type { Direction, Entity, GameEvent, GameState, Point, Stage } from '@/game/types'
 
 const SECONDS = {
   moved: 0.24,
@@ -10,7 +10,7 @@ const SECONDS = {
   placed: 0.22,
 }
 // 미끄러짐은 칸 수에 상관없이 속도가 같아야 상자와 큐브가 나란히 간다. max는 아주 긴 미끄러짐만 잡는다
-const SLIDE = { perCell: 0.09, max: 0.9 }
+const SLIDE = { perCell: 0.1, max: 0.9 }
 const TILT = 0.24
 
 const easeIn = (t: number) => t * t
@@ -112,14 +112,145 @@ const CRUMBLE_SECONDS = 0.46
 // 한 단계 닳는 변화도 이동 연출보다 길게 두어 천천히 갈라진다
 const WEAR_SECONDS = 0.4
 
+// 미끄러져 지나온 칸에 남는 서리 자국이 옅어지는 시간
+const FROST_FADE = 0.2
+
+interface Stamp {
+  p: Point
+  at: number // 미끄러지며 그 칸을 떠난 시각
+}
+
+// 미끄러짐이 멈추는 칸은 그 위에 큐브나 상자가 서 있어 자국을 두지 않는다
+const slideStamps = (segments: Segment[]): Stamp[] => {
+  const stamps: Stamp[] = []
+  let start = 0
+  for (const { event, seconds } of segments) {
+    if (event.type === 'slid') {
+      const cells = Math.abs(event.to.x - event.from.x) + Math.abs(event.to.y - event.from.y)
+      const step = {
+        x: (event.to.x - event.from.x) / cells,
+        y: (event.to.y - event.from.y) / cells,
+      }
+      for (let i = 0; i < cells; i += 1) {
+        stamps.push({
+          p: { x: event.from.x + step.x * i, y: event.from.y + step.y * i },
+          at: start + (seconds * i) / cells,
+        })
+      }
+    }
+    start += seconds
+  }
+  return stamps
+}
+
+const frostStamps = (events: GameEvent[]) => [
+  ...slideStamps(playerSegments(events)),
+  ...slideStamps(segmentsOf(boxPath(events))),
+]
+
+// 큐브나 상자가 그 칸에 닿는 시각과 그 칸을 떠나는 시각
+const touchAt = (events: GameEvent[], p: Point) => {
+  let arrive: number | null = null
+  let leave: number | null = null
+  for (const segments of [playerSegments(events), segmentsOf(boxPath(events))]) {
+    let start = 0
+    for (const { event, seconds } of segments) {
+      if (leave === null && same(event.from, p)) leave = start
+      if (same(event.to, p)) arrive = start + seconds
+      start += seconds
+    }
+  }
+  return { arrive, leave }
+}
+
+// 스위치가 눌리거나 풀린 뒤 문과 발판이 따라 움직이는 시간
+const SWITCH_SECONDS = 0.16
+
+// 눌림은 구간 끝에서, 풀림은 구간 시작에서 일어난다. 가장 늦은 때에 맞춰 연출할 시간을 남긴다
+const switchEnd = (events: GameEvent[]) => {
+  const linked = events.filter(
+    (e): e is Extract<GameEvent, { type: 'door' | 'lift' }> =>
+      e.type === 'door' || e.type === 'lift',
+  )
+  if (linked.length === 0) return 0
+
+  const pressed = linked.some((e) => (e.type === 'door' ? e.open : e.up))
+  const latest = (segments: Segment[]) =>
+    totalSeconds(segments) - (pressed ? 0 : (segments.at(-1)?.seconds ?? 0))
+
+  return (
+    Math.max(latest(playerSegments(events)), latest(segmentsOf(boxPath(events)))) + SWITCH_SECONDS
+  )
+}
+
+// 들고 있던 사다리가 손으로 옮겨지는 시간
+const LADDER_SECONDS = 0.16
+
+// 큐브가 사다리 칸에 닿는 시각. 이 이동에서 집지 않으면 null
+const pickUpAt = (events: GameEvent[]) => {
+  const picked = events.find((e) => e.type === 'pickedUp')
+  return picked?.type === 'pickedUp' ? touchAt(events, picked.at).arrive : null
+}
+
+const pickUpEnd = (events: GameEvent[]) => {
+  const at = pickUpAt(events)
+  return at === null ? 0 : at + LADDER_SECONDS
+}
+
 export const durationOf = (events: GameEvent[]) =>
   Math.max(
     0,
     totalSeconds(playerSegments(events)),
     totalSeconds(segmentsOf(boxPath(events))),
+    switchEnd(events),
+    pickUpEnd(events),
     ...events.map((e) => (e.type === 'blocked' || e.type === 'placed' ? SECONDS[e.type] : 0)),
     ...events.map((e) => (e.type === 'cracked' ? (e.gone ? CRUMBLE_SECONDS : WEAR_SECONDS) : 0)),
+    ...frostStamps(events).map((stamp) => stamp.at + FROST_FADE),
   )
+
+// cells 중 한 칸이 pressed 상태가 되는 시각. 이 이동에서 닿지 않는 칸뿐이면 null
+const pressedAt = (events: GameEvent[], cells: Point[], pressed: boolean) => {
+  const times = cells
+    .map((p) => (pressed ? touchAt(events, p).arrive : touchAt(events, p).leave))
+    .filter((at): at is number => at !== null)
+
+  return times.length === 0 ? null : Math.min(...times)
+}
+
+// 스위치와 엮인 문과 발판의 진행도 0~1. 눌림이 바뀌지 않는 이동은 이동 전체에 걸쳐 섞는다
+export const switchProgress = (
+  events: GameEvent[],
+  cells: Point[],
+  pressed: boolean,
+  t: number,
+) => {
+  const at = pressedAt(events, cells, pressed)
+  return at === null ? t : Math.min(1, Math.max(0, (t * durationOf(events) - at) / SWITCH_SECONDS))
+}
+
+// 사다리를 집어 드는 진행도 0~1. 집지 않는 이동은 이동 전체에 걸쳐 섞는다
+export const pickUpProgress = (events: GameEvent[], t: number) => {
+  const at = pickUpAt(events)
+  return at === null ? t : Math.min(1, Math.max(0, (t * durationOf(events) - at) / LADDER_SECONDS))
+}
+
+export const switchCells = (stage: Stage, target: string): Point[] =>
+  stage.entities.filter((e) => e.type === 'switch' && e.target === target)
+
+// 칸 하나의 자국 진하기 0~1. 겹치면 진한 쪽을 쓴다
+export const frostAt = (events: GameEvent[], p: Point, t: number) => {
+  if (!events.some((e) => e.type === 'slid')) return 0
+
+  const elapsed = t * durationOf(events)
+  return frostStamps(events)
+    .filter((stamp) => same(stamp.p, p))
+    .reduce(
+      (deepest, stamp) =>
+        Math.max(deepest, elapsed < stamp.at ? 0 : 1 - (elapsed - stamp.at) / FROST_FADE),
+      0,
+    )
+}
 
 // 미끄러져 멈춘 이동은 다음 입력과 이어 붙이지 않는다
 const slideChain = (events: GameEvent[], chain: Chain): Chain =>
@@ -149,6 +280,31 @@ const stepAt = (segments: Segment[], seconds: number, chain: Chain): Step | null
   return null
 }
 
+// 미끄러짐 전체를 하나로 보고 앞에서 눌렸다가 뒤에서 풀린다. 이어진 구간 사이에서 풀리면 끊겨 보인다
+const SQUASH = { rise: 0.15, fall: 0.25 }
+
+const squashAt = (q: number) =>
+  q <= 0 || q >= 1
+    ? 0
+    : q < SQUASH.rise
+      ? easeOut(q / SQUASH.rise)
+      : Math.min(1, easeIn((1 - q) / SQUASH.fall))
+
+// 이어지는 미끄러짐 구간 전체의 시작과 끝 시각
+const slideSpan = (segments: Segment[]) => {
+  let start = 0
+  let from = -1
+  let to = -1
+  for (const { event, seconds } of segments) {
+    if (event.type === 'slid') {
+      if (from < 0) from = start
+      to = start + seconds
+    }
+    start += seconds
+  }
+  return from < 0 ? null : { from, to }
+}
+
 export interface CubeFrame {
   x: number
   y: number
@@ -156,6 +312,7 @@ export interface CubeFrame {
   direction: Direction
   angle: number
   cell: Point // 그리기 순서를 맞출 칸
+  squash: number // 진행 방향으로 눌린 정도. 0이면 평소 모양
 }
 
 const levelAfter = (level: number, event: PathEvent) =>
@@ -163,6 +320,16 @@ const levelAfter = (level: number, event: PathEvent) =>
 
 // 앞쪽 칸에 그려야 뒤쪽 칸 블록에 덮이지 않는다
 const frontOf = (a: Point, b: Point) => (a.x + a.y >= b.x + b.y ? a : b)
+
+// 그 칸의 발판이 오르내리는 진행도. 발판 칸이 아니면 이동 전체에 걸쳐 섞는다
+const ridePhase = (game: GameState, events: GameEvent[], p: Point, t: number) => {
+  const lift = game.stage.entities.find(
+    (e): e is Extract<Entity, { type: 'lift' }> => e.type === 'lift' && same(e, p),
+  )
+  return lift === undefined
+    ? t
+    : switchProgress(events, switchCells(game.stage, lift.id), isLiftRaised(game, lift.id), t)
+}
 
 export const playerFrame = (
   prev: GameState | null,
@@ -179,6 +346,7 @@ export const playerFrame = (
     direction: 'right' as Direction,
     angle: 0,
     cell: player,
+    squash: 0,
   }
   if (t >= 1) return still
 
@@ -186,10 +354,13 @@ export const playerFrame = (
   const startLevel = prev ? standHeight(prev, prev.player) : endLevel
   // 이동 경로로 설명되지 않는 높이 차이는 발판이 오르내린 몫이라 칸과 같은 속도로 따라간다
   const riding =
-    (endLevel - segments.reduce((level, s) => levelAfter(level, s.event), startLevel)) * t
+    (endLevel - segments.reduce((level, s) => levelAfter(level, s.event), startLevel)) *
+    ridePhase(game, events, player, t)
   // 연출이 이동보다 길 수 있어 큐브는 제 길을 다 가면 그 자리에서 기다린다
-  const step = stepAt(segments, t * durationOf(events), slideChain(events, chain))
+  const elapsed = t * durationOf(events)
+  const step = stepAt(segments, elapsed, slideChain(events, chain))
   if (prev && step) {
+    const span = slideSpan(segments)
     const { event, index, p } = step
     const fromLevel = segments
       .slice(0, index)
@@ -212,6 +383,7 @@ export const playerFrame = (
       // 얼음 위에서는 구르지 않고 그대로 미끄러진다
       angle: event.type === 'slid' ? 0 : (Math.PI / 2) * p,
       cell: frontOf(event.from, event.to),
+      squash: span ? squashAt((elapsed - span.from) / (span.to - span.from)) : 0,
     }
   }
 
@@ -267,7 +439,7 @@ export const movingBox = (
     event.type === 'slid' || p < 0.6 ? fromLevel : lerp(fromLevel, toLevel, easeIn((p - 0.6) / 0.4))
   // 도착 칸에 서는 높이에서 상자 한 층을 뺀 값이 상자가 앉을 높이다. 발판이 오르내린 몫이 여기서 드러난다
   const endLevel = path.reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
-  const riding = (standHeight(game, to) - 1 - endLevel) * t
+  const riding = (standHeight(game, to) - 1 - endLevel) * ridePhase(game, events, to, t)
 
   return {
     x: lerp(event.from.x, event.to.x, p),
