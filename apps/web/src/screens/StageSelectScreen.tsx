@@ -7,10 +7,9 @@ import { worldTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
 import { goTo } from '@/platform/route'
 import {
-  STAGES,
-  STAGES_PER_WORLD,
   WORLDS,
   isBossStage,
+  parseStageId,
   previousWorld,
   stageIdsOf,
   worldUnlockStageId,
@@ -47,20 +46,19 @@ const StageSelectScreen = ({ world }: StageSelectScreenProps) => {
   const showArrows = WORLDS.length > 1
   const unlocked = isWorldUnlocked(progress, worldUnlockStageId(world))
   const ids = stageIdsOf(world)
-  const cards = ids.map((id, i) => {
-    const stage = STAGES[id]
+  const cards = ids.map((id) => {
     const record = progress.stages[id]
     const state: StageCardState = !unlocked
       ? 'locked'
       : record
         ? 'cleared'
-        : stage && isUnlocked(progress, ids, id)
+        : isUnlocked(progress, ids, id)
           ? 'open'
           : 'locked'
 
     return {
       id,
-      number: i + 1,
+      number: parseStageId(id).stage,
       state,
       stars: record?.stars ?? 0,
       boss: isBossStage(id),
@@ -116,7 +114,7 @@ const StageSelectScreen = ({ world }: StageSelectScreenProps) => {
             <span className="flex items-baseline justify-between gap-3 font-mono text-mute">
               <span className="text-[11px] tracking-[0.22em]">WORLD {world}</span>
               <span className="text-xs tracking-[0.15em] whitespace-nowrap">
-                {totalStars(progress, ids)} / {STAGES_PER_WORLD * 3} ◆
+                {totalStars(progress, ids)} / {ids.length * 3} ◆
               </span>
             </span>
             <span className="flex items-start gap-1">
