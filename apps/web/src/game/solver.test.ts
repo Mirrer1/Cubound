@@ -76,6 +76,18 @@ describe('solve', () => {
     })
   })
 
+  it('얼음 미끄러짐을 반영해 최소 이동 수를 찾는다', () => {
+    const stage: Stage = {
+      ...STAGE,
+      heights: [[0, 0, 0, 0, 0]],
+      start: { x: 0, y: 0 },
+      goal: { x: 4, y: 0 },
+      ice: ['.###.'],
+    }
+
+    expect(solve(stage)).toEqual({ status: 'solved', moves: 1, path: ['right'] })
+  })
+
   it('탐색 상태 수 한도를 넘으면 limit을 돌려준다', () => {
     expect(solve(STAGE, { maxStates: 2 }).status).toBe('limit')
   })

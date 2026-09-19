@@ -22,6 +22,7 @@ export interface Stage {
   id: string
   name?: string // 유저가 만든 맵의 이름. 공식 스테이지 이름은 사전에 둔다
   heights: number[][] // 행(y) 먼저, -1은 바닥 없음
+  ice?: string[] // heights와 같은 모양에서 '#'이 얼음
   start: Point
   goal: Point
   entities: Entity[]
@@ -64,6 +65,7 @@ export type GameEvent =
   | { type: 'moved'; from: Point; to: Point }
   | { type: 'fell'; from: Point; to: Point; drop: number } // drop은 층 수
   | { type: 'climbed'; from: Point; to: Point; via: 'box' | 'ladder' }
+  | { type: 'slid'; subject: 'player' | 'box'; from: Point; to: Point } // 얼음 위 미끄러짐이라 from과 to가 이웃하지 않을 수 있다
   | { type: 'pushed'; from: Point; to: Point; result: 'slid' | 'fell' | 'filled' }
   | { type: 'pickedUp'; at: Point }
   | { type: 'placed'; ladder: LeaningLadder }
