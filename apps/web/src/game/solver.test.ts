@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createState, move } from './rules'
-import { moveLimit, solve, stars } from './solver'
+import { deadEnds, moveLimit, solutionCount, solve, stars, statesWithin } from './solver'
 import type { Stage } from './types'
 
 const STAGE: Stage = {
@@ -16,6 +16,20 @@ const STAGE: Stage = {
   start: { x: 0, y: 0 },
   goal: { x: 2, y: 2 },
   entities: [],
+}
+
+// 상자를 (1,2)로 밀면 (2,1)을 메울 수단이 없어져 목표에 갈 수 없다
+const BOX_TRAP: Stage = {
+  version: 1,
+  id: 'test-dead-end',
+  heights: [
+    [0, 0, 0, -1],
+    [0, 0, -1, 0],
+    [0, -1, -1, -1],
+  ],
+  start: { x: 0, y: 1 },
+  goal: { x: 3, y: 1 },
+  entities: [{ type: 'box', x: 1, y: 1 }],
 }
 
 describe('solve', () => {
@@ -98,5 +112,60 @@ describe('stars', () => {
     const inside = Array.from({ length: limit - 20 + 1 }, (_, i) => stars(20 + i, 20, limit))
 
     expect(inside.every((count) => count >= 2)).toBe(true)
+  })
+})
+
+describe('deadEnds', () => {
+  it('상자가 없는 맵은 막히는 상태가 없다', () => {
+    expect(deadEnds(STAGE)).toEqual({ status: 'ok', states: 8, dead: 0, earliest: null })
+  })
+
+  it('상자를 엉뚱한 빈 칸에 밀어 넣으면 막힌 상태가 된다', () => {
+    const result = deadEnds(BOX_TRAP)
+
+    expect(result.status).toBe('ok')
+    if (result.status !== 'ok') return
+    expect(result.dead).toBeGreaterThan(0)
+    expect(result.earliest).toBe(3)
+  })
+
+  it('탐색 상태 수 한도를 넘으면 limit을 돌려준다', () => {
+    expect(deadEnds(STAGE, { maxStates: 2 })).toEqual({ status: 'limit' })
+  })
+})
+
+describe('solutionCount', () => {
+  it('최소 이동 수로 가는 길이 둘이면 2가지로 센다', () => {
+    expect(solutionCount(STAGE)).toEqual({ status: 'ok', count: 2 })
+  })
+
+  it('목표에 갈 수 없으면 0가지다', () => {
+    const blocked: Stage = {
+      ...STAGE,
+      heights: [
+        [0, 0, 0],
+        [0, 0, 1],
+        [0, 1, 1],
+      ],
+    }
+
+    expect(solutionCount(blocked)).toEqual({ status: 'ok', count: 0 })
+  })
+})
+
+describe('statesWithin', () => {
+  it('최소 이동 수 안에 목표까지 갈 수 있는 상태만 센다', () => {
+    expect(statesWithin(STAGE, 4)).toEqual({ status: 'ok', count: 8 })
+    expect(statesWithin(STAGE, 3)).toEqual({ status: 'ok', count: 0 })
+  })
+
+  it('막힌 상태는 여유를 많이 줘도 세지 않는다', () => {
+    const all = deadEnds(BOX_TRAP)
+    const inside = statesWithin(BOX_TRAP, 100)
+
+    expect(all.status).toBe('ok')
+    expect(inside.status).toBe('ok')
+    if (all.status !== 'ok' || inside.status !== 'ok') return
+    expect(inside.count).toBe(all.states - all.dead)
   })
 })

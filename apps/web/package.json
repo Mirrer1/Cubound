@@ -11,7 +11,9 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "e2e": "playwright test --grep-invert @shot",
-    "shot": "playwright test --grep @shot"
+    "shot": "playwright test --grep @shot --grep-invert @shot-stage",
+    "shot:stages": "playwright test --grep @shot-stage",
+    "stage:check": "node tools/run.mjs"
   },
   "dependencies": {
     "motion": "^13.4.0",

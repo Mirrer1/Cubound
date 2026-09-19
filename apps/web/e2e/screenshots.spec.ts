@@ -1,5 +1,8 @@
 import { type Page, test } from '@playwright/test'
 
+// 캡처는 서로 기대지 않아 나눠 돌린다
+test.describe.configure({ mode: 'parallel' })
+
 const KEYS = {
   up: 'ArrowUp',
   right: 'ArrowRight',
@@ -13,168 +16,21 @@ const LABELS = {
   en: { start: 'Start', skip: 'Skip', select: 'All stages' },
 }
 
-const SOLUTIONS = {
-  '1-1': 'up up right right right down down left',
-  '1-2': 'right right right right down down down left left left left down down',
-  '1-3': 'up right down down down right down down down right right right right right',
-  '1-4': 'right right right right right right down down down left right right right down',
-  '1-5': 'up right down down down right down right right right right down down down',
-  '1-6': 'right right right right down down down down right right right down down left down',
-  '1-7':
-    'down down right right right left left left down down right down down right right right down',
-  '1-8':
-    'down down right right right right left left left left down down right right right right right right right down',
-  '1-9':
-    'left left left left right right right right down down left left left left left up up left left down down',
-  '1-10':
-    'right right down down right right right right right right right right down down down down left down down up left left left left left left left down up up left left down left',
+interface StageShots {
+  solution: string
+  guide?: string[] // 가이드 단계마다 남길 장면 이름
+  shots: Record<number, string> // 이동 번호 → 장면 이름
+  extra?: (page: Page, prefix: string) => Promise<void> // 풀이 전에 따로 찍고 처음으로 되돌리는 장면
 }
 
-// 이동 번호마다 남길 장면 이름
-const PLAY_SHOTS: Record<keyof typeof SOLUTIONS, Record<number, string>> = {
-  '1-1': { 0: 'start', 8: 'cleared' },
-  '1-2': { 8: 'occluded' },
-  '1-3': {
-    0: 'start',
-    3: 'box-pushed',
-    4: 'box-climbed',
-    7: 'zone-changed',
-    8: 'occluded',
-    13: 'box-stair',
-  },
-  '1-4': {
-    0: 'start',
-    1: 'bridge-filled',
-    2: 'bridge-crossing',
-    3: 'zone-changed',
-    9: 'box-climbed',
-    11: 'bridge-2',
-  },
-  '1-5': { 0: 'start', 9: 'high-bridge', 10: 'high-bridge-crossing', 13: 'box-stair' },
-  '1-6': {
-    0: 'start',
-    1: 'on-switch',
-    2: 'on-door',
-    3: 'door-closed-behind',
-    9: 'fork',
-    12: 'zone-changed',
-    13: 'gate-2',
-  },
-  '1-7': { 0: 'start', 5: 'box-on-switch', 12: 'on-door', 13: 'zone-changed' },
-  '1-8': { 0: 'start', 6: 'box-on-switch', 16: 'box-on-door', 19: 'on-box' },
-  '1-9': {
-    0: 'start',
-    1: 'ladder-carried',
-    2: 'ladder-leaning',
-    3: 'ladder-climbed',
-    4: 'box-dropped',
-    6: 'ladder-taken-back',
-    15: 'zone-kept',
-    17: 'on-box-with-ladder',
-    20: 'ladder-at-goal',
-  },
-  '1-10': {
-    0: 'start',
-    5: 'box-stair',
-    8: 'zone-2',
-    10: 'bridge',
-    13: 'bridge-2',
-    16: 'zone-3',
-    19: 'ladder-carried',
-    21: 'ladder-leaning',
-    22: 'ladder-climbed',
-    25: 'zone-4',
-    28: 'door-opened',
-    33: 'on-door',
-  },
-}
+// 이동 0.24~0.32초, 구역 카메라 0.6초, 가이드 등장 0.5초가 끝나기를 기다린다
+const SETTLE = 600
+// 클리어 카드는 1.3초 뒤에 떠서 0.4초에 걸쳐 나타난다
+const CARD = 2200
 
-const shot = async (page: Page, name: string) => {
-  await page.waitForTimeout(1200)
+const shot = async (page: Page, name: string, settle = SETTLE) => {
+  await page.waitForTimeout(settle)
   await page.screenshot({ path: `e2e/.screenshots/${name}.png` })
-}
-
-const openStage = async (page: Page, start: string) => {
-  await page.getByRole('button', { name: start }).click()
-  await page.getByRole('button', { name: /01/ }).click()
-  await page.getByText('STAGE 01').waitFor()
-}
-
-// 가이드 1단계, 방향키 막힘, 2단계, 건너뛰기 뒤를 찍는다
-const shootGuide = async (page: Page, prefix: string, skip: string) => {
-  await page.getByText('GUIDE 1 / 2').waitFor()
-  await shot(page, `${prefix}-guide-1-cube`)
-
-  await page.keyboard.press('ArrowRight')
-  await page.keyboard.press('ArrowUp')
-  await shot(page, `${prefix}-guide-blocked`)
-
-  if (prefix.includes('mobile')) await page.touchscreen.tap(60, 400)
-  else await page.mouse.click(60, 400)
-  await page.getByText('GUIDE 2 / 2').waitFor()
-  await shot(page, `${prefix}-guide-2-goal`)
-
-  await page.getByRole('button', { name: skip }).click()
-  await shot(page, `${prefix}-guide-skipped`)
-}
-
-// 스테이지 2의 한 단계짜리 높이 가이드를 찍고 시작한다
-const shootHeightGuide = async (page: Page, prefix: string, start: string) => {
-  await page.getByText('STAGE 02').waitFor()
-  await page.getByText('GUIDE 1 / 1').waitFor()
-  await shot(page, `${prefix}-stage-02-guide`)
-  await page.getByRole('button', { name: start, exact: true }).click()
-}
-
-// 스테이지 3의 두 단계짜리 상자 가이드를 찍고 시작한다
-const shootBoxGuide = async (page: Page, prefix: string, start: string) => {
-  await page.getByText('STAGE 03').waitFor()
-  await page.getByText('GUIDE 1 / 2').waitFor()
-  await shot(page, `${prefix}-stage-03-guide-1-box`)
-
-  if (prefix.includes('mobile')) await page.touchscreen.tap(60, 400)
-  else await page.mouse.click(60, 400)
-  await page.getByText('GUIDE 2 / 2').waitFor()
-  await shot(page, `${prefix}-stage-03-guide-2-restart`)
-
-  await page.getByRole('button', { name: start, exact: true }).click()
-}
-
-// 스테이지 6의 두 단계짜리 스위치와 문 가이드를 찍고 시작한다
-const shootSwitchGuide = async (page: Page, prefix: string, start: string) => {
-  await page.getByText('STAGE 06').waitFor()
-  await page.getByText('GUIDE 1 / 2').waitFor()
-  await shot(page, `${prefix}-stage-06-guide-1-switch`)
-
-  if (prefix.includes('mobile')) await page.touchscreen.tap(60, 400)
-  else await page.mouse.click(60, 400)
-  await page.getByText('GUIDE 2 / 2').waitFor()
-  await shot(page, `${prefix}-stage-06-guide-2-door`)
-
-  await page.getByRole('button', { name: start, exact: true }).click()
-}
-
-// 스테이지 9의 두 단계짜리 사다리 가이드를 찍고 시작한다
-const shootLadderGuide = async (page: Page, prefix: string, start: string) => {
-  await page.getByText('STAGE 09').waitFor()
-  await page.getByText('GUIDE 1 / 2').waitFor()
-  await shot(page, `${prefix}-stage-09-guide-1-ladder`)
-
-  if (prefix.includes('mobile')) await page.touchscreen.tap(60, 400)
-  else await page.mouse.click(60, 400)
-  await page.getByText('GUIDE 2 / 2').waitFor()
-  await shot(page, `${prefix}-stage-09-guide-2-climb`)
-
-  await page.getByRole('button', { name: start, exact: true }).click()
-}
-
-// 스테이지 10의 한 단계짜리 보스 가이드를 찍고 시작한다
-const shootBossGuide = async (page: Page, prefix: string, start: string) => {
-  await page.getByText('STAGE 10').waitFor()
-  await page.getByText('GUIDE 1 / 1').waitFor()
-  await shot(page, `${prefix}-stage-10-guide-moves`)
-
-  await page.getByRole('button', { name: start, exact: true }).click()
 }
 
 const solve = async (page: Page, solution: string, onMove?: (index: number) => Promise<void>) => {
@@ -188,24 +44,14 @@ const solve = async (page: Page, solution: string, onMove?: (index: number) => P
   }
 }
 
-// 풀이를 두면서 정해둔 장면과 클리어 카드를 찍는다
-const playStage = async (page: Page, id: keyof typeof SOLUTIONS, prefix: string) => {
-  const shots = PLAY_SHOTS[id]
-  await solve(page, SOLUTIONS[id], async (i) => {
-    if (shots[i]) await shot(page, `${prefix}-${shots[i]}`)
-  })
-  await page.waitForTimeout(1600)
-  await shot(page, `${prefix}-clear-card`)
-}
-
 // 스테이지 7에서 큐브가 스위치를 밟아도 문까지 닿지 못하는 것을 찍고 처음으로 되돌린다
 const shootFarDoor = async (page: Page, prefix: string) => {
   await solve(page, 'down down down down right right right')
-  await shot(page, `${prefix}-stage-07-switch-pressed`)
+  await shot(page, `${prefix}-switch-pressed`)
 
   await page.keyboard.press('ArrowRight')
   await page.waitForTimeout(320)
-  await shot(page, `${prefix}-stage-07-door-closed`)
+  await shot(page, `${prefix}-door-closed`)
 
   await page.keyboard.press('r')
   await page.waitForTimeout(800)
@@ -217,17 +63,186 @@ const shootLadderMid = async (page: Page, prefix: string) => {
 
   await page.keyboard.press('ArrowLeft')
   await page.waitForTimeout(120)
-  await page.screenshot({ path: `e2e/.screenshots/${prefix}-stage-09-climb-mid.png` })
+  await page.screenshot({ path: `e2e/.screenshots/${prefix}-climb-mid.png` })
   await page.waitForTimeout(400)
 
   await solve(page, 'left right')
   await page.keyboard.press('ArrowRight')
   await page.waitForTimeout(130)
-  await page.screenshot({ path: `e2e/.screenshots/${prefix}-stage-09-take-back-mid.png` })
+  await page.screenshot({ path: `e2e/.screenshots/${prefix}-take-back-mid.png` })
   await page.waitForTimeout(500)
 
   await page.keyboard.press('r')
   await page.waitForTimeout(900)
+}
+
+// 스테이지가 늘면 코드가 아니라 이 표에만 줄을 더한다
+const STAGES: Record<string, StageShots> = {
+  '1-1': {
+    solution: 'up up right right right down down left',
+    guide: ['guide-1-cube', 'guide-2-goal'],
+    shots: { 0: 'start', 8: 'cleared' },
+  },
+  '1-2': {
+    solution: 'right right right right down down down left left left left down down',
+    guide: ['guide'],
+    shots: { 0: 'start', 8: 'occluded' },
+  },
+  '1-3': {
+    solution: 'up right down down down right down down down right right right right right',
+    guide: ['guide-1-box', 'guide-2-restart'],
+    shots: {
+      0: 'start',
+      3: 'box-pushed',
+      4: 'box-climbed',
+      7: 'zone-changed',
+      8: 'occluded',
+      13: 'box-stair',
+    },
+  },
+  '1-4': {
+    solution: 'right right right right right right down down down left right right right down',
+    shots: {
+      0: 'start',
+      1: 'bridge-filled',
+      2: 'bridge-crossing',
+      3: 'zone-changed',
+      9: 'box-climbed',
+      11: 'bridge-2',
+    },
+  },
+  '1-5': {
+    solution: 'up right down down down right down right right right right down down down',
+    shots: { 0: 'start', 9: 'high-bridge', 10: 'high-bridge-crossing', 13: 'box-stair' },
+  },
+  '1-6': {
+    solution: 'right right right right down down down down right right right down down left down',
+    guide: ['guide-1-switch', 'guide-2-door'],
+    shots: {
+      0: 'start',
+      1: 'on-switch',
+      2: 'on-door',
+      3: 'door-closed-behind',
+      9: 'fork',
+      12: 'zone-changed',
+      13: 'gate-2',
+    },
+  },
+  '1-7': {
+    solution:
+      'down down right right right left left left down down right down down right right right down',
+    shots: { 0: 'start', 5: 'box-on-switch', 12: 'on-door', 13: 'zone-changed' },
+    extra: shootFarDoor,
+  },
+  '1-8': {
+    solution:
+      'down down right right right right left left left left down down right right right right right right right down',
+    shots: { 0: 'start', 6: 'box-on-switch', 16: 'box-on-door', 19: 'on-box' },
+  },
+  '1-9': {
+    solution:
+      'left left left left right right right right down down left left left left left up up left left down down',
+    guide: ['guide-1-ladder', 'guide-2-climb'],
+    shots: {
+      0: 'start',
+      1: 'ladder-carried',
+      2: 'ladder-leaning',
+      3: 'ladder-climbed',
+      4: 'box-dropped',
+      6: 'ladder-taken-back',
+      15: 'zone-kept',
+      17: 'on-box-with-ladder',
+      20: 'ladder-at-goal',
+    },
+    extra: shootLadderMid,
+  },
+  '1-10': {
+    solution:
+      'right right down down right right right right right right right right down down down down left down down up left left left left left left left down up up left left down left',
+    guide: ['guide-moves'],
+    shots: {
+      0: 'start',
+      5: 'box-stair',
+      8: 'zone-2',
+      10: 'bridge',
+      13: 'bridge-2',
+      16: 'zone-3',
+      19: 'ladder-carried',
+      21: 'ladder-leaning',
+      22: 'ladder-climbed',
+      25: 'zone-4',
+      28: 'door-opened',
+      33: 'on-door',
+    },
+  },
+}
+
+const stageNumber = (id: string) => String(Number(id.split('-')[1])).padStart(2, '0')
+
+// 해시만 바꾸면 페이지를 다시 읽지 않아 심어 둔 진행이 반영되지 않는다. 쿼리를 달아 새로 읽게 한다
+const openPlay = async (page: Page, id: string) => {
+  await page.goto(`/?stage=${id}#/play/${id}`)
+  await page.getByText(`STAGE ${stageNumber(id)}`).waitFor()
+}
+
+// 앞 스테이지까지 클리어한 진행을 심는다. 그 스테이지가 열리고 가이드가 자동으로 뜬다
+const unlock = async (page: Page, id: string) => {
+  const cleared = Array.from({ length: Number(stageNumber(id)) - 1 }, (_, i) => [
+    `1-${i + 1}`,
+    { bestMoves: 8, stars: 3 },
+  ])
+  await page.addInitScript((stages) => {
+    localStorage.setItem('cubound:progress', JSON.stringify({ version: 1, stages }))
+  }, Object.fromEntries(cleared))
+}
+
+const tap = async (page: Page, prefix: string) => {
+  if (prefix.includes('mobile')) await page.touchscreen.tap(60, 400)
+  else await page.mouse.click(60, 400)
+}
+
+// 가이드 단계를 차례로 찍고 시작한다
+const shootGuide = async (page: Page, prefix: string, names: string[] = []) => {
+  if (names.length === 0) return
+
+  for (const [i, name] of names.entries()) {
+    await page.getByText(`GUIDE ${i + 1} / ${names.length}`).waitFor()
+    await shot(page, `${prefix}-${name}`)
+    if (i < names.length - 1) await tap(page, prefix)
+  }
+  await page.getByRole('button', { name: LABELS.ko.start, exact: true }).click()
+}
+
+// 풀이를 두면서 정해둔 장면과 클리어 카드를 찍는다
+const playStage = async (page: Page, id: string, prefix: string) => {
+  const { solution, shots } = STAGES[id]
+  await solve(page, solution, async (i) => {
+    if (shots[i]) await shot(page, `${prefix}-${shots[i]}`)
+  })
+  await shot(page, `${prefix}-clear-card`, CARD)
+}
+
+const openStage = async (page: Page, start: string) => {
+  await page.getByRole('button', { name: start }).click()
+  await page.getByRole('button', { name: /01/ }).click()
+  await page.getByText('STAGE 01').waitFor()
+}
+
+// 스테이지 1 가이드는 방향키가 막히는 모습과 건너뛴 뒤까지 함께 찍는다
+const shootFirstGuide = async (page: Page, prefix: string, skip: string) => {
+  await page.getByText('GUIDE 1 / 2').waitFor()
+  await shot(page, `${prefix}-guide-1-cube`)
+
+  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('ArrowUp')
+  await shot(page, `${prefix}-guide-blocked`)
+
+  await tap(page, prefix)
+  await page.getByText('GUIDE 2 / 2').waitFor()
+  await shot(page, `${prefix}-guide-2-goal`)
+
+  await page.getByRole('button', { name: skip }).click()
+  await shot(page, `${prefix}-guide-skipped`)
 }
 
 // 배치가 갈라지는 화면 크기
@@ -239,27 +254,8 @@ const SIZES = [
   { name: '3440x1440', width: 3440, height: 1440, mobile: false },
 ]
 
-// 1~9를 클리어한 진행. 보스가 열린다
-const BOSS_OPENED = {
-  version: 1,
-  stages: Object.fromEntries(
-    Array.from({ length: 9 }, (_, i) => [`1-${i + 1}`, { bestMoves: 8, stars: 3 }]),
-  ),
-}
-
-// 1~4를 클리어한 진행. 5까지 열리고 가이드가 자동으로 뜨지 않는다
-const OPENED = {
-  version: 1,
-  stages: {
-    '1-1': { bestMoves: 8, stars: 3 },
-    '1-2': { bestMoves: 13, stars: 3 },
-    '1-3': { bestMoves: 14, stars: 3 },
-    '1-4': { bestMoves: 14, stars: 3 },
-  },
-}
-
 test('@shot 데스크톱 화면', async ({ page }) => {
-  test.setTimeout(600_000)
+  test.setTimeout(120_000)
   await page.goto('/')
   await shot(page, 'desktop-title')
 
@@ -276,7 +272,7 @@ test('@shot 데스크톱 화면', async ({ page }) => {
 
   await page.getByRole('button', { name: /01/ }).click()
   await page.getByText('STAGE 01').waitFor()
-  await shootGuide(page, 'desktop', LABELS.ko.skip)
+  await shootFirstGuide(page, 'desktop', LABELS.ko.skip)
   await page.keyboard.press('ArrowUp')
   await page.waitForTimeout(90)
   await page.screenshot({ path: 'e2e/.screenshots/desktop-rolling-mid.png' })
@@ -284,51 +280,20 @@ test('@shot 데스크톱 화면', async ({ page }) => {
   await page.waitForTimeout(110)
   await page.screenshot({ path: 'e2e/.screenshots/desktop-restart-mid.png' })
 
-  await solve(page, SOLUTIONS['1-1'], async (i) => {
-    if (i === 8) {
+  await solve(page, STAGES['1-1'].solution, async (i) => {
+    const last = i === 8
+    if (last) {
       await page.waitForTimeout(450)
       await page.screenshot({ path: 'e2e/.screenshots/desktop-clear-effect.png' })
     }
-    if (PLAY_SHOTS['1-1'][i])
-      await shot(page, `desktop-play-${String(i).padStart(2, '0')}-${PLAY_SHOTS['1-1'][i]}`)
+    if (STAGES['1-1'].shots[i])
+      await shot(
+        page,
+        `desktop-play-${String(i).padStart(2, '0')}-${STAGES['1-1'].shots[i]}`,
+        last ? CARD : SETTLE,
+      )
   })
-  await page.waitForTimeout(1600)
-  await shot(page, 'desktop-clear-card')
-
-  await page.getByRole('button', { name: LABELS.ko.next }).click()
-  await shootHeightGuide(page, 'desktop', LABELS.ko.start)
-  await shot(page, 'desktop-stage-02-start')
-  await playStage(page, '1-2', 'desktop-stage-02')
-
-  await page.getByRole('button', { name: LABELS.ko.next }).click()
-  await shootBoxGuide(page, 'desktop', LABELS.ko.start)
-  await playStage(page, '1-3', 'desktop-stage-03')
-
-  await page.getByRole('button', { name: LABELS.ko.next }).click()
-  await page.getByText('STAGE 04').waitFor()
-  await playStage(page, '1-4', 'desktop-stage-04')
-
-  await page.getByRole('button', { name: LABELS.ko.next }).click()
-  await page.getByText('STAGE 05').waitFor()
-  await playStage(page, '1-5', 'desktop-stage-05')
-
-  await page.getByRole('button', { name: LABELS.ko.next }).click()
-  await shootSwitchGuide(page, 'desktop', LABELS.ko.start)
-  await playStage(page, '1-6', 'desktop-stage-06')
-
-  await page.getByRole('button', { name: LABELS.ko.next }).click()
-  await page.getByText('STAGE 07').waitFor()
-  await shootFarDoor(page, 'desktop')
-  await playStage(page, '1-7', 'desktop-stage-07')
-
-  await page.getByRole('button', { name: LABELS.ko.next }).click()
-  await page.getByText('STAGE 08').waitFor()
-  await playStage(page, '1-8', 'desktop-stage-08')
-
-  await page.getByRole('button', { name: LABELS.ko.next }).click()
-  await shootLadderGuide(page, 'desktop', LABELS.ko.start)
-  await shootLadderMid(page, 'desktop')
-  await playStage(page, '1-9', 'desktop-stage-09')
+  await shot(page, 'desktop-clear-card', CARD)
 
   await page.getByRole('button', { name: LABELS.ko.select, exact: true }).click()
   await shot(page, 'desktop-select-after-clear')
@@ -341,7 +306,7 @@ test.describe('모바일', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
 
   test('@shot 모바일 화면', async ({ page }) => {
-    test.setTimeout(600_000)
+    test.setTimeout(120_000)
     await page.goto('/')
     await shot(page, 'mobile-title')
 
@@ -350,107 +315,38 @@ test.describe('모바일', () => {
     await page.keyboard.press('Escape')
 
     await openStage(page, LABELS.ko.start)
-    await shootGuide(page, 'mobile', LABELS.ko.skip)
+    await shootFirstGuide(page, 'mobile', LABELS.ko.skip)
     await shot(page, 'mobile-play')
 
-    await solve(page, SOLUTIONS['1-1'])
-    await page.waitForTimeout(1600)
-    await shot(page, 'mobile-clear-card')
+    await solve(page, STAGES['1-1'].solution)
+    await shot(page, 'mobile-clear-card', CARD)
 
     await page.getByRole('button', { name: LABELS.ko.select, exact: true }).click()
     await shot(page, 'mobile-select')
-
-    await page.getByRole('button', { name: /02/ }).click()
-    await shootHeightGuide(page, 'mobile', LABELS.ko.start)
-    await shot(page, 'mobile-stage-02-play')
-    await playStage(page, '1-2', 'mobile-stage-02')
-
-    await page.getByRole('button', { name: LABELS.ko.next }).click()
-    await shootBoxGuide(page, 'mobile', LABELS.ko.start)
-    await playStage(page, '1-3', 'mobile-stage-03')
-
-    await page.getByRole('button', { name: LABELS.ko.next }).click()
-    await page.getByText('STAGE 04').waitFor()
-    await playStage(page, '1-4', 'mobile-stage-04')
-
-    await page.getByRole('button', { name: LABELS.ko.next }).click()
-    await page.getByText('STAGE 05').waitFor()
-    await playStage(page, '1-5', 'mobile-stage-05')
-
-    await page.getByRole('button', { name: LABELS.ko.next }).click()
-    await shootSwitchGuide(page, 'mobile', LABELS.ko.start)
-    await playStage(page, '1-6', 'mobile-stage-06')
-
-    await page.getByRole('button', { name: LABELS.ko.next }).click()
-    await page.getByText('STAGE 07').waitFor()
-    await playStage(page, '1-7', 'mobile-stage-07')
-
-    await page.getByRole('button', { name: LABELS.ko.next }).click()
-    await page.getByText('STAGE 08').waitFor()
-    await playStage(page, '1-8', 'mobile-stage-08')
-
-    await page.getByRole('button', { name: LABELS.ko.next }).click()
-    await shootLadderGuide(page, 'mobile', LABELS.ko.start)
-    await shootLadderMid(page, 'mobile')
-    await playStage(page, '1-9', 'mobile-stage-09')
   })
 })
 
-// 보스는 한 판이 34수라 앞 스테이지 흐름과 묶지 않고 따로 찍는다
-test.describe('보스', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.addInitScript((progress) => {
-      localStorage.setItem('cubound:progress', JSON.stringify(progress))
-    }, BOSS_OPENED)
-  })
+// 제한을 다 쓰면 큐브가 멈추고 재시작 버튼이 진해진다
+test('@shot 보스 이동 제한', async ({ page }) => {
+  test.setTimeout(120_000)
+  await unlock(page, '1-10')
+  await page.goto('/')
 
-  test('@shot 보스 화면', async ({ page }) => {
-    test.setTimeout(600_000)
-    await page.goto('/')
+  await page.getByRole('button', { name: LABELS.ko.start }).click()
+  await shot(page, 'desktop-select-boss-open')
 
-    await page.getByRole('button', { name: LABELS.ko.start }).click()
-    await shot(page, 'desktop-select-boss-open')
+  await openPlay(page, '1-10')
+  await page.getByRole('button', { name: LABELS.ko.start, exact: true }).click()
 
-    await page.getByRole('button', { name: /10/ }).click()
-    await shootBossGuide(page, 'desktop', LABELS.ko.start)
-    await playStage(page, '1-10', 'desktop-stage-10')
+  const left = page.locator('[data-guide="moves"] span').last()
+  for (let i = 0; i < 80 && (await left.textContent()) !== '0'; i++) {
+    await page.keyboard.press(i % 2 === 0 ? 'ArrowRight' : 'ArrowLeft')
+    await page.waitForTimeout(300)
+  }
+  await shot(page, 'desktop-stage-10-moves-zero')
 
-    await page.getByRole('button', { name: LABELS.ko.select, exact: true }).click()
-    await shot(page, 'desktop-select-boss-cleared')
-  })
-
-  // 제한을 다 쓰면 큐브가 멈추고 재시작 버튼이 진해진다
-  test('@shot 보스 이동 제한', async ({ page }) => {
-    test.setTimeout(300_000)
-    await page.goto('/#/play/1-10')
-    await page.getByRole('button', { name: LABELS.ko.start, exact: true }).click()
-
-    const left = page.locator('[data-guide="moves"] span').last()
-    for (let i = 0; i < 80 && (await left.textContent()) !== '0'; i++) {
-      await page.keyboard.press(i % 2 === 0 ? 'ArrowRight' : 'ArrowLeft')
-      await page.waitForTimeout(300)
-    }
-    await shot(page, 'desktop-stage-10-moves-zero')
-
-    await page.keyboard.press('ArrowRight')
-    await shot(page, 'desktop-stage-10-moves-zero-blocked')
-  })
-
-  test.describe('모바일', () => {
-    test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
-
-    test('@shot 보스 모바일 화면', async ({ page }) => {
-      test.setTimeout(600_000)
-      await page.goto('/')
-
-      await page.getByRole('button', { name: LABELS.ko.start }).click()
-      await shot(page, 'mobile-select-boss-open')
-
-      await page.getByRole('button', { name: /10/ }).click()
-      await shootBossGuide(page, 'mobile', LABELS.ko.start)
-      await playStage(page, '1-10', 'mobile-stage-10')
-    })
-  })
+  await page.keyboard.press('ArrowRight')
+  await shot(page, 'desktop-stage-10-moves-zero-blocked')
 })
 
 // 브라우저 언어가 영어면 처음부터 영어로 시작하는지 함께 본다
@@ -463,12 +359,11 @@ test.describe('영어', () => {
     await shot(page, 'en-desktop-title')
 
     await openStage(page, LABELS.en.start)
-    await shootGuide(page, 'en-desktop', LABELS.en.skip)
+    await shootFirstGuide(page, 'en-desktop', LABELS.en.skip)
     await shot(page, 'en-desktop-play')
 
-    await solve(page, SOLUTIONS['1-1'])
-    await page.waitForTimeout(1600)
-    await shot(page, 'en-desktop-clear-card')
+    await solve(page, STAGES['1-1'].solution)
+    await shot(page, 'en-desktop-clear-card', CARD)
 
     await page.getByRole('button', { name: LABELS.en.select, exact: true }).click()
     await shot(page, 'en-desktop-select')
@@ -483,12 +378,11 @@ test.describe('영어', () => {
       await shot(page, 'en-mobile-title')
 
       await openStage(page, LABELS.en.start)
-      await shootGuide(page, 'en-mobile', LABELS.en.skip)
+      await shootFirstGuide(page, 'en-mobile', LABELS.en.skip)
       await shot(page, 'en-mobile-play')
 
-      await solve(page, SOLUTIONS['1-1'])
-      await page.waitForTimeout(1600)
-      await shot(page, 'en-mobile-clear-card')
+      await solve(page, STAGES['1-1'].solution)
+      await shot(page, 'en-mobile-clear-card', CARD)
 
       await page.getByRole('button', { name: LABELS.en.select, exact: true }).click()
       await shot(page, 'en-mobile-select')
@@ -506,9 +400,7 @@ for (const size of SIZES) {
 
     test(`@shot ${size.name} 화면`, async ({ page }) => {
       test.setTimeout(120_000)
-      await page.addInitScript((progress) => {
-        localStorage.setItem('cubound:progress', JSON.stringify(progress))
-      }, OPENED)
+      await unlock(page, '1-5')
       await page.goto('/')
 
       await page.getByRole('button', { name: LABELS.ko.start }).click()
@@ -523,18 +415,15 @@ for (const size of SIZES) {
       await shot(page, `size-${size.name}-guide`)
 
       await page.getByRole('button', { name: LABELS.ko.skip }).click()
-      await solve(page, SOLUTIONS['1-1'])
-      await page.waitForTimeout(1600)
-      await shot(page, `size-${size.name}-clear-card`)
+      await solve(page, STAGES['1-1'].solution)
+      await shot(page, `size-${size.name}-clear-card`, CARD)
     })
   })
 }
 
 // 키보드로 옮겨 다닐 때 포커스가 보이는 자리
 test('@shot 키보드 포커스', async ({ page }) => {
-  await page.addInitScript((progress) => {
-    localStorage.setItem('cubound:progress', JSON.stringify(progress))
-  }, OPENED)
+  await unlock(page, '1-5')
   await page.goto('/')
   await page.getByRole('button', { name: LABELS.ko.start }).waitFor()
 
@@ -554,7 +443,38 @@ test('@shot 키보드 포커스', async ({ page }) => {
   await page.keyboard.press('Tab')
   await shot(page, 'desktop-focus-play')
 
-  await solve(page, SOLUTIONS['1-4'])
-  await page.waitForTimeout(1600)
-  await shot(page, 'desktop-focus-clear-card')
+  await solve(page, STAGES['1-4'].solution)
+  await shot(page, 'desktop-focus-clear-card', CARD)
+})
+
+// 스테이지마다 한 판을 두며 장면을 남긴다. 1은 데스크톱 화면 테스트가 이미 찍는다
+for (const id of Object.keys(STAGES).filter((key) => key !== '1-1')) {
+  test(`@shot-stage ${id} 데스크톱`, async ({ page }) => {
+    test.setTimeout(120_000)
+    const prefix = `desktop-stage-${stageNumber(id)}`
+
+    await unlock(page, id)
+    await openPlay(page, id)
+    await shootGuide(page, prefix, STAGES[id].guide)
+    await STAGES[id].extra?.(page, prefix)
+    await playStage(page, id, prefix)
+  })
+}
+
+// 모바일은 맵마다 배율이 달라 시작 화면과 가이드만 본다
+test.describe('모바일 스테이지', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+
+  test('@shot-stage 모바일 스테이지', async ({ page }) => {
+    test.setTimeout(120_000)
+
+    for (const id of Object.keys(STAGES)) {
+      const prefix = `mobile-stage-${stageNumber(id)}`
+
+      await unlock(page, id)
+      await openPlay(page, id)
+      await shootGuide(page, prefix, STAGES[id].guide)
+      await shot(page, `${prefix}-start`)
+    }
+  })
 })

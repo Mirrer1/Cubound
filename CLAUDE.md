@@ -123,7 +123,9 @@ pnpm test                         # 전체 테스트
 pnpm lint                         # 전체 린트
 pnpm format                       # Prettier 정리
 pnpm e2e                          # Playwright 스모크 테스트
-pnpm shot                         # 화면 캡처 (apps/web/e2e/.screenshots)
+pnpm shot                         # 핵심 화면 캡처 (apps/web/e2e/.screenshots)
+pnpm shot:stages                  # 스테이지별 상세 캡처
+pnpm stage:check world-1          # 스테이지 검사 (폴더나 JSON 경로, 없으면 전체)
 pnpm --filter @cubound/web add <pkg>   # web에 패키지 추가
 ```
 

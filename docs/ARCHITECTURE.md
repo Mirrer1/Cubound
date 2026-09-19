@@ -91,6 +91,10 @@ src/
 ├── screens/               # TitleScreen, StageSelectScreen, PlayScreen
 ├── App.tsx                # 주소로 화면 고르기와 전환
 └── index.css              # Tailwind, 색 토큰, 전환과 스크롤 유틸리티
+
+tools/                     # 명령줄 도구 (앱 번들에 들어가지 않는다)
+├── run.mjs                # TypeScript 도구를 Vite로 불러 실행
+└── stageCheck.ts          # pnpm stage:check
 ```
 
 ## 게임 모델
@@ -159,7 +163,11 @@ move(state: GameState, dir: Direction): MoveResult // { state, events }
 - 탐색은 `rules`를 뺀 스테이지로 한다. 제한을 모르는 채 맵을 먼저 만들다 너무 작게 적어도 못 푸는 맵과 헷갈리지 않고 진짜 최소 이동 수가 나온다
 - `moveLimit(best)`: 최소 이동 수 + 20% 올림. 보스 제한을 정할 때 쓰는 값이고 제한이 없는 스테이지의 ★★ 기준
 - `stars(moves, best, limit)`: 최소 이동이면 3, `limit` 안이면 2, 그 밖은 1. `limit`은 스테이지의 `rules.moveLimit`이고 없으면 `moveLimit(best)`다
+- `deadEnds(stage)`: 시작에서 닿는 모든 상태를 펼친 뒤 목표에서 역방향으로 훑어, 목표에 갈 수 없게 된 상태 수와 가장 빨리 막히는 이동 수를 돌려준다. 되돌릴 수 없는 실수가 몇 수째부터 생기는지 보는 값이다
+- `solutionCount(stage)`: 최소 이동 수와 같은 길이의 풀이가 몇 가지인지 센다. 1이면 외길이다
+- `statesWithin(stage, maxMoves)`: 그 이동 수 안에 목표까지 갈 수 있는 상태를 센다. 보스 제한이 실수를 만회할 자리를 얼마나 주는지 보는 값이다. 풀이 가짓수로 세면 여유가 1수만 늘어도 폭발해 비교할 수 없다
 - `stages/stages.test.ts`가 모든 스테이지 JSON이 풀리는지 검사한다
+- `pnpm stage:check`가 위 함수들을 묶어 스테이지 하나나 폴더를 검사하고 결과를 표로 찍는다. 도구는 `apps/web/tools/`에 있고 규칙을 복사하지 않는다
 - 넓은 스테이지를 만들면 탐색 시간을 다시 재고, 느려지면 상태 키 계산을 최적화한다
 - 용도
   - 스테이지가 풀리는지 테스트로 검증
