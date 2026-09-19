@@ -28,6 +28,7 @@ interface BoardCellProps {
   hidden: boolean // 상자가 메우는 중인 칸
   faded: boolean
   entity: 'switch' | 'door' | null
+  lift: boolean
   switchDepth: number
   doorDepth: number
   box: boolean
@@ -48,6 +49,7 @@ const BoardCell = ({
   hidden,
   faded,
   entity,
+  lift,
   switchDepth,
   doorDepth,
   box,
@@ -58,6 +60,12 @@ const BoardCell = ({
 }: BoardCellProps) => {
   const floorTop = parity ? darken('floor-top', 2.8) : 'var(--color-floor-top)'
   const icy = ice && !goal && !filled
+  // 상자가 메운 칸, 얼음, 발판은 바닥 대신 제 색으로 칠한다
+  const surface = filled ? 'tool' : icy ? 'ice' : lift ? 'lift' : null
+  const faces = surface
+    ? { top: shade(surface, 'top'), left: shade(surface, 'left'), right: shade(surface, 'right') }
+    : { top: floorTop, left: 'var(--color-floor-left)', right: 'var(--color-floor-right)' }
+  const stroke = icy ? darken('ice', 10) : lift ? darken('lift', 26) : darken('floor-top', 6)
   const gloss = glossLine(x, y)
   const ladders = leaning
     ? leaning.split('|').map((item) => {
@@ -76,31 +84,17 @@ const BoardCell = ({
               y={y}
               width={TILE.width}
               depth={h * TILE.layer + TILE.lip}
-              top={
-                goal
-                  ? 'var(--color-goal)'
-                  : filled
-                    ? shade('tool', 'top')
-                    : icy
-                      ? shade('ice', 'top')
-                      : floorTop
-              }
-              left={
-                filled
-                  ? shade('tool', 'left')
-                  : icy
-                    ? shade('ice', 'left')
-                    : 'var(--color-floor-left)'
-              }
-              right={
-                filled
-                  ? shade('tool', 'right')
-                  : icy
-                    ? shade('ice', 'right')
-                    : 'var(--color-floor-right)'
-              }
-              stroke={goal ? undefined : icy ? darken('ice', 10) : darken('floor-top', 6)}
+              top={goal ? 'var(--color-goal)' : faces.top}
+              left={faces.left}
+              right={faces.right}
+              stroke={goal ? undefined : stroke}
             />
+            {lift && (
+              <polygon
+                points={blockFaces(x, y, TILE.width * 0.84, 0).top}
+                style={{ fill: 'none', stroke: darken('lift', 26), strokeWidth: 1.8 }}
+              />
+            )}
             {icy && (
               <line
                 x1={gloss.x1}

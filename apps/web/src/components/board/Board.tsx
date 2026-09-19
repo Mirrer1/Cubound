@@ -11,8 +11,8 @@ import { useBoardAnimation } from './useBoardAnimation'
 import { useCamera } from './useCamera'
 import { TILE, toScreen } from '@/game/iso'
 import { occludingCells } from '@/game/occlusion'
-import { isDoorOpen, isIce, standHeight } from '@/game/rules'
-import type { GameEvent, GameState, Point } from '@/game/types'
+import { isDoorOpen, isIce, isLiftRaised, standHeight } from '@/game/rules'
+import type { Entity, GameEvent, GameState, Point } from '@/game/types'
 
 interface BoardProps {
   game: GameState
@@ -109,6 +109,14 @@ const Board = ({
         const pressed = (state: GameState) => same(state.player, cell.p) || has(state.boxes, cell.p)
         const doorDepth = (state: GameState) =>
           entity?.type === 'door' && isDoorOpen(state, entity.id) ? 7 : TILE.layer
+        // 상자가 얹힌 칸도 발판으로 찾도록 entity와 따로 본다
+        const lift = stage.entities.find(
+          (e): e is Extract<Entity, { type: 'lift' }> => e.type === 'lift' && same(e, cell.p),
+        )
+        const liftLevel = (state: GameState) =>
+          lift !== undefined && isLiftRaised(state, lift.id) ? 1 : 0
+        const raised = lerp(liftLevel(before), liftLevel(game), progress)
+        const cellY = cell.y - raised * TILE.layer
         const pickedHere = pickedUp?.type === 'pickedUp' && same(pickedUp.at, cell.p)
         const flatLadder = has(ladders, cell.p)
           ? 1
@@ -143,8 +151,8 @@ const Board = ({
           <BoardCell
             key={cell.key}
             x={cell.x}
-            y={cell.y}
-            h={cell.h}
+            y={cellY}
+            h={cell.h + raised}
             parity={(cell.p.x + cell.p.y) % 2 === 1}
             goal={same(cell.p, stage.goal)}
             filled={isFilled}
@@ -152,6 +160,7 @@ const Board = ({
             hidden={isFilled && box !== null && same(box.to, cell.p)}
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
+            lift={lift !== undefined}
             switchDepth={lerp(pressed(before) ? 4 : 11, pressed(game) ? 4 : 11, progress)}
             doorDepth={lerp(doorDepth(before), doorDepth(game), progress)}
             box={has(boxes, cell.p) && !(box && same(box.to, cell.p)) && boxDrop === null}
@@ -164,7 +173,7 @@ const Board = ({
                 {drawBox && boxScreen && <BoardBox x={boxScreen.x} y={boxScreen.y - TILE.layer} />}
                 {boxDrop && (
                   <g opacity={boxDrop.opacity}>
-                    <BoardBox x={cell.x} y={cell.y - TILE.layer - boxDrop.lift * TILE.layer} />
+                    <BoardBox x={cell.x} y={cellY - TILE.layer - boxDrop.lift * TILE.layer} />
                   </g>
                 )}
                 {drawCube && (
