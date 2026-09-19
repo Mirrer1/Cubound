@@ -28,6 +28,7 @@ const stateKey = (state: GameState) => {
     points(state.ladders),
     points(filled),
     leaning.join(' '),
+    state.raisedLifts.join(' '),
     state.carrying,
   ].join('|')
 }

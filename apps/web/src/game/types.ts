@@ -9,6 +9,7 @@ export type Entity = (
   | { type: 'box' }
   | { type: 'switch'; target: string }
   | { type: 'door'; id: string }
+  | { type: 'lift'; id: string }
   | { type: 'ladder' }
 ) &
   Point
@@ -55,6 +56,7 @@ export interface GameState {
   boxes: Point[]
   ladders: Point[] // 바닥에 놓인 사다리
   leaningLadders: LeaningLadder[]
+  raisedLifts: string[] // 한 층 올라가 있는 발판 id
   carrying: boolean
   player: Point
   moves: number
@@ -70,6 +72,7 @@ export type GameEvent =
   | { type: 'pickedUp'; at: Point }
   | { type: 'placed'; ladder: LeaningLadder }
   | { type: 'door'; id: string; open: boolean }
+  | { type: 'lift'; id: string; up: boolean }
   | { type: 'blocked'; direction: Direction }
   | { type: 'cleared' }
 

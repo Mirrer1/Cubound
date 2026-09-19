@@ -21,6 +21,7 @@ const MID = {
   boxes: [{ x: 2, y: 0 }],
   ladders: [],
   leaningLadders: [],
+  raisedLifts: [],
   carrying: false,
   player: { x: 1, y: 0 },
   moves: 1,
@@ -110,5 +111,33 @@ describe('restoreSession', () => {
 
   it('이어서 시작한 상태는 클리어 전이다', () => {
     expect(restoreSession(saved(MID), STAGE)?.cleared).toBe(false)
+  })
+})
+
+const LIFT_STAGE: Stage = {
+  version: 1,
+  id: '2-9',
+  heights: [[0, 0, 0]],
+  start: { x: 0, y: 0 },
+  goal: { x: 2, y: 0 },
+  entities: [{ type: 'switch', x: 1, y: 0, target: 'a' }],
+}
+
+describe('restoreSession 발판', () => {
+  it('올라가 있던 발판을 그대로 이어간다', () => {
+    const stage: Stage = {
+      ...LIFT_STAGE,
+      heights: [[0, 0, 0, 0]],
+      goal: { x: 3, y: 0 },
+      entities: [...LIFT_STAGE.entities, { type: 'lift', x: 2, y: 0, id: 'a' }],
+    }
+    const state = move(createState(stage), 'right').state
+
+    expect(state.raisedLifts).toEqual(['a'])
+    expect(restoreSession(toSession(state), stage)).toEqual(state)
+  })
+
+  it('스테이지에 없는 발판 id가 담겨 있으면 버린다', () => {
+    expect(restoreSession(saved({ ...MID, raisedLifts: ['a'] }), STAGE)).toBeNull()
   })
 })

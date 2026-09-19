@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createState, isDoorOpen, move, movesLeft } from './rules'
+import { createState, isDoorOpen, isLiftRaised, move, movesLeft, standHeight } from './rules'
 import type { Direction, MoveResult, Stage } from './types'
 
 const FLAT_STAGE: Stage = {
@@ -720,6 +720,129 @@ describe('move 얼음', () => {
       { type: 'moved', from: { x: 0, y: 1 }, to: { x: 1, y: 1 } },
       { type: 'slid', subject: 'player', from: { x: 1, y: 1 }, to: { x: 3, y: 1 } },
     ])
+  })
+})
+
+const LIFT_STAGE: Stage = {
+  version: 1,
+  id: 'test-lift',
+  name: '발판 테스트',
+  heights: [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+  ],
+  start: { x: 0, y: 1 },
+  goal: { x: 4, y: 0 },
+  entities: [
+    { type: 'switch', x: 2, y: 1, target: 'a' },
+    { type: 'lift', x: 4, y: 1, id: 'a' },
+  ],
+}
+
+const LIFT = { x: 4, y: 1 }
+
+describe('move 발판', () => {
+  const HELD_STAGE: Stage = {
+    ...LIFT_STAGE,
+    entities: [...LIFT_STAGE.entities, { type: 'box', x: 1, y: 1 }],
+  }
+
+  it('스위치를 밟으면 발판이 한 층 올라간다', () => {
+    const { state, events } = play(LIFT_STAGE, ['right', 'right'])
+
+    expect(isLiftRaised(state, 'a')).toBe(true)
+    expect(standHeight(state, LIFT)).toBe(1)
+    expect(events).toContainEqual({ type: 'lift', id: 'a', up: true })
+  })
+
+  it('스위치에서 내려오면 발판이 원래 높이로 돌아온다', () => {
+    const { state, events } = play(LIFT_STAGE, ['right', 'right', 'down'])
+
+    expect(isLiftRaised(state, 'a')).toBe(false)
+    expect(standHeight(state, LIFT)).toBe(0)
+    expect(events).toContainEqual({ type: 'lift', id: 'a', up: false })
+  })
+
+  it('상자로 스위치를 눌러 두면 발판이 계속 올라가 있다', () => {
+    const { state, events } = play(HELD_STAGE, ['right', 'up'])
+
+    expect(state.boxes).toEqual([{ x: 2, y: 1 }])
+    expect(isLiftRaised(state, 'a')).toBe(true)
+    expect(events.some((e) => e.type === 'lift')).toBe(false)
+  })
+
+  it('올라간 발판으로는 그냥 올라가지 못한다', () => {
+    const { state, events } = play(HELD_STAGE, ['right', 'up', 'right', 'right', 'down', 'right'])
+
+    expect(state.player).toEqual({ x: 3, y: 1 })
+    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+  })
+
+  it('내려간 발판은 보통 칸처럼 지나간다', () => {
+    const { state, events } = move(createState({ ...LIFT_STAGE, start: { x: 3, y: 1 } }), 'right')
+
+    expect(state.player).toEqual(LIFT)
+    expect(events).toEqual([{ type: 'moved', from: { x: 3, y: 1 }, to: LIFT }])
+  })
+
+  it('발판 위에 큐브가 있으면 스위치가 풀려도 내려가지 않는다', () => {
+    const stage: Stage = {
+      ...LIFT_STAGE,
+      heights: [
+        [0, 0, 0, 1, 0],
+        [0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      start: { x: 3, y: 0 },
+      entities: [
+        { type: 'switch', x: 3, y: 1, target: 'a' },
+        { type: 'lift', x: 4, y: 1, id: 'a' },
+      ],
+    }
+    const { state, events } = play(stage, ['down', 'right'])
+
+    expect(state.player).toEqual(LIFT)
+    expect(isLiftRaised(state, 'a')).toBe(true)
+    expect(standHeight(state, LIFT)).toBe(1)
+    expect(events.some((e) => e.type === 'lift')).toBe(false)
+  })
+
+  it('발판 위에 상자가 있으면 스위치가 풀려도 내려가지 않는다', () => {
+    const stage: Stage = {
+      ...LIFT_STAGE,
+      heights: [
+        [0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      entities: [...LIFT_STAGE.entities, { type: 'box', x: 3, y: 1 }],
+    }
+    const { state, events } = play(stage, ['right', 'right', 'right'])
+
+    expect(state.boxes).toEqual([LIFT])
+    expect(isLiftRaised(state, 'a')).toBe(true)
+    expect(standHeight(state, LIFT)).toBe(2)
+    expect(events.some((e) => e.type === 'lift')).toBe(false)
+  })
+
+  it('올라간 발판 쪽으로는 상자를 밀지 못해 상자 위로 올라간다', () => {
+    const stage: Stage = {
+      ...LIFT_STAGE,
+      entities: [...LIFT_STAGE.entities, { type: 'box', x: 3, y: 1 }],
+    }
+    const { state, events } = play(stage, ['right', 'right', 'right'])
+
+    expect(state.boxes).toEqual([{ x: 3, y: 1 }])
+    expect(state.player).toEqual({ x: 3, y: 1 })
+    expect(events[0].type).toBe('climbed')
+  })
+
+  it('미끄러지다 올라간 발판을 만나면 그 앞에서 멈춘다', () => {
+    const stage: Stage = { ...LIFT_STAGE, ice: ['.....', '...#.', '.....'] }
+    const { state } = play(stage, ['right', 'right', 'right'])
+
+    expect(state.player).toEqual({ x: 3, y: 1 })
   })
 })
 

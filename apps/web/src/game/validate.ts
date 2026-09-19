@@ -2,7 +2,7 @@ import type { Stage } from './types'
 
 export const STAGE_VERSION = 1
 
-const ENTITY_TYPES = ['box', 'switch', 'door', 'ladder']
+const ENTITY_TYPES = ['box', 'switch', 'door', 'lift', 'ladder']
 const GUIDE_TARGETS = ['restart', 'moves']
 const MAX_GUIDES = 3
 
@@ -71,7 +71,8 @@ export const validateStage = (data: unknown): ValidateResult => {
 
   const occupied = new Set<string>()
   const reserved = new Set([data.start, data.goal].filter(isFloor).map(key))
-  const doorIds = new Set<string>()
+  // 스위치는 문과 발판을 같은 target으로 가리켜 id를 함께 관리한다
+  const targetIds = new Set<string>()
 
   entities.forEach((entity, i) => {
     if (!isObject(entity) || !ENTITY_TYPES.includes(entity.type as string)) {
@@ -86,16 +87,17 @@ export const validateStage = (data: unknown): ValidateResult => {
     if (reserved.has(key(entity))) add(`entities[${i}]이 시작이나 목표 칸에 있다`)
     occupied.add(key(entity))
 
-    if (entity.type === 'door') {
-      if (typeof entity.id !== 'string') add(`entities[${i}]의 문 id가 없다`)
-      else if (doorIds.has(entity.id)) add(`문 id ${entity.id}가 겹친다`)
-      else doorIds.add(entity.id)
+    if (entity.type === 'door' || entity.type === 'lift') {
+      const label = entity.type === 'door' ? '문' : '발판'
+      if (typeof entity.id !== 'string') add(`entities[${i}]의 ${label} id가 없다`)
+      else if (targetIds.has(entity.id)) add(`${label} id ${entity.id}가 겹친다`)
+      else targetIds.add(entity.id)
     }
   })
 
   entities.forEach((entity, i) => {
-    if (isObject(entity) && entity.type === 'switch' && !doorIds.has(entity.target as string)) {
-      add(`entities[${i}]의 target인 문 ${String(entity.target)}가 없다`)
+    if (isObject(entity) && entity.type === 'switch' && !targetIds.has(entity.target as string)) {
+      add(`entities[${i}]의 target인 문이나 발판 ${String(entity.target)}가 없다`)
     }
   })
 

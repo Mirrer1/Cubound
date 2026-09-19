@@ -1,5 +1,6 @@
 import type {
   Direction,
+  Entity,
   GameEvent,
   GameState,
   LeaningLadder,
@@ -7,6 +8,8 @@ import type {
   Point,
   Stage,
 } from './types'
+
+type Lift = Extract<Entity, { type: 'lift' }>
 
 const OFFSETS: Record<Direction, Point> = {
   up: { x: 0, y: -1 },
@@ -22,27 +25,46 @@ const step = (p: Point, direction: Direction) => ({
   y: p.y + OFFSETS[direction].y,
 })
 
-// 필드 밖은 undefined, 바닥 없는 칸은 -1
-const rawHeight = (state: GameState, { x, y }: Point): number | undefined => state.heights[y]?.[x]
+const hasBox = (state: GameState, p: Point) => state.boxes.some((box) => same(box, p))
+
+const doors = (stage: Stage) => stage.entities.filter((e) => e.type === 'door')
+
+const lifts = (stage: Stage) => stage.entities.filter((e) => e.type === 'lift')
+
+const isPressed = (state: GameState, p: Point) => same(state.player, p) || hasBox(state, p)
+
+const isSwitchOn = (state: GameState, target: string) =>
+  state.stage.entities.some(
+    (e) => e.type === 'switch' && e.target === target && isPressed(state, e),
+  )
+
+// 연결된 스위치가 하나라도 눌렸거나 문 위에 무언가 있으면 열림
+export const isDoorOpen = (state: GameState, id: string) =>
+  isSwitchOn(state, id) ||
+  doors(state.stage).some((door) => door.id === id && isPressed(state, door))
+
+// 발판 위에 큐브나 상자가 있으면 스위치와 상관없이 직전 높이를 지킨다
+const isRaised = (state: GameState, lift: Lift) =>
+  isPressed(state, lift) ? state.raisedLifts.includes(lift.id) : isSwitchOn(state, lift.id)
+
+export const isLiftRaised = (state: GameState, id: string) => {
+  const lift = lifts(state.stage).find((l) => l.id === id)
+  return lift !== undefined && isRaised(state, lift)
+}
+
+// 필드 밖은 undefined, 바닥 없는 칸은 -1, 올라간 발판은 한 층 높다
+const rawHeight = (state: GameState, p: Point): number | undefined => {
+  const h = state.heights[p.y]?.[p.x]
+  if (h === undefined) return undefined
+
+  const lift = state.stage.entities.find((e): e is Lift => e.type === 'lift' && same(e, p))
+  return lift && isRaised(state, lift) ? h + 1 : h
+}
 
 const floorAt = (state: GameState, p: Point) => {
   const h = rawHeight(state, p)
   return h === undefined || h < 0 ? null : h
 }
-
-const hasBox = (state: GameState, p: Point) => state.boxes.some((box) => same(box, p))
-
-const doors = (stage: Stage) => stage.entities.filter((e) => e.type === 'door')
-
-const isPressed = (state: GameState, p: Point) => same(state.player, p) || hasBox(state, p)
-
-// 연결된 스위치가 하나라도 눌렸거나 문 위에 무언가 있으면 열림
-export const isDoorOpen = (state: GameState, id: string) =>
-  state.stage.entities.some(
-    (e) =>
-      (e.type === 'switch' && e.target === id && isPressed(state, e)) ||
-      (e.type === 'door' && e.id === id && isPressed(state, e)),
-  )
 
 const isClosedDoor = (state: GameState, p: Point) =>
   doors(state.stage).some((door) => same(door, p) && !isDoorOpen(state, door.id))
@@ -68,6 +90,7 @@ export const createState = (stage: Stage): GameState => ({
   boxes: stage.entities.filter((e) => e.type === 'box').map(({ x, y }) => ({ x, y })),
   ladders: stage.entities.filter((e) => e.type === 'ladder').map(({ x, y }) => ({ x, y })),
   leaningLadders: [],
+  raisedLifts: [],
   carrying: false,
   player: stage.start,
   moves: 0,
@@ -280,6 +303,14 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
   return arrive(state, to, direction, { type: 'climbed', from, to, via: 'box' })
 }
 
+const settleLifts = (state: GameState): GameState => {
+  const all = lifts(state.stage)
+  if (all.length === 0) return state
+
+  const raised = all.filter((lift) => isRaised(state, lift)).map((lift) => lift.id)
+  return { ...state, raisedLifts: raised }
+}
+
 export const move = (state: GameState, direction: Direction): MoveResult => {
   if (state.cleared) return { state, events: [] }
   if (movesLeft(state) === 0) return { state, events: [{ type: 'blocked', direction }] }
@@ -287,21 +318,28 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
   const result = moveOnce(state, direction)
   if (result.state === state) return result
 
+  const moved = settleLifts(result.state)
+
   const doorEvents: GameEvent[] = doors(state.stage)
     .map((door) => ({
       id: door.id,
       before: isDoorOpen(state, door.id),
-      after: isDoorOpen(result.state, door.id),
+      after: isDoorOpen(moved, door.id),
     }))
     .filter(({ before, after }) => before !== after)
     .map(({ id, after }) => ({ type: 'door', id, open: after }))
 
+  const liftEvents: GameEvent[] = lifts(state.stage)
+    .filter((lift) => isRaised(state, lift) !== isRaised(moved, lift))
+    .map((lift) => ({ type: 'lift', id: lift.id, up: isRaised(moved, lift) }))
+
   return {
-    state: result.state,
+    state: moved,
     events: [
       ...result.events,
       ...doorEvents,
-      ...(result.state.cleared ? [{ type: 'cleared' } as const] : []),
+      ...liftEvents,
+      ...(moved.cleared ? [{ type: 'cleared' } as const] : []),
     ],
   }
 }

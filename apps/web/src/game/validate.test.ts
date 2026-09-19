@@ -105,10 +105,10 @@ describe('validateStage', () => {
     )
   })
 
-  it('스위치는 있는 문을 가리키고 문 id는 겹치지 않는다', () => {
+  it('스위치는 있는 문이나 발판을 가리키고 문 id는 겹치지 않는다', () => {
     expect(
       errorsOf({ ...VALID, entities: [{ type: 'switch', x: 0, y: 1, target: 'b' }] }),
-    ).toContain('entities[0]의 target인 문 b가 없다')
+    ).toContain('entities[0]의 target인 문이나 발판 b가 없다')
     expect(
       errorsOf({
         ...VALID,
@@ -118,6 +118,26 @@ describe('validateStage', () => {
         ],
       }),
     ).toContain('문 id a가 겹친다')
+  })
+
+  it('발판은 바닥 칸에 있고 id가 겹치지 않으며 스위치가 가리킬 수 있다', () => {
+    const entities = (list: unknown[]) => errorsOf({ ...VALID, entities: list })
+
+    expect(
+      entities([
+        { type: 'switch', x: 0, y: 1, target: 'b' },
+        { type: 'lift', x: 2, y: 0, id: 'b' },
+      ]),
+    ).toEqual([])
+    expect(entities([{ type: 'lift', x: 1, y: 1, id: 'b' }])).toContain(
+      'entities[0]이 바닥 칸이 아니다',
+    )
+    expect(
+      entities([
+        { type: 'lift', x: 2, y: 0, id: 'b' },
+        { type: 'lift', x: 0, y: 1, id: 'b' },
+      ]),
+    ).toContain('발판 id b가 겹친다')
   })
 
   it('best는 양의 정수여야 한다', () => {
