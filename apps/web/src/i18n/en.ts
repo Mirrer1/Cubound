@@ -40,6 +40,7 @@ export const en = {
   'guide.climb':
     'Set the ladder against a tile one level up, then climb. Roll back down to pick it up again',
   'guide.moveLimit': 'You have {n} moves to get home',
+  'guide.ice': 'You slide across ice until something stops you',
 
   'world.1': 'Land of Low Steps',
   'stage.1-1': 'First Steps',
