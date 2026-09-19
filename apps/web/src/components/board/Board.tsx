@@ -170,6 +170,8 @@ const Board = ({
             ice={isIce(game, cell.p)}
             crack={Math.max(left, was) >= 0}
             crackDepth={crumble.depth}
+            crackSpread={crumble.spread}
+            crackSeed={(cell.p.x * 3 + cell.p.y * 5) % 4}
             hidden={isFilled && box !== null && same(box.to, cell.p)}
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}

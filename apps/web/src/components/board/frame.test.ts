@@ -334,11 +334,25 @@ describe('crackFrame', () => {
     }
   })
 
-  it('무너지는 칸은 큐브가 절반쯤 간 뒤부터 떨어져 이동이 끝날 때 사라진다', () => {
-    expect(crackFrame(0, -1, 0.4)).toMatchObject({ fall: 0, opacity: 1 })
-    expect(crackFrame(0, -1, 0.7).fall).toBeGreaterThan(0)
-    expect(crackFrame(0, -1, 0.7).opacity).toBeLessThan(1)
+  it('무너지는 칸은 큐브가 떠나자마자 갈라져 떨어지고 이동이 끝날 때 사라진다', () => {
+    expect(crackFrame(0, -1, 0.1)).toMatchObject({ fall: 0, spread: 0, opacity: 1 })
+    expect(crackFrame(0, -1, 0.4).fall).toBeGreaterThan(0)
+    expect(crackFrame(0, -1, 0.4).opacity).toBeLessThan(1)
     expect(crackFrame(0, -1, 1)).toMatchObject({ opacity: 0 })
+  })
+
+  it('무너지는 동안 조각이 벌어지기만 한다', () => {
+    let last = crackFrame(0, -1, 0).spread
+    for (let t = 0.05; t <= 1; t += 0.05) {
+      const { spread } = crackFrame(0, -1, t)
+      expect(spread).toBeGreaterThanOrEqual(last)
+      last = spread
+    }
+    expect(last).toBeGreaterThan(0.1)
+  })
+
+  it('무너지지 않는 칸은 조각이 벌어지지 않는다', () => {
+    expect(crackFrame(2, 1, 0.5).spread).toBe(0)
   })
 
   it('무너지는 동안 계속 내려가고 되올라가지 않는다', () => {

@@ -271,11 +271,12 @@ export const movingBox = (
   }
 }
 
-// 금이 깊어지는 앞부분과 바닥이 떨어져 나가는 뒷부분
-const CRUMBLE = { deepen: 0.6, fallFrom: 0.45, drop: 1.4 }
+// 금이 깊어지는 앞부분과 조각이 갈라져 떨어지는 뒷부분. 떨어짐은 이동 연출을 거의 다 쓴다
+const CRUMBLE = { deepen: 0.6, fallFrom: 0.12, drop: 1.6, spread: 0.17 }
 
 export interface CrackFrame {
   depth: number // 금 깊이, 0이면 실금 1이면 굵은 금
+  spread: number // 조각이 벌어진 정도. 칸 한 변을 1로 본다
   fall: number // 아래로 내려간 층 수
   opacity: number
 }
@@ -289,7 +290,12 @@ export const crackFrame = (before: number, after: number, t: number): CrackFrame
   const falling = before >= 0 && after < 0
   const p = falling ? Math.min(1, Math.max(0, (t - CRUMBLE.fallFrom) / (1 - CRUMBLE.fallFrom))) : 0
 
-  return { depth, fall: CRUMBLE.drop * easeIn(p), opacity: 1 - p }
+  return {
+    depth,
+    spread: CRUMBLE.spread * easeOut(p),
+    fall: CRUMBLE.drop * easeIn(p),
+    opacity: 1 - p * p,
+  }
 }
 
 // 재시작할 때 큐브와 상자가 처음 자리 위에서 내려앉는다

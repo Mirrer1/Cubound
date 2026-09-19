@@ -5,32 +5,66 @@ import BoardBox from './BoardBox'
 import BoardLadder from './BoardLadder'
 import { darken, shade, tint } from './shade'
 import { TILE, blockFaces, isoDelta } from '@/game/iso'
-import type { Direction, Point } from '@/game/types'
+import type { Direction } from '@/game/types'
 
 const GLOSS = { pull: 0.175, span: 0.2 }
-const CRACK = { thin: 1.3, thick: 3, faint: 0.5 }
+// 무너지는 칸은 윗면이 네 조각으로 갈라져 있고 틈으로 아래 어둠이 비친다. 닳을수록 틈이 벌어진다
+const CRACK = { thin: 0.026, thick: 0.075, dim: 28, dimDeep: 64 }
 
-// 칸 하나를 한 변으로 하는 격자 좌표로 찍은 금. 윗면을 가로지르고 굵어지면 가지가 드러난다
-const CRACK_LINE: Point[] = [
-  { x: -0.4, y: 0.33 },
-  { x: 0, y: 0.23 },
-  { x: 0, y: -0.15 },
-  { x: 0.4, y: -0.29 },
+// 갈라지는 자리를 칸마다 어긋나게 둔다. 나란히 놓여도 격자무늬로 보이지 않는다
+const CRACK_CENTERS: [number, number][] = [
+  [-0.11, 0.07],
+  [0.09, -0.13],
+  [0.13, 0.11],
+  [-0.07, -0.09],
 ]
-const CRACK_BRANCH: Point[] = [
-  { x: 0, y: 0.23 },
-  { x: 0.08, y: 0.46 },
-]
+
+// 네 조각. 바깥 윤곽은 그대로 두고 갈라진 자리 쪽 두 변만 틈만큼 물러난다
+const crackShards = (x: number, y: number, gap: number, seed: number) => {
+  const g = Math.min(gap, 0.3)
+  const [ox, oy] = CRACK_CENTERS[seed]
+  const l = ox - g
+  const r = ox + g
+  const u = oy - g
+  const d = oy + g
+  const quads: [number, number][][] = [
+    [
+      [-0.5, -0.5],
+      [l, -0.5],
+      [l, u],
+      [-0.5, u],
+    ],
+    [
+      [r, -0.5],
+      [0.5, -0.5],
+      [0.5, u],
+      [r, u],
+    ],
+    [
+      [r, d],
+      [0.5, d],
+      [0.5, 0.5],
+      [r, 0.5],
+    ],
+    [
+      [-0.5, d],
+      [l, d],
+      [l, 0.5],
+      [-0.5, 0.5],
+    ],
+  ]
+
+  return quads.map((quad) =>
+    quad
+      .map(([u, v]) => {
+        const d = isoDelta(u, v)
+        return `${x + d.x},${y + d.y}`
+      })
+      .join(' '),
+  )
+}
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-
-const crackPoints = (line: Point[], x: number, y: number) =>
-  line
-    .map((p) => {
-      const d = isoDelta(p.x, p.y)
-      return `${x + d.x},${y + d.y}`
-    })
-    .join(' ')
 
 // 왼쪽 위 모서리와 나란하게 가운데 쪽으로 당겨 놓은 얼음 윗면의 광택선
 const glossLine = (x: number, y: number) => ({
@@ -50,6 +84,8 @@ interface BoardCellProps {
   ice: boolean
   crack: boolean // 무너지는 칸
   crackDepth: number // 금 깊이, 0이면 실금 1이면 굵은 금
+  crackSpread: number // 무너지며 조각이 벌어진 정도
+  crackSeed: number // 갈라지는 자리를 칸마다 어긋나게 하는 값
   hidden: boolean // 상자가 메우는 중인 칸
   faded: boolean
   entity: 'switch' | 'door' | null
@@ -73,6 +109,8 @@ const BoardCell = ({
   ice,
   crack,
   crackDepth,
+  crackSpread,
+  crackSeed,
   hidden,
   faded,
   entity,
@@ -141,24 +179,18 @@ const BoardCell = ({
             )}
             {crack && (
               <>
-                <polyline
-                  points={crackPoints(CRACK_LINE, x, y)}
-                  fill="none"
-                  stroke="var(--color-crack-line)"
-                  strokeWidth={lerp(CRACK.thin, CRACK.thick, crackDepth)}
-                  strokeOpacity={lerp(CRACK.faint, 1, crackDepth)}
-                  strokeLinecap="butt"
-                  strokeLinejoin="miter"
+                <polygon
+                  points={blockFaces(x, y, TILE.width, 0).top}
+                  style={{ fill: darken('crack', lerp(CRACK.dim, CRACK.dimDeep, crackDepth)) }}
                 />
-                <polyline
-                  points={crackPoints(CRACK_BRANCH, x, y)}
-                  fill="none"
-                  stroke="var(--color-crack-line)"
-                  strokeWidth={CRACK.thin}
-                  strokeOpacity={crackDepth}
-                  strokeLinecap="butt"
-                  strokeLinejoin="miter"
-                />
+                {crackShards(
+                  x,
+                  y,
+                  lerp(CRACK.thin, CRACK.thick, crackDepth) + crackSpread,
+                  crackSeed,
+                ).map((shard, i) => (
+                  <polygon key={i} points={shard} style={{ fill: faces.top }} />
+                ))}
               </>
             )}
             {goal && (
