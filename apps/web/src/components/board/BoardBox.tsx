@@ -21,8 +21,8 @@ const BoardBox = ({ x, y }: BoardBoxProps) => {
         right={shade('tool', 'right')}
       />
       <polygon
-        points={blockFaces(x, y, TILE.width * 0.44, 0).top}
-        style={{ fill: 'none', stroke: darken('tool', 34), strokeWidth: 1.1 }}
+        points={blockFaces(x, y, TILE.width * CUBE * 0.52, 0).top}
+        style={{ fill: darken('tool', 13) }}
       />
     </>
   )

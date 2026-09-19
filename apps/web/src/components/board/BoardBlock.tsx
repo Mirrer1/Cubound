@@ -8,20 +8,16 @@ interface BoardBlockProps {
   top: string
   left: string
   right: string
-  stroke?: string
 }
 
-const BoardBlock = ({ x, y, width, depth, top, left, right, stroke }: BoardBlockProps) => {
+const BoardBlock = ({ x, y, width, depth, top, left, right }: BoardBlockProps) => {
   const faces = blockFaces(x, y, width, depth)
 
   return (
     <g>
       <polygon points={faces.left} style={{ fill: left }} />
       <polygon points={faces.right} style={{ fill: right }} />
-      <polygon
-        points={faces.top}
-        style={{ fill: top, stroke: stroke ?? 'none', strokeWidth: 0.8 }}
-      />
+      <polygon points={faces.top} style={{ fill: top }} />
     </g>
   )
 }

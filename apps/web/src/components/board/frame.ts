@@ -271,30 +271,44 @@ export const movingBox = (
   }
 }
 
-// 금이 깊어지는 앞부분과 조각이 갈라져 떨어지는 뒷부분. 떨어짐은 이동 연출을 거의 다 쓴다
-const CRUMBLE = { deepen: 0.6, fallFrom: 0.12, drop: 1.6, spread: 0.17 }
+// 단계가 오르는 앞부분과 가라앉아 사라지는 뒷부분. 가라앉음은 이동 연출을 거의 다 쓴다
+const CRUMBLE = { deepen: 0.6, fallFrom: 0.12, drop: 1.6, shadow: 0.9 }
+
+// 닳은 단계마다의 내려앉은 화면 거리와 옆면 두께
+const CRACK_SINK = [0, 4, 9]
+const CRACK_THICKNESS = [11, 8, 5]
 
 export interface CrackFrame {
-  depth: number // 금 깊이, 0이면 실금 1이면 굵은 금
-  spread: number // 조각이 벌어진 정도. 칸 한 변을 1로 본다
+  stage: number // 닳은 단계 0~2. 오를수록 얇아지고 내려앉는다
   fall: number // 아래로 내려간 층 수
   opacity: number
+  shadow: number // 무너진 자리에 깔리는 그림자 진하기
 }
 
-// left는 앞으로 견디는 횟수. 1 이하면 다음에 밟고 나올 때 무너져서 굵은 금으로 알린다
-const depthOf = (left: number) => (left > 1 ? 0 : 1)
+// left는 앞으로 견디는 횟수. -1은 바닥 없는 칸이다
+const stageOf = (left: number) => (left > 1 ? 0 : left === 1 ? 1 : 2)
 
-// before와 after는 이동 앞뒤의 left. -1은 바닥 없는 칸이다
+// 단계 사이 값은 앞뒤 단계를 섞는다
+const atStage = (steps: number[], stage: number) => {
+  const i = Math.min(steps.length - 2, Math.max(0, Math.floor(stage)))
+  return lerp(steps[i], steps[i + 1], stage - i)
+}
+
+export const crackSink = (stage: number) => atStage(CRACK_SINK, stage)
+
+export const crackThickness = (stage: number) => atStage(CRACK_THICKNESS, stage)
+
+// before와 after는 이동 앞뒤의 left
 export const crackFrame = (before: number, after: number, t: number): CrackFrame => {
-  const depth = lerp(depthOf(before), depthOf(after), easeOut(Math.min(1, t / CRUMBLE.deepen)))
+  const stage = lerp(stageOf(before), stageOf(after), easeOut(Math.min(1, t / CRUMBLE.deepen)))
   const falling = before >= 0 && after < 0
   const p = falling ? Math.min(1, Math.max(0, (t - CRUMBLE.fallFrom) / (1 - CRUMBLE.fallFrom))) : 0
 
   return {
-    depth,
-    spread: CRUMBLE.spread * easeOut(p),
+    stage,
     fall: CRUMBLE.drop * easeIn(p),
     opacity: 1 - p * p,
+    shadow: CRUMBLE.shadow * easeOut(p) * (1 - p ** 4),
   }
 }
 

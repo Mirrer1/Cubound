@@ -5,7 +5,14 @@ import BoardCell from './BoardCell'
 import BoardLadder from './BoardLadder'
 import ClearEffect from './ClearEffect'
 import { rollingCubeFaces } from './cube'
-import { crackFrame, movingBox, playerFrame, restartDrop, restartDuration } from './frame'
+import {
+  crackFrame,
+  crackSink,
+  movingBox,
+  playerFrame,
+  restartDrop,
+  restartDuration,
+} from './frame'
 import { shade } from './shade'
 import { useBoardAnimation } from './useBoardAnimation'
 import { useCamera } from './useCamera'
@@ -94,6 +101,26 @@ const Board = ({
   const carriedOpacity =
     pickedUp && !game.carrying ? 0 : pickedUp ? t : placed ? 1 - t : game.carrying ? 1 : 0
   const progress = moving ? t : 1
+
+  // 무너지는 칸은 닳을수록 내려앉아서 그 위에 선 것도 같은 만큼 내려간다
+  const sinkAt = (p: Point) => {
+    const left = crackLeft(game, p)
+    const was = crackLeft(before, p)
+    return Math.max(left, was) >= 0 ? crackSink(crackFrame(was, left, progress).stage) : 0
+  }
+  // 칸 사이를 지나는 동안에는 앞뒤 칸의 내려앉은 양을 섞는다
+  const standSink = (x: number, y: number) => {
+    const x0 = Math.floor(x)
+    const x1 = Math.ceil(x)
+    const y0 = Math.floor(y)
+    const y1 = Math.ceil(y)
+    const near = lerp(sinkAt({ x: x0, y: y0 }), sinkAt({ x: x1, y: y0 }), x - x0)
+    const far = lerp(sinkAt({ x: x0, y: y1 }), sinkAt({ x: x1, y: y1 }), x - x0)
+    return lerp(near, far, y - y0)
+  }
+
+  const cubeSink = standSink(cube.x, cube.y)
+  const boxSink = box ? standSink(box.x, box.y) : 0
   const guideLevel = guideCell ? Math.max(0, heights[guideCell.y][guideCell.x]) : 0
   const guideScreen = guideCell ? toScreen(guideCell, guideLevel) : null
   // 칸 위에 선 것은 한 층보다 높이 솟아서 위쪽을 더 잡는다
@@ -126,7 +153,8 @@ const Board = ({
           (stage.heights[cell.p.y][cell.p.x] < 0 || (wasCrack && left < 0))
         const crumble = crackFrame(was, left, progress)
         const raised = lerp(liftLevel(before), liftLevel(game), progress)
-        const cellY = cell.y - raised * TILE.layer + crumble.fall * TILE.layer
+        const crackFall = crumble.fall * TILE.layer
+        const cellY = cell.y - raised * TILE.layer + sinkAt(cell.p) + crackFall
         const pickedHere = pickedUp?.type === 'pickedUp' && same(pickedUp.at, cell.p)
         const flatLadder = has(ladders, cell.p)
           ? 1
@@ -169,14 +197,15 @@ const Board = ({
             filled={isFilled}
             ice={isIce(game, cell.p)}
             crack={Math.max(left, was) >= 0}
-            crackDepth={crumble.depth}
-            crackSpread={crumble.spread}
+            crackStage={crumble.stage}
+            crackFall={crackFall}
+            crackShadow={crumble.shadow}
             crackSeed={(cell.p.x * 3 + cell.p.y * 5) % 4}
             hidden={isFilled && box !== null && same(box.to, cell.p)}
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
             lift={lift !== undefined}
-            switchDepth={lerp(pressed(before) ? 4 : 11, pressed(game) ? 4 : 11, progress)}
+            switchDepth={lerp(pressed(before) ? 2 : 9, pressed(game) ? 2 : 9, progress)}
             doorDepth={lerp(doorDepth(before), doorDepth(game), progress)}
             box={has(boxes, cell.p) && !(box && same(box.to, cell.p)) && boxDrop === null}
             blockOpacity={restored > 0 ? 1 - t : restored < 0 ? t : crumble.opacity}
@@ -185,14 +214,19 @@ const Board = ({
           >
             {overlay ? (
               <>
-                {drawBox && boxScreen && <BoardBox x={boxScreen.x} y={boxScreen.y - TILE.layer} />}
+                {drawBox && boxScreen && (
+                  <BoardBox x={boxScreen.x} y={boxScreen.y - TILE.layer + boxSink} />
+                )}
                 {boxDrop && (
                   <g opacity={boxDrop.opacity}>
                     <BoardBox x={cell.x} y={cellY - TILE.layer - boxDrop.lift * TILE.layer} />
                   </g>
                 )}
                 {drawCube && (
-                  <g opacity={cubeDrop ? cubeDrop.opacity : 1}>
+                  <g
+                    opacity={cubeDrop ? cubeDrop.opacity : 1}
+                    transform={`translate(0 ${cubeSink})`}
+                  >
                     {rollingCubeFaces(cube.x, cube.y, cubeLevel, cube.direction, cube.angle).map(
                       (f) => (
                         <polygon
@@ -206,7 +240,7 @@ const Board = ({
                 )}
                 {drawCube && carriedOpacity > 0 && (
                   <g opacity={carriedOpacity}>
-                    <BoardLadder x={cubeScreen.x} y={cubeScreen.y - TILE.layer - 2} />
+                    <BoardLadder x={cubeScreen.x} y={cubeScreen.y - TILE.layer - 2 + cubeSink} />
                   </g>
                 )}
                 {goalEffect && <ClearEffect x={cell.x} y={cell.y} />}

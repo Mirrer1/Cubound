@@ -1,9 +1,11 @@
-import { shade } from './shade'
+import { darken, shade } from './shade'
 import { TILE, isoDelta } from '@/game/iso'
 import type { Direction, Point } from '@/game/types'
 
 // 높은 칸 위로 살짝 솟아 가려져도 보이게 한다
 const TIP = 10
+// 바닥에 놓인 사다리는 칸 윗면에서 살짝 떠 있다
+const LIFT = 2
 const RUNGS = [-0.3, -0.1, 0.1, 0.3]
 const LEAN_RUNGS = [0.2, 0.45, 0.7, 0.92]
 const DIRECTION_DELTA: Record<Direction, Point> = {
@@ -28,16 +30,20 @@ const lerp = (a: Point, b: Point, t: number) => ({
   y: a.y + (b.y - a.y) * t,
 })
 
-const flatSegments = (center: Point, s: number) => ({
-  rails: [-0.24, 0.24].map((v): Segment => [
-    add(center, isoDelta(-0.43 * s, v * s)),
-    add(center, isoDelta(0.43 * s, v * s)),
-  ]),
-  rungs: RUNGS.map((u): Segment => [
-    add(center, isoDelta(u * s, -0.26 * s)),
-    add(center, isoDelta(u * s, 0.26 * s)),
-  ]),
-})
+const flatSegments = (origin: Point, s: number) => {
+  const center = { x: origin.x, y: origin.y - LIFT }
+
+  return {
+    rails: [-0.26, 0.26].map((v): Segment => [
+      add(center, isoDelta(-0.42 * s, v * s)),
+      add(center, isoDelta(0.42 * s, v * s)),
+    ]),
+    rungs: RUNGS.map((u): Segment => [
+      add(center, isoDelta(u * s, -0.26 * s)),
+      add(center, isoDelta(u * s, 0.26 * s)),
+    ]),
+  }
+}
 
 const leaningSegments = (center: Point, direction: Direction) => {
   const d = DIRECTION_DELTA[direction]
@@ -61,14 +67,15 @@ const BoardLadder = ({ x, y, scale = 1, direction }: BoardLadderProps) => {
   const { rails, rungs } = direction
     ? leaningSegments({ x, y }, direction)
     : flatSegments({ x, y }, scale)
+  // 바닥에 놓인 사다리는 위에서 보아 옆대가 빛을 받고 가로대가 그 아래로 내려앉는다
   const railStyle = {
-    stroke: shade('tool', 'left'),
-    strokeWidth: 4.5 * scale,
+    stroke: direction ? shade('tool', 'left') : shade('tool', 'top'),
+    strokeWidth: (direction ? 4.5 : 7) * scale,
     strokeLinecap: 'round' as const,
   }
   const rungStyle = {
-    stroke: shade('tool', 'top'),
-    strokeWidth: 3.5 * scale,
+    stroke: direction ? shade('tool', 'top') : darken('tool', 16),
+    strokeWidth: (direction ? 3.5 : 5) * scale,
     strokeLinecap: 'round' as const,
   }
 

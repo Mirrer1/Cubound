@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   crackFrame,
+  crackSink,
+  crackThickness,
   durationOf,
   moveEase,
   movingBox,
@@ -307,52 +309,44 @@ describe('moveEase 이어짐 경계', () => {
 })
 
 describe('crackFrame', () => {
-  it('두 번 남은 칸은 실금이고 한 번 남은 칸은 굵은 금이다', () => {
-    expect(crackFrame(2, 2, 1).depth).toBe(0)
-    expect(crackFrame(1, 1, 1).depth).toBe(1)
-    expect(crackFrame(0, 0, 1).depth).toBe(1)
+  it('남은 횟수가 줄수록 닳은 단계가 오른다', () => {
+    expect(crackFrame(2, 2, 1).stage).toBe(0)
+    expect(crackFrame(1, 1, 1).stage).toBe(1)
+    expect(crackFrame(0, 0, 1).stage).toBe(2)
   })
 
-  it('세 번 이상 남은 칸도 실금으로 그려 굵은 금의 뜻이 하나로 남는다', () => {
-    expect(crackFrame(5, 5, 1).depth).toBe(0)
+  it('세 번 이상 남은 칸도 멀쩡한 단계로 그려 단계마다 뜻이 하나로 남는다', () => {
+    expect(crackFrame(5, 5, 1).stage).toBe(0)
   })
 
-  it('금이 깊어지는 동안 값이 이어지고 되얕아지지 않는다', () => {
-    let last = crackFrame(2, 1, 0).depth
+  it('단계가 오르는 동안 값이 이어지고 되돌아가지 않는다', () => {
+    let last = crackFrame(2, 1, 0).stage
     expect(last).toBe(0)
     for (let t = 0.05; t <= 1; t += 0.05) {
-      const depth = crackFrame(2, 1, t).depth
-      expect(depth).toBeGreaterThanOrEqual(last)
-      last = depth
+      const { stage } = crackFrame(2, 1, t)
+      expect(stage).toBeGreaterThanOrEqual(last)
+      last = stage
     }
     expect(last).toBeCloseTo(1)
   })
 
   it('무너지지 않는 칸은 제자리에 또렷하게 남는다', () => {
     for (const t of [0, 0.5, 1]) {
-      expect(crackFrame(2, 1, t)).toMatchObject({ fall: 0, opacity: 1 })
+      expect(crackFrame(2, 1, t)).toMatchObject({ fall: 0, opacity: 1, shadow: 0 })
     }
   })
 
-  it('무너지는 칸은 큐브가 떠나자마자 갈라져 떨어지고 이동이 끝날 때 사라진다', () => {
-    expect(crackFrame(0, -1, 0.1)).toMatchObject({ fall: 0, spread: 0, opacity: 1 })
+  it('무너지는 칸은 큐브가 떠나자마자 가라앉고 이동이 끝날 때 사라진다', () => {
+    expect(crackFrame(0, -1, 0.1)).toMatchObject({ fall: 0, opacity: 1 })
     expect(crackFrame(0, -1, 0.4).fall).toBeGreaterThan(0)
     expect(crackFrame(0, -1, 0.4).opacity).toBeLessThan(1)
     expect(crackFrame(0, -1, 1)).toMatchObject({ opacity: 0 })
   })
 
-  it('무너지는 동안 조각이 벌어지기만 한다', () => {
-    let last = crackFrame(0, -1, 0).spread
-    for (let t = 0.05; t <= 1; t += 0.05) {
-      const { spread } = crackFrame(0, -1, t)
-      expect(spread).toBeGreaterThanOrEqual(last)
-      last = spread
-    }
-    expect(last).toBeGreaterThan(0.1)
-  })
-
-  it('무너지지 않는 칸은 조각이 벌어지지 않는다', () => {
-    expect(crackFrame(2, 1, 0.5).spread).toBe(0)
+  it('무너지는 동안 그림자가 짙어졌다가 자리와 함께 사라진다', () => {
+    expect(crackFrame(0, -1, 0.1).shadow).toBe(0)
+    expect(crackFrame(0, -1, 0.5).shadow).toBeGreaterThan(0.3)
+    expect(crackFrame(0, -1, 1).shadow).toBe(0)
   })
 
   it('무너지는 동안 계속 내려가고 되올라가지 않는다', () => {
@@ -364,9 +358,34 @@ describe('crackFrame', () => {
     }
   })
 
-  it('재시작으로 돌아온 칸은 떨어지지 않고 금이 얕아진다', () => {
+  it('재시작으로 돌아온 칸은 떨어지지 않고 단계가 낮아진다', () => {
     expect(crackFrame(-1, 2, 0.5)).toMatchObject({ fall: 0, opacity: 1 })
-    expect(crackFrame(-1, 2, 1).depth).toBe(0)
+    expect(crackFrame(-1, 2, 1).stage).toBe(0)
+  })
+})
+
+describe('crackSink', () => {
+  it('닳은 단계가 오를수록 칸이 더 내려앉는다', () => {
+    expect(crackSink(0)).toBe(0)
+    expect(crackSink(1)).toBe(4)
+    expect(crackSink(2)).toBe(9)
+  })
+
+  it('단계 사이에서는 앞뒤 단계 사이 값으로 이어진다', () => {
+    expect(crackSink(0.5)).toBe(2)
+    expect(crackSink(1.5)).toBe(6.5)
+  })
+})
+
+describe('crackThickness', () => {
+  it('닳은 단계가 오를수록 옆면이 얇아진다', () => {
+    expect(crackThickness(0)).toBe(11)
+    expect(crackThickness(1)).toBe(8)
+    expect(crackThickness(2)).toBe(5)
+  })
+
+  it('단계 사이에서는 앞뒤 단계 사이 값으로 이어진다', () => {
+    expect(crackThickness(0.5)).toBe(9.5)
   })
 })
 

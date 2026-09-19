@@ -3,76 +3,75 @@ import { type ReactNode, memo } from 'react'
 import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
 import BoardLadder from './BoardLadder'
-import { darken, shade, tint } from './shade'
+import { crackThickness } from './frame'
+import { blend, checker, darken, shade, tint } from './shade'
 import { TILE, blockFaces, isoDelta } from '@/game/iso'
 import type { Direction } from '@/game/types'
 
-const GLOSS = { pull: 0.175, span: 0.2 }
-// 무너지는 칸은 윗면이 네 조각으로 갈라져 있고 틈으로 아래 어둠이 비친다. 닳을수록 틈이 벌어진다
-const CRACK = { thin: 0.026, thick: 0.075, dim: 28, dimDeep: 64 }
-
-// 갈라지는 자리를 칸마다 어긋나게 둔다. 나란히 놓여도 격자무늬로 보이지 않는다
-const CRACK_CENTERS: [number, number][] = [
-  [-0.11, 0.07],
-  [0.09, -0.13],
-  [0.13, 0.11],
-  [-0.07, -0.09],
+// 왼쪽 위 모서리와 나란하게 누운 얼음 윗면의 광택 면
+const GLOSS_SPOTS: [number, number][] = [
+  [-0.38, -0.04],
+  [-0.04, -0.38],
+  [0.04, -0.3],
+  [-0.3, 0.04],
 ]
 
-// 네 조각. 바깥 윤곽은 그대로 두고 갈라진 자리 쪽 두 변만 틈만큼 물러난다
-const crackShards = (x: number, y: number, gap: number, seed: number) => {
-  const g = Math.min(gap, 0.3)
-  const [ox, oy] = CRACK_CENTERS[seed]
-  const l = ox - g
-  const r = ox + g
-  const u = oy - g
-  const d = oy + g
-  const quads: [number, number][][] = [
-    [
-      [-0.5, -0.5],
-      [l, -0.5],
-      [l, u],
-      [-0.5, u],
-    ],
-    [
-      [r, -0.5],
-      [0.5, -0.5],
-      [0.5, u],
-      [r, u],
-    ],
-    [
-      [r, d],
-      [0.5, d],
-      [0.5, 0.5],
-      [r, 0.5],
-    ],
-    [
-      [-0.5, d],
-      [l, d],
-      [l, 0.5],
-      [-0.5, 0.5],
-    ],
-  ]
+// 닳은 자국을 찍는 네 자리. 칸마다 다른 자리에서 시작해 나란히 놓여도 무늬로 보이지 않는다
+const CHIP_SPOTS: [number, number][] = [
+  [-0.27, -0.09],
+  [0.1, -0.29],
+  [0.29, 0.07],
+  [-0.09, 0.28],
+]
+const CHIP = { half: 10, rise: 5 }
+const CHIPS = [0, 1]
 
-  return quads.map((quad) =>
-    quad
-      .map(([u, v]) => {
-        const d = isoDelta(u, v)
-        return `${x + d.x},${y + d.y}`
-      })
-      .join(' '),
-  )
+const SURFACES = {
+  hole: {
+    top: 'var(--color-hole-rim)',
+    left: 'var(--color-floor-left)',
+    right: 'var(--color-floor-right)',
+  },
+  tool: { top: shade('tool', 'top'), left: shade('tool', 'left'), right: shade('tool', 'right') },
+  ice: {
+    top: 'var(--color-ice)',
+    left: 'var(--color-ice-left)',
+    right: 'var(--color-ice-right)',
+  },
+  machine: {
+    top: 'var(--color-machine-frame-top)',
+    left: 'var(--color-machine-frame-left)',
+    right: 'var(--color-machine-frame-right)',
+  },
 }
 
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+// 승강 발판은 칸 크기의 틀 위에 얹힌 판이다
+const PLATE = { scale: 0.84, rise: 4, depth: 4 }
+const SWITCH_SCALE = 0.66
+// 구멍은 테두리 안쪽으로 판 두 장이 차례로 내려간다
+const HOLE = [
+  { scale: 0.64, drop: 3 },
+  { scale: 0.52, drop: 12 },
+]
 
-// 왼쪽 위 모서리와 나란하게 가운데 쪽으로 당겨 놓은 얼음 윗면의 광택선
-const glossLine = (x: number, y: number) => ({
-  x1: x - TILE.width * (GLOSS.pull + GLOSS.span),
-  y1: y - (TILE.width / 2) * (GLOSS.pull - GLOSS.span),
-  x2: x - TILE.width * (GLOSS.pull - GLOSS.span),
-  y2: y - (TILE.width / 2) * (GLOSS.pull + GLOSS.span),
-})
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
+
+const spotPoints = (x: number, y: number, spots: [number, number][]) =>
+  spots
+    .map(([u, v]) => {
+      const d = isoDelta(u, v)
+      return `${x + d.x},${y + d.y}`
+    })
+    .join(' ')
+
+const chipPoints = (x: number, y: number, seed: number, index: number) => {
+  const [u, v] = CHIP_SPOTS[(seed + index * 2) % 4]
+  const d = isoDelta(u, v)
+  const cx = x + d.x
+  const cy = y + d.y
+
+  return `${cx},${cy - CHIP.rise} ${cx + CHIP.half},${cy} ${cx},${cy + CHIP.rise} ${cx - CHIP.half},${cy}`
+}
 
 interface BoardCellProps {
   x: number
@@ -83,9 +82,10 @@ interface BoardCellProps {
   filled: boolean
   ice: boolean
   crack: boolean // 무너지는 칸
-  crackDepth: number // 금 깊이, 0이면 실금 1이면 굵은 금
-  crackSpread: number // 무너지며 조각이 벌어진 정도
-  crackSeed: number // 갈라지는 자리를 칸마다 어긋나게 하는 값
+  crackStage: number // 닳은 단계 0~2
+  crackFall: number // 무너지며 아래로 내려간 화면 거리
+  crackShadow: number // 무너진 자리에 깔리는 그림자 진하기
+  crackSeed: number // 자국 자리를 칸마다 어긋나게 하는 값
   hidden: boolean // 상자가 메우는 중인 칸
   faded: boolean
   entity: 'switch' | 'door' | null
@@ -108,8 +108,9 @@ const BoardCell = ({
   filled,
   ice,
   crack,
-  crackDepth,
-  crackSpread,
+  crackStage,
+  crackFall,
+  crackShadow,
   crackSeed,
   hidden,
   faded,
@@ -123,21 +124,35 @@ const BoardCell = ({
   leaning,
   children,
 }: BoardCellProps) => {
-  const floorTop = parity ? darken('floor-top', 2.8) : 'var(--color-floor-top)'
   const icy = ice && !goal && !filled
-  // 상자가 메운 칸, 얼음, 발판, 무너지는 칸은 바닥 대신 제 색으로 칠한다
-  const surface = filled ? 'tool' : icy ? 'ice' : lift ? 'lift' : crack ? 'crack' : null
-  const faces = surface
-    ? { top: shade(surface, 'top'), left: shade(surface, 'left'), right: shade(surface, 'right') }
-    : { top: floorTop, left: 'var(--color-floor-left)', right: 'var(--color-floor-right)' }
-  const stroke = icy
-    ? darken('ice', 10)
-    : lift
-      ? darken('lift', 26)
-      : crack
-        ? darken('crack', 12)
-        : darken('floor-top', 6)
-  const gloss = glossLine(x, y)
+  // 상자가 메운 칸, 얼음, 발판, 구멍은 바닥 대신 제 색으로 칠한다
+  const surface = goal ? 'hole' : filled ? 'tool' : icy ? 'ice' : lift ? 'machine' : null
+  // 닳은 단계 사이에서는 앞뒤 단계 색을 섞는다
+  const worn = Math.min(1, Math.floor(crackStage))
+  const crackFace = (face: string) =>
+    blend(
+      `var(--color-crack-${face}-${worn})`,
+      `var(--color-crack-${face}-${worn + 1})`,
+      crackStage - worn,
+    )
+  const plain = surface
+    ? SURFACES[surface]
+    : crack
+      ? { top: crackFace('top'), left: crackFace('left'), right: crackFace('right') }
+      : {
+          top: parity ? 'var(--color-floor-top-alt)' : 'var(--color-floor-top)',
+          left: 'var(--color-floor-left)',
+          right: 'var(--color-floor-right)',
+        }
+  // 바닥은 제 색 토큰이 둘이라 이미 번갈아 있고 구멍은 한 칸뿐이다
+  const evenOdd = crack || (surface !== null && surface !== 'hole')
+  const faces = evenOdd ? { ...plain, top: checker(plain.top, parity) } : plain
+  const depth = crack ? crackThickness(crackStage) + h * TILE.layer : h * TILE.layer + TILE.lip
+  const chips = crack
+    ? CHIPS.map((index) => ({ index, opacity: clamp01(crackStage - index) })).filter(
+        (chip) => chip.opacity > 0,
+      )
+    : []
   const ladders = leaning
     ? leaning.split('|').map((item) => {
         const [direction, opacity] = item.split(':')
@@ -149,81 +164,67 @@ const BoardCell = ({
     <g>
       {!hidden && (
         <g style={{ opacity: faded ? 0.5 : 1, transition: 'opacity 320ms var(--ease-soft)' }}>
+          {crackShadow > 0 && (
+            <polygon
+              points={blockFaces(x, y - crackFall, TILE.width, 0).top}
+              style={{ fill: 'var(--color-crack-shadow)', opacity: crackShadow }}
+            />
+          )}
           <g opacity={blockOpacity}>
             <BoardBlock
               x={x}
               y={y}
               width={TILE.width}
-              depth={h * TILE.layer + TILE.lip}
-              top={goal ? 'var(--color-goal)' : faces.top}
+              depth={depth}
+              top={faces.top}
               left={faces.left}
               right={faces.right}
-              stroke={goal ? undefined : stroke}
             />
             {lift && (
-              <polygon
-                points={blockFaces(x, y, TILE.width * 0.84, 0).top}
-                style={{ fill: 'none', stroke: darken('lift', 26), strokeWidth: 1.8 }}
+              <BoardBlock
+                x={x}
+                y={y - PLATE.rise}
+                width={TILE.width * PLATE.scale}
+                depth={PLATE.depth}
+                top="var(--color-machine-top)"
+                left="var(--color-machine-left)"
+                right="var(--color-machine-right)"
               />
             )}
             {icy && (
-              <line
-                x1={gloss.x1}
-                y1={gloss.y1}
-                x2={gloss.x2}
-                y2={gloss.y2}
-                stroke="var(--color-ice-gloss)"
-                strokeWidth={2.2}
-                strokeLinecap="round"
+              <polygon
+                points={spotPoints(x, y, GLOSS_SPOTS)}
+                style={{ fill: 'var(--color-ice-gloss)' }}
               />
             )}
-            {crack && (
-              <>
+            {chips.map(({ index, opacity }) => (
+              <polygon
+                key={index}
+                points={chipPoints(x, y, crackSeed, index)}
+                style={{ fill: 'var(--color-crack-chip)', opacity }}
+              />
+            ))}
+            {goal &&
+              HOLE.map(({ scale, drop }, i) => (
                 <polygon
-                  points={blockFaces(x, y, TILE.width, 0).top}
-                  style={{ fill: darken('crack', lerp(CRACK.dim, CRACK.dimDeep, crackDepth)) }}
+                  key={scale}
+                  points={blockFaces(x, y + drop, TILE.width * scale, 0).top}
+                  style={{ fill: i === 0 ? 'var(--color-goal)' : darken('goal', 30) }}
                 />
-                {crackShards(
-                  x,
-                  y,
-                  lerp(CRACK.thin, CRACK.thick, crackDepth) + crackSpread,
-                  crackSeed,
-                ).map((shard, i) => (
-                  <polygon key={i} points={shard} style={{ fill: faces.top }} />
-                ))}
-              </>
-            )}
-            {goal && (
-              <>
-                <polygon
-                  points={blockFaces(x, y + 7, TILE.width * 0.62, 0).top}
-                  style={{ fill: darken('goal', 16) }}
-                />
-                <polygon
-                  points={blockFaces(x, y + 1, TILE.width * 0.62, 0).top}
-                  style={{ fill: darken('goal', 36) }}
-                />
-              </>
-            )}
+              ))}
           </g>
         </g>
       )}
       {entity === 'switch' && (
-        <>
-          <polygon
-            points={blockFaces(x, y, TILE.width * 0.78, 0).top}
-            style={{ fill: 'none', stroke: 'var(--color-floor-left)', strokeWidth: 1 }}
-          />
-          <BoardBlock
-            x={x}
-            y={y - switchDepth}
-            width={TILE.width * (56 / 104)}
-            depth={switchDepth}
-            top={shade('tool', 'top')}
-            left={shade('tool', 'left')}
-            right={shade('tool', 'right')}
-          />
-        </>
+        <BoardBlock
+          x={x}
+          y={y - switchDepth}
+          width={TILE.width * SWITCH_SCALE}
+          depth={switchDepth}
+          top={shade('tool', 'top')}
+          left={shade('tool', 'left')}
+          right={shade('tool', 'right')}
+        />
       )}
       {entity === 'door' && (
         <>

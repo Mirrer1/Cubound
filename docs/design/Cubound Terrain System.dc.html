@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #E9E7E2; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+</style>
+</helmet>
+<div style="background:#E9E7E2;color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 80px;min-height:100vh">
+  <div style="max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:36px">
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>CUBOUND</span>
+      <span>Terrain system · 필드 위 요소 재설계</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <span style="font-size:30px;font-weight:400;letter-spacing:-0.01em">칸을 읽는 규칙 세 가지</span>
+      <span style="font-size:15px;color:#5F5D59;max-width:720px;line-height:1.6;word-break:keep-all;text-wrap:pretty">세 가지 장치만 씁니다. 새 요소가 생기면 이 셋 중 어디에 속하는지만 정하면 됩니다. 색은 소속을, 높이는 동작을, 핍은 연결을 말합니다.</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:16px">
+        <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">01 · 색 = 소속</span>
+          <span style="font-size:18px;font-weight:400">무엇인가</span>
+          <span style="font-size:14px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">땅은 회색, 기계는 땅보다 밝은 회색, 손댈 수 있는 도구는 옐로, 나는 블루. 얼음만 땅의 예외로 아주 옅은 하늘색을 씁니다. 네 소속 밖의 색은 쓰지 않습니다.</span>
+        </div>
+        <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">02 · 높이 = 상태</span>
+          <span style="font-size:18px;font-weight:400">지금 어떤가</span>
+          <span style="font-size:14px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">칸의 변화는 전부 위아래로 말합니다. 승강 블록은 한 층, 스위치는 7px, 무너지는 칸은 밟을 때마다 4px씩 내려앉습니다. 무늬를 더하지 않으므로 칸이 붙어 있어도 패턴이 생기지 않습니다.</span>
+        </div>
+        <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">03 · 핍 = 연결</span>
+          <span style="font-size:18px;font-weight:400">누구와 이어졌나</span>
+          <span style="font-size:14px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">짝지어진 것끼리 같은 개수의 작은 마름모를 답니다. 스위치와 그 블록, 짝 칸 두 개가 같은 방식입니다. 핍은 칸의 앞쪽 모서리에 찍어 큐브가 올라서도 가려지지 않습니다.</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+        <span>PALETTE</span>
+        <span style="white-space:nowrap">전체 명도 상향 · 옆면까지 밝게</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px">
+        <sc-for list="{{ palette }}" as="grp" hint-placeholder-count="5">
+          <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <span style="font-size:15px;font-weight:400">{{ grp.name }}</span>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <sc-for list="{{ grp.items }}" as="c" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="width:22px;height:22px;flex:none;border-radius:6px;border:1px solid #DCD9D3;background:{{ c.hex }}"></span>
+                  <span style="font-size:13px;color:#5F5D59;flex:1;min-width:0">{{ c.name }}</span>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;color:#8A8781">{{ c.hex }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+        <span>ELEMENTS IN CONTEXT</span>
+        <span style="white-space:nowrap">요소마다 6~10칸 · 붙여 놓고 판단</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px">
+        <sc-for list="{{ scenes }}" as="sc" hint-placeholder-count="7">
+          <div style="background:#F4F3F0;border:1px solid #DCD9D3;border-radius:16px;padding:20px 20px 18px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:17px;font-weight:400">{{ sc.title }}</span>
+              <span style="font-size:13px;color:#6E6C68;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ sc.note }}</span>
+            </div>
+            <svg viewBox="{{ sc.vb }}" style="width:100%;height:auto;display:block">
+              <sc-for list="{{ sc.shapes }}" as="p" hint-placeholder-count="12">
+                <polygon points="{{ p.d }}" fill="{{ p.f }}" opacity="{{ p.o }}"></polygon>
+              </sc-for>
+            </svg>
+            <div style="display:flex;align-items:center;gap:12px;border-top:1px solid #E6E3DE;padding-top:12px">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.14em;color:#A9A6A0;white-space:nowrap">60PX</span>
+              <svg viewBox="{{ sc.vb }}" style="width:58%;height:auto;display:block">
+                <sc-for list="{{ sc.shapes }}" as="p" hint-placeholder-count="12">
+                  <polygon points="{{ p.d }}" fill="{{ p.f }}" opacity="{{ p.o }}"></polygon>
+                </sc-for>
+              </svg>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+        <span>FULL FIELD</span>
+        <span style="white-space:nowrap">모든 요소가 한 화면에</span>
+      </div>
+      <div style="background:#F4F3F0;border:1px solid #DCD9D3;border-radius:22px;padding:28px 24px 26px;display:flex;flex-direction:column;gap:16px">
+        <svg viewBox="{{ full.vb }}" style="width:100%;height:auto;display:block">
+          <sc-for list="{{ full.shapes }}" as="p" hint-placeholder-count="40">
+            <polygon points="{{ p.d }}" fill="{{ p.f }}" opacity="{{ p.o }}"></polygon>
+          </sc-for>
+        </svg>
+        <span style="font-size:13.5px;color:#6E6C68;line-height:1.6;word-break:keep-all;text-wrap:pretty;max-width:760px">핍 하나는 스위치와 승강 블록, 핍 둘은 두 번째 쌍, 핍 셋은 짝 칸 한 쌍입니다. 오른쪽 아래 밝은 줄이 움직이는 발판의 경로이고, 가운데 가라앉은 세 칸이 무너지는 칸입니다.</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+        <span>MOTION</span>
+        <span style="white-space:nowrap">3 안 · 이동 연출과 같은 길이</span>
+      </div>
+      <sc-for list="{{ seqs }}" as="q" hint-placeholder-count="3">
+        <div style="background:#F4F3F0;border:1px solid #DCD9D3;border-radius:16px;padding:20px 20px 18px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-size:17px;font-weight:400">{{ q.name }}</span>
+            <span style="font-size:13px;color:#6E6C68;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ q.note }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:12px">
+            <sc-for list="{{ q.frames }}" as="f" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <svg viewBox="{{ q.vb }}" style="width:100%;height:auto;display:block">
+                  <sc-for list="{{ f.shapes }}" as="p" hint-placeholder-count="10">
+                    <polygon points="{{ p.d }}" fill="{{ p.f }}" opacity="{{ p.o }}"></polygon>
+                  </sc-for>
+                </svg>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0;letter-spacing:0.08em">{{ f.t }}</span>
+                <span style="font-size:12.5px;color:#6E6C68;line-height:1.55;word-break:keep-all;text-wrap:pretty">{{ f.note }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1240}}">
+class Component extends DCLogic {
+  TW = 104; TH = 52; TK = 16; LV = 30; CS = 60 / 104;
+
+  P = {
+    bg: '#F4F3F0',
+    fl: { a: '#EDEBE6', b: '#E7E5E0', l: '#C6C3BC', r: '#D9D6D0' },
+    weak: { t: ['#E4E0D7', '#D7D2C7', '#C6C0B2'], l: ['#C0BCB2', '#B4AFA3', '#A8A294'], r: ['#D3CFC5', '#C7C2B7', '#B9B3A5'], chip: '#BCB7AB' },
+    ice: { t: '#DDEEF5', l: '#B8D2DD', r: '#CCE3EB', s: '#F5FBFD' },
+    ma: { base: '#E5E2DB', bl: '#C9C5BD', br: '#DCD9D2', t: '#F7F5F0', l: '#D3CFC7', r: '#EAE7E0', dish: '#DEDAD2' },
+    hole: { rim: '#DDDAD3', in: '#3E3C39', fl: '#2B2A28' },
+    pip: '#6E6B66',
+    blue: '#8FB3C9', yellow: '#E3CD8E'
+  };
+
+  mix(h, t, a) {
+    const p = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16));
+    const A = p(h), B = p(t);
+    return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * a).toString(16).padStart(2, '0')).join('');
+  }
+  n(v) { return Math.round(v * 10) / 10; }
+  P4(pts) { return pts.map(p => this.n(p[0]) + ',' + this.n(p[1])).join(' '); }
+  sh(d, f, o) { return { d, f, o: o === undefined ? 1 : o }; }
+  pt(cx, cy, u, v, z) { return [cx + (u - v) * this.TW / 2, cy + (u + v) * this.TH / 2 - (z || 0)]; }
+  iso(x, y, h, ox, oy) { return [ox + (x - y) * this.TW / 2, oy + (x + y) * this.TH / 2 - h * this.LV]; }
+
+  prism(cx, cy, s, z, th, tf, lf, rf, o) {
+    const hw = this.TW / 2 * s, hh = this.TH / 2 * s, y = cy - (z || 0);
+    const N = [cx, y - hh], E = [cx + hw, y], S = [cx, y + hh], W = [cx - hw, y];
+    return [
+      this.sh(this.P4([W, S, [S[0], S[1] + th], [W[0], W[1] + th]]), lf, o),
+      this.sh(this.P4([S, E, [E[0], E[1] + th], [S[0], S[1] + th]]), rf, o),
+      this.sh(this.P4([N, E, S, W]), tf, o)
+    ];
+  }
+  plate(cx, cy, s, z, f, o) {
+    const hw = this.TW / 2 * s, hh = this.TH / 2 * s, y = cy - (z || 0);
+    return this.sh(this.P4([[cx, y - hh], [cx + hw, y], [cx, y + hh], [cx - hw, y]]), f, o);
+  }
+  pips(cx, cy, n, z, fill, o) {
+    if (!n) return [];
+    const b = this.pt(cx, cy, 0.27, 0.27, z || 0), xs = n === 1 ? [0] : n === 2 ? [-9, 9] : [-18, 0, 18], out = [];
+    xs.forEach(dx => {
+      const x = b[0] + dx, y = b[1];
+      out.push(this.sh(this.P4([[x, y - 2.7], [x + 5.4, y], [x, y + 2.7], [x - 5.4, y]]), fill || this.P.pip, o));
+    });
+    return out;
+  }
+
+  // ---- tiles ----
+  tile(cx, cy, h, type, parity, seed) {
+    const P = this.P, base = h * this.LV + this.TK;
+    if (type === 'i') return this.prism(cx, cy, 1, 0, base, P.ice.t, P.ice.l, P.ice.r)
+      .concat([this.sh(this.P4([this.pt(cx, cy, -0.38, -0.04), this.pt(cx, cy, -0.04, -0.38), this.pt(cx, cy, 0.04, -0.30), this.pt(cx, cy, -0.30, 0.04)]), P.ice.s)]);
+    if (type === 'm') return this.prism(cx, cy, 1, 0, base, this.mix(P.ma.t, '#FFFFFF', 0.25), P.ma.bl, P.ma.br);
+    if (type === '0' || type === '1' || type === '2') {
+      const st = +type, sink = [0, 4, 9][st], th = [11, 8, 5][st];
+      const out = this.prism(cx, cy, 1, -sink, th + h * this.LV, P.weak.t[st], P.weak.l[st], P.weak.r[st]);
+      const spots = [[-0.27, -0.09], [0.10, -0.29], [0.29, 0.07], [-0.09, 0.28]];
+      for (let i = 0; i < st; i++) {
+        const s = spots[(seed + i * 2) % 4], c = this.pt(cx, cy, s[0], s[1], -sink);
+        out.push(this.sh(this.P4([[c[0], c[1] - 5], [c[0] + 10, c[1]], [c[0], c[1] + 5], [c[0] - 10, c[1]]]), P.weak.chip));
+      }
+      return out;
+    }
+    return this.prism(cx, cy, 1, 0, base, parity ? P.fl.b : P.fl.a, P.fl.l, P.fl.r);
+  }
+
+  // ---- objects ----
+  oHole(cx, cy, h) {
+    const P = this.P;
+    return this.prism(cx, cy, 1, 0, h * this.LV + this.TK, P.hole.rim, P.fl.l, P.fl.r)
+      .concat([this.plate(cx, cy, 0.64, -3, P.hole.in), this.plate(cx, cy, 0.52, -12, P.hole.fl)]);
+  }
+  oCube(cx, cy, color, o) {
+    const c = { t: this.mix(color, '#FFFFFF', 0.14), l: this.mix(color, '#000000', 0.24), r: this.mix(color, '#000000', 0.09) };
+    return this.prism(cx, cy - this.LV, this.CS, 0, this.LV, c.t, c.l, c.r, o);
+  }
+  oBox(cx, cy, rise) {
+    const y = cy - (rise || 0), out = this.oCube(cx, y, this.P.yellow);
+    out.push(this.plate(cx, y - this.LV, this.CS * 0.52, 0, this.mix(this.P.yellow, '#000000', 0.13)));
+    return out;
+  }
+  oSwitch(cx, cy, pressed, n) {
+    const P = this.P, z = pressed ? 2 : 9;
+    const out = this.prism(cx, cy, 0.66, z, z, this.mix(P.yellow, '#FFFFFF', 0.1), this.mix(P.yellow, '#000000', 0.22), this.mix(P.yellow, '#000000', 0.08));
+    return out.concat(this.pips(cx, cy, n, z, this.mix(P.yellow, '#000000', 0.45)));
+  }
+  oLift(cx, cy, h, up, n) {
+    const P = this.P, lift = up ? this.LV : 0;
+    const out = this.prism(cx, cy - lift, 1, 0, h * this.LV + this.TK + lift, P.ma.base, P.ma.bl, P.ma.br);
+    out.push.apply(out, this.prism(cx, cy - lift, 0.84, 4, 4, P.ma.t, P.ma.l, P.ma.r));
+    return out.concat(this.pips(cx, cy - lift, n, 4, P.pip));
+  }
+  oWarp(cx, cy, n) {
+    const P = this.P, out = this.prism(cx, cy, 1, 0, this.TK, P.ma.base, P.ma.bl, P.ma.br);
+    out.push.apply(out, this.prism(cx, cy, 0.84, 4, 4, P.ma.t, P.ma.l, P.ma.r));
+    out.push(this.plate(cx, cy, 0.46, 1, P.ma.dish));
+    return out.concat(this.pips(cx, cy, n, 4, P.pip));
+  }
+  oPlat(cx, cy, n) {
+    const P = this.P, out = [this.plate(cx, cy, 0.9, -1, '#D8D4CC')];
+    out.push.apply(out, this.prism(cx, cy, 0.86, 8, 7, P.ma.t, P.ma.l, P.ma.r));
+    return out.concat(this.pips(cx, cy, n, 8, P.pip));
+  }
+  oLadderFlat(cx, cy) {
+    const P = this.P, out = [], t = this.mix(P.yellow, '#FFFFFF', 0.08), r = this.mix(P.yellow, '#000000', 0.16);
+    [-0.26, 0.26].forEach(v => {
+      const a = this.pt(cx, cy, -0.42 + 0, v, 2), b = this.pt(cx, cy, 0.42, v, 2);
+      out.push(this.sh(this.P4([[a[0], a[1] - 3.5], [b[0], b[1] - 3.5], [b[0], b[1] + 3.5], [a[0], a[1] + 3.5]]), t));
+    });
+    [-0.3, -0.1, 0.1, 0.3].forEach(u => {
+      const a = this.pt(cx, cy, u, -0.26, 2), b = this.pt(cx, cy, u, 0.26, 2);
+      out.push(this.sh(this.P4([[a[0] - 2.5, a[1]], [a[0] + 2.5, a[1]], [b[0] + 2.5, b[1]], [b[0] - 2.5, b[1]]]), r));
+    });
+    return out;
+  }
+  oLadderLean(cx, cy) {
+    // leans from this tile up onto the tile to the north (one level higher)
+    const P = this.P, t = this.mix(P.yellow, '#FFFFFF', 0.08), l = this.mix(P.yellow, '#000000', 0.2), out = [];
+    const top = this.pt(cx, cy, -0.5, -0.5, this.LV), bot = this.pt(cx, cy, 0.1, 0.1, 0);
+    const lerp = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+    const off = d => [[top[0] + d, top[1] - d * 0.5], [bot[0] + d, bot[1] - d * 0.5]];
+    const r1 = off(-11), r2 = off(11);
+    [r1, r2].forEach(r => out.push(this.sh(this.P4([[r[1][0] - 3, r[1][1]], [r[1][0] + 3, r[1][1]], [r[0][0] + 3, r[0][1]], [r[0][0] - 3, r[0][1]]]), l)));
+    [0.16, 0.42, 0.68, 0.92].forEach(k => {
+      const a = lerp(r1[1], r1[0], k), b = lerp(r2[1], r2[0], k);
+      out.push(this.sh(this.P4([[a[0], a[1]], [b[0], b[1]], [b[0], b[1] + 4.5], [a[0], a[1] + 4.5]]), t));
+    });
+    return out;
+  }
+
+  // ---- scene engine ----
+  build(spec) {
+    const g = spec.g, ty = spec.t || [], objs = spec.objs || [], out = [], cells = [];
+    for (let y = 0; y < g.length; y++) for (let x = 0; x < g[y].length; x++) if (g[y][x] !== null) cells.push({ x, y });
+    cells.sort((a, b) => (a.x + a.y) - (b.x + b.y));
+    for (const c of cells) {
+      const h = g[c.y][c.x], p = this.iso(c.x, c.y, h, 0, 0), cx = p[0], cy = p[1];
+      const type = (ty[c.y] && ty[c.y][c.x]) || '.';
+      const here = objs.filter(o => o.x === c.x && o.y === c.y);
+      const special = here.find(o => o.t === 'hole' || o.t === 'lift' || o.t === 'warp');
+      if (special) {
+        if (special.t === 'hole') out.push.apply(out, this.oHole(cx, cy, h));
+        if (special.t === 'lift') out.push.apply(out, this.oLift(cx, cy, h, special.up, special.n));
+        if (special.t === 'warp') out.push.apply(out, this.oWarp(cx, cy, special.n));
+      } else {
+        out.push.apply(out, this.tile(cx, cy, h, type, (c.x + c.y) % 2, (c.x * 3 + c.y * 5) % 4));
+      }
+      for (const o of here) {
+        const lift = (special && special.t === 'lift' && special.up) ? this.LV : 0, yy = cy - lift;
+        if (o.t === 'player') out.push.apply(out, this.oCube(cx, yy, this.P.blue));
+        else if (o.t === 'box') out.push.apply(out, this.oBox(cx, yy, 0));
+        else if (o.t === 'sw') out.push.apply(out, this.oSwitch(cx, cy, o.on, o.n));
+        else if (o.t === 'plat') out.push.apply(out, this.oPlat(cx, cy, o.n));
+        else if (o.t === 'ladF') out.push.apply(out, this.oLadderFlat(cx, cy));
+        else if (o.t === 'ladL') out.push.apply(out, this.oLadderLean(cx, cy));
+      }
+    }
+    return out;
+  }
+  fit(shapes, pad) {
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    shapes.forEach(s => s.d.split(' ').forEach(t => {
+      const v = t.split(','), x = +v[0], y = +v[1];
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }));
+    const p = pad === undefined ? 10 : pad;
+    return [x0 - p, y0 - p, x1 - x0 + p * 2, y1 - y0 + p * 2].map(v => Math.round(v)).join(' ');
+  }
+  scene(title, note, spec) { const shapes = this.build(spec); return { title, note, shapes, vb: this.fit(shapes) }; }
+
+  scenes() {
+    const S = [];
+    S.push(this.scene('보통 바닥과 목표 구멍', '체크는 윗면 명도 차 6뿐입니다. 칸 수는 세지되 무늬로 읽히지 않습니다.', {
+      g: [[0, 0, 1], [0, 0, 0], [0, 0, 0]],
+      objs: [{ x: 2, y: 0, t: 'hole' }, { x: 0, y: 2, t: 'player' }, { x: 1, y: 1, t: 'box' }]
+    }));
+    S.push(this.scene('도구 · 상자, 스위치, 사다리', '옐로는 집거나 밀 수 있는 것에만. 스위치 판에 찍힌 핍 하나가 연결 상대를 말합니다.', {
+      g: [[1, 1, 0], [0, 0, 0], [0, 0, 0]],
+      objs: [{ x: 0, y: 1, t: 'ladL' }, { x: 2, y: 1, t: 'ladF' }, { x: 1, y: 2, t: 'sw', n: 1 }, { x: 2, y: 2, t: 'box' }]
+    }));
+    S.push(this.scene('승강 블록 = 문이자 엘리베이터', '같은 부품입니다. 올라가면 길을 막는 벽, 내려가면 지나갈 수 있는 바닥. 핍 둘이 왼쪽 스위치와 짝입니다.', {
+      g: [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+      objs: [{ x: 0, y: 0, t: 'lift', up: true, n: 2 }, { x: 2, y: 1, t: 'lift', up: false, n: 2 }, { x: 0, y: 2, t: 'sw', on: true, n: 2 }, { x: 2, y: 2, t: 'player' }]
+    }));
+    S.push(this.scene('얼음', '땅의 유일한 예외 색. 광택은 선이 아니라 한 방향으로 누운 밝은 면이라 여러 칸이 한 장의 얼음판으로 읽힙니다.', {
+      g: [[0, 0, 0], [0, 0, 0], [0, 0, 0]], t: [['.', 'i', 'i'], ['.', 'i', 'i'], ['.', '.', 'i']],
+      objs: [{ x: 0, y: 1, t: 'player' }]
+    }));
+    S.push(this.scene('무너지는 칸 · 세 상태', '옆면이 얇은 것이 종류, 가라앉은 깊이가 남은 횟수입니다. 아홉 칸이 붙어 있어도 줄눈이 생기지 않습니다. 큐브가 선 칸도 함께 내려앉아 읽힙니다.', {
+      g: [[0, 0, 0], [0, 0, 0], [0, 0, 0]], t: [['0', '1', '2'], ['1', '2', '0'], ['2', '0', '1']],
+      objs: [{ x: 1, y: 1, t: 'player' }]
+    }));
+    S.push(this.scene('짝 칸', '핍 셋을 공유하는 두 칸이 서로의 출구입니다. 스위치 연결과 같은 표기라 새로 배울 것이 없습니다.', {
+      g: [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+      objs: [{ x: 0, y: 0, t: 'warp', n: 3 }, { x: 2, y: 2, t: 'warp', n: 3 }, { x: 2, y: 0, t: 'player' }]
+    }));
+    S.push(this.scene('움직이는 발판', '발판은 바닥에서 8px 떠 있고 그 아래 그림자가 깔립니다. 지나갈 경로는 밝은 기계 톤 바닥으로 미리 보입니다.', {
+      g: [[0, 0, 0], [0, 0, 0], [0, 0, 0]], t: [['.', 'm', 'm'], ['.', 'm', '.'], ['.', 'm', '.']],
+      objs: [{ x: 1, y: 1, t: 'plat' }, { x: 0, y: 2, t: 'player' }]
+    }));
+    return S;
+  }
+
+  fullField() {
+    const g = [
+      [1, 1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0]
+    ];
+    const t = [
+      ['.', '.', 'i', 'i', '.', '.'],
+      ['.', '.', 'i', '.', '.', '.'],
+      ['.', '1', '2', '.', '.', 'm'],
+      ['.', '0', '.', '.', '.', 'm'],
+      ['.', '.', '.', '.', '.', 'm'],
+      ['.', '.', '.', '.', '.', '.']
+    ];
+    const objs = [
+      { x: 0, y: 0, t: 'hole' },
+      { x: 5, y: 5, t: 'player' },
+      { x: 3, y: 1, t: 'box' },
+      { x: 1, y: 4, t: 'sw', n: 1 },
+      { x: 4, y: 0, t: 'lift', up: true, n: 1 },
+      { x: 0, y: 3, t: 'ladF' },
+      { x: 3, y: 4, t: 'warp', n: 3 },
+      { x: 0, y: 5, t: 'warp', n: 3 },
+      { x: 5, y: 3, t: 'plat', n: 2 },
+      { x: 4, y: 5, t: 'sw', on: true, n: 2 }
+    ];
+    const shapes = this.build({ g, t, objs });
+    return { shapes, vb: this.fit(shapes, 16) };
+  }
+
+  seqs() {
+    const P = this.P, LV = this.LV;
+    // A. 무너짐 — 네 조각이 벌어지며 낙하
+    const quads = (cx, cy, spread, drop, op, th) => {
+      const sets = [[[0, 0], [-0.5, 0], [-0.5, -0.5], [0, -0.5]], [[0, 0], [0, -0.5], [0.5, -0.5], [0.5, 0]],
+                    [[0, 0], [0.5, 0], [0.5, 0.5], [0, 0.5]], [[0, 0], [0, 0.5], [-0.5, 0.5], [-0.5, 0]]];
+      const out = [];
+      sets.forEach((s, i) => {
+        const pts = s.map(p => this.pt(cx, cy, p[0], p[1], -drop));
+        const mx = pts.reduce((a, p) => a + p[0], 0) / 4, my = pts.reduce((a, p) => a + p[1], 0) / 4;
+        const d = Math.hypot(mx - cx, my - cy) || 1;
+        const q = pts.map(p => [p[0] + (mx - cx) / d * spread, p[1] + (my - cy) / d * spread * 0.5]);
+        for (let k = 0; k < 4; k++) {
+          const a = q[k], b = q[(k + 1) % 4], f = (a[0] + b[0]) / 2 < cx ? P.weak.l[2] : P.weak.r[2];
+          out.push(this.sh(this.P4([a, b, [b[0], b[1] + th], [a[0], a[1] + th]]), f, op));
+        }
+        out.push(this.sh(this.P4(q), i % 2 ? P.weak.t[2] : this.mix(P.weak.t[2], '#FFFFFF', 0.06), op));
+      });
+      return out;
+    };
+    const crumbBase = () => this.build({ g: [[0, null], [0, 0]], t: [['.', '.'], ['.', '.']] });
+    const cA = this.iso(1, 0, 0, 0, 0);
+    const A = [0, 1, 2, 3].map(i => {
+      const spread = [0, 4, 12, 22][i], drop = [0, 2, 11, 30][i], op = [1, 1, 0.62, 0.1][i], th = [5, 5, 4, 3][i];
+      const out = crumbBase();
+      out.push(this.plate(cA[0], cA[1], 1, 0, '#C4C0B8', [0.35, 0.5, 0.75, 0.9][i]));
+      out.push.apply(out, quads(cA[0], cA[1], spread, drop, op, th));
+      const q0 = this.iso(0, 0, 0, 0, 0);
+      out.push.apply(out, this.oCube(q0[0], q0[1], P.blue));
+      return { t: ['0ms', '70ms', '140ms', '210ms'][i], shapes: out, note: ['큐브가 마지막 한 번을 밟고 떠남', '네 조각으로 갈라지며 살짝 벌어짐', '바깥으로 기울며 떨어지고 그림자만 짙어짐', '자리에 옅은 자국만 남고 소멸'][i] };
+    });
+    const vbA = this.fit(A[3].shapes.concat(A[0].shapes), 12);
+
+    // B. 얼음 미끄러짐 — 큐브가 눌리고 뒤로 서리 자국
+    const iceRow = () => this.build({ g: [[0, 0, 0, 0]], t: [['i', 'i', 'i', '.']] });
+    const B = [0, 1, 2, 3].map(i => {
+      const out = iceRow();
+      const trail = [[], [0], [0, 1], [1, 2]][i];
+      trail.forEach((tx, k) => {
+        const p = this.iso(tx, 0, 0, 0, 0);
+        out.push(this.plate(p[0], p[1], 0.62, 1, '#FFFFFF', [0.5, 0.3, 0.16][k] || 0.16));
+      });
+      const px = [0, 1, 2, 3][i], p = this.iso(px, 0, 0, 0, 0);
+      const squash = i === 1 || i === 2 ? 0.9 : 1;
+      const c = { t: this.mix(P.blue, '#FFFFFF', 0.14), l: this.mix(P.blue, '#000000', 0.24), r: this.mix(P.blue, '#000000', 0.09) };
+      out.push.apply(out, this.prism(p[0], p[1] - LV * squash, this.CS, 0, LV * squash, c.t, c.l, c.r));
+      return { t: ['0ms', '90ms', '180ms', '270ms'][i], shapes: out, note: ['미끄러짐 시작. 큐브가 진행 방향으로 살짝 눌림', '지나온 칸에 흰 서리 면이 남음', '자국이 한 칸씩 옅어지며 따라옴', '얼음이 끝나는 칸에서 멈추고 형태가 돌아옴'][i] };
+    });
+    const vbB = this.fit(B[3].shapes.concat(B[0].shapes), 12);
+
+    // C. 승강 블록 오르내림
+    const C = [0, 1, 2, 3].map(i => {
+      const g = [[0, 0]], out = this.build({ g, t: [['.', '.']] });
+      const p = this.iso(1, 0, 0, 0, 0), rise = [0, 9, 24, 30][i];
+      const base = this.prism(p[0], p[1] - rise, 1, 0, this.TK + rise, P.ma.base, P.ma.bl, P.ma.br);
+      base.push.apply(base, this.prism(p[0], p[1] - rise, 0.84, 4, 4, P.ma.t, P.ma.l, P.ma.r));
+      base.push.apply(base, this.pips(p[0], p[1] - rise, 1, 4, P.pip));
+      out.push.apply(out, base);
+      const q = this.iso(0, 0, 0, 0, 0);
+      out.push.apply(out, this.oCube(q[0], q[1], P.blue));
+      return { t: ['0ms', '80ms', '160ms', '240ms'][i], shapes: out, note: ['스위치가 눌리는 순간', '옆면이 드러나며 한 층으로 올라감', '끝부분에서 아주 살짝 느려짐', '한 층에 도착. 벽이자 디딤판이 됨'][i] };
+    });
+    const vbC = this.fit(C[3].shapes.concat(C[0].shapes), 12);
+
+    return [
+      { name: 'A · 무너짐 (210ms)', note: '조각이 벌어지는 양보다 그림자가 짙어지는 쪽에 무게를 둡니다. 소리 없이 가라앉듯 사라집니다.', vb: vbA, frames: A },
+      { name: 'B · 얼음 미끄러짐 (칸당 90ms)', note: '칸에는 손대지 않고 큐브와 잔상만 씁니다. 큐브가 진행 방향으로 눌리고, 지나온 칸에 흰 서리 면이 한 박자 남습니다.', vb: vbB, frames: B },
+      { name: 'C · 승강 블록 (240ms)', note: '이동 연출과 같은 길이. 드러나는 옆면이 높이를 설명하므로 추가 효과가 필요 없습니다.', vb: vbC, frames: C }
+    ];
+  }
+
+  palette() {
+    const P = this.P;
+    return [
+      { name: '바탕과 땅', items: [
+        { name: '화면 배경', hex: P.bg }, { name: '바닥 윗면 A', hex: P.fl.a }, { name: '바닥 윗면 B (체크)', hex: P.fl.b },
+        { name: '옆면 왼쪽', hex: P.fl.l }, { name: '옆면 오른쪽', hex: P.fl.r }] },
+      { name: '기계 (승강·짝 칸·발판)', items: [
+        { name: '틀 윗면', hex: P.ma.base }, { name: '판 윗면', hex: P.ma.t }, { name: '판 옆면 왼쪽', hex: P.ma.l },
+        { name: '판 옆면 오른쪽', hex: P.ma.r }, { name: '짝 칸 우묵면', hex: P.ma.dish }] },
+      { name: '무너지는 칸', items: [
+        { name: '보통', hex: P.weak.t[0] }, { name: '두 번 남음', hex: P.weak.t[1] }, { name: '한 번 남음', hex: P.weak.t[2] },
+        { name: '옆면 (한 번 남음, 왼쪽)', hex: P.weak.l[2] }, { name: '결손 면', hex: P.weak.chip }] },
+      { name: '얼음과 구멍', items: [
+        { name: '얼음 윗면', hex: P.ice.t }, { name: '얼음 옆면 왼쪽', hex: P.ice.l }, { name: '광택 면', hex: P.ice.s },
+        { name: '구멍 안쪽', hex: P.hole.in }, { name: '구멍 바닥', hex: P.hole.fl }] },
+      { name: '큐브·도구·핍', items: [
+        { name: '플레이어 큐브', hex: P.blue }, { name: '도구 옐로', hex: P.yellow }, { name: '핍 (연결 표시)', hex: P.pip }] }
+    ];
+  }
+
+  renderVals() {
+    return { palette: this.palette(), scenes: this.scenes(), full: this.fullField(), seqs: this.seqs() };
+  }
+}
+</script>
+</body>
+</html>

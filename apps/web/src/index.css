@@ -20,18 +20,37 @@
   --color-ink: #3a3936;
   --color-mute: #8a8781;
   --color-faint: #a9a6a0;
-  --color-floor-top: #e3e1dc;
-  --color-floor-left: #b5b2ab;
-  --color-floor-right: #cbc8c2;
+  --color-floor-top: #edebe6;
+  --color-floor-top-alt: #e7e5e0;
+  --color-floor-left: #c6c3bc;
+  --color-floor-right: #d9d6d0;
   --color-player: #8fb3c9;
   --color-tool: #e3cd8e;
-  --color-goal: #4a4845;
+  --color-goal: #3e3c39;
+  --color-hole-rim: #dddad3;
   --color-door: #d8d5cf;
-  --color-lift: #e3d9bd;
-  --color-ice: #d9eaf1;
-  --color-ice-gloss: #f7fcfe;
-  --color-crack: #cdc9c0;
-  --color-crack-line: #837f78;
+  --color-machine-frame-top: #e5e2db;
+  --color-machine-frame-left: #c9c5bd;
+  --color-machine-frame-right: #dcd9d2;
+  --color-machine-top: #f7f5f0;
+  --color-machine-left: #d3cfc7;
+  --color-machine-right: #eae7e0;
+  --color-ice: #ddeef5;
+  --color-ice-left: #b8d2dd;
+  --color-ice-right: #cce3eb;
+  --color-ice-gloss: #f5fbfd;
+  /* 무너지는 칸은 닳은 단계 0에서 2까지를 뒤 숫자로 둔다 */
+  --color-crack-top-0: #e4e0d7;
+  --color-crack-top-1: #d7d2c7;
+  --color-crack-top-2: #c6c0b2;
+  --color-crack-left-0: #c0bcb2;
+  --color-crack-left-1: #b4afa3;
+  --color-crack-left-2: #a8a294;
+  --color-crack-right-0: #d3cfc5;
+  --color-crack-right-1: #c7c2b7;
+  --color-crack-right-2: #b9b3a5;
+  --color-crack-chip: #bcb7ab;
+  --color-crack-shadow: #c4c0b8;
 }
 
 html,
