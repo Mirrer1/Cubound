@@ -107,12 +107,16 @@ const playerSegments = (events: GameEvent[]): Segment[] => {
   return [...approach.map((s) => ({ ...s, seconds: s.seconds * slower })), ...segmentsOf([tile])]
 }
 
+// 칸이 무너지는 연출은 이동보다 길다. 큐브 뒤쪽 칸이라 진행을 막지 않는다
+const CRUMBLE_SECONDS = 0.46
+
 export const durationOf = (events: GameEvent[]) =>
   Math.max(
     0,
     totalSeconds(playerSegments(events)),
     totalSeconds(segmentsOf(boxPath(events))),
     ...events.map((e) => (e.type === 'blocked' || e.type === 'placed' ? SECONDS[e.type] : 0)),
+    ...events.map((e) => (e.type === 'cracked' && e.gone ? CRUMBLE_SECONDS : 0)),
   )
 
 // 미끄러져 멈춘 이동은 다음 입력과 이어 붙이지 않는다
@@ -181,7 +185,8 @@ export const playerFrame = (
   // 이동 경로로 설명되지 않는 높이 차이는 발판이 오르내린 몫이라 칸과 같은 속도로 따라간다
   const riding =
     (endLevel - segments.reduce((level, s) => levelAfter(level, s.event), startLevel)) * t
-  const step = stepAt(segments, t * totalSeconds(segments), slideChain(events, chain))
+  // 연출이 이동보다 길 수 있어 큐브는 제 길을 다 가면 그 자리에서 기다린다
+  const step = stepAt(segments, t * durationOf(events), slideChain(events, chain))
   if (prev && step) {
     const { event, index, p } = step
     const fromLevel = segments
