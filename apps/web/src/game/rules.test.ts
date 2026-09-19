@@ -9,7 +9,7 @@ import {
   pushesLeft,
   standHeight,
 } from './rules'
-import type { Direction, MoveResult, Stage } from './types'
+import type { Direction, GameState, MoveResult, Point, Stage } from './types'
 
 const FLAT_STAGE: Stage = {
   version: 1,
@@ -988,5 +988,154 @@ describe('pushesLeft', () => {
     expect(pushesLeft(createState(stage))).toBe(2)
     expect(pushesLeft(play(stage, ['right']).state)).toBe(1)
     expect(pushesLeft(play(stage, ['right', 'right']).state)).toBe(0)
+  })
+})
+
+const CRACK_STAGE: Stage = {
+  version: 1,
+  id: 'test-crack',
+  name: '무너지는 칸 테스트',
+  heights: [
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ],
+  start: { x: 0, y: 1 },
+  goal: { x: 3, y: 0 },
+  entities: [],
+  cracks: ['....', '.2..', '....'],
+}
+
+const CRACK: Point = { x: 1, y: 1 }
+
+const withCrackRow = (row: number[]) => [CRACK_STAGE.heights[0], row, CRACK_STAGE.heights[2]]
+
+const leftAt = (state: GameState, p: Point) =>
+  state.cracks.find((crack) => crack.x === p.x && crack.y === p.y)?.left
+
+describe('move 무너지는 칸', () => {
+  it('올라선 동안에는 남은 횟수가 그대로다', () => {
+    const { state, events } = move(createState(CRACK_STAGE), 'right')
+
+    expect(state.player).toEqual(CRACK)
+    expect(leftAt(state, CRACK)).toBe(2)
+    expect(events.some((e) => e.type === 'cracked')).toBe(false)
+  })
+
+  it('떠나면 남은 횟수가 하나 준다', () => {
+    const { state, events } = play(CRACK_STAGE, ['right', 'right'])
+
+    expect(leftAt(state, CRACK)).toBe(1)
+    expect(state.heights[1][1]).toBe(0)
+    expect(events).toContainEqual({ type: 'cracked', at: CRACK, left: 1, gone: false })
+  })
+
+  it('남은 횟수를 다 쓰면 바닥 없는 칸이 되어 다시 지나가지 못한다', () => {
+    const { state, events } = play(CRACK_STAGE, ['right', 'right', 'left', 'left'])
+
+    expect(state.heights[1][1]).toBe(-1)
+    expect(events).toContainEqual({ type: 'cracked', at: CRACK, left: 0, gone: true })
+    expect(move(state, 'right').events).toEqual([{ type: 'blocked', direction: 'right' }])
+  })
+
+  it('막혀서 제자리로 돌아오면 줄지 않는다', () => {
+    const stage: Stage = { ...CRACK_STAGE, cracks: ['....', '2...', '....'] }
+    const start = createState(stage)
+    const { state, events } = move(start, 'left')
+
+    expect(state).toBe(start)
+    expect(events).toEqual([{ type: 'blocked', direction: 'left' }])
+  })
+
+  it('상자가 남아 있으면 큐브가 떠나도 줄지 않는다', () => {
+    const stage: Stage = {
+      ...CRACK_STAGE,
+      heights: withCrackRow([0, 0, 1, 0]),
+      entities: [{ type: 'box', x: 1, y: 1 }],
+    }
+    const { state, events } = play(stage, ['right', 'up'])
+
+    expect(state.player).toEqual({ x: 1, y: 0 })
+    expect(state.boxes).toEqual([CRACK])
+    expect(leftAt(state, CRACK)).toBe(2)
+    expect(events.some((e) => e.type === 'cracked')).toBe(false)
+  })
+
+  it('상자가 밀려 나가면 남은 횟수가 준다', () => {
+    const stage: Stage = { ...CRACK_STAGE, entities: [{ type: 'box', x: 1, y: 1 }] }
+    const { state, events } = move(createState(stage), 'right')
+
+    expect(state.boxes).toEqual([{ x: 2, y: 1 }])
+    expect(state.player).toEqual(CRACK)
+    expect(leftAt(state, CRACK)).toBe(1)
+    expect(events).toContainEqual({ type: 'cracked', at: CRACK, left: 1, gone: false })
+  })
+
+  it('한 번 남은 칸의 상자를 밀면 큐브가 선 동안은 바닥이 남고 떠날 때 사라진다', () => {
+    const stage: Stage = {
+      ...CRACK_STAGE,
+      cracks: ['....', '.1..', '....'],
+      entities: [{ type: 'box', x: 1, y: 1 }],
+    }
+    const pushed = move(createState(stage), 'right')
+    const away = move(pushed.state, 'up')
+
+    expect(pushed.state.heights[1][1]).toBe(0)
+    expect(pushed.events).toContainEqual({ type: 'cracked', at: CRACK, left: 0, gone: false })
+    expect(away.state.heights[1][1]).toBe(-1)
+    expect(away.events).toContainEqual({ type: 'cracked', at: CRACK, left: 0, gone: true })
+  })
+
+  it('무너진 칸에 상자를 밀어 넣으면 다시 바닥이 되고 다시 무너지지 않는다', () => {
+    const stage: Stage = {
+      ...CRACK_STAGE,
+      cracks: ['....', '.1..', '....'],
+      entities: [{ type: 'box', x: 2, y: 1 }],
+    }
+    const { state } = play(stage, ['right', 'down', 'right', 'right', 'up', 'left'])
+    const onFill = move(state, 'left')
+    const offFill = move(onFill.state, 'left')
+
+    expect(state.heights[1][1]).toBe(0)
+    expect(state.boxes).toEqual([])
+    expect(onFill.state.player).toEqual(CRACK)
+    expect(offFill.state.heights[1][1]).toBe(0)
+    expect(offFill.events.some((e) => e.type === 'cracked')).toBe(false)
+  })
+
+  it('떨어지거나 올라가며 떠나도 남은 횟수가 준다', () => {
+    const cliff: Stage = { ...CRACK_STAGE, heights: withCrackRow([1, 1, 0, 0]) }
+    const fallen = play(cliff, ['right', 'right'])
+
+    expect(fallen.events).toContainEqual({ type: 'cracked', at: CRACK, left: 1, gone: false })
+
+    const wall: Stage = {
+      ...CRACK_STAGE,
+      heights: withCrackRow([0, 0, 0, 1]),
+      entities: [{ type: 'box', x: 2, y: 1 }],
+    }
+    const climbed = play(wall, ['right', 'right'])
+
+    expect(climbed.state.player).toEqual({ x: 2, y: 1 })
+    expect(climbed.events).toContainEqual({ type: 'cracked', at: CRACK, left: 1, gone: false })
+  })
+
+  it('기대 놓은 사다리가 있으면 다 닳아도 무너지지 않는다', () => {
+    const stage: Stage = {
+      ...CRACK_STAGE,
+      heights: withCrackRow([0, 0, 1, 0]),
+      cracks: ['....', '.1..', '....'],
+      entities: [{ type: 'ladder', x: 0, y: 2 }],
+    }
+    // 사다리를 주워 와 무너지는 칸에서 오른쪽 턱에 기대 놓고 오른다
+    const leaned = play(stage, ['down', 'up', 'right', 'right'])
+
+    expect(leaned.state.leaningLadders).toEqual([{ x: 1, y: 1, direction: 'right' }])
+    expect(leaned.state.heights[1][1]).toBe(0)
+
+    const climbed = move(leaned.state, 'right')
+    expect(climbed.state.player).toEqual({ x: 2, y: 1 })
+    expect(climbed.state.heights[1][1]).toBe(0)
+    expect(climbed.events.every((e) => e.type !== 'cracked' || !e.gone)).toBe(true)
   })
 })

@@ -60,6 +60,30 @@ export const validateStage = (data: unknown): ValidateResult => {
       add('바닥 없는 칸에 얼음이 있다')
   }
 
+  const crackCells = new Set<string>()
+  if (data.cracks !== undefined) {
+    const cracks = data.cracks
+    const shaped =
+      Array.isArray(cracks) &&
+      cracks.length === grid.length &&
+      cracks.every((row) => typeof row === 'string' && row.length === width)
+
+    if (!shaped) add('cracks는 heights와 같은 모양의 문자열 배열이어야 한다')
+    else {
+      const ice = Array.isArray(data.ice) ? (data.ice as string[]) : []
+      const cells = (cracks as string[]).flatMap((row, y) =>
+        [...row].flatMap((c, x) => (c === '.' ? [] : [{ c, x, y }])),
+      )
+
+      if (cells.some(({ c }) => c < '1' || c > '9')) add('cracks 값은 점이나 1~9여야 한다')
+      if (cells.some(({ x, y }) => grid[y][x] < 0)) add('바닥 없는 칸에 무너지는 칸이 있다')
+      if (cells.some(({ x, y }) => ice[y]?.[x] === '#')) add('얼음 칸에 무너지는 칸이 있다')
+
+      cells.forEach(({ x, y }) => crackCells.add(key({ x, y })))
+      if (isFloor(data.goal) && crackCells.has(key(data.goal))) add('goal이 무너지는 칸에 있다')
+    }
+  }
+
   if (!isFloor(data.start)) add('start가 바닥 칸이 아니다')
   if (!isFloor(data.goal)) add('goal이 바닥 칸이 아니다')
   if (isFloor(data.start) && isFloor(data.goal) && key(data.start) === key(data.goal)) {
@@ -85,6 +109,10 @@ export const validateStage = (data: unknown): ValidateResult => {
     }
     if (occupied.has(key(entity))) add(`entities[${i}]이 다른 오브젝트와 같은 칸에 있다`)
     if (reserved.has(key(entity))) add(`entities[${i}]이 시작이나 목표 칸에 있다`)
+    // 상자는 밀려 다니므로 시작 위치가 무너지는 칸이어도 된다
+    if (entity.type !== 'box' && crackCells.has(key(entity))) {
+      add(`entities[${i}]이 무너지는 칸에 있다`)
+    }
     occupied.add(key(entity))
 
     if (entity.type === 'door' || entity.type === 'lift') {

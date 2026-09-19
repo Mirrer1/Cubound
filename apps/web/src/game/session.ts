@@ -1,12 +1,14 @@
-import type { Direction, GameState, LeaningLadder, Point, Stage } from './types'
+import { readCracks } from './rules'
+import type { Crack, Direction, GameState, LeaningLadder, Point, Stage } from './types'
 
-export const SESSION_VERSION = 4
+export const SESSION_VERSION = 5
 
 export interface Session {
   version: typeof SESSION_VERSION
   stageId: string
   heights: number[][] // 상자로 메운 칸이 반영된 높이
   boxes: Point[]
+  cracks: Crack[]
   ladders: Point[]
   leaningLadders: LeaningLadder[]
   carrying: boolean
@@ -30,6 +32,7 @@ export const toSession = (game: GameState): Session => ({
   stageId: game.stage.id,
   heights: game.heights,
   boxes: game.boxes,
+  cracks: game.cracks,
   ladders: game.ladders,
   leaningLadders: game.leaningLadders,
   carrying: game.carrying,
@@ -44,6 +47,26 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     return null
   }
 
+  const cracks = readCracks(stage)
+  const savedCracks = saved.cracks
+  // 남은 횟수는 줄기만 하고 -1은 이미 무너진 칸이다
+  const sameCracks =
+    Array.isArray(savedCracks) &&
+    savedCracks.length === cracks.length &&
+    cracks.every((crack, i) => {
+      const value = savedCracks[i]
+      return (
+        isObject(value) &&
+        value.x === crack.x &&
+        value.y === crack.y &&
+        Number.isInteger(value.left) &&
+        (value.left as number) >= -1 &&
+        (value.left as number) <= crack.left
+      )
+    })
+  if (!sameCracks) return null
+
+  const crackKeys = new Set(cracks.map(({ x, y }) => `${x},${y}`))
   const rows = saved.heights
   const sameShape =
     Array.isArray(rows) &&
@@ -52,8 +75,13 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
       (row, y) =>
         Array.isArray(row) &&
         row.length === stage.heights[y].length &&
-        // 상자로 메운 칸만 스테이지 높이와 달라질 수 있다
-        row.every((h, x) => h === stage.heights[y][x] || (stage.heights[y][x] < 0 && isCount(h))),
+        // 상자로 메운 칸과 무너진 칸만 스테이지 높이와 달라질 수 있다
+        row.every(
+          (h, x) =>
+            h === stage.heights[y][x] ||
+            (stage.heights[y][x] < 0 && isCount(h)) ||
+            (crackKeys.has(`${x},${y}`) && (h === -1 || isCount(h))),
+        ),
     )
   if (!sameShape) return null
 
@@ -83,6 +111,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     stage,
     heights,
     boxes: boxes.map(({ x, y }) => ({ x, y })),
+    cracks: (savedCracks as Crack[]).map(({ x, y, left }) => ({ x, y, left })),
     ladders: ladders.map(({ x, y }) => ({ x, y })),
     leaningLadders: leaningLadders.map(({ x, y, direction }) => ({ x, y, direction })),
     carrying,

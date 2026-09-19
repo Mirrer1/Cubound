@@ -144,6 +144,19 @@ describe('deadEnds', () => {
   it('탐색 상태 수 한도를 넘으면 limit을 돌려준다', () => {
     expect(deadEnds(STAGE, { maxStates: 2 })).toEqual({ status: 'limit' })
   })
+
+  it('무너지는 칸의 남은 횟수가 다르면 다른 상태로 센다', () => {
+    const stage: Stage = {
+      ...STAGE,
+      heights: [[0, 0, 0]],
+      start: { x: 0, y: 0 },
+      goal: { x: 2, y: 0 },
+      cracks: ['.2.'],
+    }
+
+    expect(solve(stage)).toEqual({ status: 'solved', moves: 2, path: ['right', 'right'] })
+    expect(deadEnds(stage)).toEqual({ status: 'ok', states: 7, dead: 1, earliest: 4 })
+  })
 })
 
 describe('solutionCount', () => {

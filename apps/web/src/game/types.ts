@@ -25,6 +25,7 @@ export interface Stage {
   name?: string // 유저가 만든 맵의 이름. 공식 스테이지 이름은 사전에 둔다
   heights: number[][] // 행(y) 먼저, -1은 바닥 없음
   ice?: string[] // heights와 같은 모양에서 '#'이 얼음
+  cracks?: string[] // heights와 같은 모양에서 1~9가 무너지기까지 견디는 횟수
   start: Point
   goal: Point
   entities: Entity[]
@@ -51,10 +52,14 @@ export interface Zone {
 // (x, y) 칸에서 direction 쪽 높은 칸에 기대 놓인 사다리
 export type LeaningLadder = Point & { direction: Direction }
 
+// 무너지는 칸이 앞으로 견디는 횟수. -1은 이미 무너진 칸
+export type Crack = Point & { left: number }
+
 export interface GameState {
   stage: Stage
   heights: number[][] // 상자로 메운 칸이 반영된 높이
   boxes: Point[]
+  cracks: Crack[]
   ladders: Point[] // 바닥에 놓인 사다리
   leaningLadders: LeaningLadder[]
   carrying: boolean
@@ -70,6 +75,7 @@ export type GameEvent =
   | { type: 'climbed'; from: Point; to: Point; via: 'box' | 'ladder' }
   | { type: 'slid'; subject: 'player' | 'box'; from: Point; to: Point } // 얼음 위 미끄러짐이라 from과 to가 이웃하지 않을 수 있다
   | { type: 'pushed'; from: Point; to: Point; result: 'slid' | 'fell' | 'filled' }
+  | { type: 'cracked'; at: Point; left: number; gone: boolean } // gone은 바닥 없는 칸이 되었는지
   | { type: 'pickedUp'; at: Point }
   | { type: 'placed'; ladder: LeaningLadder }
   | { type: 'door'; id: string; open: boolean }

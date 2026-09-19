@@ -21,6 +21,10 @@ const stateKey = (state: GameState) => {
     row.flatMap((h, x) => (h === state.stage.heights[y][x] ? [] : [{ x, y }])),
   )
   const leaning = state.leaningLadders.map((l) => `${l.x},${l.y},${l.direction}`).sort()
+  // 남은 횟수. 무너져 사라진 칸은 '-', 상자로 메운 칸은 '+'
+  const cracks = state.cracks.map(({ x, y, left }) =>
+    left >= 0 ? left : state.heights[y][x] < 0 ? '-' : '+',
+  )
 
   return [
     `${state.player.x},${state.player.y}`,
@@ -29,6 +33,7 @@ const stateKey = (state: GameState) => {
     points(filled),
     leaning.join(' '),
     state.carrying,
+    ...(cracks.length > 0 ? [cracks.join('')] : []),
   ].join('|')
 }
 

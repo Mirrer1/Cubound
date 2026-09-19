@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createState, isLiftRaised, move } from './rules'
 import { SESSION_VERSION, restoreSession, toSession } from './session'
-import type { Stage } from './types'
+import type { Direction, Stage } from './types'
 
 const STAGE: Stage = {
   version: 1,
@@ -19,6 +19,7 @@ const STAGE: Stage = {
 const MID = {
   heights: STAGE.heights,
   boxes: [{ x: 2, y: 0 }],
+  cracks: [],
   ladders: [],
   leaningLadders: [],
   carrying: false,
@@ -123,6 +124,51 @@ describe('restoreSession', () => {
 
   it('이어서 시작한 상태는 클리어 전이다', () => {
     expect(restoreSession(saved(MID), STAGE)?.cleared).toBe(false)
+  })
+})
+
+const CRACK_STAGE: Stage = {
+  version: 1,
+  id: '3-1',
+  heights: [[0, 0, 0]],
+  start: { x: 0, y: 0 },
+  goal: { x: 2, y: 0 },
+  entities: [],
+  cracks: ['.2.'],
+}
+
+const crossed = (directions: Direction[]) =>
+  directions.reduce((state, d) => move(state, d).state, createState(CRACK_STAGE))
+
+describe('restoreSession 무너지는 칸', () => {
+  it('남은 횟수를 그대로 이어간다', () => {
+    const state = crossed(['right', 'left'])
+    const restored = restoreSession(toSession(state), CRACK_STAGE)
+
+    expect(state.cracks).toEqual([{ x: 1, y: 0, left: 1 }])
+    expect(restored).toEqual(state)
+  })
+
+  it('무너진 칸을 그대로 이어간다', () => {
+    const state = crossed(['right', 'left', 'right', 'left'])
+    const restored = restoreSession(toSession(state), CRACK_STAGE)
+
+    expect(state.heights[0][1]).toBe(-1)
+    expect(restored).toEqual(state)
+  })
+
+  it('스테이지의 무너지는 칸과 어긋나면 버린다', () => {
+    const state = crossed(['right', 'left'])
+    const session = toSession(state)
+
+    expect(restoreSession({ ...session, cracks: [] }, CRACK_STAGE)).toBeNull()
+    expect(
+      restoreSession({ ...session, cracks: [{ x: 0, y: 0, left: 1 }] }, CRACK_STAGE),
+    ).toBeNull()
+    expect(
+      restoreSession({ ...session, cracks: [{ x: 1, y: 0, left: 3 }] }, CRACK_STAGE),
+    ).toBeNull()
+    expect(restoreSession({ ...session, cracks: undefined }, CRACK_STAGE)).toBeNull()
   })
 })
 
