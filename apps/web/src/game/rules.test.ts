@@ -750,6 +750,21 @@ const LIFT_STAGE: Stage = {
 
 const LIFT = { x: 4, y: 1 }
 
+// 스위치 칸이 한 층 높아 큐브가 올라간 발판으로 옮겨 설 수 있다
+const RIDE_STAGE: Stage = {
+  ...LIFT_STAGE,
+  heights: [
+    [0, 0, 0, 1, 0],
+    [0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0],
+  ],
+  start: { x: 3, y: 0 },
+  entities: [
+    { type: 'switch', x: 3, y: 1, target: 'a' },
+    { type: 'lift', x: 4, y: 1, id: 'a' },
+  ],
+}
+
 describe('move 발판', () => {
   const HELD_STAGE: Stage = {
     ...LIFT_STAGE,
@@ -794,29 +809,16 @@ describe('move 발판', () => {
     expect(events).toEqual([{ type: 'moved', from: { x: 3, y: 1 }, to: LIFT }])
   })
 
-  it('발판 위에 큐브가 있으면 스위치가 풀려도 내려가지 않는다', () => {
-    const stage: Stage = {
-      ...LIFT_STAGE,
-      heights: [
-        [0, 0, 0, 1, 0],
-        [0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0],
-      ],
-      start: { x: 3, y: 0 },
-      entities: [
-        { type: 'switch', x: 3, y: 1, target: 'a' },
-        { type: 'lift', x: 4, y: 1, id: 'a' },
-      ],
-    }
-    const { state, events } = play(stage, ['down', 'right'])
+  it('큐브가 스위치에서 발판으로 옮겨 서면 발판과 함께 내려앉는다', () => {
+    const { state, events } = play(RIDE_STAGE, ['down', 'right'])
 
     expect(state.player).toEqual(LIFT)
-    expect(isLiftRaised(state, 'a')).toBe(true)
-    expect(standHeight(state, LIFT)).toBe(1)
-    expect(events.some((e) => e.type === 'lift')).toBe(false)
+    expect(isLiftRaised(state, 'a')).toBe(false)
+    expect(standHeight(state, LIFT)).toBe(0)
+    expect(events).toContainEqual({ type: 'lift', id: 'a', up: false })
   })
 
-  it('발판 위에 상자가 있으면 스위치가 풀려도 내려가지 않는다', () => {
+  it('발판 위의 상자도 스위치가 풀리면 같이 내려온다', () => {
     const stage: Stage = {
       ...LIFT_STAGE,
       heights: [
@@ -829,9 +831,9 @@ describe('move 발판', () => {
     const { state, events } = play(stage, ['right', 'right', 'right'])
 
     expect(state.boxes).toEqual([LIFT])
-    expect(isLiftRaised(state, 'a')).toBe(true)
-    expect(standHeight(state, LIFT)).toBe(2)
-    expect(events.some((e) => e.type === 'lift')).toBe(false)
+    expect(isLiftRaised(state, 'a')).toBe(false)
+    expect(standHeight(state, LIFT)).toBe(1)
+    expect(events).toContainEqual({ type: 'lift', id: 'a', up: false })
   })
 
   it('올라간 발판 쪽으로는 상자를 밀지 못해 상자 위로 올라간다', () => {

@@ -166,9 +166,10 @@ export const playerFrame = (
   chain: Chain = NO_CHAIN,
 ): CubeFrame => {
   const { player } = game
+  const endLevel = standHeight(game, player)
   const still = {
     ...player,
-    level: standHeight(game, player),
+    level: endLevel,
     direction: 'right' as Direction,
     angle: 0,
     cell: player,
@@ -176,12 +177,16 @@ export const playerFrame = (
   if (t >= 1) return still
 
   const segments = playerSegments(events)
+  const startLevel = prev ? standHeight(prev, prev.player) : endLevel
+  // 이동 경로로 설명되지 않는 높이 차이는 발판이 오르내린 몫이라 칸과 같은 속도로 따라간다
+  const riding =
+    (endLevel - segments.reduce((level, s) => levelAfter(level, s.event), startLevel)) * t
   const step = stepAt(segments, t * totalSeconds(segments), slideChain(events, chain))
   if (prev && step) {
     const { event, index, p } = step
     const fromLevel = segments
       .slice(0, index)
-      .reduce((level, s) => levelAfter(level, s.event), standHeight(prev, prev.player))
+      .reduce((level, s) => levelAfter(level, s.event), startLevel)
     const toLevel = levelAfter(fromLevel, event)
     const level =
       event.type === 'fell'
@@ -195,7 +200,7 @@ export const playerFrame = (
     return {
       x: lerp(event.from.x, event.to.x, p),
       y: lerp(event.from.y, event.to.y, p),
-      level,
+      level: level + riding,
       direction: directionBetween(event.from, event.to),
       // 얼음 위에서는 구르지 않고 그대로 미끄러진다
       angle: event.type === 'slid' ? 0 : (Math.PI / 2) * p,
@@ -208,7 +213,7 @@ export const playerFrame = (
     return { ...still, direction: blocked.direction, angle: Math.sin(Math.PI * t) * TILT }
   }
 
-  return still
+  return { ...still, level: startLevel + riding }
 }
 
 export interface BoxFrame {
@@ -230,6 +235,7 @@ const boxLevelAfter = (prev: GameState, level: number, event: PathEvent) =>
 
 export const movingBox = (
   prev: GameState | null,
+  game: GameState,
   events: GameEvent[],
   t: number,
   chain: Chain = NO_CHAIN,
@@ -244,6 +250,7 @@ export const movingBox = (
   if (!step) return null
 
   const { event, index, p } = step
+  const to = path[path.length - 1].to
   const start = prev.heights[path[0].from.y][path[0].from.x]
   const fromLevel = path
     .slice(0, index)
@@ -251,12 +258,15 @@ export const movingBox = (
   const toLevel = boxLevelAfter(prev, fromLevel, event)
   const level =
     event.type === 'slid' || p < 0.6 ? fromLevel : lerp(fromLevel, toLevel, easeIn((p - 0.6) / 0.4))
+  // 도착 칸에 서는 높이에서 상자 한 층을 뺀 값이 상자가 앉을 높이다. 발판이 오르내린 몫이 여기서 드러난다
+  const endLevel = path.reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
+  const riding = (standHeight(game, to) - 1 - endLevel) * t
 
   return {
     x: lerp(event.from.x, event.to.x, p),
     y: lerp(event.from.y, event.to.y, p),
-    level,
-    to: path[path.length - 1].to,
+    level: level + riding,
+    to,
     cell: frontOf(event.from, event.to),
   }
 }

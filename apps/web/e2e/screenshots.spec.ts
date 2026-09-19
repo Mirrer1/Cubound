@@ -230,18 +230,17 @@ const STAGES: Record<string, StageShots> = {
   },
   '2-6': {
     solution:
-      'right right right right right down down left down down right down right up up right right down down right right right',
+      'right down down left left left left left down down right right right right right up up right right down down left down left',
     guide: ['guide-lift'],
     shots: {
       0: 'start',
-      1: 'lift-raised',
-      2: 'on-lift',
+      2: 'lift-raised',
       3: 'lift-lowered',
-      16: 'zone-changed',
-      18: 'box-on-switch',
-      19: 'on-box',
-      20: 'on-lift-2',
-      22: 'cleared',
+      13: 'box-on-switch',
+      14: 'on-box',
+      17: 'on-lift',
+      18: 'zone-changed',
+      24: 'cleared',
     },
   },
 }

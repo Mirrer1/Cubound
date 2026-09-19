@@ -1,6 +1,6 @@
 import type { Direction, GameState, LeaningLadder, Point, Stage } from './types'
 
-export const SESSION_VERSION = 3
+export const SESSION_VERSION = 4
 
 export interface Session {
   version: typeof SESSION_VERSION
@@ -9,7 +9,6 @@ export interface Session {
   boxes: Point[]
   ladders: Point[]
   leaningLadders: LeaningLadder[]
-  raisedLifts: string[] // 올라가 있는 발판
   carrying: boolean
   player: Point
   moves: number
@@ -33,7 +32,6 @@ export const toSession = (game: GameState): Session => ({
   boxes: game.boxes,
   ladders: game.ladders,
   leaningLadders: game.leaningLadders,
-  raisedLifts: game.raisedLifts,
   carrying: game.carrying,
   player: game.player,
   moves: game.moves,
@@ -71,16 +69,12 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
 
   const boxCount = countOf(stage, 'box')
   const ladderCount = countOf(stage, 'ladder')
-  const liftIds = stage.entities.filter((e) => e.type === 'lift').map((lift) => lift.id)
-  const isLiftId = (value: unknown): value is string =>
-    typeof value === 'string' && liftIds.includes(value)
   const boxes = listOf<Point>(saved.boxes, onFloor, boxCount)
   const ladders = listOf<Point>(saved.ladders, onFloor, ladderCount)
   const leaningLadders = listOf<LeaningLadder>(saved.leaningLadders, isLeaning, ladderCount)
-  const raisedLifts = listOf<string>(saved.raisedLifts, isLiftId, liftIds.length)
   const carrying = saved.carrying
 
-  if (!boxes || !ladders || !leaningLadders || !raisedLifts) return null
+  if (!boxes || !ladders || !leaningLadders) return null
   if (typeof carrying !== 'boolean') return null
   if (ladders.length + leaningLadders.length + (carrying ? 1 : 0) > ladderCount) return null
   if (!isCount(saved.moves) || !isCount(saved.pushes) || !onFloor(saved.player)) return null
@@ -91,7 +85,6 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     boxes: boxes.map(({ x, y }) => ({ x, y })),
     ladders: ladders.map(({ x, y }) => ({ x, y })),
     leaningLadders: leaningLadders.map(({ x, y, direction }) => ({ x, y, direction })),
-    raisedLifts: [...raisedLifts],
     carrying,
     player: { x: saved.player.x, y: saved.player.y },
     moves: saved.moves as number,

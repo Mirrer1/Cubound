@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createState, move } from './rules'
+import { createState, isLiftRaised, move } from './rules'
 import { SESSION_VERSION, restoreSession, toSession } from './session'
 import type { Stage } from './types'
 
@@ -21,7 +21,6 @@ const MID = {
   boxes: [{ x: 2, y: 0 }],
   ladders: [],
   leaningLadders: [],
-  raisedLifts: [],
   carrying: false,
   player: { x: 1, y: 0 },
   moves: 1,
@@ -137,7 +136,7 @@ const LIFT_STAGE: Stage = {
 }
 
 describe('restoreSession 발판', () => {
-  it('올라가 있던 발판을 그대로 이어간다', () => {
+  it('발판 상태를 담지 않아도 스위치를 누른 자리에서 올라간 채로 살아난다', () => {
     const stage: Stage = {
       ...LIFT_STAGE,
       heights: [[0, 0, 0, 0]],
@@ -145,12 +144,9 @@ describe('restoreSession 발판', () => {
       entities: [...LIFT_STAGE.entities, { type: 'lift', x: 2, y: 0, id: 'a' }],
     }
     const state = move(createState(stage), 'right').state
+    const session = toSession(state)
 
-    expect(state.raisedLifts).toEqual(['a'])
-    expect(restoreSession(toSession(state), stage)).toEqual(state)
-  })
-
-  it('스테이지에 없는 발판 id가 담겨 있으면 버린다', () => {
-    expect(restoreSession(saved({ ...MID, raisedLifts: ['a'] }), STAGE)).toBeNull()
+    expect(restoreSession(session, stage)).toEqual(state)
+    expect(isLiftRaised(restoreSession(session, stage)!, 'a')).toBe(true)
   })
 })

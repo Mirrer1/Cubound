@@ -60,14 +60,87 @@ describe('playerFrame', () => {
   })
 })
 
+// 큐브가 한 층 높은 스위치에서 올라간 발판으로 옮겨 서면 발판과 함께 내려앉는다
+const LIFT_STAGE: Stage = {
+  version: 1,
+  id: 'test-lift',
+  name: '발판',
+  heights: [
+    [0, 1, 0],
+    [0, 1, 0],
+  ],
+  start: { x: 1, y: 0 },
+  goal: { x: 0, y: 0 },
+  entities: [
+    { type: 'switch', x: 1, y: 1, target: 'a' },
+    { type: 'lift', x: 2, y: 1, id: 'a' },
+  ],
+}
+
+describe('playerFrame 발판', () => {
+  it('발판을 타고 내려앉는 이동은 끝에서 최종 높이에 닿는다', () => {
+    const prev = move(createState(LIFT_STAGE), 'down').state
+    const { state, events } = move(prev, 'right')
+
+    expect(playerFrame(prev, state, events, 0)).toMatchObject({ level: 1 })
+    expect(playerFrame(prev, state, events, 0.99).level).toBeCloseTo(0, 1)
+    expect(playerFrame(prev, state, events, 1)).toMatchObject({ x: 2, y: 1, level: 0 })
+  })
+
+  it('내려앉는 동안 높이가 되올라가지 않는다', () => {
+    const prev = move(createState(LIFT_STAGE), 'down').state
+    const { state, events } = move(prev, 'right')
+    let last = playerFrame(prev, state, events, 0).level
+
+    for (let t = 0.05; t <= 1; t += 0.05) {
+      const { level } = playerFrame(prev, state, events, t)
+      expect(level).toBeLessThanOrEqual(last)
+      last = level
+    }
+  })
+
+  it('큐브가 움직이지 않아도 발판이 내려간 만큼 높이가 이어진다', () => {
+    const onLift = { ...createState(LIFT_STAGE), player: { x: 2, y: 1 } }
+    const pressed = { ...onLift, boxes: [{ x: 1, y: 1 }] }
+
+    expect(playerFrame(pressed, onLift, [], 0.5).level).toBeCloseTo(0.5)
+  })
+})
+
 describe('movingBox', () => {
   it('밀린 상자는 두 칸 사이를 미끄러진다', () => {
     const stage: Stage = { ...STAGE, heights: [[0, 0, 0]], entities: [{ type: 'box', x: 1, y: 0 }] }
     const prev = createState(stage)
-    const { events } = move(prev, 'right')
+    const { state, events } = move(prev, 'right')
 
-    expect(movingBox(prev, events, 0.5)).toMatchObject({ x: 1.5, level: 0, to: { x: 2, y: 0 } })
-    expect(movingBox(prev, events, 1)).toBeNull()
+    expect(movingBox(prev, state, events, 0.5)).toMatchObject({
+      x: 1.5,
+      level: 0,
+      to: { x: 2, y: 0 },
+    })
+    expect(movingBox(prev, state, events, 1)).toBeNull()
+  })
+
+  it('올라간 발판으로 밀린 상자는 발판을 따라 내려앉는다', () => {
+    const stage: Stage = {
+      ...LIFT_STAGE,
+      heights: [
+        [0, 0, 0],
+        [1, 1, 0],
+      ],
+      start: { x: 0, y: 1 },
+      entities: [
+        { type: 'switch', x: 0, y: 1, target: 'a' },
+        { type: 'lift', x: 2, y: 1, id: 'a' },
+        { type: 'box', x: 1, y: 1 },
+      ],
+    }
+    const prev = createState(stage)
+    const { state, events } = move(prev, 'right')
+
+    expect(state.boxes).toEqual([{ x: 2, y: 1 }])
+    expect(movingBox(prev, state, events, 0)?.level).toBe(1)
+    expect(movingBox(prev, state, events, 0.99)?.level).toBeCloseTo(0, 1)
   })
 })
 
@@ -175,11 +248,11 @@ describe('movingBox 미끄러짐', () => {
       entities: [{ type: 'box', x: 1, y: 0 }],
     }
     const prev = createState(stage)
-    const { events } = move(prev, 'right')
+    const { state, events } = move(prev, 'right')
 
-    expect(movingBox(prev, events, 0.2)?.x).toBeLessThanOrEqual(2)
-    expect(movingBox(prev, events, 0.9)?.x).toBeGreaterThan(3)
-    expect(movingBox(prev, events, 0.9)?.to).toEqual({ x: 5, y: 0 })
+    expect(movingBox(prev, state, events, 0.2)?.x).toBeLessThanOrEqual(2)
+    expect(movingBox(prev, state, events, 0.9)?.x).toBeGreaterThan(3)
+    expect(movingBox(prev, state, events, 0.9)?.to).toEqual({ x: 5, y: 0 })
   })
 })
 

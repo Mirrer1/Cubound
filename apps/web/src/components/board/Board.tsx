@@ -59,7 +59,7 @@ const Board = ({
 
   const { stage, heights, boxes, ladders, leaningLadders, player } = game
   const cube = playerFrame(prevGame, game, events, t, chain)
-  const box = movingBox(prevGame, events, t, chain)
+  const box = movingBox(prevGame, game, events, t, chain)
   const pickedUp = moving ? events.find((e) => e.type === 'pickedUp') : undefined
   const placed = moving ? events.find((e) => e.type === 'placed') : undefined
 
