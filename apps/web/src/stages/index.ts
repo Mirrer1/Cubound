@@ -26,6 +26,15 @@ export const stageIdsOf = (world: number) =>
 
 export const isBossStage = (id: string) => parseStageId(id).stage % STAGES_PER_WORLD === 0
 
+// 월드 마지막 스테이지 다음은 다음 월드의 첫 스테이지
+export const nextStageId = (id: string) => {
+  const { world, stage } = parseStageId(id)
+  if (stage < STAGES_PER_WORLD) return stageId(world, stage + 1)
+
+  const next = WORLDS[WORLDS.indexOf(world) + 1]
+  return next === undefined ? undefined : stageId(next, 1)
+}
+
 // 목록에서 한 칸 앞 월드. 첫 월드는 앞이 없다
 export const previousWorld = (world: number): number | undefined =>
   WORLDS[WORLDS.indexOf(world) - 1]

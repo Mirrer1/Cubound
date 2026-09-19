@@ -10,7 +10,7 @@ import { stageTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
 import { directionFromKey, directionFromSwipe, isRestartKey } from '@/platform/input'
 import { goTo } from '@/platform/route'
-import { STAGES, parseStageId, stageId } from '@/stages'
+import { STAGES, nextStageId, parseStageId } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
 
 interface PlayScreenProps {
@@ -42,8 +42,8 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   // 주소가 바뀐 바로 다음 프레임에는 앞 스테이지가 남아 있어 지금 스테이지일 때만 그린다
   const game = loaded?.stage.id === currentId ? loaded : null
   const { world, stage: stageNumber } = parseStageId(currentId)
-  const nextId = stageId(world, stageNumber + 1)
-  const hasNext = nextId in STAGES
+  const nextId = nextStageId(currentId)
+  const hasNext = nextId !== undefined && nextId in STAGES
   const record = game ? progress.stages[game.stage.id] : undefined
   const guides = game?.stage.guides ?? []
   const hasGuide = guides.length > 0
@@ -52,7 +52,9 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const left = game ? movesLeft(game) : null
   const outOfMoves = left === 0 && !game?.cleared
 
-  const handleNext = () => goTo({ screen: 'play', stageId: nextId })
+  const handleNext = () => {
+    if (nextId) goTo({ screen: 'play', stageId: nextId })
+  }
   const handleSelect = () => goTo({ screen: 'select', world })
   // 포커스가 남으면 Enter나 Space로 가이드가 다시 열려서 버튼 포커스를 뺀다
   const handleOpenGuide = (e: MouseEvent<HTMLButtonElement>) => {
