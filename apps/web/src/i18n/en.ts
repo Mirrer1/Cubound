@@ -62,6 +62,9 @@ export const en = {
   'stage.2-4': 'The Stopper',
   'stage.2-5': 'The Ice Wall',
   'stage.2-6': 'The Step Up',
+  'stage.2-7': 'The Bucket',
+  'stage.2-8': 'The Interlock',
+  'stage.2-9': 'The Glacier',
 }
 
 export type Texts = typeof en

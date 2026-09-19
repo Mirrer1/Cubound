@@ -243,6 +243,52 @@ const STAGES: Record<string, StageShots> = {
       24: 'cleared',
     },
   },
+  '2-7': {
+    solution:
+      'right down left down right right right right down right right down down left down down right up up up right right down down down',
+    shots: {
+      0: 'start',
+      4: 'slid-down',
+      6: 'box-slid-to-switch',
+      7: 'on-box',
+      9: 'on-lift',
+      11: 'zone-changed',
+      16: 'slid-on-ice',
+      20: 'climbed',
+      25: 'cleared',
+    },
+  },
+  '2-8': {
+    solution:
+      'left up up up right right right down up right right right up up right up up right down down left left down down down down right right',
+    shots: {
+      0: 'start',
+      8: 'box-on-door-switch',
+      14: 'box-on-lift-switch',
+      16: 'on-box',
+      18: 'on-lift',
+      19: 'zone-changed',
+      21: 'slid-on-ice',
+      26: 'door-passed',
+      28: 'cleared',
+    },
+  },
+  '2-9': {
+    solution:
+      'right right right right right down down left right down down right right right right down down left left left left down down down left right up right right right down down',
+    shots: {
+      0: 'start',
+      8: 'box-on-switch',
+      11: 'door-passed',
+      15: 'box-on-switch-2',
+      17: 'on-box',
+      19: 'on-lift',
+      21: 'zone-changed',
+      25: 'ladder-taken',
+      30: 'ladder-leaning',
+      32: 'cleared',
+    },
+  },
 }
 
 const stageNumber = (id: string) => String(Number(id.split('-')[1])).padStart(2, '0')
