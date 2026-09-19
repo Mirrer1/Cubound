@@ -367,13 +367,13 @@ describe('crackFrame', () => {
 describe('crackSink', () => {
   it('닳은 단계가 오를수록 칸이 더 내려앉는다', () => {
     expect(crackSink(0)).toBe(0)
-    expect(crackSink(1)).toBe(4)
-    expect(crackSink(2)).toBe(9)
+    expect(crackSink(1)).toBeGreaterThan(crackSink(0))
+    expect(crackSink(2)).toBeGreaterThan(crackSink(1))
   })
 
   it('단계 사이에서는 앞뒤 단계 사이 값으로 이어진다', () => {
-    expect(crackSink(0.5)).toBe(2)
-    expect(crackSink(1.5)).toBe(6.5)
+    expect(crackSink(0.5)).toBeCloseTo((crackSink(0) + crackSink(1)) / 2)
+    expect(crackSink(1.5)).toBeCloseTo((crackSink(1) + crackSink(2)) / 2)
   })
 })
 

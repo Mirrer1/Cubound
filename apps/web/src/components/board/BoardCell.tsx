@@ -33,7 +33,8 @@ const SHARDS: [number, number][] = [
 const SHARD = { scale: 0.46, away: 0.72, sink: [0, 7, 3, 10], thin: 5 }
 
 const CHIP = { half: 10, rise: 5 }
-const CHIPS = [0, 1]
+// 닳을수록 자국이 는다. 한 번 밟으면 둘, 다 닳으면 넷
+const CHIPS = [0, 1, 2, 3]
 
 const SURFACES = {
   hole: {
@@ -74,7 +75,7 @@ const spotPoints = (x: number, y: number, spots: [number, number][]) =>
     .join(' ')
 
 const chipPoints = (x: number, y: number, seed: number, index: number) => {
-  const [u, v] = CHIP_SPOTS[(seed + index * 2) % 4]
+  const [u, v] = CHIP_SPOTS[(seed + index) % 4]
   const d = isoDelta(u, v)
   const cx = x + d.x
   const cy = y + d.y
@@ -162,7 +163,7 @@ const BoardCell = ({
   const chips = crack
     ? CHIPS.map((index) => ({
         index,
-        opacity: clamp01(crackStage - index) * (1 - crackBroken),
+        opacity: clamp01(crackStage * 2 - index) * (1 - crackBroken),
       })).filter((chip) => chip.opacity > 0)
     : []
   const shards =

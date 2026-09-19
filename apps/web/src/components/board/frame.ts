@@ -280,7 +280,7 @@ export const movingBox = (
 const CRUMBLE = { deepen: 0.6, fallFrom: 0.12, drop: 1.6, shadow: 0.9 }
 
 // 닳은 단계마다의 내려앉은 화면 거리와 옆면 두께
-const CRACK_SINK = [0, 4, 9]
+const CRACK_SINK = [0, 7, 13]
 const CRACK_THICKNESS = [11, 8, 5]
 
 export interface CrackFrame {

@@ -41,14 +41,14 @@
   --color-ice-gloss: #f5fbfd;
   /* 무너지는 칸은 닳은 단계 0에서 2까지를 뒤 숫자로 둔다 */
   --color-crack-top-0: #e4e0d7;
-  --color-crack-top-1: #d7d2c7;
-  --color-crack-top-2: #c6c0b2;
+  --color-crack-top-1: #cfc9bb;
+  --color-crack-top-2: #bab3a2;
   --color-crack-left-0: #c0bcb2;
-  --color-crack-left-1: #b4afa3;
-  --color-crack-left-2: #a8a294;
+  --color-crack-left-1: #aba596;
+  --color-crack-left-2: #989182;
   --color-crack-right-0: #d3cfc5;
-  --color-crack-right-1: #c7c2b7;
-  --color-crack-right-2: #b9b3a5;
+  --color-crack-right-1: #beb9aa;
+  --color-crack-right-2: #aca593;
   --color-crack-chip: #bcb7ab;
   --color-crack-shadow: #c4c0b8;
 }
