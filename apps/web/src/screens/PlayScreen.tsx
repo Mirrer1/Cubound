@@ -5,7 +5,7 @@ import Board from '@/components/board/Board'
 import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
-import { movesLeft } from '@/game/rules'
+import { movesLeft, pushesLeft } from '@/game/rules'
 import { stageTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
 import { directionFromKey, directionFromSwipe, isRestartKey } from '@/platform/input'
@@ -50,6 +50,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const guideTarget = guideStep !== null ? guides[guideStep]?.target : undefined
   const guideCell = typeof guideTarget === 'object' ? guideTarget : undefined
   const left = game ? movesLeft(game) : null
+  const pushesOver = game ? pushesLeft(game) : null
   const outOfMoves = left === 0 && !game?.cleared
 
   const handleNext = () => {
@@ -134,6 +135,17 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
               </span>
             </div>
             <div className="flex items-center gap-5 wide:gap-7">
+              {pushesOver !== null && (
+                <div
+                  data-guide="pushes"
+                  className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"
+                >
+                  <span className="font-mono text-[10px] tracking-[0.22em] text-mute">PUSHES</span>
+                  <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl">
+                    {pushesOver}
+                  </span>
+                </div>
+              )}
               <div
                 data-guide="moves"
                 className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"

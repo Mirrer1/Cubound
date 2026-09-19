@@ -34,7 +34,7 @@ export interface Stage {
   zones?: Zone[] // 카메라 구역, 없으면 맵 전체
 }
 
-export type GuideTarget = Point | 'restart' | 'moves' // 칸 좌표나 화면 요소 이름
+export type GuideTarget = Point | 'restart' | 'moves' | 'pushes' // 칸 좌표나 화면 요소 이름
 
 export interface Guide {
   id: string // 문구 모음의 키
