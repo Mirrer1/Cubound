@@ -271,6 +271,27 @@ export const movingBox = (
   }
 }
 
+// 금이 깊어지는 앞부분과 바닥이 떨어져 나가는 뒷부분
+const CRUMBLE = { deepen: 0.6, fallFrom: 0.45, drop: 1.4 }
+
+export interface CrackFrame {
+  depth: number // 금 깊이, 0이면 실금 1이면 굵은 금
+  fall: number // 아래로 내려간 층 수
+  opacity: number
+}
+
+// left는 앞으로 견디는 횟수. 1 이하면 다음에 밟고 나올 때 무너져서 굵은 금으로 알린다
+const depthOf = (left: number) => (left > 1 ? 0 : 1)
+
+// before와 after는 이동 앞뒤의 left. -1은 바닥 없는 칸이다
+export const crackFrame = (before: number, after: number, t: number): CrackFrame => {
+  const depth = lerp(depthOf(before), depthOf(after), easeOut(Math.min(1, t / CRUMBLE.deepen)))
+  const falling = before >= 0 && after < 0
+  const p = falling ? Math.min(1, Math.max(0, (t - CRUMBLE.fallFrom) / (1 - CRUMBLE.fallFrom))) : 0
+
+  return { depth, fall: CRUMBLE.drop * easeIn(p), opacity: 1 - p }
+}
+
 // 재시작할 때 큐브와 상자가 처음 자리 위에서 내려앉는다
 const RESTART = { fall: 0.38, stagger: 0.06, steps: 2, lift: 1.5, fadeIn: 6 }
 

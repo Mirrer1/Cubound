@@ -4,10 +4,33 @@ import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
 import BoardLadder from './BoardLadder'
 import { darken, shade, tint } from './shade'
-import { TILE, blockFaces } from '@/game/iso'
-import type { Direction } from '@/game/types'
+import { TILE, blockFaces, isoDelta } from '@/game/iso'
+import type { Direction, Point } from '@/game/types'
 
 const GLOSS = { pull: 0.175, span: 0.2 }
+const CRACK = { thin: 1.3, thick: 3, faint: 0.5 }
+
+// 칸 하나를 한 변으로 하는 격자 좌표로 찍은 금. 윗면을 가로지르고 굵어지면 가지가 드러난다
+const CRACK_LINE: Point[] = [
+  { x: -0.4, y: 0.33 },
+  { x: 0, y: 0.23 },
+  { x: 0, y: -0.15 },
+  { x: 0.4, y: -0.29 },
+]
+const CRACK_BRANCH: Point[] = [
+  { x: 0, y: 0.23 },
+  { x: 0.08, y: 0.46 },
+]
+
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+
+const crackPoints = (line: Point[], x: number, y: number) =>
+  line
+    .map((p) => {
+      const d = isoDelta(p.x, p.y)
+      return `${x + d.x},${y + d.y}`
+    })
+    .join(' ')
 
 // 왼쪽 위 모서리와 나란하게 가운데 쪽으로 당겨 놓은 얼음 윗면의 광택선
 const glossLine = (x: number, y: number) => ({
@@ -25,6 +48,8 @@ interface BoardCellProps {
   goal: boolean
   filled: boolean
   ice: boolean
+  crack: boolean // 무너지는 칸
+  crackDepth: number // 금 깊이, 0이면 실금 1이면 굵은 금
   hidden: boolean // 상자가 메우는 중인 칸
   faded: boolean
   entity: 'switch' | 'door' | null
@@ -46,6 +71,8 @@ const BoardCell = ({
   goal,
   filled,
   ice,
+  crack,
+  crackDepth,
   hidden,
   faded,
   entity,
@@ -60,12 +87,18 @@ const BoardCell = ({
 }: BoardCellProps) => {
   const floorTop = parity ? darken('floor-top', 2.8) : 'var(--color-floor-top)'
   const icy = ice && !goal && !filled
-  // 상자가 메운 칸, 얼음, 발판은 바닥 대신 제 색으로 칠한다
-  const surface = filled ? 'tool' : icy ? 'ice' : lift ? 'lift' : null
+  // 상자가 메운 칸, 얼음, 발판, 무너지는 칸은 바닥 대신 제 색으로 칠한다
+  const surface = filled ? 'tool' : icy ? 'ice' : lift ? 'lift' : crack ? 'crack' : null
   const faces = surface
     ? { top: shade(surface, 'top'), left: shade(surface, 'left'), right: shade(surface, 'right') }
     : { top: floorTop, left: 'var(--color-floor-left)', right: 'var(--color-floor-right)' }
-  const stroke = icy ? darken('ice', 10) : lift ? darken('lift', 26) : darken('floor-top', 6)
+  const stroke = icy
+    ? darken('ice', 10)
+    : lift
+      ? darken('lift', 26)
+      : crack
+        ? darken('crack', 12)
+        : darken('floor-top', 6)
   const gloss = glossLine(x, y)
   const ladders = leaning
     ? leaning.split('|').map((item) => {
@@ -105,6 +138,28 @@ const BoardCell = ({
                 strokeWidth={2.2}
                 strokeLinecap="round"
               />
+            )}
+            {crack && (
+              <>
+                <polyline
+                  points={crackPoints(CRACK_LINE, x, y)}
+                  fill="none"
+                  stroke="var(--color-crack-line)"
+                  strokeWidth={lerp(CRACK.thin, CRACK.thick, crackDepth)}
+                  strokeOpacity={lerp(CRACK.faint, 1, crackDepth)}
+                  strokeLinecap="butt"
+                  strokeLinejoin="miter"
+                />
+                <polyline
+                  points={crackPoints(CRACK_BRANCH, x, y)}
+                  fill="none"
+                  stroke="var(--color-crack-line)"
+                  strokeWidth={CRACK.thin}
+                  strokeOpacity={crackDepth}
+                  strokeLinecap="butt"
+                  strokeLinejoin="miter"
+                />
+              </>
             )}
             {goal && (
               <>

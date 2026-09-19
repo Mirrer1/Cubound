@@ -1,7 +1,7 @@
 import { animate } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
-import { type Box, type ViewSize, viewBoxFor, zoneBox } from './camera'
+import { type Box, type ViewSize, cameraHeights, viewBoxFor, zoneBox } from './camera'
 import { zoneIndexAt } from '@/game/camera'
 import type { GameState, Point } from '@/game/types'
 
@@ -14,7 +14,7 @@ export const useCamera = (game: GameState, focus?: Point) => {
   const nextIndex = zones.length > 0 ? zoneIndexAt(zones, focus ?? game.player, zoneIndex) : 0
   if (nextIndex !== zoneIndex) setZoneIndex(nextIndex)
 
-  const target = zoneBox(game.heights, zones[nextIndex])
+  const target = zoneBox(cameraHeights(game.stage.heights, game.heights), zones[nextIndex])
   const targetKey = `${target.minX} ${target.minY} ${target.maxX} ${target.maxY}`
   const [box, setBox] = useState<Box>(target)
   const current = useRef(box)

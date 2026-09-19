@@ -5,7 +5,7 @@ import BoardCell from './BoardCell'
 import BoardLadder from './BoardLadder'
 import ClearEffect from './ClearEffect'
 import { rollingCubeFaces } from './cube'
-import { movingBox, playerFrame, restartDrop, restartDuration } from './frame'
+import { crackFrame, movingBox, playerFrame, restartDrop, restartDuration } from './frame'
 import { shade } from './shade'
 import { useBoardAnimation } from './useBoardAnimation'
 import { useCamera } from './useCamera'
@@ -29,6 +29,9 @@ interface BoardProps {
 const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y
 const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+
+// 무너지는 칸이 앞으로 견디는 횟수. 목록에 없는 칸은 바닥 없는 칸과 같게 본다
+const crackLeft = (state: GameState, p: Point) => state.cracks.find((c) => same(c, p))?.left ?? -1
 
 const GUIDE_MARGIN = 12
 
@@ -105,7 +108,6 @@ const Board = ({
     <svg ref={ref} viewBox={viewBox} className="h-full w-full">
       {cells.map((cell) => {
         const entity = stage.entities.find((e) => same(e, cell.p))
-        const isFilled = stage.heights[cell.p.y][cell.p.x] < 0
         const pressed = (state: GameState) => same(state.player, cell.p) || has(state.boxes, cell.p)
         const doorDepth = (state: GameState) =>
           entity?.type === 'door' && isDoorOpen(state, entity.id) ? 7 : TILE.layer
@@ -115,8 +117,16 @@ const Board = ({
         )
         const liftLevel = (state: GameState) =>
           lift !== undefined && isLiftRaised(state, lift.id) ? 1 : 0
+        const left = crackLeft(game, cell.p)
+        const was = crackLeft(before, cell.p)
+        // 처음부터 구멍이던 칸과 무너진 뒤 메워진 칸 둘 다 상자가 만든 바닥이다
+        const wasCrack = (stage.cracks?.[cell.p.y]?.[cell.p.x] ?? '.') !== '.'
+        const isFilled =
+          game.heights[cell.p.y][cell.p.x] >= 0 &&
+          (stage.heights[cell.p.y][cell.p.x] < 0 || (wasCrack && left < 0))
+        const crumble = crackFrame(was, left, progress)
         const raised = lerp(liftLevel(before), liftLevel(game), progress)
-        const cellY = cell.y - raised * TILE.layer
+        const cellY = cell.y - raised * TILE.layer + crumble.fall * TILE.layer
         const pickedHere = pickedUp?.type === 'pickedUp' && same(pickedUp.at, cell.p)
         const flatLadder = has(ladders, cell.p)
           ? 1
@@ -142,9 +152,10 @@ const Board = ({
         const goalEffect = same(cell.p, stage.goal) && game.cleared && !moving
         const droppingBox = dropping ? boxes.findIndex((b) => same(b, cell.p)) : -1
         const boxDrop = droppingBox >= 0 ? restartDrop(t, droppingBox + 1, boxes.length) : null
-        // 메운 칸이 다시 구멍으로 돌아갈 때는 제자리에서 사라진다
-        const restored =
-          dropping && before.heights[cell.p.y][cell.p.x] > heights[cell.p.y][cell.p.x]
+        // 재시작하면 메운 칸은 제자리에서 사라지고 무너졌던 칸은 돌아온다
+        const restored = dropping
+          ? Math.sign(before.heights[cell.p.y][cell.p.x] - heights[cell.p.y][cell.p.x])
+          : 0
         const overlay = drawBox || drawCube || goalEffect || boxDrop !== null
 
         return (
@@ -157,6 +168,8 @@ const Board = ({
             goal={same(cell.p, stage.goal)}
             filled={isFilled}
             ice={isIce(game, cell.p)}
+            crack={Math.max(left, was) >= 0}
+            crackDepth={crumble.depth}
             hidden={isFilled && box !== null && same(box.to, cell.p)}
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
@@ -164,7 +177,7 @@ const Board = ({
             switchDepth={lerp(pressed(before) ? 4 : 11, pressed(game) ? 4 : 11, progress)}
             doorDepth={lerp(doorDepth(before), doorDepth(game), progress)}
             box={has(boxes, cell.p) && !(box && same(box.to, cell.p)) && boxDrop === null}
-            blockOpacity={restored ? 1 - t : 1}
+            blockOpacity={restored > 0 ? 1 - t : restored < 0 ? t : crumble.opacity}
             flatLadder={flatLadder}
             leaning={leaning}
           >

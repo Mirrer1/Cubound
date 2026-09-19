@@ -25,6 +25,10 @@ export interface ViewSize {
 export const maxTile = (view: ViewSize) =>
   Math.max(BASE_MAX_TILE, Math.min(view.width, view.height) / VIEW_PER_TILE)
 
+// 무너진 칸도 처음 높이로 세서 칸이 사라질 때 화면이 따라 움직이지 않는다
+export const cameraHeights = (stage: number[][], heights: number[][]) =>
+  heights.map((row, y) => row.map((h, x) => Math.max(h, stage[y][x])))
+
 // 구역 칸이 그려지는 범위, 구역이 없으면 맵 전체
 export const zoneBox = (heights: number[][], zone?: Zone): Box => {
   const blocks = heights.flatMap((row, y) =>

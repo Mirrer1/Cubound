@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { type Box, type ViewBox, type ViewSize, maxTile, viewBoxFor, zoneBox } from './camera'
+import {
+  type Box,
+  type ViewBox,
+  type ViewSize,
+  cameraHeights,
+  maxTile,
+  viewBoxFor,
+  zoneBox,
+} from './camera'
 import { rollingCubeFaces } from './cube'
 import { TILE } from '@/game/iso'
 import type { Direction } from '@/game/types'
@@ -44,6 +52,30 @@ const cubeTop = (x: number, y: number, level: number) => {
     ),
   )
 }
+
+describe('cameraHeights', () => {
+  it('무너진 칸을 처음 높이로 되돌려 화면 범위가 줄지 않는다', () => {
+    expect(
+      cameraHeights(
+        [
+          [0, 1],
+          [2, 0],
+        ],
+        [
+          [0, -1],
+          [2, 0],
+        ],
+      ),
+    ).toEqual([
+      [0, 1],
+      [2, 0],
+    ])
+  })
+
+  it('상자가 메운 구멍은 메운 높이를 그대로 쓴다', () => {
+    expect(cameraHeights([[-1, 0]], [[0, 0]])).toEqual([[0, 0]])
+  })
+})
 
 describe('zoneBox', () => {
   it('구역 안 칸만 담는다', () => {

@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { durationOf, moveEase, movingBox, playerFrame, restartDrop, restartDuration } from './frame'
+import {
+  crackFrame,
+  durationOf,
+  moveEase,
+  movingBox,
+  playerFrame,
+  restartDrop,
+  restartDuration,
+} from './frame'
 import { createState, move } from '@/game/rules'
 import type { Stage } from '@/game/types'
 
@@ -295,6 +303,56 @@ describe('moveEase 이어짐 경계', () => {
       expect(moveEase(0.5, chain)).toBeCloseTo(0.5)
       expect(Math.abs(left - right)).toBeLessThan(0.1)
     }
+  })
+})
+
+describe('crackFrame', () => {
+  it('두 번 남은 칸은 실금이고 한 번 남은 칸은 굵은 금이다', () => {
+    expect(crackFrame(2, 2, 1).depth).toBe(0)
+    expect(crackFrame(1, 1, 1).depth).toBe(1)
+    expect(crackFrame(0, 0, 1).depth).toBe(1)
+  })
+
+  it('세 번 이상 남은 칸도 실금으로 그려 굵은 금의 뜻이 하나로 남는다', () => {
+    expect(crackFrame(5, 5, 1).depth).toBe(0)
+  })
+
+  it('금이 깊어지는 동안 값이 이어지고 되얕아지지 않는다', () => {
+    let last = crackFrame(2, 1, 0).depth
+    expect(last).toBe(0)
+    for (let t = 0.05; t <= 1; t += 0.05) {
+      const depth = crackFrame(2, 1, t).depth
+      expect(depth).toBeGreaterThanOrEqual(last)
+      last = depth
+    }
+    expect(last).toBeCloseTo(1)
+  })
+
+  it('무너지지 않는 칸은 제자리에 또렷하게 남는다', () => {
+    for (const t of [0, 0.5, 1]) {
+      expect(crackFrame(2, 1, t)).toMatchObject({ fall: 0, opacity: 1 })
+    }
+  })
+
+  it('무너지는 칸은 큐브가 절반쯤 간 뒤부터 떨어져 이동이 끝날 때 사라진다', () => {
+    expect(crackFrame(0, -1, 0.4)).toMatchObject({ fall: 0, opacity: 1 })
+    expect(crackFrame(0, -1, 0.7).fall).toBeGreaterThan(0)
+    expect(crackFrame(0, -1, 0.7).opacity).toBeLessThan(1)
+    expect(crackFrame(0, -1, 1)).toMatchObject({ opacity: 0 })
+  })
+
+  it('무너지는 동안 계속 내려가고 되올라가지 않는다', () => {
+    let last = crackFrame(0, -1, 0).fall
+    for (let t = 0.05; t <= 1; t += 0.05) {
+      const { fall } = crackFrame(0, -1, t)
+      expect(fall).toBeGreaterThanOrEqual(last)
+      last = fall
+    }
+  })
+
+  it('재시작으로 돌아온 칸은 떨어지지 않고 금이 얕아진다', () => {
+    expect(crackFrame(-1, 2, 0.5)).toMatchObject({ fall: 0, opacity: 1 })
+    expect(crackFrame(-1, 2, 1).depth).toBe(0)
   })
 })
 
