@@ -1,6 +1,6 @@
 import type { Direction, GameState, LeaningLadder, Point, Stage } from './types'
 
-export const SESSION_VERSION = 2
+export const SESSION_VERSION = 3
 
 export interface Session {
   version: typeof SESSION_VERSION
@@ -13,6 +13,7 @@ export interface Session {
   carrying: boolean
   player: Point
   moves: number
+  pushes: number
 }
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
@@ -36,6 +37,7 @@ export const toSession = (game: GameState): Session => ({
   carrying: game.carrying,
   player: game.player,
   moves: game.moves,
+  pushes: game.pushes,
 })
 
 // 스테이지 데이터가 바뀌었거나 값이 깨졌으면 처음부터 시작하도록 null을 돌려준다
@@ -81,7 +83,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   if (!boxes || !ladders || !leaningLadders || !raisedLifts) return null
   if (typeof carrying !== 'boolean') return null
   if (ladders.length + leaningLadders.length + (carrying ? 1 : 0) > ladderCount) return null
-  if (!isCount(saved.moves) || !onFloor(saved.player)) return null
+  if (!isCount(saved.moves) || !isCount(saved.pushes) || !onFloor(saved.player)) return null
 
   return {
     stage,
@@ -93,6 +95,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     carrying,
     player: { x: saved.player.x, y: saved.player.y },
     moves: saved.moves as number,
+    pushes: saved.pushes as number,
     cleared: false,
   }
 }

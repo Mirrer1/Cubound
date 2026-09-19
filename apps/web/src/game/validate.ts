@@ -107,10 +107,15 @@ export const validateStage = (data: unknown): ValidateResult => {
 
   if (data.rules !== undefined) {
     if (!isObject(data.rules)) add('rules가 객체가 아니다')
-    else if (data.rules.moveLimit !== undefined) {
-      const limit = data.rules.moveLimit
-      if (!(isInt(limit) && limit > 0)) add('rules.moveLimit은 양의 정수여야 한다')
-      else if (isInt(data.best) && limit < data.best) add('rules.moveLimit이 best보다 작다')
+    else {
+      const { moveLimit, pushLimit } = data.rules
+      if (moveLimit !== undefined) {
+        if (!(isInt(moveLimit) && moveLimit > 0)) add('rules.moveLimit은 양의 정수여야 한다')
+        else if (isInt(data.best) && moveLimit < data.best) add('rules.moveLimit이 best보다 작다')
+      }
+      if (pushLimit !== undefined && !(isInt(pushLimit) && pushLimit > 0)) {
+        add('rules.pushLimit은 양의 정수여야 한다')
+      }
     }
   }
 

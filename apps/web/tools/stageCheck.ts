@@ -3,7 +3,7 @@ import { join } from 'node:path'
 
 import { zoneIndexAt } from '@/game/camera'
 import { createState, move } from '@/game/rules'
-import { deadEnds, moveLimit, solutionCount, solve, statesWithin } from '@/game/solver'
+import { deadEnds, minPushes, moveLimit, solutionCount, solve, statesWithin } from '@/game/solver'
 import type { Direction, Stage } from '@/game/types'
 import { validateStage } from '@/game/validate'
 
@@ -57,6 +57,7 @@ const zoneMoves = (stage: Stage, path: Direction[]) => {
 interface Summary {
   id: string
   best: string
+  pushes: string
   dead: string
   alternatives: string
   states: string
@@ -86,6 +87,8 @@ const check = (file: string): Summary | null => {
 
   const { moves, path } = solved
   const limit = stage.rules?.moveLimit
+  const pushLimit = stage.rules?.pushLimit
+  const pushed = minPushes(stage)
   const counted = solutionCount(stage)
   const inside = limit === undefined ? null : statesWithin(stage, limit)
   const stuck = deadEnds(stage)
@@ -98,6 +101,15 @@ const check = (file: string): Summary | null => {
     limit === undefined
       ? `없음 (★★ 기준 ${moveLimit(moves)}수)`
       : `${limit}수 (여유 ${limit - moves}수)`,
+  )
+  row(
+    '밀기',
+    pushed.status !== 'solved'
+      ? '탐색 한도 초과'
+      : `최소 ${pushed.pushes}번` +
+          (pushLimit === undefined
+            ? ''
+            : ` (제한 ${pushLimit}번, 여유 ${pushLimit - pushed.pushes}번)`),
   )
   row('풀이', path.map((d) => ARROWS[d]).join(' '))
   row('탐색', stuck.status === 'ok' ? `상태 ${stuck.states}개, ${ms}ms` : `한도 초과, ${ms}ms`)
@@ -124,6 +136,10 @@ const check = (file: string): Summary | null => {
   return {
     id: stage.id,
     best: `${moves}${limit === undefined ? '' : `/${limit}`}`,
+    pushes:
+      pushed.status !== 'solved'
+        ? '?'
+        : `${pushed.pushes}${pushLimit === undefined ? '' : `/${pushLimit}`}`,
     dead:
       stuck.status === 'ok' ? (stuck.dead === 0 ? '0' : `${stuck.dead}@${stuck.earliest}`) : '?',
     alternatives: `${ways}${inside === null ? '' : `가지, ${room}개`}`,
@@ -135,6 +151,7 @@ const check = (file: string): Summary | null => {
 const COLUMNS: [keyof Summary, string, number][] = [
   ['id', '스테이지', 10],
   ['best', '최소/제한', 11],
+  ['pushes', '밀기/제한', 11],
   ['states', '상태', 8],
   ['dead', '막힘@수', 10],
   ['alternatives', '풀이/여유', 14],

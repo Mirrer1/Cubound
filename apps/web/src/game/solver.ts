@@ -76,6 +76,59 @@ export const solve = (stage: Stage, { maxStates = 1_000_000 } = {}): SolveResult
   return { status: 'unsolvable' }
 }
 
+export type PushResult =
+  { status: 'solved'; pushes: number } | { status: 'unsolvable' } | { status: 'limit' }
+
+// 미는 이동만 한 걸음으로 치는 너비 우선 탐색으로 가장 적게 미는 풀이를 찾는다
+export const minPushes = (stage: Stage, { maxStates = 1_000_000 } = {}): PushResult => {
+  const start = createState({ ...stage, rules: undefined })
+  const seen = new Set<string>([stateKey(start)])
+  let layer: GameState[] = [start]
+  let pushes = 0
+
+  while (layer.length > 0) {
+    const pushedTo: GameState[] = []
+    let queue = layer
+
+    while (queue.length > 0) {
+      const next: GameState[] = []
+
+      for (const state of queue) {
+        if (state.cleared) return { status: 'solved', pushes }
+
+        for (const direction of DIRECTIONS) {
+          const { state: moved } = move(state, direction)
+          if (moved === state) continue
+
+          // 민 이동으로만 닿는 상태는 이번 걸음의 밀지 않는 길을 다 훑은 뒤에 판단한다
+          if (moved.pushes > state.pushes) {
+            pushedTo.push(moved)
+            continue
+          }
+
+          const key = stateKey(moved)
+          if (seen.has(key)) continue
+          if (seen.size > maxStates) return { status: 'limit' }
+          seen.add(key)
+          next.push(moved)
+        }
+      }
+
+      queue = next
+    }
+
+    layer = pushedTo.filter((state) => {
+      const key = stateKey(state)
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    pushes += 1
+  }
+
+  return { status: 'unsolvable' }
+}
+
 interface Explored {
   keys: string[]
   next: Map<string, string[]>

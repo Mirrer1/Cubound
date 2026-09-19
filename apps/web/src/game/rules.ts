@@ -84,6 +84,12 @@ export const movesLeft = (state: GameState) => {
   return limit === undefined ? null : Math.max(limit - state.moves, 0)
 }
 
+// 보스 밀기 제한이 없으면 null
+export const pushesLeft = (state: GameState) => {
+  const limit = state.stage.rules?.pushLimit
+  return limit === undefined ? null : Math.max(limit - state.pushes, 0)
+}
+
 export const createState = (stage: Stage): GameState => ({
   stage,
   heights: stage.heights,
@@ -94,6 +100,7 @@ export const createState = (stage: Stage): GameState => ({
   carrying: false,
   player: stage.start,
   moves: 0,
+  pushes: 0,
   cleared: false,
 })
 
@@ -267,15 +274,17 @@ const pushBox = (state: GameState, box: Point, direction: Direction): MoveResult
   const filled = landing < 0 ? target : landed?.result === 'filled' ? landed.to : null
   const fillHeight = landing < 0 ? boxFloor : landing
 
+  // 미끄러짐과 낙하까지 한 번의 밀기로 센다
+  const pushing: GameState = { ...state, pushes: state.pushes + 1 }
   const next: GameState = filled
     ? {
-        ...state,
+        ...pushing,
         boxes: others,
         heights: state.heights.map((row, y) =>
           y === filled.y ? row.map((h, x) => (x === filled.x ? fillHeight : h)) : row,
         ),
       }
-    : { ...state, boxes: [...others, landed?.to ?? rest] }
+    : { ...pushing, boxes: [...others, landed?.to ?? rest] }
 
   return walk(next, box, boxFloor, direction, events)
 }
@@ -297,7 +306,7 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
   if (toFloor + 1 <= fromHeight) return walk(state, to, toFloor + 1, direction)
   if (toFloor > fromHeight) return blocked
 
-  const pushed = pushBox(state, to, direction)
+  const pushed = pushesLeft(state) === 0 ? null : pushBox(state, to, direction)
   if (pushed) return pushed
 
   return arrive(state, to, direction, { type: 'climbed', from, to, via: 'box' })

@@ -25,6 +25,7 @@ const MID = {
   carrying: false,
   player: { x: 1, y: 0 },
   moves: 1,
+  pushes: 1,
 }
 
 const saved = (state: object) => ({ version: SESSION_VERSION, stageId: '1-3', ...state })
@@ -107,6 +108,18 @@ describe('restoreSession', () => {
   it('이동 수가 음수이거나 정수가 아니면 버린다', () => {
     expect(restoreSession(saved({ ...MID, moves: -1 }), STAGE)).toBeNull()
     expect(restoreSession(saved({ ...MID, moves: 1.5 }), STAGE)).toBeNull()
+  })
+
+  it('민 횟수를 그대로 이어간다', () => {
+    const state = move(createState(STAGE), 'right').state
+
+    expect(state.pushes).toBe(1)
+    expect(restoreSession(toSession(state), STAGE)?.pushes).toBe(1)
+  })
+
+  it('민 횟수가 음수이거나 정수가 아니면 버린다', () => {
+    expect(restoreSession(saved({ ...MID, pushes: -1 }), STAGE)).toBeNull()
+    expect(restoreSession(saved({ ...MID, pushes: 1.5 }), STAGE)).toBeNull()
   })
 
   it('이어서 시작한 상태는 클리어 전이다', () => {

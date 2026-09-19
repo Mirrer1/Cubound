@@ -16,6 +16,7 @@ export type Entity = (
 
 export interface StageRules {
   moveLimit?: number // 보스 이동 제한, 없으면 제한 없음
+  pushLimit?: number // 보스 밀기 제한, 없으면 제한 없음
 }
 
 export interface Stage {
@@ -60,6 +61,7 @@ export interface GameState {
   carrying: boolean
   player: Point
   moves: number
+  pushes: number // 상자를 민 이동의 수
   cleared: boolean
 }
 

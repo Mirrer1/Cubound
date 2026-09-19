@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { createState, isDoorOpen, isLiftRaised, move, movesLeft, standHeight } from './rules'
+import {
+  createState,
+  isDoorOpen,
+  isLiftRaised,
+  move,
+  movesLeft,
+  pushesLeft,
+  standHeight,
+} from './rules'
 import type { Direction, MoveResult, Stage } from './types'
 
 const FLAT_STAGE: Stage = {
@@ -891,5 +899,92 @@ describe('movesLeft', () => {
     expect(movesLeft(createState(stage))).toBe(2)
     expect(movesLeft(play(stage, ['left']).state)).toBe(1)
     expect(movesLeft(play(stage, ['left', 'right']).state)).toBe(0)
+  })
+})
+
+describe('move 민 횟수', () => {
+  it('상자를 밀면 민 횟수가 1 오른다', () => {
+    const { state } = move(createState(BOX_STAGE), 'right')
+
+    expect(state.pushes).toBe(1)
+  })
+
+  it('상자를 밀지 않은 이동은 민 횟수가 오르지 않는다', () => {
+    const { state } = play(BOX_STAGE, ['up', 'right', 'right'])
+
+    expect(state.pushes).toBe(0)
+  })
+
+  it('얼음에서 상자가 여러 칸 미끄러져도 민 횟수는 1 오른다', () => {
+    const stage: Stage = { ...BOX_STAGE, ice: ['.....', '..##.', '.....'] }
+    const { state } = move(createState(stage), 'right')
+
+    expect(state.boxes).toEqual([{ x: 4, y: 1 }])
+    expect(state.pushes).toBe(1)
+  })
+
+  it('상자가 미끄러지다 구멍을 메워도 민 횟수는 1 오른다', () => {
+    const stage: Stage = {
+      ...BOX_STAGE,
+      heights: withMiddleRow([0, 0, 0, 0, -1]),
+      ice: ['.....', '..##.', '.....'],
+    }
+    const { state, events } = move(createState(stage), 'right')
+
+    expect(state.boxes).toEqual([])
+    expect(events.filter((e) => e.type === 'pushed')).toHaveLength(2)
+    expect(state.pushes).toBe(1)
+  })
+})
+
+describe('move 밀기 제한', () => {
+  const LIMITED_STAGE: Stage = { ...BOX_STAGE, rules: { pushLimit: 1 } }
+
+  it('제한 안에서는 그대로 민다', () => {
+    const { state } = move(createState(LIMITED_STAGE), 'right')
+
+    expect(state.boxes).toEqual([{ x: 2, y: 1 }])
+    expect(state.player).toEqual({ x: 1, y: 1 })
+  })
+
+  it('제한을 다 쓰면 상자가 밀리지 않고 큐브가 상자 위로 올라선다', () => {
+    const { state, events } = play(LIMITED_STAGE, ['right', 'right'])
+
+    expect(state.boxes).toEqual([{ x: 2, y: 1 }])
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(state.pushes).toBe(1)
+    expect(events).toEqual([
+      { type: 'climbed', from: { x: 1, y: 1 }, to: { x: 2, y: 1 }, via: 'box' },
+    ])
+  })
+
+  it('제한을 다 써도 상자가 없는 쪽으로는 계속 이동한다', () => {
+    const { state } = play(LIMITED_STAGE, ['right', 'up'])
+
+    expect(state.player).toEqual({ x: 1, y: 0 })
+    expect(state.moves).toBe(2)
+  })
+
+  it('이동 제한과 밀기 제한을 함께 두면 각자 동작한다', () => {
+    const stage: Stage = { ...BOX_STAGE, rules: { moveLimit: 3, pushLimit: 1 } }
+    const used = play(stage, ['right', 'right', 'right'])
+
+    expect(used.state.pushes).toBe(1)
+    expect(used.state.moves).toBe(3)
+    expect(move(used.state, 'right').state).toBe(used.state)
+  })
+})
+
+describe('pushesLeft', () => {
+  it('제한이 없으면 null을 돌려준다', () => {
+    expect(pushesLeft(createState(BOX_STAGE))).toBe(null)
+  })
+
+  it('제한이 있으면 남은 밀기 수를 돌려준다', () => {
+    const stage: Stage = { ...BOX_STAGE, rules: { pushLimit: 2 } }
+
+    expect(pushesLeft(createState(stage))).toBe(2)
+    expect(pushesLeft(play(stage, ['right']).state)).toBe(1)
+    expect(pushesLeft(play(stage, ['right', 'right']).state)).toBe(0)
   })
 })

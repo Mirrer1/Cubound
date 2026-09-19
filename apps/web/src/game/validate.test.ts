@@ -206,4 +206,13 @@ describe('validateStage', () => {
       'rules.moveLimit이 best보다 작다',
     )
   })
+
+  it('밀기 제한은 양의 정수여야 한다', () => {
+    const limit = (value: unknown) => errorsOf({ ...VALID, rules: { pushLimit: value } })
+
+    expect(limit(3)).toEqual([])
+    expect(limit(0)).toContain('rules.pushLimit은 양의 정수여야 한다')
+    expect(limit(-1)).toContain('rules.pushLimit은 양의 정수여야 한다')
+    expect(limit(2.5)).toContain('rules.pushLimit은 양의 정수여야 한다')
+  })
 })

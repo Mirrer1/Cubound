@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createState, move } from './rules'
-import { deadEnds, moveLimit, solutionCount, solve, stars, statesWithin } from './solver'
+import { deadEnds, minPushes, moveLimit, solutionCount, solve, stars, statesWithin } from './solver'
 import type { Stage } from './types'
 
 const STAGE: Stage = {
@@ -162,6 +162,59 @@ describe('solutionCount', () => {
     }
 
     expect(solutionCount(blocked)).toEqual({ status: 'ok', count: 0 })
+  })
+})
+
+describe('minPushes', () => {
+  it('상자가 없으면 0번이다', () => {
+    expect(minPushes(STAGE)).toEqual({ status: 'solved', pushes: 0 })
+  })
+
+  it('상자를 꼭 밀어야 하는 맵은 최소로 미는 횟수를 돌려준다', () => {
+    const stage: Stage = {
+      ...STAGE,
+      heights: [[0, 0, 0, 0, 1, 1]],
+      start: { x: 0, y: 0 },
+      goal: { x: 5, y: 0 },
+      entities: [{ type: 'box', x: 1, y: 0 }],
+    }
+
+    expect(minPushes(stage)).toEqual({ status: 'solved', pushes: 2 })
+  })
+
+  it('밀지 않고 돌아가는 길이 있으면 최소 이동 풀이가 밀어도 0번이다', () => {
+    const stage: Stage = {
+      ...STAGE,
+      heights: [
+        [0, 0, 0, 0, 0],
+        [0, 0, -1, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      start: { x: 0, y: 1 },
+      goal: { x: 4, y: 1 },
+      entities: [{ type: 'box', x: 1, y: 1 }],
+    }
+    const solved = solve(stage)
+
+    expect(solved.status === 'solved' && solved.moves).toBe(4)
+    expect(minPushes(stage)).toEqual({ status: 'solved', pushes: 0 })
+  })
+
+  it('목표에 갈 수 없으면 unsolvable을 돌려준다', () => {
+    const stage: Stage = {
+      ...STAGE,
+      heights: [
+        [0, 0, 0],
+        [0, 0, 1],
+        [0, 1, 1],
+      ],
+    }
+
+    expect(minPushes(stage)).toEqual({ status: 'unsolvable' })
+  })
+
+  it('탐색 상태 수 한도를 넘으면 limit을 돌려준다', () => {
+    expect(minPushes(STAGE, { maxStates: 2 })).toEqual({ status: 'limit' })
   })
 })
 
