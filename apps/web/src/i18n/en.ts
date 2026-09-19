@@ -58,6 +58,7 @@ export const en = {
   'stage.2-1': 'The Slide',
   'stage.2-2': 'The Sled',
   'stage.2-3': 'The Ledge',
+  'stage.2-4': 'The Stopper',
 }
 
 export type Texts = typeof en

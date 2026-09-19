@@ -59,4 +59,5 @@ export const ko: Partial<Texts> = {
   'stage.2-1': '미끄럼',
   'stage.2-2': '썰매',
   'stage.2-3': '벼랑',
+  'stage.2-4': '멈춤돌',
 }
