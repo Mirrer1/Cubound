@@ -52,6 +52,11 @@ export const en = {
   'stage.1-8': 'The Carrier',
   'stage.1-9': 'Uphill',
   'stage.1-10': 'The Long Way',
+
+  'world.2': 'Land of Sliding Ice',
+  'stage.2-1': 'The Slide',
+  'stage.2-2': 'The Sled',
+  'stage.2-3': 'The Ledge',
 }
 
 export type Texts = typeof en

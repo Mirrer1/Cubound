@@ -175,6 +175,34 @@ const STAGES: Record<string, StageShots> = {
       33: 'on-door',
     },
   },
+  '2-1': {
+    solution: 'right down left down left up right down right down',
+    shots: { 0: 'start', 1: 'long-slide', 6: 'turn-up', 9: 'goal-lined-up', 10: 'cleared' },
+  },
+  '2-2': {
+    solution: 'left down left down right right up left up right down left down down down',
+    shots: {
+      0: 'start',
+      4: 'before-sled',
+      5: 'box-bridge',
+      6: 'zone-changed',
+      13: 'box-step',
+      14: 'on-box',
+      15: 'cleared',
+    },
+  },
+  '2-3': {
+    solution: 'right down right down left up right down down right down left up right down',
+    shots: {
+      0: 'start',
+      1: 'long-slide',
+      5: 'above-trap',
+      7: 'ledge-edge',
+      8: 'dropped',
+      12: 'lower-slide',
+      15: 'cleared',
+    },
+  },
 }
 
 const stageNumber = (id: string) => String(Number(id.split('-')[1])).padStart(2, '0')
@@ -185,12 +213,16 @@ const openPlay = async (page: Page, id: string) => {
   await page.getByText(`STAGE ${stageNumber(id)}`).waitFor()
 }
 
-// 앞 스테이지까지 클리어한 진행을 심는다. 그 스테이지가 열리고 가이드가 자동으로 뜬다
+const order = (id: string) => {
+  const [world, number] = id.split('-').map(Number)
+  return world * 100 + number
+}
+
+// 앞 스테이지까지 클리어한 진행을 심는다. 그 스테이지와 월드가 열리고 가이드가 자동으로 뜬다
 const unlock = async (page: Page, id: string) => {
-  const cleared = Array.from({ length: Number(stageNumber(id)) - 1 }, (_, i) => [
-    `1-${i + 1}`,
-    { bestMoves: 8, stars: 3 },
-  ])
+  const cleared = Object.keys(STAGES)
+    .filter((key) => order(key) < order(id))
+    .map((key) => [key, { bestMoves: 8, stars: 3 }])
   await page.addInitScript((stages) => {
     localStorage.setItem('cubound:progress', JSON.stringify({ version: 1, stages }))
   }, Object.fromEntries(cleared))
@@ -451,7 +483,7 @@ test('@shot 키보드 포커스', async ({ page }) => {
 for (const id of Object.keys(STAGES).filter((key) => key !== '1-1')) {
   test(`@shot-stage ${id} 데스크톱`, async ({ page }) => {
     test.setTimeout(120_000)
-    const prefix = `desktop-stage-${stageNumber(id)}`
+    const prefix = `desktop-stage-${id}`
 
     await unlock(page, id)
     await openPlay(page, id)
@@ -469,7 +501,7 @@ test.describe('모바일 스테이지', () => {
     test.setTimeout(120_000)
 
     for (const id of Object.keys(STAGES)) {
-      const prefix = `mobile-stage-${stageNumber(id)}`
+      const prefix = `mobile-stage-${id}`
 
       await unlock(page, id)
       await openPlay(page, id)
