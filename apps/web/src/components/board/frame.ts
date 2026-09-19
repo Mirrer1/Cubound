@@ -91,7 +91,7 @@ const lastTile = (event: PathEvent): { before: PathEvent | null; tile: PathEvent
   return { before: { ...event, to: edge }, tile: { ...event, from: edge } }
 }
 
-// 상자가 메우는 중인 칸에 큐브가 올라서면 빈 공간 위에 뜬다. 메우기가 끝난 뒤에 마지막 칸을 간다
+// 상자가 메우는 중인 칸에 큐브가 올라서면 빈 공간 위에 뜬다. 멈춰 세우면 걸리는 느낌이 나서 다가가는 속도만 늦춘다
 const playerSegments = (events: GameEvent[]): Segment[] => {
   const path = playerPath(events)
   const landing = boxLanding(events)
@@ -99,11 +99,12 @@ const playerSegments = (events: GameEvent[]): Segment[] => {
   if (!landing || !last || !same(last.to, landing.to)) return segmentsOf(path)
 
   const { before, tile } = lastTile(last)
-  const kept = segmentsOf([...path.slice(0, -1), ...(before ? [before] : [])])
-  const wait = Math.max(0, totalSeconds(segmentsOf(boxPath(events))) - totalSeconds(kept))
+  const approach = segmentsOf([...path.slice(0, -1), ...(before ? [before] : [])])
+  const reach = totalSeconds(approach)
+  const settle = totalSeconds(segmentsOf(boxPath(events)))
+  const slower = reach > 0 && settle > reach ? settle / reach : 1
 
-  const hold: PathEvent = { type: 'slid', subject: 'player', from: tile.from, to: tile.from }
-  return [...kept, { event: hold, seconds: wait }, segmentsOf([tile])[0]]
+  return [...approach.map((s) => ({ ...s, seconds: s.seconds * slower })), ...segmentsOf([tile])]
 }
 
 export const durationOf = (events: GameEvent[]) =>
