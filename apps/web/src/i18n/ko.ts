@@ -11,7 +11,6 @@ export const ko: Partial<Texts> = {
   'select.back': '타이틀로',
   'select.previousWorld': '이전 월드',
   'select.nextWorld': '다음 월드',
-  'select.locked': '{n}월드를 끝내면 열려요',
 
   'play.guide': '가이드 다시 보기',
   'play.restart': '다시 하기 (R)',

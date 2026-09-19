@@ -6,14 +6,7 @@ import { isUnlocked, isWorldUnlocked, totalStars } from '@/game/progress'
 import { worldTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
 import { goTo } from '@/platform/route'
-import {
-  WORLDS,
-  isBossStage,
-  parseStageId,
-  previousWorld,
-  stageIdsOf,
-  worldUnlockStageId,
-} from '@/stages'
+import { WORLDS, isBossStage, parseStageId, stageIdsOf, worldUnlockStageId } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
 
 const cardsIn = (grid: HTMLDivElement | null) =>
@@ -45,6 +38,9 @@ const StageSelectScreen = ({ world }: StageSelectScreenProps) => {
   const index = WORLDS.indexOf(world)
   const showArrows = WORLDS.length > 1
   const unlocked = isWorldUnlocked(progress, worldUnlockStageId(world))
+  // 아직 열리지 않은 월드는 들어가 봐야 잠긴 카드뿐이라 이름부터 미리 보여주지 않는다
+  const next = WORLDS[index + 1]
+  const nextOpen = next !== undefined && isWorldUnlocked(progress, worldUnlockStageId(next))
   const ids = stageIdsOf(world)
   const cards = ids.map((id) => {
     const record = progress.stages[id]
@@ -134,7 +130,7 @@ const StageSelectScreen = ({ world }: StageSelectScreenProps) => {
                   </Button>
                   <Button
                     variant="ghost"
-                    disabled={index === WORLDS.length - 1}
+                    disabled={!nextOpen}
                     onClick={handleNext}
                     aria-label={t('select.nextWorld')}
                   >
@@ -143,11 +139,6 @@ const StageSelectScreen = ({ world }: StageSelectScreenProps) => {
                 </>
               ) : null}
             </span>
-            {unlocked ? null : (
-              <span className="text-sm break-keep text-mute">
-                {t('select.locked', previousWorld(world))}
-              </span>
-            )}
           </div>
         </header>
         <div
