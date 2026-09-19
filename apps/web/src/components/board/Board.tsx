@@ -198,6 +198,7 @@ const Board = ({
             ice={isIce(game, cell.p)}
             crack={Math.max(left, was) >= 0}
             crackStage={crumble.stage}
+            crackBroken={crumble.broken}
             crackFall={crackFall}
             crackShadow={crumble.shadow}
             crackSeed={(cell.p.x * 3 + cell.p.y * 5) % 4}

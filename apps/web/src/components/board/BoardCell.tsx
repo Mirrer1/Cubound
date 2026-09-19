@@ -23,6 +23,15 @@ const CHIP_SPOTS: [number, number][] = [
   [0.29, 0.07],
   [-0.09, 0.28],
 ]
+// 무너질 때만 네 조각으로 갈라진다. 가만히 있을 때 갈라 두면 칸이 붙었을 때 줄눈처럼 보인다
+const SHARDS: [number, number][] = [
+  [-0.25, -0.25],
+  [0.25, -0.25],
+  [0.25, 0.25],
+  [-0.25, 0.25],
+]
+const SHARD = { scale: 0.46, away: 0.72, sink: [0, 7, 3, 10], thin: 5 }
+
 const CHIP = { half: 10, rise: 5 }
 const CHIPS = [0, 1]
 
@@ -83,6 +92,7 @@ interface BoardCellProps {
   ice: boolean
   crack: boolean // 무너지는 칸
   crackStage: number // 닳은 단계 0~2
+  crackBroken: number // 네 조각으로 갈라져 벌어진 정도
   crackFall: number // 무너지며 아래로 내려간 화면 거리
   crackShadow: number // 무너진 자리에 깔리는 그림자 진하기
   crackSeed: number // 자국 자리를 칸마다 어긋나게 하는 값
@@ -109,6 +119,7 @@ const BoardCell = ({
   ice,
   crack,
   crackStage,
+  crackBroken,
   crackFall,
   crackShadow,
   crackSeed,
@@ -149,10 +160,24 @@ const BoardCell = ({
   const faces = evenOdd ? { ...plain, top: checker(plain.top, parity) } : plain
   const depth = crack ? crackThickness(crackStage) + h * TILE.layer : h * TILE.layer + TILE.lip
   const chips = crack
-    ? CHIPS.map((index) => ({ index, opacity: clamp01(crackStage - index) })).filter(
-        (chip) => chip.opacity > 0,
-      )
+    ? CHIPS.map((index) => ({
+        index,
+        opacity: clamp01(crackStage - index) * (1 - crackBroken),
+      })).filter((chip) => chip.opacity > 0)
     : []
+  const shards =
+    crackBroken > 0
+      ? SHARDS.map(([u, v], i) => {
+          const d = isoDelta(u, v)
+          const away = 1 + crackBroken * SHARD.away
+          return {
+            key: i,
+            x: x + d.x * away,
+            y: y + d.y * away + crackBroken * SHARD.sink[i],
+            depth: Math.max(SHARD.thin, depth - crackBroken * (depth - SHARD.thin)),
+          }
+        })
+      : []
   const ladders = leaning
     ? leaning.split('|').map((item) => {
         const [direction, opacity] = item.split(':')
@@ -171,15 +196,30 @@ const BoardCell = ({
             />
           )}
           <g opacity={blockOpacity}>
-            <BoardBlock
-              x={x}
-              y={y}
-              width={TILE.width}
-              depth={depth}
-              top={faces.top}
-              left={faces.left}
-              right={faces.right}
-            />
+            {shards.length > 0 ? (
+              shards.map((shard) => (
+                <BoardBlock
+                  key={shard.key}
+                  x={shard.x}
+                  y={shard.y}
+                  width={TILE.width * SHARD.scale}
+                  depth={shard.depth}
+                  top={faces.top}
+                  left={faces.left}
+                  right={faces.right}
+                />
+              ))
+            ) : (
+              <BoardBlock
+                x={x}
+                y={y}
+                width={TILE.width}
+                depth={depth}
+                top={faces.top}
+                left={faces.left}
+                right={faces.right}
+              />
+            )}
             {lift && (
               <BoardBlock
                 x={x}

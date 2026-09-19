@@ -280,6 +280,7 @@ const CRACK_THICKNESS = [11, 8, 5]
 
 export interface CrackFrame {
   stage: number // 닳은 단계 0~2. 오를수록 얇아지고 내려앉는다
+  broken: number // 네 조각으로 갈라져 벌어진 정도. 무너질 때만 0을 넘는다
   fall: number // 아래로 내려간 층 수
   opacity: number
   shadow: number // 무너진 자리에 깔리는 그림자 진하기
@@ -306,6 +307,8 @@ export const crackFrame = (before: number, after: number, t: number): CrackFrame
 
   return {
     stage,
+    // 갈라짐은 초반에 거의 다 벌어지고 그 뒤로는 떨어지기만 한다
+    broken: falling ? easeOut(Math.min(1, p / 0.45)) : 0,
     fall: CRUMBLE.drop * easeIn(p),
     opacity: 1 - p * p,
     shadow: CRUMBLE.shadow * easeOut(p) * (1 - p ** 4),
