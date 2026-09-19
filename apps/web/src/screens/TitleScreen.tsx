@@ -4,11 +4,14 @@ import Logo from '@/components/ui/Logo'
 import TitleScene from '@/components/ui/TitleScene'
 import { useText } from '@/i18n/useText'
 import { goTo } from '@/platform/route'
+import { currentWorld } from '@/stages'
+import { useGameStore } from '@/store/gameStore'
 
 const TitleScreen = () => {
+  const progress = useGameStore((s) => s.progress)
   const t = useText()
 
-  const handleStart = () => goTo({ screen: 'select' })
+  const handleStart = () => goTo({ screen: 'select', world: currentWorld(progress) })
 
   return (
     <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">

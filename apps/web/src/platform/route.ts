@@ -1,15 +1,28 @@
-export type Route = { screen: 'title' } | { screen: 'select' } | { screen: 'play'; stageId: string }
+export type Route =
+  { screen: 'title' } | { screen: 'select'; world: number } | { screen: 'play'; stageId: string }
+
+// 주소에 월드 번호가 없을 수 있어 parseRoute만 월드를 비워 둔다
+type ParsedRoute = Route | { screen: 'select'; world?: number }
+
+export interface RouteContext {
+  canPlay: (stageId: string) => boolean
+  worlds: number[]
+  currentWorld: number // 월드를 적지 않은 주소가 갈 월드
+}
 
 const TITLE: Route = { screen: 'title' }
-const SELECT: Route = { screen: 'select' }
 
+const STAGES_PATH = /^\/stages\/(\d+)$/
 const PLAY_PATH = /^\/play\/(\d+-\d+)$/
 
 // 정적 배포에서 어느 주소로 새로고침해도 404가 나지 않게 화면을 해시에 둔다
-export const parseRoute = (hash: string): Route | null => {
+export const parseRoute = (hash: string): ParsedRoute | null => {
   const path = hash.replace(/^#/, '')
   if (path === '' || path === '/') return TITLE
-  if (path === '/stages') return SELECT
+  if (path === '/stages') return { screen: 'select' }
+
+  const stages = STAGES_PATH.exec(path)
+  if (stages) return { screen: 'select', world: Number(stages[1]) }
 
   const play = PLAY_PATH.exec(path)
   return play ? { screen: 'play', stageId: play[1] } : null
@@ -17,14 +30,28 @@ export const parseRoute = (hash: string): Route | null => {
 
 export const hashOf = (route: Route) => {
   if (route.screen === 'play') return `#/play/${route.stageId}`
-  return route.screen === 'select' ? '#/stages' : '#/'
+  return route.screen === 'select' ? `#/stages/${route.world}` : '#/'
 }
 
-// 모르는 주소는 타이틀로 보내고 아직 열리지 않은 스테이지는 스테이지 선택으로 보낸다
-export const resolveRoute = (hash: string, canPlay: (stageId: string) => boolean): Route => {
+// 모르는 주소는 타이틀로 보내고 없는 월드와 아직 열리지 않은 스테이지는 진행 중인 월드로 보낸다
+export const resolveRoute = (
+  hash: string,
+  { canPlay, worlds, currentWorld }: RouteContext,
+): Route => {
   const route = parseRoute(hash)
   if (!route) return TITLE
-  return route.screen === 'play' && !canPlay(route.stageId) ? SELECT : route
+
+  if (route.screen === 'select') {
+    const { world } = route
+    return {
+      screen: 'select',
+      world: world !== undefined && worlds.includes(world) ? world : currentWorld,
+    }
+  }
+
+  return route.screen === 'play' && !canPlay(route.stageId)
+    ? { screen: 'select', world: currentWorld }
+    : route
 }
 
 export const goTo = (route: Route) => {

@@ -8,8 +8,8 @@ describe('documentTitle', () => {
   })
 
   it('스테이지 선택은 고른 언어를 따른다', () => {
-    expect(documentTitle({ screen: 'select' }, 'ko')).toBe('Cubound — 스테이지 선택')
-    expect(documentTitle({ screen: 'select' }, 'en')).toBe('Cubound — Stages')
+    expect(documentTitle({ screen: 'select', world: 1 }, 'ko')).toBe('Cubound — 스테이지 선택')
+    expect(documentTitle({ screen: 'select', world: 1 }, 'en')).toBe('Cubound — Stages')
   })
 
   it('스테이지는 두 자리 번호와 이름을 함께 쓴다', () => {

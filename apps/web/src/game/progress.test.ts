@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   EMPTY_PROGRESS,
   isUnlocked,
+  isWorldUnlocked,
   migrateProgress,
   recordClear,
   shouldShowGuide,
@@ -68,6 +69,25 @@ describe('isUnlocked', () => {
 
   it('목록에 없는 스테이지는 잠겨 있다', () => {
     expect(isUnlocked(EMPTY_PROGRESS, IDS, '1-9')).toBe(false)
+  })
+})
+
+describe('isWorldUnlocked', () => {
+  it('첫 월드는 기록이 없어도 열려 있다', () => {
+    expect(isWorldUnlocked(EMPTY_PROGRESS, undefined)).toBe(true)
+  })
+
+  it('앞 월드의 마지막 스테이지를 클리어하면 열린다', () => {
+    const progress = recordClear(EMPTY_PROGRESS, '1-10', 40, 20)
+
+    expect(isWorldUnlocked(progress, '1-10')).toBe(true)
+  })
+
+  it('앞 월드의 마지막 스테이지가 남아 있으면 잠겨 있다', () => {
+    const progress = recordClear(EMPTY_PROGRESS, '1-9', 40, 20)
+
+    expect(isWorldUnlocked(progress, '1-10')).toBe(false)
+    expect(isWorldUnlocked(EMPTY_PROGRESS, '1-10')).toBe(false)
   })
 })
 

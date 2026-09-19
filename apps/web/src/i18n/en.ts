@@ -7,6 +7,9 @@ export const en = {
   'error.reload': 'Reload',
 
   'select.back': 'Back',
+  'select.previousWorld': 'Previous world',
+  'select.nextWorld': 'Next world',
+  'select.locked': 'Clear World {n} to unlock',
 
   'play.guide': 'Show guide again',
   'play.restart': 'Restart (R)',

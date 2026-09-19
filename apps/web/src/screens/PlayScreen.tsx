@@ -53,7 +53,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const outOfMoves = left === 0 && !game?.cleared
 
   const handleNext = () => goTo({ screen: 'play', stageId: nextId })
-  const handleSelect = () => goTo({ screen: 'select' })
+  const handleSelect = () => goTo({ screen: 'select', world })
   // 포커스가 남으면 Enter나 Space로 가이드가 다시 열려서 버튼 포커스를 뺀다
   const handleOpenGuide = (e: MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.blur()
@@ -99,13 +99,13 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
       } else if (isRestartKey(e.key)) {
         restart()
       } else if (e.key === 'Escape' && guideStep === null) {
-        goTo({ screen: 'select' })
+        goTo({ screen: 'select', world })
       }
     }
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [move, restart, guideStep])
+  }, [move, restart, guideStep, world])
 
   return (
     <main

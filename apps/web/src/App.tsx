@@ -1,29 +1,42 @@
 import { AnimatePresence, MotionConfig, motion } from 'motion/react'
 import { useEffect } from 'react'
 
-import { isUnlocked } from '@/game/progress'
+import { isUnlocked, isWorldUnlocked } from '@/game/progress'
 import { hashOf } from '@/platform/route'
 import { documentTitle } from '@/platform/title'
 import { useRoute } from '@/platform/useRoute'
 import PlayScreen from '@/screens/PlayScreen'
 import StageSelectScreen from '@/screens/StageSelectScreen'
 import TitleScreen from '@/screens/TitleScreen'
-import { STAGES, parseStageId, stageIdsOf } from '@/stages'
+import {
+  STAGES,
+  WORLDS,
+  currentWorld,
+  parseStageId,
+  stageIdsOf,
+  worldUnlockStageId,
+} from '@/stages'
 import { useGameStore } from '@/store/gameStore'
 import { useSettingsStore } from '@/store/settingsStore'
 
 const App = () => {
   const progress = useGameStore((s) => s.progress)
   const language = useSettingsStore((s) => s.language)
-  // 없는 스테이지와 아직 열리지 않은 스테이지는 주소로 들어와도 열지 않는다
-  const canPlay = (stageId: string) =>
-    stageId in STAGES && isUnlocked(progress, stageIdsOf(parseStageId(stageId).world), stageId)
-  const route = useRoute(canPlay)
+  // 없는 스테이지, 잠긴 월드, 잠긴 스테이지는 주소로 들어와도 열지 않는다
+  const canPlay = (stageId: string) => {
+    const { world } = parseStageId(stageId)
+    return (
+      stageId in STAGES &&
+      isWorldUnlocked(progress, worldUnlockStageId(world)) &&
+      isUnlocked(progress, stageIdsOf(world), stageId)
+    )
+  }
+  const route = useRoute({ canPlay, worlds: WORLDS, currentWorld: currentWorld(progress) })
   const screen =
     route.screen === 'play' ? (
       <PlayScreen stageId={route.stageId} />
     ) : route.screen === 'select' ? (
-      <StageSelectScreen />
+      <StageSelectScreen world={route.world} />
     ) : (
       <TitleScreen />
     )

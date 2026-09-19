@@ -4,6 +4,7 @@ const VARIANTS = {
   primary: 'h-14 rounded-2xl bg-ink px-8 text-lg text-base-bg hover:bg-ink/90',
   secondary: 'h-14 rounded-2xl border px-3 text-lg sm:px-6',
   icon: 'size-11 shrink-0 rounded-[13px] border text-lg',
+  ghost: 'size-11 shrink-0 rounded-[13px] text-lg',
 }
 
 const TONES = {

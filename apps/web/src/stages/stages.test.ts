@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { WORLDS } from '.'
+import { WORLDS, parseStageId } from '.'
 import { solve } from '@/game/solver'
 import type { Stage } from '@/game/types'
 import { validateStage } from '@/game/validate'
@@ -35,6 +35,10 @@ describe('스테이지 데이터', () => {
     const keys = [stageTextKey(stage.id), ...(stage.guides ?? []).map((g) => `guide.${g.id}`)]
 
     expect(keys.filter((key) => !(key in en))).toEqual([])
+  })
+
+  it.each(STAGES)('%s의 월드가 월드 목록에 있다', (_, stage) => {
+    expect(WORLDS).toContain(parseStageId(stage.id).world)
   })
 
   it('모든 월드 이름이 사전에 있다', () => {

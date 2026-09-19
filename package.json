@@ -14,7 +14,9 @@
     "format:check": "prettier --check .",
     "prepare": "husky",
     "e2e": "pnpm --filter @cubound/web e2e",
-    "shot": "pnpm --filter @cubound/web shot"
+    "shot": "pnpm --filter @cubound/web shot",
+    "shot:stages": "pnpm --filter @cubound/web shot:stages",
+    "stage:check": "pnpm --filter @cubound/web stage:check"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
