@@ -46,7 +46,16 @@ const secondsOf = (event: PathEvent) =>
       )
     : SECONDS[event.type]
 
-const totalSeconds = (path: PathEvent[]) => path.reduce((sum, event) => sum + secondsOf(event), 0)
+// 기다리는 구간이 섞일 수 있어 길이를 이벤트와 따로 둔다
+interface Segment {
+  event: PathEvent
+  seconds: number
+}
+
+const segmentsOf = (path: PathEvent[]): Segment[] =>
+  path.map((event) => ({ event, seconds: secondsOf(event) }))
+
+const totalSeconds = (segments: Segment[]) => segments.reduce((sum, s) => sum + s.seconds, 0)
 
 const playerPath = (events: GameEvent[]) =>
   events.filter(
@@ -62,11 +71,46 @@ const boxPath = (events: GameEvent[]) =>
     (e): e is PathEvent => e.type === 'pushed' || (e.type === 'slid' && e.subject === 'box'),
   )
 
+const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y
+
+// 상자가 멈추면서 그 칸을 메우거나 아래층으로 떨어지는 마지막 구간
+const boxLanding = (events: GameEvent[]) => {
+  const landing = boxPath(events).at(-1)
+  return landing?.type === 'pushed' && landing.result !== 'slid' ? landing : null
+}
+
+// 큐브가 가는 마지막 한 칸. 여러 칸 미끄러졌으면 그 앞에서 끊는다
+const lastTile = (event: PathEvent): { before: PathEvent | null; tile: PathEvent } => {
+  const cells = Math.abs(event.to.x - event.from.x) + Math.abs(event.to.y - event.from.y)
+  if (event.type !== 'slid' || cells < 2) return { before: null, tile: event }
+
+  const edge = {
+    x: event.to.x - Math.sign(event.to.x - event.from.x),
+    y: event.to.y - Math.sign(event.to.y - event.from.y),
+  }
+  return { before: { ...event, to: edge }, tile: { ...event, from: edge } }
+}
+
+// 상자가 메우는 중인 칸에 큐브가 올라서면 빈 공간 위에 뜬다. 메우기가 끝난 뒤에 마지막 칸을 간다
+const playerSegments = (events: GameEvent[]): Segment[] => {
+  const path = playerPath(events)
+  const landing = boxLanding(events)
+  const last = path.at(-1)
+  if (!landing || !last || !same(last.to, landing.to)) return segmentsOf(path)
+
+  const { before, tile } = lastTile(last)
+  const kept = segmentsOf([...path.slice(0, -1), ...(before ? [before] : [])])
+  const wait = Math.max(0, totalSeconds(segmentsOf(boxPath(events))) - totalSeconds(kept))
+
+  const hold: PathEvent = { type: 'slid', subject: 'player', from: tile.from, to: tile.from }
+  return [...kept, { event: hold, seconds: wait }, segmentsOf([tile])[0]]
+}
+
 export const durationOf = (events: GameEvent[]) =>
   Math.max(
     0,
-    totalSeconds(playerPath(events)),
-    totalSeconds(boxPath(events)),
+    totalSeconds(playerSegments(events)),
+    totalSeconds(segmentsOf(boxPath(events))),
     ...events.map((e) => (e.type === 'blocked' || e.type === 'placed' ? SECONDS[e.type] : 0)),
   )
 
@@ -81,13 +125,12 @@ interface Step {
 }
 
 // 경과 시간이 들어 있는 구간. 큐브와 상자가 각자 제 길이에 맞춰 늘어나 한 이동 안에서 같이 끝난다
-const stepAt = (path: PathEvent[], seconds: number, chain: Chain): Step | null => {
+const stepAt = (segments: Segment[], seconds: number, chain: Chain): Step | null => {
   let start = 0
-  for (const [index, event] of path.entries()) {
-    const span = secondsOf(event)
-    const last = index === path.length - 1
+  for (const [index, { event, seconds: span }] of segments.entries()) {
+    const last = index === segments.length - 1
     if (seconds < start + span || last) {
-      const local = Math.min(1, Math.max(0, (seconds - start) / span))
+      const local = span === 0 ? 1 : Math.min(1, Math.max(0, (seconds - start) / span))
       return {
         event,
         index,
@@ -131,11 +174,13 @@ export const playerFrame = (
   }
   if (t >= 1) return still
 
-  const path = playerPath(events)
-  const step = stepAt(path, t * totalSeconds(path), slideChain(events, chain))
+  const segments = playerSegments(events)
+  const step = stepAt(segments, t * totalSeconds(segments), slideChain(events, chain))
   if (prev && step) {
     const { event, index, p } = step
-    const fromLevel = path.slice(0, index).reduce(levelAfter, standHeight(prev, prev.player))
+    const fromLevel = segments
+      .slice(0, index)
+      .reduce((level, s) => levelAfter(level, s.event), standHeight(prev, prev.player))
     const toLevel = levelAfter(fromLevel, event)
     const level =
       event.type === 'fell'
@@ -189,8 +234,13 @@ export const movingBox = (
   chain: Chain = NO_CHAIN,
 ): BoxFrame | null => {
   const path = boxPath(events)
-  const step = stepAt(path, t * totalSeconds(path), slideChain(events, chain))
-  if (!prev || t >= 1 || !step) return null
+  const segments = segmentsOf(path)
+  // 상자가 제자리에 앉으면 바로 사라져 메운 바닥이 드러난다. 큐브는 그 뒤에 그 칸으로 간다
+  const elapsed = t * durationOf(events)
+  if (!prev || elapsed >= totalSeconds(segments)) return null
+
+  const step = stepAt(segments, elapsed, slideChain(events, chain))
+  if (!step) return null
 
   const { event, index, p } = step
   const start = prev.heights[path[0].from.y][path[0].from.x]
