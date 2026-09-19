@@ -2,6 +2,7 @@ import type { Texts } from './en'
 
 export const ko: Partial<Texts> = {
   'title.start': '시작',
+  'title.stages': '스테이지 선택',
 
   'tab.stages': '스테이지 선택',
 

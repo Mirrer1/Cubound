@@ -1,5 +1,6 @@
 export const en = {
   'title.start': 'Start',
+  'title.stages': 'Select stage',
 
   'tab.stages': 'Stages',
 

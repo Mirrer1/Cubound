@@ -5,6 +5,7 @@ const VARIANTS = {
   secondary: 'h-14 rounded-2xl border px-3 text-lg sm:px-6',
   icon: 'size-11 shrink-0 rounded-[13px] border text-lg',
   ghost: 'size-11 shrink-0 rounded-[13px] text-lg',
+  text: 'h-11 rounded-[13px] px-4 text-sm text-mute',
 }
 
 const TONES = {

@@ -3,8 +3,8 @@ import LanguageMenu from '@/components/ui/LanguageMenu'
 import Logo from '@/components/ui/Logo'
 import TitleScene from '@/components/ui/TitleScene'
 import { useText } from '@/i18n/useText'
-import { goTo } from '@/platform/route'
-import { currentWorld } from '@/stages'
+import { goTo, showAll } from '@/platform/route'
+import { WORLDS, currentWorld } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
 
 const TitleScreen = () => {
@@ -12,6 +12,11 @@ const TitleScreen = () => {
   const t = useText()
 
   const handleStart = () => goTo({ screen: 'select', world: currentWorld(progress) })
+  // 순서대로 깨지 않고 아무 판이나 골라 본다
+  const handleSelect = () => {
+    showAll()
+    goTo({ screen: 'select', world: WORLDS[0] })
+  }
 
   return (
     <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
@@ -34,6 +39,9 @@ const TitleScreen = () => {
         <div className="relative flex w-full flex-col items-center gap-4 panel-pad sm:mt-10 sm:w-auto sm:p-0">
           <Button variant="primary" className="w-full sm:w-52" onClick={handleStart}>
             {t('title.start')}
+          </Button>
+          <Button variant="text" onClick={handleSelect}>
+            {t('title.stages')}
           </Button>
           <span className="font-mono text-[11px] tracking-[0.25em] text-faint sm:hidden">
             SWIPE TO MOVE

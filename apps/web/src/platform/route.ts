@@ -12,8 +12,15 @@ export interface RouteContext {
 
 const TITLE: Route = { screen: 'title' }
 
-// 포트폴리오로 보여줄 때 쓰는 주소. 잠금을 풀어 아무 스테이지나 바로 열어 본다
-export const showingAll = () => new URLSearchParams(window.location.search).has('all')
+// 잠금 없이 아무 스테이지나 열어 보는 중인지. 주소에 남겨 새로고침해도 유지된다
+let all: boolean | undefined
+
+export const showingAll = () => (all ??= new URLSearchParams(window.location.search).has('all'))
+
+export const showAll = () => {
+  all = true
+  window.history.replaceState(null, '', `?all${window.location.hash}`)
+}
 
 const STAGES_PATH = /^\/stages\/(\d+)$/
 const PLAY_PATH = /^\/play\/(\d+-\d+)$/
