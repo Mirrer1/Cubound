@@ -2,7 +2,7 @@ import { AnimatePresence, MotionConfig, motion } from 'motion/react'
 import { useEffect } from 'react'
 
 import { isUnlocked, isWorldUnlocked } from '@/game/progress'
-import { hashOf } from '@/platform/route'
+import { hashOf, showingAll } from '@/platform/route'
 import { documentTitle } from '@/platform/title'
 import { useRoute } from '@/platform/useRoute'
 import PlayScreen from '@/screens/PlayScreen'
@@ -27,8 +27,9 @@ const App = () => {
     const { world } = parseStageId(stageId)
     return (
       stageId in STAGES &&
-      isWorldUnlocked(progress, worldUnlockStageId(world)) &&
-      isUnlocked(progress, stageIdsOf(world), stageId)
+      (showingAll() ||
+        (isWorldUnlocked(progress, worldUnlockStageId(world)) &&
+          isUnlocked(progress, stageIdsOf(world), stageId)))
     )
   }
   const route = useRoute({ canPlay, worlds: WORLDS, currentWorld: currentWorld(progress) })

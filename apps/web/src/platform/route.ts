@@ -12,6 +12,9 @@ export interface RouteContext {
 
 const TITLE: Route = { screen: 'title' }
 
+// 포트폴리오로 보여줄 때 쓰는 주소. 잠금을 풀어 아무 스테이지나 바로 열어 본다
+export const showingAll = () => new URLSearchParams(window.location.search).has('all')
+
 const STAGES_PATH = /^\/stages\/(\d+)$/
 const PLAY_PATH = /^\/play\/(\d+-\d+)$/
 

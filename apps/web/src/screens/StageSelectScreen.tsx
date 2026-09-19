@@ -5,7 +5,7 @@ import StageCard, { type StageCardState } from '@/components/ui/StageCard'
 import { isUnlocked, isWorldUnlocked, totalStars } from '@/game/progress'
 import { worldTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
-import { goTo } from '@/platform/route'
+import { goTo, showingAll } from '@/platform/route'
 import { WORLDS, isBossStage, parseStageId, stageIdsOf, worldUnlockStageId } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
 
@@ -37,10 +37,12 @@ const StageSelectScreen = ({ world }: StageSelectScreenProps) => {
 
   const index = WORLDS.indexOf(world)
   const showArrows = WORLDS.length > 1
-  const unlocked = isWorldUnlocked(progress, worldUnlockStageId(world))
+  const all = showingAll()
+  const unlocked = all || isWorldUnlocked(progress, worldUnlockStageId(world))
   // 아직 열리지 않은 월드는 들어가 봐야 잠긴 카드뿐이라 이름부터 미리 보여주지 않는다
   const next = WORLDS[index + 1]
-  const nextOpen = next !== undefined && isWorldUnlocked(progress, worldUnlockStageId(next))
+  const nextOpen =
+    next !== undefined && (all || isWorldUnlocked(progress, worldUnlockStageId(next)))
   const ids = stageIdsOf(world)
   const cards = ids.map((id) => {
     const record = progress.stages[id]
@@ -48,7 +50,7 @@ const StageSelectScreen = ({ world }: StageSelectScreenProps) => {
       ? 'locked'
       : record
         ? 'cleared'
-        : isUnlocked(progress, ids, id)
+        : all || isUnlocked(progress, ids, id)
           ? 'open'
           : 'locked'
 
