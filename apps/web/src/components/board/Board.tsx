@@ -11,7 +11,7 @@ import { useBoardAnimation } from './useBoardAnimation'
 import { useCamera } from './useCamera'
 import { TILE, toScreen } from '@/game/iso'
 import { occludingCells } from '@/game/occlusion'
-import { isDoorOpen, standHeight } from '@/game/rules'
+import { isDoorOpen, isIce, standHeight } from '@/game/rules'
 import type { GameEvent, GameState, Point } from '@/game/types'
 
 interface BoardProps {
@@ -148,6 +148,7 @@ const Board = ({
             parity={(cell.p.x + cell.p.y) % 2 === 1}
             goal={same(cell.p, stage.goal)}
             filled={isFilled}
+            ice={isIce(game, cell.p)}
             hidden={isFilled && box !== null && same(box.to, cell.p)}
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}

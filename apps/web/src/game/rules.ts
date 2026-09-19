@@ -47,7 +47,7 @@ export const isDoorOpen = (state: GameState, id: string) =>
 const isClosedDoor = (state: GameState, p: Point) =>
   doors(state.stage).some((door) => same(door, p) && !isDoorOpen(state, door.id))
 
-const isIce = (state: GameState, { x, y }: Point) => state.stage.ice?.[y]?.[x] === '#'
+export const isIce = (state: GameState, { x, y }: Point) => state.stage.ice?.[y]?.[x] === '#'
 
 // 상자 위에 올라선 큐브는 얼음 바닥을 밟지 않은 것으로 본다
 const onIce = (state: GameState, p: Point) => isIce(state, p) && !hasBox(state, p)

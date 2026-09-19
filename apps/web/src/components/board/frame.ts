@@ -9,6 +9,8 @@ const SECONDS = {
   blocked: 0.2,
   placed: 0.22,
 }
+// 미끄러짐은 칸 수에 비례하되 걷기보다 빠르고 길어도 max를 넘지 않는다
+const SLIDE = { perCell: 0.14, max: 0.48 }
 const TILT = 0.24
 
 const easeIn = (t: number) => t * t
@@ -33,11 +35,69 @@ export const moveEase = (t: number, chain: Chain) =>
 export const directionBetween = (from: Point, to: Point): Direction =>
   to.x > from.x ? 'right' : to.x < from.x ? 'left' : to.y > from.y ? 'down' : 'up'
 
+// 미끄러지면 한 이동이 여러 구간으로 이어진다
+type PathEvent = Extract<GameEvent, { type: 'moved' | 'fell' | 'climbed' | 'slid' | 'pushed' }>
+
+const secondsOf = (event: PathEvent) =>
+  event.type === 'slid'
+    ? Math.min(
+        SLIDE.max,
+        SLIDE.perCell * (Math.abs(event.to.x - event.from.x) + Math.abs(event.to.y - event.from.y)),
+      )
+    : SECONDS[event.type]
+
+const totalSeconds = (path: PathEvent[]) => path.reduce((sum, event) => sum + secondsOf(event), 0)
+
+const playerPath = (events: GameEvent[]) =>
+  events.filter(
+    (e): e is PathEvent =>
+      e.type === 'moved' ||
+      e.type === 'fell' ||
+      e.type === 'climbed' ||
+      (e.type === 'slid' && e.subject === 'player'),
+  )
+
+const boxPath = (events: GameEvent[]) =>
+  events.filter(
+    (e): e is PathEvent => e.type === 'pushed' || (e.type === 'slid' && e.subject === 'box'),
+  )
+
 export const durationOf = (events: GameEvent[]) =>
   Math.max(
     0,
-    ...events.map((e) => (e.type in SECONDS ? SECONDS[e.type as keyof typeof SECONDS] : 0)),
+    totalSeconds(playerPath(events)),
+    totalSeconds(boxPath(events)),
+    ...events.map((e) => (e.type === 'blocked' || e.type === 'placed' ? SECONDS[e.type] : 0)),
   )
+
+// 미끄러져 멈춘 이동은 다음 입력과 이어 붙이지 않는다
+const slideChain = (events: GameEvent[], chain: Chain): Chain =>
+  events.some((e) => e.type === 'slid') ? { in: chain.in, out: false } : chain
+
+interface Step {
+  event: PathEvent
+  index: number
+  p: number
+}
+
+// 경과 시간이 들어 있는 구간. 구간 사이는 속도를 이어 붙이고 마지막 구간 뒤는 끝에 머문다
+const stepAt = (path: PathEvent[], seconds: number, chain: Chain): Step | null => {
+  let start = 0
+  for (const [index, event] of path.entries()) {
+    const span = secondsOf(event)
+    const last = index === path.length - 1
+    if (seconds < start + span || last) {
+      const local = Math.min(1, Math.max(0, (seconds - start) / span))
+      return {
+        event,
+        index,
+        p: moveEase(local, { in: index > 0 || chain.in, out: !last || chain.out }),
+      }
+    }
+    start += span
+  }
+  return null
+}
 
 export interface CubeFrame {
   x: number
@@ -48,9 +108,8 @@ export interface CubeFrame {
   cell: Point // 그리기 순서를 맞출 칸
 }
 
-const movementOf = (events: GameEvent[]) =>
-  events.find((e) => e.type === 'moved' || e.type === 'fell' || e.type === 'climbed') as
-    Extract<GameEvent, { type: 'moved' | 'fell' | 'climbed' }> | undefined
+const levelAfter = (level: number, event: PathEvent) =>
+  event.type === 'fell' ? level - event.drop : event.type === 'climbed' ? level + 1 : level
 
 // 앞쪽 칸에 그려야 뒤쪽 칸 블록에 덮이지 않는다
 const frontOf = (a: Point, b: Point) => (a.x + a.y >= b.x + b.y ? a : b)
@@ -72,27 +131,29 @@ export const playerFrame = (
   }
   if (t >= 1) return still
 
-  const movement = movementOf(events)
-  if (prev && movement) {
-    const p = moveEase(t, chain)
-    const fromLevel = standHeight(prev, movement.from)
-    const toLevel = standHeight(game, movement.to)
+  const path = playerPath(events)
+  const step = stepAt(path, t * durationOf(events), slideChain(events, chain))
+  if (prev && step) {
+    const { event, index, p } = step
+    const fromLevel = path.slice(0, index).reduce(levelAfter, standHeight(prev, prev.player))
+    const toLevel = levelAfter(fromLevel, event)
     const level =
-      movement.type === 'fell'
+      event.type === 'fell'
         ? p < 0.55
           ? fromLevel
           : lerp(fromLevel, toLevel, easeIn((p - 0.55) / 0.45))
-        : movement.type === 'climbed'
+        : event.type === 'climbed'
           ? lerp(fromLevel, toLevel, easeOut(Math.min(1, p / 0.6)))
           : fromLevel
 
     return {
-      x: lerp(movement.from.x, movement.to.x, p),
-      y: lerp(movement.from.y, movement.to.y, p),
+      x: lerp(event.from.x, event.to.x, p),
+      y: lerp(event.from.y, event.to.y, p),
       level,
-      direction: directionBetween(movement.from, movement.to),
-      angle: (Math.PI / 2) * p,
-      cell: frontOf(movement.from, movement.to),
+      direction: directionBetween(event.from, event.to),
+      // 얼음 위에서는 구르지 않고 그대로 미끄러진다
+      angle: event.type === 'slid' ? 0 : (Math.PI / 2) * p,
+      cell: frontOf(event.from, event.to),
     }
   }
 
@@ -112,31 +173,40 @@ export interface BoxFrame {
   cell: Point
 }
 
+const boxLevelAfter = (prev: GameState, level: number, event: PathEvent) =>
+  event.type !== 'pushed'
+    ? level
+    : event.result === 'filled'
+      ? level - 1
+      : event.result === 'fell'
+        ? prev.heights[event.to.y][event.to.x]
+        : level
+
 export const movingBox = (
   prev: GameState | null,
   events: GameEvent[],
   t: number,
   chain: Chain = NO_CHAIN,
 ): BoxFrame | null => {
-  const push = events.find((e) => e.type === 'pushed')
-  if (!prev || t >= 1 || push?.type !== 'pushed') return null
+  const path = boxPath(events)
+  const step = stepAt(path, t * durationOf(events), slideChain(events, chain))
+  if (!prev || t >= 1 || !step) return null
 
-  const p = moveEase(t, chain)
-  const fromLevel = prev.heights[push.from.y][push.from.x]
-  const toLevel =
-    push.result === 'filled'
-      ? fromLevel - 1
-      : push.result === 'fell'
-        ? prev.heights[push.to.y][push.to.x]
-        : fromLevel
-  const level = p < 0.6 ? fromLevel : lerp(fromLevel, toLevel, easeIn((p - 0.6) / 0.4))
+  const { event, index, p } = step
+  const start = prev.heights[path[0].from.y][path[0].from.x]
+  const fromLevel = path
+    .slice(0, index)
+    .reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
+  const toLevel = boxLevelAfter(prev, fromLevel, event)
+  const level =
+    event.type === 'slid' || p < 0.6 ? fromLevel : lerp(fromLevel, toLevel, easeIn((p - 0.6) / 0.4))
 
   return {
-    x: lerp(push.from.x, push.to.x, p),
-    y: lerp(push.from.y, push.to.y, p),
+    x: lerp(event.from.x, event.to.x, p),
+    y: lerp(event.from.y, event.to.y, p),
     level,
-    to: push.to,
-    cell: frontOf(push.from, push.to),
+    to: path[path.length - 1].to,
+    cell: frontOf(event.from, event.to),
   }
 }
 

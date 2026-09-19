@@ -14,6 +14,17 @@ const STAGE: Stage = {
   entities: [],
 }
 
+const ICE_STAGE: Stage = {
+  version: 1,
+  id: 'test-ice',
+  name: '얼음',
+  heights: [[0, 0, 0, 0, 0]],
+  ice: ['.###.'],
+  start: { x: 0, y: 0 },
+  goal: { x: 4, y: 0 },
+  entities: [],
+}
+
 describe('playerFrame', () => {
   it('중간 시점에는 두 칸 사이에서 굴러가는 중이다', () => {
     const prev = createState(STAGE)
@@ -69,6 +80,97 @@ describe('durationOf', () => {
       ]),
     ).toBe(0.24)
     expect(durationOf([])).toBe(0)
+  })
+
+  it('미끄러지면 첫 칸 뒤에 미끄러진 칸 수만큼 시간이 더 붙는다', () => {
+    const prev = createState(ICE_STAGE)
+    const { events } = move(prev, 'right')
+
+    expect(events.some((e) => e.type === 'slid')).toBe(true)
+    expect(durationOf(events)).toBeCloseTo(0.24 + 0.14 * 3)
+  })
+
+  it('한 칸 미끄러지는 시간이 한 칸 걷는 시간보다 짧다', () => {
+    const stage: Stage = { ...ICE_STAGE, ice: ['.#...'] }
+    const prev = createState(stage)
+    const { events } = move(prev, 'right')
+
+    expect(durationOf(events)).toBeLessThan(0.24 * 2)
+  })
+})
+
+describe('playerFrame 미끄러짐', () => {
+  it('첫 칸은 굴러 들어가고 미끄러지는 동안에는 구르지 않는다', () => {
+    const prev = createState(ICE_STAGE)
+    const { state, events } = move(prev, 'right')
+    const rolling = playerFrame(prev, state, events, 0.15)
+    const sliding = playerFrame(prev, state, events, 0.6)
+
+    expect(rolling.angle).toBeGreaterThan(0)
+    expect(rolling.x).toBeLessThan(1)
+    expect(sliding.angle).toBe(0)
+    expect(sliding.x).toBeGreaterThan(1)
+  })
+
+  it('미끄러지는 동안 앞으로만 가고 마지막 칸에서 멈춘다', () => {
+    const prev = createState(ICE_STAGE)
+    const { state, events } = move(prev, 'right')
+    let last = -1
+    for (let t = 0; t < 1; t += 0.02) {
+      const frame = playerFrame(prev, state, events, t)
+      expect(frame.x).toBeGreaterThanOrEqual(last)
+      last = frame.x
+    }
+
+    expect(playerFrame(prev, state, events, 1)).toMatchObject({ x: 4, y: 0 })
+  })
+
+  it('끝에서 감속한다', () => {
+    const prev = createState(ICE_STAGE)
+    const { state, events } = move(prev, 'right')
+    const speed = (t: number) =>
+      (playerFrame(prev, state, events, t + 0.01).x - playerFrame(prev, state, events, t).x) / 0.01
+
+    expect(speed(0.98)).toBeLessThan(speed(0.7))
+  })
+
+  it('미끄러지다 낮은 칸으로 떨어지면 마지막에 높이가 낮아진다', () => {
+    const stage: Stage = {
+      ...ICE_STAGE,
+      heights: [[1, 1, 1, 1, 0, 0]],
+      ice: ['.###..'],
+      goal: { x: 5, y: 0 },
+    }
+    const prev = createState(stage)
+    const { state, events } = move(prev, 'right')
+
+    expect(playerFrame(prev, state, events, 0.5).level).toBe(1)
+    expect(playerFrame(prev, state, events, 1)).toMatchObject({ x: 4, y: 0, level: 0 })
+  })
+
+  it('큐브가 지나는 칸보다 앞쪽 칸에 그린다', () => {
+    const prev = createState(ICE_STAGE)
+    const { state, events } = move(prev, 'right')
+
+    expect(playerFrame(prev, state, events, 0.6).cell).toEqual({ x: 4, y: 0 })
+  })
+})
+
+describe('movingBox 미끄러짐', () => {
+  it('밀린 상자가 얼음 위를 이어서 미끄러진다', () => {
+    const stage: Stage = {
+      ...ICE_STAGE,
+      heights: [[0, 0, 0, 0, 0, 0, 0]],
+      ice: ['..###..'],
+      goal: { x: 6, y: 0 },
+      entities: [{ type: 'box', x: 1, y: 0 }],
+    }
+    const prev = createState(stage)
+    const { events } = move(prev, 'right')
+
+    expect(movingBox(prev, events, 0.2)?.x).toBeLessThanOrEqual(2)
+    expect(movingBox(prev, events, 0.9)?.x).toBeGreaterThan(3)
+    expect(movingBox(prev, events, 0.9)?.to).toEqual({ x: 5, y: 0 })
   })
 })
 

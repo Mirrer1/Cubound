@@ -7,6 +7,16 @@ import { darken, shade, tint } from './shade'
 import { TILE, blockFaces } from '@/game/iso'
 import type { Direction } from '@/game/types'
 
+const GLOSS = { pull: 0.175, span: 0.2 }
+
+// 왼쪽 위 모서리와 나란하게 가운데 쪽으로 당겨 놓은 얼음 윗면의 광택선
+const glossLine = (x: number, y: number) => ({
+  x1: x - TILE.width * (GLOSS.pull + GLOSS.span),
+  y1: y - (TILE.width / 2) * (GLOSS.pull - GLOSS.span),
+  x2: x - TILE.width * (GLOSS.pull - GLOSS.span),
+  y2: y - (TILE.width / 2) * (GLOSS.pull + GLOSS.span),
+})
+
 interface BoardCellProps {
   x: number
   y: number
@@ -14,6 +24,7 @@ interface BoardCellProps {
   parity: boolean
   goal: boolean
   filled: boolean
+  ice: boolean
   hidden: boolean // 상자가 메우는 중인 칸
   faded: boolean
   entity: 'switch' | 'door' | null
@@ -33,6 +44,7 @@ const BoardCell = ({
   parity,
   goal,
   filled,
+  ice,
   hidden,
   faded,
   entity,
@@ -45,6 +57,8 @@ const BoardCell = ({
   children,
 }: BoardCellProps) => {
   const floorTop = parity ? darken('floor-top', 2.8) : 'var(--color-floor-top)'
+  const icy = ice && !goal && !filled
+  const gloss = glossLine(x, y)
   const ladders = leaning
     ? leaning.split('|').map((item) => {
         const [direction, opacity] = item.split(':')
@@ -62,11 +76,42 @@ const BoardCell = ({
               y={y}
               width={TILE.width}
               depth={h * TILE.layer + TILE.lip}
-              top={goal ? 'var(--color-goal)' : filled ? shade('tool', 'top') : floorTop}
-              left={filled ? shade('tool', 'left') : 'var(--color-floor-left)'}
-              right={filled ? shade('tool', 'right') : 'var(--color-floor-right)'}
-              stroke={goal ? undefined : darken('floor-top', 6)}
+              top={
+                goal
+                  ? 'var(--color-goal)'
+                  : filled
+                    ? shade('tool', 'top')
+                    : icy
+                      ? shade('ice', 'top')
+                      : floorTop
+              }
+              left={
+                filled
+                  ? shade('tool', 'left')
+                  : icy
+                    ? shade('ice', 'left')
+                    : 'var(--color-floor-left)'
+              }
+              right={
+                filled
+                  ? shade('tool', 'right')
+                  : icy
+                    ? shade('ice', 'right')
+                    : 'var(--color-floor-right)'
+              }
+              stroke={goal ? undefined : icy ? darken('ice', 10) : darken('floor-top', 6)}
             />
+            {icy && (
+              <line
+                x1={gloss.x1}
+                y1={gloss.y1}
+                x2={gloss.x2}
+                y2={gloss.y2}
+                stroke="var(--color-ice-gloss)"
+                strokeWidth={2.2}
+                strokeLinecap="round"
+              />
+            )}
             {goal && (
               <>
                 <polygon
