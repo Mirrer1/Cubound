@@ -41,6 +41,7 @@ export const en = {
     'Set the ladder against a tile one level up, then climb. Roll back down to pick it up again',
   'guide.moveLimit': 'You have {n} moves to get home',
   'guide.ice': 'You slide across ice until something stops you',
+  'guide.lift': 'The switch lifts the plate while something holds it down',
 
   'world.1': 'Land of Low Steps',
   'stage.1-1': 'First Steps',
@@ -59,6 +60,8 @@ export const en = {
   'stage.2-2': 'The Sled',
   'stage.2-3': 'The Ledge',
   'stage.2-4': 'The Stopper',
+  'stage.2-5': 'The Ice Wall',
+  'stage.2-6': 'The Step Up',
 }
 
 export type Texts = typeof en
