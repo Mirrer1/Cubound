@@ -176,8 +176,8 @@ const STAGES: Record<string, StageShots> = {
     },
   },
   '2-1': {
-    solution: 'right down left down left up right down right down',
-    shots: { 0: 'start', 1: 'long-slide', 6: 'turn-up', 9: 'goal-lined-up', 10: 'cleared' },
+    solution: 'right down left down right down down right',
+    shots: { 0: 'start', 1: 'long-slide', 3: 'on-ground', 7: 'goal-lined-up', 8: 'cleared' },
     guide: ['guide-ice'],
   },
   '2-2': {
