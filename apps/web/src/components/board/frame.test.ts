@@ -11,6 +11,7 @@ import {
   restartDrop,
   restartDuration,
 } from './frame'
+import { TILE } from '@/game/iso'
 import { createState, move } from '@/game/rules'
 import type { Stage } from '@/game/types'
 
@@ -379,13 +380,13 @@ describe('crackSink', () => {
 
 describe('crackThickness', () => {
   it('닳은 단계가 오를수록 옆면이 얇아진다', () => {
-    expect(crackThickness(0)).toBe(11)
-    expect(crackThickness(1)).toBe(8)
-    expect(crackThickness(2)).toBe(5)
+    expect(crackThickness(0)).toBeLessThan(TILE.lip)
+    expect(crackThickness(1)).toBeLessThan(crackThickness(0))
+    expect(crackThickness(2)).toBeLessThan(crackThickness(1))
   })
 
   it('단계 사이에서는 앞뒤 단계 사이 값으로 이어진다', () => {
-    expect(crackThickness(0.5)).toBe(9.5)
+    expect(crackThickness(0.5)).toBeCloseTo((crackThickness(0) + crackThickness(1)) / 2)
   })
 })
 

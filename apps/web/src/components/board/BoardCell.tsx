@@ -4,7 +4,7 @@ import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
 import BoardLadder from './BoardLadder'
 import { crackThickness } from './frame'
-import { blend, checker, darken, shade, tint } from './shade'
+import { blend, checker, darken, dim, shade, tint } from './shade'
 import { TILE, blockFaces, isoDelta } from '@/game/iso'
 import type { Direction } from '@/game/types'
 
@@ -16,35 +16,14 @@ const GLOSS_SPOTS: [number, number][] = [
   [-0.3, 0.04],
 ]
 
-// 닳으면 칸의 사분면이 한 단계 내려앉아 디딜 면이 좁아진다. 자리는 칸마다 어긋난다
-const NOTCH_QUADS: [number, number][][] = [
-  [
-    [0, 0],
-    [0, -0.5],
-    [0.5, -0.5],
-    [0.5, 0],
-  ],
-  [
-    [0, 0],
-    [0.5, 0],
-    [0.5, 0.5],
-    [0, 0.5],
-  ],
-  [
-    [0, 0],
-    [0, 0.5],
-    [-0.5, 0.5],
-    [-0.5, 0],
-  ],
-  [
-    [0, 0],
-    [-0.5, 0],
-    [-0.5, -0.5],
-    [0, -0.5],
-  ],
+// 닳으면 칸이 네 조각으로 갈라지고 밟힌 만큼 조각이 들린다. 들리는 자리는 칸마다 어긋난다
+const QUARTERS: [number, number][] = [
+  [-0.25, -0.25],
+  [0.25, -0.25],
+  [0.25, 0.25],
+  [-0.25, 0.25],
 ]
-const NOTCH = { drop: 7, dim: 13 }
-const NOTCHES = [0, 1]
+const QUARTER = { scale: 0.44, depth: 5, rise: 7 }
 
 // 무너질 때만 네 조각으로 갈라진다. 가만히 있을 때 갈라 두면 칸이 붙었을 때 줄눈처럼 보인다
 const SHARDS: [number, number][] = [
@@ -92,9 +71,6 @@ const spotPoints = (x: number, y: number, spots: [number, number][]) =>
       return `${x + d.x},${y + d.y}`
     })
     .join(' ')
-
-const notchPoints = (x: number, y: number, seed: number, index: number) =>
-  spotPoints(x, y + NOTCH.drop, NOTCH_QUADS[(seed + index) % 4])
 
 interface BoardCellProps {
   x: number
@@ -173,12 +149,20 @@ const BoardCell = ({
   const evenOdd = crack || (surface !== null && surface !== 'hole')
   const faces = evenOdd ? { ...plain, top: checker(plain.top, parity) } : plain
   const depth = crack ? crackThickness(crackStage) + h * TILE.layer : h * TILE.layer + TILE.lip
-  const notches = crack
-    ? NOTCHES.map((index) => ({
-        index,
-        opacity: clamp01(crackStage - index) * (1 - crackBroken),
-      })).filter((notch) => notch.opacity > 0)
-    : []
+  // 갈라짐은 한 번 밟은 뒤부터다. 무너지는 중에는 조각이 따로 날아간다
+  const split = crack && crackBroken === 0 ? clamp01(crackStage) : 0
+  const quarters =
+    split > 0
+      ? QUARTERS.map(([u, v], i) => {
+          const d = isoDelta(u, v)
+          const lifted = (i - crackSeed + 4) % 4 < Math.round(crackStage)
+          return {
+            key: i,
+            x: x + d.x * (1 + split * 0.08),
+            y: y + d.y * (1 + split * 0.08) - (lifted ? split * QUARTER.rise : 0),
+          }
+        })
+      : []
   const shards =
     crackBroken > 0
       ? SHARDS.map(([u, v], i) => {
@@ -229,7 +213,7 @@ const BoardCell = ({
                 y={y}
                 width={TILE.width}
                 depth={depth}
-                top={faces.top}
+                top={split > 0 ? dim(faces.top, 18) : faces.top}
                 left={faces.left}
                 right={faces.right}
               />
@@ -251,11 +235,16 @@ const BoardCell = ({
                 style={{ fill: 'var(--color-ice-gloss)' }}
               />
             )}
-            {notches.map(({ index, opacity }) => (
-              <polygon
-                key={index}
-                points={notchPoints(x, y, crackSeed, index)}
-                style={{ fill: darken('crack-chip', NOTCH.dim), opacity }}
+            {quarters.map((quarter) => (
+              <BoardBlock
+                key={quarter.key}
+                x={quarter.x}
+                y={quarter.y}
+                width={TILE.width * QUARTER.scale}
+                depth={QUARTER.depth}
+                top={faces.top}
+                left={faces.left}
+                right={faces.right}
               />
             ))}
             {goal &&
