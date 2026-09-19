@@ -44,6 +44,7 @@ export const ko: Partial<Texts> = {
   'guide.pushLimit': '상자는 {n}번만 밀 수 있어요. 얼음에 태워 보내요',
   'guide.ice': '얼음에서는 멈출 때까지 미끄러져요',
   'guide.lift': '스위치를 누르는 동안 발판이 올라가요',
+  'guide.crack': '밟고 지나간 칸은 금이 가고 곧 무너져요',
 
   'world.1': '낮은 계단의 땅',
   'stage.1-1': '첫걸음',
@@ -68,4 +69,9 @@ export const ko: Partial<Texts> = {
   'stage.2-8': '맞물림',
   'stage.2-9': '빙하',
   'stage.2-10': '눈보라',
+
+  'world.3': '무너지는 땅',
+  'stage.3-1': '금길',
+  'stage.3-2': '메움',
+  'stage.3-3': '외길',
 }

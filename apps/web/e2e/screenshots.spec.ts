@@ -306,6 +306,43 @@ const STAGES: Record<string, StageShots> = {
       36: 'cleared',
     },
   },
+  '3-1': {
+    solution:
+      'right right right left left left left left up up up right right right right right right right down',
+    guide: ['guide-crack'],
+    shots: {
+      0: 'start',
+      1: 'stepped-on-crack',
+      6: 'collapsed',
+      8: 'zone-changed',
+      13: 'ladder-leaning',
+      19: 'cleared',
+    },
+  },
+  '3-2': {
+    solution:
+      'right right right right right up up up up right right right right right right down down left left left left left left left',
+    shots: {
+      0: 'start',
+      5: 'fell-in-pit',
+      8: 'box-pushed-collapsed',
+      9: 'on-box',
+      16: 'zone-changed',
+      23: 'refilled-and-cleared',
+    },
+  },
+  '3-3': {
+    solution:
+      'right right down down left left down down right right right right right right left left down down down right right down down down left left left left up up right',
+    shots: {
+      0: 'start',
+      4: 'fell-in-pit',
+      8: 'ladder-taken',
+      13: 'crack-collapsed',
+      17: 'ladder-leaning',
+      31: 'cleared',
+    },
+  },
 }
 
 const stageNumber = (id: string) => String(Number(id.split('-')[1])).padStart(2, '0')

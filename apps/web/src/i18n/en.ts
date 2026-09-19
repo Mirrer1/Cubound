@@ -43,6 +43,7 @@ export const en = {
   'guide.pushLimit': 'You can push a box {n} times. Let the ice carry it',
   'guide.ice': 'You slide across ice until something stops you',
   'guide.lift': 'The switch lifts the plate while something holds it down',
+  'guide.crack': 'Tiles crack as you step off them, then fall away',
 
   'world.1': 'Land of Low Steps',
   'stage.1-1': 'First Steps',
@@ -67,6 +68,11 @@ export const en = {
   'stage.2-8': 'The Interlock',
   'stage.2-9': 'The Glacier',
   'stage.2-10': 'The Blizzard',
+
+  'world.3': 'Land of Crumbling Ground',
+  'stage.3-1': 'The Cracked Path',
+  'stage.3-2': 'The Patch',
+  'stage.3-3': 'The One Way',
 }
 
 export type Texts = typeof en
