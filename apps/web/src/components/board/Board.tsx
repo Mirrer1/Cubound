@@ -180,7 +180,7 @@ const Board = ({
         const goalEffect = same(cell.p, stage.goal) && game.cleared && !moving
         const droppingBox = dropping ? boxes.findIndex((b) => same(b, cell.p)) : -1
         const boxDrop = droppingBox >= 0 ? restartDrop(t, droppingBox + 1, boxes.length) : null
-        // 재시작하면 메운 칸은 제자리에서 사라지고 무너졌던 칸은 돌아온다
+        // 재시작하면 메운 칸은 제자리에서 사라지고 무너졌던 칸은 큐브와 같은 빠르기로 돌아온다
         const restored = dropping
           ? Math.sign(before.heights[cell.p.y][cell.p.x] - heights[cell.p.y][cell.p.x])
           : 0
@@ -209,7 +209,9 @@ const Board = ({
             switchDepth={lerp(pressed(before) ? 2 : 9, pressed(game) ? 2 : 9, progress)}
             doorDepth={lerp(doorDepth(before), doorDepth(game), progress)}
             box={has(boxes, cell.p) && !(box && same(box.to, cell.p)) && boxDrop === null}
-            blockOpacity={restored > 0 ? 1 - t : restored < 0 ? t : crumble.opacity}
+            blockOpacity={
+              restored > 0 ? 1 - t : restored < 0 ? (cubeDrop?.opacity ?? 1) : crumble.opacity
+            }
             flatLadder={flatLadder}
             leaning={leaning}
           >
