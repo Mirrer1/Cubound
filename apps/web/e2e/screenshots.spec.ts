@@ -356,6 +356,61 @@ const STAGES: Record<string, StageShots> = {
       18: 'cleared',
     },
   },
+  '3-5': {
+    solution:
+      'right up up left left left down down left left left left up up up up right left up up up',
+    shots: {
+      0: 'start',
+      4: 'box-bridge',
+      16: 'warped',
+      18: 'back-on-warp',
+      21: 'cleared',
+    },
+  },
+  '3-6': {
+    solution:
+      'right right up up right right right right right up up up up up up left left left left left left right down down',
+    shots: {
+      0: 'start',
+      4: 'crossed-cracks',
+      15: 'dropped-to-corridor',
+      19: 'pit-filled',
+      24: 'cleared',
+    },
+  },
+  '3-7': {
+    solution:
+      'left left left up up up right right right right down right right up left up left up right down down down left left left left left up up up',
+    shots: {
+      0: 'start',
+      10: 'on-box',
+      18: 'sliding-on-ice',
+      19: 'warped',
+      30: 'cleared',
+    },
+  },
+  '3-8': {
+    solution:
+      'up up right right right right right right right right right down down down down left left left left down down down left left left left left up up up',
+    shots: {
+      0: 'start',
+      10: 'box-on-switch',
+      13: 'on-lift',
+      22: 'box-at-wall',
+      30: 'cleared',
+    },
+  },
+  '3-9': {
+    solution:
+      'left left left left left up up left left left left right right right right down down right right right right right up up right right up up left left left left left left',
+    shots: {
+      0: 'start',
+      12: 'ladder-taken',
+      23: 'warped',
+      30: 'ladder-leaning',
+      34: 'cleared',
+    },
+  },
 }
 
 const stageNumber = (id: string) => String(Number(id.split('-')[1])).padStart(2, '0')

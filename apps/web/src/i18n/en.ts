@@ -75,6 +75,11 @@ export const en = {
   'stage.3-2': 'The Patch',
   'stage.3-3': 'The One Way',
   'stage.3-4': 'The Link',
+  'stage.3-5': 'The Return',
+  'stage.3-6': 'The Crossing',
+  'stage.3-7': 'Thin Ice',
+  'stage.3-8': 'The Step Up',
+  'stage.3-9': 'The Tangle',
 }
 
 export type Texts = typeof en

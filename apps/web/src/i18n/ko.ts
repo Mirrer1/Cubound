@@ -76,4 +76,9 @@ export const ko: Partial<Texts> = {
   'stage.3-2': '메움',
   'stage.3-3': '외길',
   'stage.3-4': '이음',
+  'stage.3-5': '되돌이',
+  'stage.3-6': '건넘',
+  'stage.3-7': '살얼음',
+  'stage.3-8': '오름턱',
+  'stage.3-9': '얽힘',
 }
