@@ -15,10 +15,11 @@ import {
   restartDuration,
   switchCells,
   switchProgress,
+  tramProgress,
 } from './frame'
 import { TILE } from '@/game/iso'
 import { createState, move } from '@/game/rules'
-import type { Stage } from '@/game/types'
+import type { Point, Stage } from '@/game/types'
 
 const STAGE: Stage = {
   version: 1,
@@ -862,5 +863,172 @@ describe('restartDrop 늦게 출발하는 단계', () => {
   it('떨어지기 시작하자마자 또렷해져서 빈 자리처럼 보이지 않는다', () => {
     expect(restartDrop(0.1, 0, 0).opacity).toBeGreaterThan(0.5)
     expect(restartDrop(0.2, 0, 0).opacity).toBe(1)
+  })
+})
+
+const TRAM_CELLS: Point[] = [
+  { x: 1, y: 1 },
+  { x: 2, y: 1 },
+  { x: 3, y: 1 },
+]
+
+const TRAM_STAGE: Stage = {
+  version: 1,
+  id: 'test-tram',
+  name: '움직이는 발판',
+  heights: [
+    [0, 0, 0, 0, 0, 0],
+    [0, -1, -1, -1, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+  ],
+  start: { x: 0, y: 1 },
+  goal: { x: 5, y: 2 },
+  entities: [{ type: 'tram', x: 1, y: 1, id: 'tram-a', level: 0, cells: TRAM_CELLS, dir: 1 }],
+}
+
+// 상자를 발판 위로 밀어 넣는 판
+const PUSH_TRAM_STAGE: Stage = {
+  ...TRAM_STAGE,
+  start: { x: 5, y: 1 },
+  entities: [
+    { type: 'tram', x: 3, y: 1, id: 'tram-a', level: 0, cells: TRAM_CELLS, dir: 1 },
+    { type: 'box', x: 4, y: 1 },
+  ],
+}
+
+const WALK = durationOf([{ type: 'moved', from: { x: 0, y: 0 }, to: { x: 1, y: 0 } }])
+
+const board = () => {
+  const prev = createState(TRAM_STAGE)
+  return { prev, ...move(prev, 'right') }
+}
+
+const ride = () => {
+  const prev = move(createState(TRAM_STAGE), 'right').state
+  return { prev, ...move(prev, 'right') }
+}
+
+describe('durationOf 움직이는 발판', () => {
+  it('발판만 가는 이동은 한 칸 걷는 이동과 길이가 같다', () => {
+    const { events } = ride()
+
+    expect(events.every((e) => e.type === 'tram')).toBe(true)
+    expect(durationOf(events)).toBe(WALK)
+  })
+
+  it('옆에서 걷기만 하는 이동은 발판 때문에 길어지지 않는다', () => {
+    const { events } = move(createState(TRAM_STAGE), 'down')
+
+    expect(events.some((e) => e.type === 'tram')).toBe(true)
+    expect(durationOf(events)).toBe(WALK)
+  })
+
+  it('올라타는 이동은 걷기와 발판 가기를 이어 붙인 길이다', () => {
+    const { events } = board()
+
+    expect(durationOf(events)).toBeGreaterThan(WALK)
+    expect(durationOf(events)).toBeCloseTo(WALK + durationOf(ride().events))
+  })
+})
+
+describe('tramProgress', () => {
+  it('되돌아가지 않고 끝에서 다 간다', () => {
+    const { events } = ride()
+    let last = 0
+
+    for (let t = 0; t <= 1; t += 0.05) {
+      const p = tramProgress(events, t)
+      expect(p).toBeGreaterThanOrEqual(last)
+      last = p
+    }
+
+    expect(tramProgress(events, 1)).toBe(1)
+  })
+
+  it('올라타는 이동에서는 큐브가 발판 칸에 앉은 뒤에 움직인다', () => {
+    const { prev, state, events } = board()
+
+    for (let t = 0; t <= 1; t += 0.02) {
+      if (tramProgress(events, t) > 0) {
+        expect(playerFrame(prev, state, events, t).x).toBeGreaterThanOrEqual(1)
+      }
+    }
+  })
+
+  it('발판이 가지 않는 이동은 1이다', () => {
+    expect(tramProgress([{ type: 'blocked', direction: 'left' }], 0.5)).toBe(1)
+  })
+})
+
+describe('playerFrame 발판에 실려 가기', () => {
+  it('발판 위에서 막힌 이동은 발판과 같은 자리를 따라간다', () => {
+    const { prev, state, events } = ride()
+
+    expect(prev.player).toEqual({ x: 2, y: 1 })
+    expect(state.player).toEqual({ x: 3, y: 1 })
+    for (let t = 0; t <= 1; t += 0.05) {
+      expect(playerFrame(prev, state, events, t).x).toBeCloseTo(2 + tramProgress(events, t))
+    }
+  })
+
+  it('실려 가는 동안 구르지 않고 높이도 그대로다', () => {
+    const { prev, state, events } = ride()
+
+    for (let t = 0; t <= 1; t += 0.05) {
+      expect(playerFrame(prev, state, events, t)).toMatchObject({ angle: 0, level: 0, y: 1 })
+    }
+  })
+
+  it('올라타는 이동은 걸어 든 칸에서 실려 간 칸까지 이어서 간다', () => {
+    const { prev, state, events } = board()
+    let last = playerFrame(prev, state, events, 0).x
+
+    expect(last).toBeCloseTo(0)
+    for (let t = 0.05; t <= 1; t += 0.05) {
+      const { x } = playerFrame(prev, state, events, t)
+      expect(x).toBeGreaterThanOrEqual(last)
+      last = x
+    }
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(playerFrame(prev, state, events, 1)).toMatchObject({ x: 2, y: 1 })
+  })
+
+  it('발판에서 내리는 이동은 발판을 따라가지 않는다', () => {
+    const prev = move(createState(TRAM_STAGE), 'right').state
+    const { state, events } = move(prev, 'up')
+
+    expect(state.player).toEqual({ x: 2, y: 0 })
+    expect(playerFrame(prev, state, events, 0.5)).toMatchObject({ x: 2, y: 0.5 })
+  })
+})
+
+describe('movingBox 발판에 실려 가기', () => {
+  it('밀려서 올라탄 상자는 발판이 멈출 때까지 이어서 간다', () => {
+    const prev = createState(PUSH_TRAM_STAGE)
+    const { state, events } = move(prev, 'left')
+    let last = 4
+
+    expect(state.boxes).toEqual([{ x: 2, y: 1 }])
+    for (let t = 0; t < 1; t += 0.02) {
+      const frame = movingBox(prev, state, events, t)
+      expect(frame).not.toBeNull()
+      expect(frame?.x ?? 0).toBeLessThanOrEqual(last)
+      expect(frame).toMatchObject({ level: 0, to: { x: 2, y: 1 } })
+      last = frame?.x ?? 0
+    }
+
+    expect(movingBox(prev, state, events, 0.999)?.x).toBeCloseTo(2, 1)
+    expect(movingBox(prev, state, events, 1)).toBeNull()
+  })
+
+  it('발판이 가는 동안에는 상자가 밀린 칸을 지나 발판을 따라간다', () => {
+    const prev = createState(PUSH_TRAM_STAGE)
+    const { state, events } = move(prev, 'left')
+
+    for (let t = 0; t < 1; t += 0.02) {
+      const p = tramProgress(events, t)
+      if (p > 0) expect(movingBox(prev, state, events, t)?.x).toBeCloseTo(3 - p)
+    }
   })
 })

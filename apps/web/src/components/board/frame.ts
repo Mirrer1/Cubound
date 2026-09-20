@@ -8,6 +8,7 @@ const SECONDS = {
   climbed: 0.3,
   blocked: 0.2,
   placed: 0.22,
+  tram: 0.24,
 }
 // 미끄러짐은 칸 수에 상관없이 속도가 같아야 상자와 큐브가 나란히 간다. max는 아주 긴 미끄러짐만 잡는다
 const SLIDE = { perCell: 0.1, max: 0.9 }
@@ -209,6 +210,40 @@ const warpEnd = (events: GameEvent[]) => {
   return at === null ? 0 : at + WARP.sink + WARP.rise
 }
 
+type TramEvent = Extract<GameEvent, { type: 'tram' }>
+
+const tramMoves = (events: GameEvent[]) => events.filter((e): e is TramEvent => e.type === 'tram')
+
+// 이 이동에서 큐브나 상자가 새로 올라선 발판이 있는지
+const boarded = (events: GameEvent[]) => {
+  const warped = events.find((e) => e.type === 'warped')
+  const arrivals = [
+    playerPath(events).at(-1)?.to,
+    boxPath(events).at(-1)?.to,
+    warped?.type === 'warped' ? warped.to : undefined,
+  ]
+  return arrivals.some(
+    (at) => at !== undefined && tramMoves(events).some((tram) => same(tram.from, at)),
+  )
+}
+
+// 발판이 출발하는 시각. 새로 올라타는 것이 있는 이동에서만 그것이 자리에 앉기를 기다린다
+const tramStart = (events: GameEvent[]) => {
+  if (tramMoves(events).length === 0) return null
+  if (!boarded(events)) return 0
+
+  return Math.max(
+    totalSeconds(playerSegments(events)),
+    totalSeconds(segmentsOf(boxPath(events))),
+    warpEnd(events),
+  )
+}
+
+const tramEnd = (events: GameEvent[]) => {
+  const at = tramStart(events)
+  return at === null ? 0 : at + SECONDS.tram
+}
+
 export const durationOf = (events: GameEvent[]) =>
   Math.max(
     0,
@@ -217,6 +252,7 @@ export const durationOf = (events: GameEvent[]) =>
     switchEnd(events),
     pickUpEnd(events),
     warpEnd(events),
+    tramEnd(events),
     ...events.map((e) => (e.type === 'blocked' || e.type === 'placed' ? SECONDS[e.type] : 0)),
     ...events.map((e) => (e.type === 'cracked' && e.gone ? CRUMBLE_SECONDS : 0)),
     ...frostStamps(events).map((stamp) => stamp.at + FROST_FADE),
@@ -259,6 +295,14 @@ export const pressProgress = (events: GameEvent[], p: Point, pressed: boolean, t
 export const pickUpProgress = (events: GameEvent[], t: number) => {
   const at = pickUpAt(events)
   return at === null ? t : Math.min(1, Math.max(0, (t * durationOf(events) - at) / LADDER_SECONDS))
+}
+
+// 발판이 다음 칸으로 가는 진행도 0~1. 발판이 가지 않는 이동은 1
+export const tramProgress = (events: GameEvent[], t: number) => {
+  const at = tramStart(events)
+  if (at === null) return 1
+
+  return Math.min(1, Math.max(0, (t * durationOf(events) - at) / SECONDS.tram))
 }
 
 export const switchCells = (stage: Stage, target: string): Point[] =>
@@ -348,6 +392,20 @@ const levelAfter = (level: number, event: PathEvent) =>
 // 앞쪽 칸에 그려야 뒤쪽 칸 블록에 덮이지 않는다
 const frontOf = (a: Point, b: Point) => (a.x + a.y >= b.x + b.y ? a : b)
 
+// 발판과 그 위에 탄 것이 같은 칸에 그려져야 서로 덮이는 순서가 맞는다
+export const slidingCell = (from: Point, to: Point, p: number) =>
+  p <= 0 ? from : p >= 1 ? to : frontOf(from, to)
+
+// at 칸을 실어 옮기는 발판, 없으면 null
+const carryOf = (events: GameEvent[], at: Point | null) =>
+  at === null ? null : (tramMoves(events).find((tram) => same(tram.from, at)) ?? null)
+
+// 발판에 실려 간 칸 거리
+const carriedBy = (carry: TramEvent, p: number) => ({
+  x: (carry.to.x - carry.from.x) * p,
+  y: (carry.to.y - carry.from.y) * p,
+})
+
 // 그 칸의 발판이 오르내리는 진행도. 발판 칸이 아니면 이동 전체에 걸쳐 섞는다
 const ridePhase = (game: GameState, events: GameEvent[], p: Point, t: number) => {
   const lift = game.stage.entities.find(
@@ -358,12 +416,13 @@ const ridePhase = (game: GameState, events: GameEvent[], p: Point, t: number) =>
     : switchProgress(events, switchCells(game.stage, lift.id), isLiftRaised(game, lift.id), t)
 }
 
-export const playerFrame = (
+// 큐브가 제 힘으로 간 몫만 그린 프레임. 발판에 실린 몫은 playerFrame이 더한다
+const pathFrame = (
   prev: GameState | null,
   game: GameState,
   events: GameEvent[],
   t: number,
-  chain: Chain = NO_CHAIN,
+  chain: Chain,
 ): CubeFrame => {
   const { player } = game
   const endLevel = standHeight(game, player)
@@ -445,7 +504,35 @@ export const playerFrame = (
     return { ...still, direction: blocked.direction, angle: Math.sin(Math.PI * t) * TILT }
   }
 
-  return { ...still, level: startLevel + riding }
+  // 제 힘으로 가지 않은 이동은 떠나기 전 칸에 서 있는다
+  const hold = prev ? prev.player : player
+  return { ...still, x: hold.x, y: hold.y, cell: hold, level: startLevel + riding }
+}
+
+export const playerFrame = (
+  prev: GameState | null,
+  game: GameState,
+  events: GameEvent[],
+  t: number,
+  chain: Chain = NO_CHAIN,
+): CubeFrame => {
+  const frame = pathFrame(prev, game, events, t, chain)
+  const warped = events.find((e) => e.type === 'warped')
+  // 큐브가 제 길을 다 가고 선 칸. 그 자리가 발판이면 이어서 실려 간다
+  const rest =
+    warped?.type === 'warped' ? warped.to : (playerPath(events).at(-1)?.to ?? prev?.player ?? null)
+  const carry = prev && t < 1 ? carryOf(events, rest) : null
+  if (carry === null) return frame
+
+  const p = tramProgress(events, t)
+  const shift = carriedBy(carry, p)
+
+  return {
+    ...frame,
+    x: frame.x + shift.x,
+    y: frame.y + shift.y,
+    cell: p <= 0 ? frame.cell : slidingCell(carry.from, carry.to, p),
+  }
 }
 
 export interface BoxFrame {
@@ -476,13 +563,16 @@ export const movingBox = (
   const segments = segmentsOf(path)
   // 상자가 제자리에 앉으면 바로 사라져 메운 바닥이 드러난다. 큐브는 그 뒤에 그 칸으로 간다
   const elapsed = t * durationOf(events)
-  if (!prev || elapsed >= totalSeconds(segments)) return null
+  const carry = carryOf(events, path.at(-1)?.to ?? null)
+  const ride = carry === null ? 0 : tramProgress(events, t)
+  const settled = elapsed >= totalSeconds(segments) && (carry === null || ride >= 1)
+  if (!prev || settled) return null
 
   const step = stepAt(segments, elapsed, slideChain(events, chain))
   if (!step) return null
 
   const { event, index, p } = step
-  const to = path[path.length - 1].to
+  const to = carry ? carry.to : path[path.length - 1].to
   const start = prev.heights[path[0].from.y][path[0].from.x]
   const fromLevel = path
     .slice(0, index)
@@ -493,13 +583,15 @@ export const movingBox = (
   // 도착 칸에 서는 높이에서 상자 한 층을 뺀 값이 상자가 앉을 높이다. 발판이 오르내린 몫이 여기서 드러난다
   const endLevel = path.reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
   const riding = (standHeight(game, to) - 1 - endLevel) * ridePhase(game, events, to, t)
+  const shift = carry ? carriedBy(carry, ride) : { x: 0, y: 0 }
 
   return {
-    x: lerp(event.from.x, event.to.x, p),
-    y: lerp(event.from.y, event.to.y, p),
+    x: lerp(event.from.x, event.to.x, p) + shift.x,
+    y: lerp(event.from.y, event.to.y, p) + shift.y,
     level: level + riding,
     to,
-    cell: frontOf(event.from, event.to),
+    cell:
+      carry && ride > 0 ? slidingCell(carry.from, carry.to, ride) : frontOf(event.from, event.to),
   }
 }
 

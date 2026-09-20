@@ -16,8 +16,10 @@ import {
   pressProgress,
   restartDrop,
   restartDuration,
+  slidingCell,
   switchCells,
   switchProgress,
+  tramProgress,
 } from './frame'
 import { shade } from './shade'
 import { useBoardAnimation } from './useBoardAnimation'
@@ -50,7 +52,7 @@ const crackLeft = (state: GameState, p: Point) => state.cracks.find((c) => same(
 
 const tramNext = (tram: Tram, spot: TramSpot) => tram.cells[nextTramSpot(tram.cells, spot).at]
 
-// 코는 지금 가는 쪽을 가리킨다. 끝에 닿으면 오던 쪽 그대로 둔다
+// 코는 다음에 갈 쪽을 가리킨다. 끝에 닿으면 오던 쪽 그대로 둔다
 const tramFacing = (tram: Tram, spot: TramSpot) => {
   const at = tram.cells[spot.at]
   const ahead = tram.cells[spot.at + spot.dir]
@@ -152,12 +154,30 @@ const Board = ({
   // 구덩이 벽은 옆 칸 윗면에서 시작한다. 옆 칸도 길이면 구덩이가 이어져 벽이 없다
   const wallHeight = (x: number, y: number) =>
     railDirs.has(`${x}-${y}`) ? -1 : Math.max(heights[y]?.[x] ?? -1, before.heights[y]?.[x] ?? -1)
-  const nextRails = new Set(
-    trams.map((tram, i) => {
-      const cell = tramNext(tram, game.trams[i])
-      return `${cell.x}-${cell.y}`
-    }),
-  )
+  // 발판은 이전 자리에서 다음 자리로 미끄러진다. 코와 밝은 레일은 도착하는 순간에 다음 쪽으로 넘어간다
+  const tramPhase = moving ? tramProgress(events, t) : 1
+  const tramFrames = trams.map((tram, i) => {
+    const from = tram.cells[before.trams[i].at]
+    const to = tram.cells[game.trams[i].at]
+    const spot = tramPhase < 1 ? before.trams[i] : game.trams[i]
+    const sliding = tramPhase > 0 && tramPhase < 1
+    const facing = sliding ? { x: to.x - from.x, y: to.y - from.y } : tramFacing(tram, spot)
+    const screen = toScreen(
+      { x: lerp(from.x, to.x, tramPhase), y: lerp(from.y, to.y, tramPhase) },
+      0,
+    )
+    return {
+      x: screen.x,
+      y: screen.y - tram.level * TILE.layer,
+      depth: PIT_FLOOR + tram.level * TILE.layer,
+      dx: facing.x,
+      dy: facing.y,
+      to,
+      cell: slidingCell(from, to, tramPhase),
+      next: tramNext(tram, spot),
+    }
+  })
+  const nextRails = new Set(tramFrames.map((frame) => `${frame.next.x}-${frame.next.y}`))
 
   const cubeDrop = dropping ? restartDrop(t, 0, boxes.length) : null
   const cubeLevel = cube.level + (cubeDrop?.lift ?? 0)
@@ -199,7 +219,24 @@ const Board = ({
   }
 
   const cubeSink = standSink(cube.x, cube.y)
-  const boxSink = box ? standSink(box.x, box.y) : 0
+  // 밀리는 상자와 발판 위의 상자. 칸과 따로 움직여서 화면 좌표로 미리 구해 둔다
+  const pushedScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
+  const boxFrames = [
+    ...(box && pushedScreen
+      ? [
+          {
+            x: pushedScreen.x,
+            y: pushedScreen.y - TILE.layer + standSink(box.x, box.y),
+            to: box.to,
+            cell: box.cell,
+          },
+        ]
+      : []),
+    // 발판 위의 상자는 발판과 한 몸이라 판 위에 얹혀 그려져야 한다
+    ...tramFrames
+      .filter((frame) => has(boxes, frame.to) && !(box && same(box.to, frame.to)))
+      .map((frame) => ({ x: frame.x, y: frame.y - TILE.layer, to: frame.to, cell: frame.cell })),
+  ]
   const guideLevel = guideCell ? Math.max(0, heights[guideCell.y][guideCell.x]) : 0
   const guideScreen = guideCell ? toScreen(guideCell, guideLevel) : null
   // 칸 위에 선 것은 한 층보다 높이 솟아서 위쪽을 더 잡는다
@@ -268,12 +305,10 @@ const Board = ({
             : []),
         ].join('|')
 
-        const tramIndex = trams.findIndex((tram, i) => same(tram.cells[game.trams[i].at], cell.p))
-        const tram = tramIndex >= 0 ? trams[tramIndex] : null
-        const facing = tram ? tramFacing(tram, game.trams[tramIndex]) : null
+        const tram = tramFrames.find((frame) => same(frame.cell, cell.p)) ?? null
         const drawCube = same(cube.cell, cell.p) && !(game.cleared && !moving)
-        const drawBox = box !== null && same(box.cell, cell.p)
-        const boxScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
+        const drawBoxes = boxFrames.filter((frame) => same(frame.cell, cell.p))
+        const movedBoxHere = boxFrames.some((frame) => same(frame.to, cell.p))
         const goalEffect = same(cell.p, stage.goal) && game.cleared && !moving
         const droppingBox = dropping ? boxes.findIndex((b) => same(b, cell.p)) : -1
         const boxDrop = droppingBox >= 0 ? restartDrop(t, droppingBox + 1, boxes.length) : null
@@ -281,7 +316,8 @@ const Board = ({
         const restored = dropping
           ? Math.sign(before.heights[cell.p.y][cell.p.x] - heights[cell.p.y][cell.p.x])
           : 0
-        const overlay = drawBox || drawCube || goalEffect || boxDrop !== null || tram !== null
+        const overlay =
+          drawBoxes.length > 0 || drawCube || goalEffect || boxDrop !== null || tram !== null
 
         return (
           <BoardCell
@@ -300,14 +336,14 @@ const Board = ({
             crackFall={crackFall}
             crackShadow={crumble.shadow}
             crackSeed={(cell.p.x * 3 + cell.p.y * 5) % 4}
-            hidden={isFilled && box !== null && same(box.to, cell.p)}
+            hidden={isFilled && movedBoxHere}
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
             lift={lift !== undefined}
             warp={warp !== undefined}
             switchDepth={lerp(pressed(before) ? 2 : 9, pressed(game) ? 2 : 9, switchPhase)}
             doorDepth={lerp(doorDepth(before), doorDepth(game), doorPhase)}
-            box={has(boxes, cell.p) && !(box && same(box.to, cell.p)) && boxDrop === null}
+            box={has(boxes, cell.p) && !movedBoxHere && boxDrop === null}
             rail={cell.rail}
             railNext={nextRails.has(cell.key)}
             pitWallLeft={cell.rail === '' ? -1 : wallHeight(cell.p.x, cell.p.y - 1)}
@@ -320,18 +356,12 @@ const Board = ({
           >
             {overlay ? (
               <>
-                {tram && facing && (
-                  <BoardTram
-                    x={cell.x}
-                    y={cell.y - tram.level * TILE.layer}
-                    depth={PIT_FLOOR + tram.level * TILE.layer}
-                    dx={facing.x}
-                    dy={facing.y}
-                  />
+                {tram && (
+                  <BoardTram x={tram.x} y={tram.y} depth={tram.depth} dx={tram.dx} dy={tram.dy} />
                 )}
-                {drawBox && boxScreen && (
-                  <BoardBox x={boxScreen.x} y={boxScreen.y - TILE.layer + boxSink} />
-                )}
+                {drawBoxes.map((frame) => (
+                  <BoardBox key={`${frame.to.x}-${frame.to.y}`} x={frame.x} y={frame.y} />
+                ))}
                 {boxDrop && (
                   <g opacity={boxDrop.opacity}>
                     <BoardBox x={cell.x} y={cellY - TILE.layer - boxDrop.lift * TILE.layer} />
