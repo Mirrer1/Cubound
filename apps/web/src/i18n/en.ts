@@ -89,6 +89,10 @@ export const en = {
 
   'world.4': 'Land of Moving Ground',
   'stage.4-1': 'The First Ride',
+  'stage.4-2': 'The Freight Car',
+  'stage.4-3': 'The Transfer',
+  'stage.4-4': 'The Signal',
+  'stage.4-5': 'The Shortcut',
 }
 
 export type Texts = typeof en

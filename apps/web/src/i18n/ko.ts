@@ -90,4 +90,8 @@ export const ko: Partial<Texts> = {
 
   'world.4': '때를 맞추는 땅',
   'stage.4-1': '첫차',
+  'stage.4-2': '짐칸',
+  'stage.4-3': '환승',
+  'stage.4-4': '신호',
+  'stage.4-5': '지름길',
 }
