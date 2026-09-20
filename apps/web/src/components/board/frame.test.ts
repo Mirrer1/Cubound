@@ -93,6 +93,15 @@ describe('playerFrame', () => {
     expect(playerFrame(prev, state, events, 0.5).angle).toBeGreaterThan(0)
     expect(playerFrame(prev, state, events, 0.5).x).toBe(0)
   })
+
+  // 재시작은 앞 상태를 넘기지 않아야 처음 자리에 내려앉는다. 넘기면 떠나기 전 칸에 서 있는 프레임이 나온다
+  it('앞 상태가 없으면 이동 이벤트가 없어도 새 상태의 자리에 선다', () => {
+    const start = createState(STAGE)
+    const moved = move(start, 'right').state
+
+    expect(playerFrame(null, start, [], 0.3)).toMatchObject({ x: 0, y: 0, level: 1 })
+    expect(playerFrame(moved, start, [], 0.3)).toMatchObject({ x: 1, y: 0 })
+  })
 })
 
 // 큐브가 한 층 높은 스위치에서 올라간 발판으로 옮겨 서면 발판과 함께 내려앉는다
@@ -896,6 +905,21 @@ const PUSH_TRAM_STAGE: Stage = {
   ],
 }
 
+// 발판에 실린 상자를 구덩이로 밀어 넣는 판
+const DROP_TRAM_STAGE: Stage = {
+  ...TRAM_STAGE,
+  heights: [
+    [0, 0, 0, 0, 0, 0],
+    [0, -1, -1, -1, 0, 0],
+    [0, 0, -1, 0, 0, 0],
+  ],
+  start: { x: 2, y: 0 },
+  entities: [
+    { type: 'tram', x: 2, y: 1, id: 'tram-a', level: 0, cells: TRAM_CELLS, dir: 1 },
+    { type: 'box', x: 2, y: 1 },
+  ],
+}
+
 const WALK = durationOf([{ type: 'moved', from: { x: 0, y: 0 }, to: { x: 1, y: 0 } }])
 
 const board = () => {
@@ -1029,6 +1053,33 @@ describe('movingBox 발판에 실려 가기', () => {
     for (let t = 0; t < 1; t += 0.02) {
       const p = tramProgress(events, t)
       if (p > 0) expect(movingBox(prev, state, events, t)?.x).toBeCloseTo(3 - p)
+    }
+  })
+})
+
+describe('movingBox 발판에서 구덩이로', () => {
+  const drop = () => {
+    const prev = createState(DROP_TRAM_STAGE)
+    return { prev, ...move(prev, 'down') }
+  }
+
+  it('발판 위의 상자는 발판 높이에서 출발한다', () => {
+    const { prev, state, events } = drop()
+
+    expect(state.heights[2][2]).toBe(0)
+    expect(movingBox(prev, state, events, 0)).toMatchObject({ x: 2, y: 1, level: 0 })
+  })
+
+  it('메우는 상자는 한 층만 내려가고 바닥 아래로 꺼지지 않는다', () => {
+    const { prev, state, events } = drop()
+    let last = 0
+
+    for (let t = 0; t <= 1; t += 0.02) {
+      const frame = movingBox(prev, state, events, t)
+      if (!frame) continue
+      expect(frame.level).toBeLessThanOrEqual(last + 1e-9)
+      expect(frame.level).toBeGreaterThanOrEqual(-1)
+      last = frame.level
     }
   })
 })

@@ -573,7 +573,8 @@ export const movingBox = (
 
   const { event, index, p } = step
   const to = carry ? carry.to : path[path.length - 1].to
-  const start = prev.heights[path[0].from.y][path[0].from.x]
+  // 발판이나 올라간 승강 발판 위의 상자는 칸 높이가 아니라 딛고 선 높이에서 출발한다
+  const start = standHeight(prev, path[0].from) - 1
   const fromLevel = path
     .slice(0, index)
     .reduce((level, passed) => boxLevelAfter(prev, level, passed), start)

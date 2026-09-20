@@ -103,7 +103,8 @@ const Board = ({
     () => stage.entities.filter((e): e is Tram => e.type === 'tram'),
     [stage.entities],
   )
-  const cube = playerFrame(prevGame, game, events, t, chain)
+  // 재시작은 큐브가 길을 간 것이 아니라 처음 자리에 새로 내려앉는 것이라 앞 상태를 넘기지 않는다
+  const cube = playerFrame(dropping ? null : prevGame, game, events, t, chain)
   const cubeCell = { x: Math.round(cube.x), y: Math.round(cube.y) }
   // 카메라는 최종 자리가 아니라 지금 그려지는 자리를 따라간다. 순간이동은 나온 뒤에 움직인다
   const { ref, viewBox } = useCamera(game, guideCell ?? cubeCell)
