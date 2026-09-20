@@ -17,6 +17,9 @@ export const en = {
   'play.restartShort': 'Restart',
   'play.guideShort': 'Guide',
   'play.menuShort': 'Menu',
+  'play.restartAsk': 'Start this stage over?',
+  'play.restartKeep': 'Keep playing',
+  'play.restartGo': 'Start over',
 
   'clear.next': 'Next stage',
   'clear.retry': 'Retry',

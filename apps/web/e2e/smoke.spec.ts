@@ -13,7 +13,7 @@ const swipe = async (page: Page, x: number, y: number, dx: number, dy: number) =
   await cdp.detach()
 }
 
-test('타이틀에서 스테이지를 골라 가이드를 넘기고 방향키로 이동하고 재시작한다', async ({
+test('타이틀에서 스테이지를 골라 가이드를 넘기고 방향키로 이동하고 확인을 거쳐 재시작한다', async ({
   page,
 }) => {
   await page.goto('/')
@@ -37,6 +37,25 @@ test('타이틀에서 스테이지를 골라 가이드를 넘기고 방향키로
   await expect(moves).toContainText('1')
 
   await page.keyboard.press('r')
+  await expect(moves).toContainText('0')
+
+  // 5수부터는 재시작 전에 물어본다. 내려앉기 연출 중에는 이동이 막혀서 끝나기를 기다린다
+  await page.waitForTimeout(600)
+  for (const key of ['ArrowUp', 'ArrowUp', 'ArrowRight', 'ArrowRight', 'ArrowRight']) {
+    await page.keyboard.press(key)
+    await page.waitForTimeout(300)
+  }
+  await expect(moves).toContainText('5')
+
+  const keep = page.getByRole('button', { name: '계속하기' })
+  await page.keyboard.press('r')
+  await expect(keep).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(keep).toBeHidden()
+  await expect(moves).toContainText('5')
+
+  await page.keyboard.press('r')
+  await page.getByRole('button', { name: '다시 시작' }).click()
   await expect(moves).toContainText('0')
 })
 

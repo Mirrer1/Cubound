@@ -1,10 +1,11 @@
 import { AnimatePresence } from 'motion/react'
-import { type MouseEvent, type PointerEvent, useEffect, useRef } from 'react'
+import { type MouseEvent, type PointerEvent, useCallback, useEffect, useRef, useState } from 'react'
 
 import Board from '@/components/board/Board'
 import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
+import RestartCard from '@/components/ui/RestartCard'
 import { climbsLeft, movesLeft, pushesLeft } from '@/game/rules'
 import { stageTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
@@ -16,6 +17,8 @@ import { useGameStore } from '@/store/gameStore'
 interface PlayScreenProps {
   stageId: string
 }
+
+const ASK_FROM_MOVES = 5 // 이만큼 진행했으면 재시작 전에 물어본다
 
 const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const loaded = useGameStore((s) => s.game)
@@ -34,6 +37,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const openGuide = useGameStore((s) => s.openGuide)
   const nextGuide = useGameStore((s) => s.nextGuide)
   const closeGuide = useGameStore((s) => s.closeGuide)
+  const [asking, setAsking] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
   const swipeStart = useRef<{ x: number; y: number } | null>(null)
   const swiped = useRef(false)
@@ -63,10 +67,20 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     e.currentTarget.blur()
     openGuide()
   }
-  // 가이드와 클리어 카드가 떠 있는 동안은 스와이프를 받지 않고 제스처마다 앞 판정을 지운다
+  // 얼마 못 간 판은 다시 풀기 쉬워서 묻지 않고 바로 다시 시작한다
+  const askOrRestart = useCallback(() => {
+    if (guideStep === null && (game?.moves ?? 0) >= ASK_FROM_MOVES) setAsking(true)
+    else restart()
+  }, [game, guideStep, restart])
+  const handleKeep = () => setAsking(false)
+  const handleRestart = () => {
+    setAsking(false)
+    restart()
+  }
+  // 가이드와 카드가 떠 있는 동안은 스와이프를 받지 않고 제스처마다 앞 판정을 지운다
   const handlePointerDown = (e: PointerEvent<HTMLElement>) => {
     swiped.current = false
-    if (guideStep !== null || game?.cleared) return
+    if (guideStep !== null || asking || game?.cleared) return
     swipeStart.current = { x: e.clientX, y: e.clientY }
   }
   // 최소 거리를 넘는 순간 판정하고, 시작점을 비워 한 제스처에 한 칸만 움직인다
@@ -104,12 +118,17 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (asking) {
+        if (e.key === 'Escape') setAsking(false)
+        return
+      }
+
       const direction = directionFromKey(e.key)
       if (direction) {
         e.preventDefault()
         move(direction)
       } else if (isRestartKey(e.key)) {
-        restart()
+        askOrRestart()
       } else if (e.key === 'Escape' && guideStep === null) {
         goTo({ screen: 'select', world })
       }
@@ -117,7 +136,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [move, restart, guideStep, world])
+  }, [move, askOrRestart, asking, guideStep, world])
 
   return (
     <main
@@ -186,7 +205,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                 <Button
                   variant="icon"
                   strong={outOfMoves}
-                  onClick={restart}
+                  onClick={askOrRestart}
                   title={t('play.restart')}
                   data-guide="restart"
                 >
@@ -215,7 +234,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
           <div
             className={`grid gap-3 panel-pad whitespace-nowrap sm:hidden ${hasGuide ? 'grid-cols-3' : 'grid-cols-2'}`}
           >
-            <Button strong={outOfMoves} onClick={restart} data-guide="restart">
+            <Button strong={outOfMoves} onClick={askOrRestart} data-guide="restart">
               ↺ {t('play.restartShort')}
             </Button>
             {hasGuide && <Button onClick={handleOpenGuide}>? {t('play.guideShort')}</Button>}
@@ -232,6 +251,9 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                 onSelect={handleSelect}
               />
             )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {asking && <RestartCard onKeep={handleKeep} onRestart={handleRestart} />}
           </AnimatePresence>
           <AnimatePresence>
             {guideStep !== null && (
