@@ -26,6 +26,9 @@
     "prettier-plugin-tailwindcss": "^0.8.1"
   },
   "lint-staged": {
+    "apps/web/src/components/board/useBoardAnimation.ts": [
+      "node -e \"if(/const duration =[^\\n]*\\*\\s*\\d/.test(require('fs').readFileSync(process.argv[1],'utf8'))){console.error('연출 시간에 임시 배수가 남아 있다. 중간 프레임을 찍고 되돌리지 않은 것이다');process.exit(1)}\""
+    ],
     "apps/web/**/*.{ts,tsx}": [
       "pnpm --filter @cubound/web exec oxlint --fix",
       "prettier --write"
