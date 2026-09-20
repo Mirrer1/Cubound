@@ -50,6 +50,7 @@ export const ko: Partial<Texts> = {
   'guide.crack': '밟고 지나간 칸은 금이 가고 곧 무너져요',
   'guide.warp': '짝 칸에 들어가면 이어진 칸으로 나와요',
   'guide.climbLimit': '{n}번만 올라갈 수 있어요. 오를 자리를 고르세요',
+  'guide.tram': '발판은 한 수마다 한 칸 가요. 막힌 쪽으로 밀면 그대로 타고 가요',
 
   'world.1': '낮은 계단의 땅',
   'stage.1-1': '첫걸음',
@@ -86,4 +87,7 @@ export const ko: Partial<Texts> = {
   'stage.3-8': '오름턱',
   'stage.3-9': '얽힘',
   'stage.3-10': '무너짐',
+
+  'world.4': '때를 맞추는 땅',
+  'stage.4-1': '첫차',
 }
