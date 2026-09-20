@@ -32,6 +32,7 @@ return <>{isCleared ? <ClearScreen /> : <Board />}</>
 - 큐브와 도구의 세 면 색은 기본색(토큰이나 스킨 데이터)에서 `docs/ARCHITECTURE.md` "디자인 기준값"의 명암 공식으로 계산한다
 - 연출은 `game/`이 돌려준 이벤트를 보고 `components/board/frame.ts`의 순수 함수로 그 순간의 위치를 계산한다. 진행도는 `useBoardAnimation`이 Motion으로 재생한다
 - 연출 중에도 바뀌지 않는 칸은 `BoardCell`(memo)이 다시 그리지 않게 props를 원시값으로 넘긴다
+- **`data-guide`가 붙은 요소는 화면에 하나씩만 둔다.** 스텝 가이드가 `querySelector`로 찾아 그 자리에 구멍을 뚫는다. 화면 크기마다 배치가 달라질 때 각 크기용 DOM을 따로 그려 놓고 CSS로 숨기면 가이드가 숨은 쪽을 가리켜 구멍이 엉뚱한 데 뚫린다. 테스트가 잡아주지 않으니 DOM은 하나만 두고 `contents`와 `order`로 재배치한다
 
 ## 모션
 
