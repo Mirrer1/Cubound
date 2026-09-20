@@ -287,7 +287,7 @@ const Board = ({
                 )}
                 {drawCube && (
                   <g
-                    opacity={cubeDrop ? cubeDrop.opacity : 1}
+                    opacity={(cubeDrop ? cubeDrop.opacity : 1) * cube.fade}
                     transform={`translate(0 ${cubeSink}) ${cubeSquash}`}
                   >
                     {rollingCubeFaces(cube.x, cube.y, cubeLevel, cube.direction, cube.angle).map(
@@ -302,7 +302,7 @@ const Board = ({
                   </g>
                 )}
                 {drawCube && carriedOpacity > 0 && (
-                  <g opacity={carriedOpacity}>
+                  <g opacity={carriedOpacity * cube.fade}>
                     <BoardLadder x={cubeScreen.x} y={cubeScreen.y - TILE.layer - 2 + cubeSink} />
                   </g>
                 )}

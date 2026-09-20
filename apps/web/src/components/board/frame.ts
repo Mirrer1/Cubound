@@ -13,6 +13,9 @@ const SECONDS = {
 const SLIDE = { perCell: 0.1, max: 0.9 }
 const TILT = 0.24
 
+// 짝 칸으로 가라앉는 시간, 짝인 칸에서 솟아오르는 시간, 잠기는 층 수
+const WARP = { sink: 0.14, rise: 0.14, depth: 0.6 }
+
 const easeIn = (t: number) => t * t
 const easeOut = (t: number) => 1 - (1 - t) ** 2
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
@@ -197,6 +200,17 @@ const pickUpEnd = (events: GameEvent[]) => {
   return at === null ? 0 : at + LADDER_SECONDS
 }
 
+// 큐브가 짝 칸에 닿는 시각. 이 이동에서 순간이동하지 않으면 null
+const warpAt = (events: GameEvent[]) => {
+  const warped = events.find((e) => e.type === 'warped')
+  return warped?.type === 'warped' ? touchAt(events, warped.from).arrive : null
+}
+
+const warpEnd = (events: GameEvent[]) => {
+  const at = warpAt(events)
+  return at === null ? 0 : at + WARP.sink + WARP.rise
+}
+
 export const durationOf = (events: GameEvent[]) =>
   Math.max(
     0,
@@ -204,6 +218,7 @@ export const durationOf = (events: GameEvent[]) =>
     totalSeconds(segmentsOf(boxPath(events))),
     switchEnd(events),
     pickUpEnd(events),
+    warpEnd(events),
     ...events.map((e) => (e.type === 'blocked' || e.type === 'placed' ? SECONDS[e.type] : 0)),
     ...events.map((e) => (e.type === 'cracked' ? (e.gone ? CRUMBLE_SECONDS : WEAR_SECONDS) : 0)),
     ...frostStamps(events).map((stamp) => stamp.at + FROST_FADE),
@@ -328,6 +343,7 @@ export interface CubeFrame {
   angle: number
   cell: Point // 그리기 순서를 맞출 칸
   squash: number // 진행 방향으로 눌린 정도. 0이면 평소 모양
+  fade: number // 진하기. 1이면 평소, 0이면 안 보임
 }
 
 const levelAfter = (level: number, event: PathEvent) =>
@@ -362,17 +378,40 @@ export const playerFrame = (
     angle: 0,
     cell: player,
     squash: 0,
+    fade: 1,
   }
   if (t >= 1) return still
 
   const segments = playerSegments(events)
   const startLevel = prev ? standHeight(prev, prev.player) : endLevel
+  const pathLevel = segments.reduce((level, s) => levelAfter(level, s.event), startLevel)
   // 이동 경로로 설명되지 않는 높이 차이는 발판이 오르내린 몫이라 칸과 같은 속도로 따라간다
-  const riding =
-    (endLevel - segments.reduce((level, s) => levelAfter(level, s.event), startLevel)) *
-    ridePhase(game, events, player, t)
+  const riding = (endLevel - pathLevel) * ridePhase(game, events, player, t)
   // 연출이 이동보다 길 수 있어 큐브는 제 길을 다 가면 그 자리에서 기다린다
   const elapsed = t * durationOf(events)
+
+  const warped = events.find((e) => e.type === 'warped')
+  const warpStart = warpAt(events)
+  // 순간이동은 길을 다 간 뒤에 일어나서 가라앉는 동안 들어간 칸에, 솟는 동안 나온 칸에 그린다
+  if (warped?.type === 'warped' && warpStart !== null && elapsed >= warpStart) {
+    const sinking = elapsed < warpStart + WARP.sink
+    const p = sinking
+      ? (elapsed - warpStart) / WARP.sink
+      : Math.min(1, (elapsed - warpStart - WARP.sink) / WARP.rise)
+    const cell = sinking ? warped.from : warped.to
+    const last = segments.at(-1)
+
+    return {
+      ...cell,
+      level: (sinking ? pathLevel + riding : endLevel) - WARP.depth * (sinking ? p : 1 - p),
+      direction: last ? directionBetween(last.event.from, last.event.to) : still.direction,
+      angle: 0,
+      cell,
+      squash: 0,
+      fade: sinking ? 1 - p : p,
+    }
+  }
+
   const step = stepAt(segments, elapsed, slideChain(events, chain))
   if (prev && step) {
     const span = slideSpan(segments)
@@ -399,6 +438,7 @@ export const playerFrame = (
       angle: event.type === 'slid' ? 0 : (Math.PI / 2) * p,
       cell: frontOf(event.from, event.to),
       squash: span ? squashAt((elapsed - span.from) / (span.to - span.from)) : 0,
+      fade: 1,
     }
   }
 

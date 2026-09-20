@@ -420,6 +420,112 @@ describe('playerFrame 눌림', () => {
   })
 })
 
+// 한 칸 걸어 들어간 짝 칸에서 저쪽 짝 칸으로 옮겨 선다
+const WARP_STAGE: Stage = {
+  version: 1,
+  id: 'test-warp',
+  name: '짝 칸',
+  heights: [[0, 0, 0, 0, 0]],
+  start: { x: 0, y: 0 },
+  goal: { x: 4, y: 0 },
+  entities: [
+    { type: 'warp', x: 1, y: 0, id: 'a' },
+    { type: 'warp', x: 3, y: 0, id: 'a' },
+  ],
+}
+
+describe('durationOf 순간이동', () => {
+  it('순간이동하는 이동이 같은 길이의 보통 이동보다 길다', () => {
+    const bare: Stage = { ...WARP_STAGE, entities: [] }
+    const { events } = move(createState(WARP_STAGE), 'right')
+
+    expect(durationOf(events)).toBeGreaterThan(durationOf(move(createState(bare), 'right').events))
+  })
+})
+
+describe('playerFrame 순간이동', () => {
+  const entry = { x: 1, y: 0 }
+  const exit = { x: 3, y: 0 }
+  const warp = () => {
+    const prev = createState(WARP_STAGE)
+    return { prev, ...move(prev, 'right') }
+  }
+
+  it('들어간 칸에 있다가 나온 칸으로 옮겨간다', () => {
+    const { prev, state, events } = warp()
+    let warped = false
+    for (let t = 0; t <= 1; t += 0.01) {
+      const { cell } = playerFrame(prev, state, events, t)
+      if (cell.x === exit.x) warped = true
+      expect(cell).toEqual(warped ? exit : entry)
+    }
+
+    expect(warped).toBe(true)
+  })
+
+  it('도중에 안 보이게 흐려졌다가 다시 또렷해진다', () => {
+    const { prev, state, events } = warp()
+    let faintest = 1
+    for (let t = 0; t <= 1; t += 0.005) {
+      faintest = Math.min(faintest, playerFrame(prev, state, events, t).fade)
+    }
+
+    expect(faintest).toBeLessThan(0.05)
+    expect(playerFrame(prev, state, events, 1).fade).toBe(1)
+  })
+
+  it('들어간 칸에서 가라앉는다', () => {
+    const { prev, state, events } = warp()
+    let last = Infinity
+    let sinking = 0
+    for (let t = 0; t <= 1; t += 0.01) {
+      const { cell, level, fade } = playerFrame(prev, state, events, t)
+      if (cell.x !== entry.x || fade === 1) continue
+      expect(level).toBeLessThan(last)
+      last = level
+      sinking += 1
+    }
+
+    expect(sinking).toBeGreaterThan(1)
+  })
+
+  it('나온 칸에서 솟아오른다', () => {
+    const { prev, state, events } = warp()
+    let last = -Infinity
+    let rising = 0
+    for (let t = 0; t <= 1; t += 0.01) {
+      const { cell, level } = playerFrame(prev, state, events, t)
+      if (cell.x !== exit.x) continue
+      expect(level).toBeGreaterThan(last)
+      last = level
+      rising += 1
+    }
+
+    expect(rising).toBeGreaterThan(1)
+  })
+
+  it('끝나면 나온 칸에 또렷하게 서 있다', () => {
+    const { prev, state, events } = warp()
+
+    expect(playerFrame(prev, state, events, 1)).toMatchObject({
+      x: 3,
+      y: 0,
+      level: 0,
+      cell: exit,
+      fade: 1,
+    })
+  })
+
+  it('순간이동이 없는 이동에서는 내내 또렷하다', () => {
+    const prev = createState(STAGE)
+    const { state, events } = move(prev, 'right')
+
+    for (let t = 0; t <= 1; t += 0.05) {
+      expect(playerFrame(prev, state, events, t).fade).toBe(1)
+    }
+  })
+})
+
 describe('frostAt', () => {
   const slidEvents = () => move(createState(ICE_STAGE), 'right').events
 
