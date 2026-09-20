@@ -1638,11 +1638,10 @@ describe('move 움직이는 발판', () => {
   })
 
   it('발판이 없는 길 칸에는 들어갈 수 없다', () => {
-    const start = createState(withTram({ x: 3, y: 1 }))
-    const { state, events } = move(start, 'right')
+    const { state, events } = move(createState(withTram({ x: 3, y: 1 })), 'right')
 
-    expect(state).toBe(start)
-    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+    expect(state.player).toEqual({ x: 0, y: 1 })
+    expect(events.some((e) => e.type === 'moved')).toBe(false)
   })
 
   it('발판 윗면이 선 높이와 같으면 걸어 들어가고 낮으면 떨어진다', () => {
@@ -1667,11 +1666,10 @@ describe('move 움직이는 발판', () => {
   })
 
   it('발판 윗면이 한 층 높으면 그냥은 올라가지 못한다', () => {
-    const start = createState(withTram({ level: 1 }))
-    const { state, events } = move(start, 'right')
+    const { state, events } = move(createState(withTram({ level: 1 })), 'right')
 
-    expect(state).toBe(start)
-    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+    expect(state.player).toEqual({ x: 0, y: 1 })
+    expect(events.some((e) => e.type === 'moved')).toBe(false)
   })
 
   it('발판이 없는 길 칸으로는 상자를 밀 수 없다', () => {
@@ -1795,5 +1793,88 @@ describe('move 발판 위에서 막힌 이동', () => {
     expect(state.player).toEqual({ x: 3, y: 1 })
     expect(state.boxes).toEqual([{ x: 3, y: 1 }])
     expect(state.moves).toBe(5)
+  })
+})
+
+describe('move 발판 기다리기', () => {
+  it('발판이 없는 길 칸 쪽으로 밀면 제자리에 서고 이동 수가 오른다', () => {
+    const { state } = move(createState(withTram({ x: 3, y: 1 })), 'right')
+
+    expect(state.player).toEqual({ x: 0, y: 1 })
+    expect(state.moves).toBe(1)
+  })
+
+  it('기다리는 동안 발판이 한 칸 간다', () => {
+    const { state } = move(createState(withTram({ x: 3, y: 1 })), 'right')
+
+    expect(state.trams).toEqual([{ id: 'tram-a', at: 1, dir: -1 }])
+  })
+
+  it('기다린 이동은 blocked 없이 발판 이벤트만 남긴다', () => {
+    const { events } = move(createState(withTram({ x: 3, y: 1 })), 'right')
+
+    expect(events).toEqual([
+      { type: 'tram', id: 'tram-a', from: { x: 3, y: 1 }, to: { x: 2, y: 1 } },
+    ])
+  })
+
+  it('두 수를 이어 기다리면 발판이 두 칸 간다', () => {
+    const { state } = play(withTram({ x: 3, y: 1 }), ['right', 'right'])
+
+    expect(state.moves).toBe(2)
+    expect(state.trams).toEqual([{ id: 'tram-a', at: 0, dir: -1 }])
+  })
+
+  it('발판 길이 아닌 벽이나 바닥 없는 칸 쪽으로 밀면 이동 수가 오르지 않는다', () => {
+    const wall = createState(withTram({ x: 3, y: 1 }))
+    const blocked = move(wall, 'left')
+
+    expect(blocked.state).toBe(wall)
+    expect(blocked.events).toEqual([{ type: 'blocked', direction: 'left' }])
+
+    const pit = createState(
+      withTram(
+        { x: 3, y: 1 },
+        {
+          start: { x: 0, y: 0 },
+          heights: [
+            [0, -1, 0, 0, 0, 0],
+            [0, -1, -1, -1, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+          ],
+        },
+      ),
+    )
+    const fell = move(pit, 'right')
+
+    expect(fell.state).toBe(pit)
+    expect(fell.events).toEqual([{ type: 'blocked', direction: 'right' }])
+  })
+
+  it('발판이 와 있으면 기다리지 않고 평소대로 올라탄다', () => {
+    const { state, events } = move(createState(TRAM_STAGE), 'right')
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(events[0]).toEqual({ type: 'moved', from: { x: 0, y: 1 }, to: { x: 1, y: 1 } })
+  })
+
+  it('발판 자리와 홀짝이 어긋나도 한 수 기다렸다가 탈 수 있다', () => {
+    const { state } = play(withTram({ x: 3, y: 1 }), ['right', 'right', 'right'])
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(state.moves).toBe(3)
+  })
+
+  it('보스 이동 제한이 있으면 기다린 이동도 제한을 쓴다', () => {
+    const stage = { ...withTram({ x: 3, y: 1 }), rules: { moveLimit: 1 } }
+    const waited = move(createState(stage), 'right')
+
+    expect(waited.state.moves).toBe(1)
+    expect(movesLeft(waited.state)).toBe(0)
+
+    const { state, events } = move(waited.state, 'right')
+
+    expect(state.moves).toBe(1)
+    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
   })
 })

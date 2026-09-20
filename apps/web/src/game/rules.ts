@@ -434,11 +434,14 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
   if (movesLeft(state) === 0) return { state, events: [{ type: 'blocked', direction }] }
 
   const result = moveOnce(state, direction)
-  // 발판 위에서 막힌 이동은 계속 타고 가겠다는 뜻이라 제자리에 서서 이동 1회로 센다
-  const riding = result.state === state && tramLevelAt(state, state.player) !== null
-  if (result.state === state && !riding) return result
+  // 발판 위에서 막힌 이동은 타고 가겠다는 뜻이고 발판 길 쪽으로 막힌 이동은 기다리겠다는 뜻이라 제자리에 서서 이동 1회로 센다
+  const forTram =
+    result.state === state &&
+    (tramLevelAt(state, state.player) !== null ||
+      onTramPath(state.stage, step(state.player, direction)))
+  if (result.state === state && !forTram) return result
 
-  const acted: MoveResult = riding
+  const acted: MoveResult = forTram
     ? { state: { ...state, moves: state.moves + 1 }, events: [] }
     : result
 
