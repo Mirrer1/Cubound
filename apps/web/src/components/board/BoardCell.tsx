@@ -188,11 +188,13 @@ const BoardCell = ({
         return { direction: direction as Direction, opacity: Number(opacity) }
       })
     : []
+  // 칸 위의 상자도 큐브를 가려서 칸과 같이 흐려진다
+  const fade = { opacity: faded ? 0.5 : 1, transition: 'opacity 320ms var(--ease-soft)' }
 
   return (
     <g>
       {!hidden && (
-        <g style={{ opacity: faded ? 0.5 : 1, transition: 'opacity 320ms var(--ease-soft)' }}>
+        <g style={fade}>
           {crackShadow > 0 && (
             <polygon
               points={blockFaces(x, y - crackFall, TILE.width, 0).top}
@@ -315,7 +317,11 @@ const BoardCell = ({
           />
         </>
       )}
-      {box && <BoardBox x={x} y={y - TILE.layer} />}
+      {box && (
+        <g style={fade}>
+          <BoardBox x={x} y={y - TILE.layer} />
+        </g>
+      )}
       {flatLadder > 0 && (
         <g opacity={flatLadder}>
           <BoardLadder x={x} y={y} />

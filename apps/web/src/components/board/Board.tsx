@@ -94,10 +94,10 @@ const Board = ({
 
   // 가림 처리도 최종 자리가 아니라 지금 그려지는 자리를 본다. 순간이동으로 가라앉는 큐브가 벽에 묻힌다
   const faded = [
-    ...occludingCells(heights, cubeCell, Math.round(cube.level)),
+    ...occludingCells(heights, cubeCell, Math.round(cube.level), boxes),
     ...leaningLadders
       .filter((l) => (l.direction === 'right' || l.direction === 'down') && same(l, player))
-      .flatMap((l) => occludingCells(heights, l, heights[l.y][l.x])),
+      .flatMap((l) => occludingCells(heights, l, heights[l.y][l.x], boxes)),
   ]
 
   // x, y는 화면 좌표, p는 칸 좌표. 메운 칸이 다시 구멍이 될 때는 사라지기 전 높이로 그린다
