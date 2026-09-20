@@ -110,10 +110,8 @@ const playerSegments = (events: GameEvent[]): Segment[] => {
   return [...approach.map((s) => ({ ...s, seconds: s.seconds * slower })), ...segmentsOf([tile])]
 }
 
-// 칸이 무너지는 연출은 이동보다 길다. 큐브 뒤쪽 칸이라 진행을 막지 않는다
-const CRUMBLE_SECONDS = 0.46
-// 한 단계 닳는 변화도 이동 연출보다 길게 두어 천천히 갈라진다
-const WEAR_SECONDS = 0.4
+// 칸이 아주 무너지는 순간만 이동보다 길게 둔다. 한 단계 닳는 변화는 이동 길이에 맞춰 끝난다
+const CRUMBLE_SECONDS = 0.36
 
 // 미끄러져 지나온 칸에 남는 서리 자국이 옅어지는 시간
 const FROST_FADE = 0.2
@@ -220,7 +218,7 @@ export const durationOf = (events: GameEvent[]) =>
     pickUpEnd(events),
     warpEnd(events),
     ...events.map((e) => (e.type === 'blocked' || e.type === 'placed' ? SECONDS[e.type] : 0)),
-    ...events.map((e) => (e.type === 'cracked' ? (e.gone ? CRUMBLE_SECONDS : WEAR_SECONDS) : 0)),
+    ...events.map((e) => (e.type === 'cracked' && e.gone ? CRUMBLE_SECONDS : 0)),
     ...frostStamps(events).map((stamp) => stamp.at + FROST_FADE),
   )
 
