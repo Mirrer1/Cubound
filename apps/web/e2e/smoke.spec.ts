@@ -146,17 +146,17 @@ test.describe('모바일', () => {
     await expect(moves).toContainText('1')
   })
 
-  test('아래 버튼 줄 위에서 스와이프하면 움직이고 탭하면 버튼이 눌린다', async ({ page }) => {
+  test('헤더 버튼 위에서 스와이프하면 움직이고 탭하면 버튼이 눌린다', async ({ page }) => {
     await page.goto('/')
 
     await page.getByRole('button', { name: '시작' }).click()
     await page.getByRole('button', { name: /01/ }).click()
     await page.getByRole('button', { name: '건너뛰기' }).click()
-    // 사라지는 중인 가이드 카드가 아래 버튼 줄을 덮고 있어 다 사라진 뒤에 잰다
+    // 사라지는 중인 가이드 카드가 버튼을 덮고 있어 다 사라진 뒤에 잰다
     await expect(page.getByText(/GUIDE/)).toBeHidden()
 
     const moves = page.getByText('MOVES').locator('..')
-    const box = await page.getByRole('button', { name: /다시/ }).boundingBox()
+    const box = await page.getByRole('button', { name: '↺' }).boundingBox()
     const x = box!.x + box!.width / 2
     const y = box!.y + box!.height / 2
 
