@@ -5,7 +5,7 @@ import { type Chain, durationOf } from './frame'
 import type { GameEvent } from '@/game/types'
 
 // 기다리는 입력 수마다의 재생 속도. 밀린 만큼 빨리 소화해야 입력이 버려지지 않는다
-const CATCH_UP = [1, 1.5, 2.1, 2.5]
+const CATCH_UP = [1, 1.3, 1.6, 1.8]
 const SPEED_RAMP = 0.15
 
 const speedFor = (queued: number) => CATCH_UP[Math.min(queued, CATCH_UP.length - 1)]

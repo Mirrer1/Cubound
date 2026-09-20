@@ -23,7 +23,7 @@ import { useBoardAnimation } from './useBoardAnimation'
 import { useCamera } from './useCamera'
 import { TILE, toScreen } from '@/game/iso'
 import { occludingCells } from '@/game/occlusion'
-import { isDoorOpen, isIce, isLiftRaised, standHeight } from '@/game/rules'
+import { isDoorOpen, isIce, isLiftRaised } from '@/game/rules'
 import type { Entity, GameEvent, GameState, Point } from '@/game/types'
 
 interface BoardProps {
@@ -79,19 +79,22 @@ const Board = ({
     chained,
     restartSeconds,
   )
-  const { ref, viewBox } = useCamera(game, guideCell)
   const moving = t < 1 && prevGame !== null
   const before = moving ? prevGame : game
   const dropping = restarting && t < 1
 
   const { stage, heights, boxes, ladders, leaningLadders, player } = game
   const cube = playerFrame(prevGame, game, events, t, chain)
+  const cubeCell = { x: Math.round(cube.x), y: Math.round(cube.y) }
+  // 카메라는 최종 자리가 아니라 지금 그려지는 자리를 따라간다. 순간이동은 나온 뒤에 움직인다
+  const { ref, viewBox } = useCamera(game, guideCell ?? cubeCell)
   const box = movingBox(prevGame, game, events, t, chain)
   const pickedUp = moving ? events.find((e) => e.type === 'pickedUp') : undefined
   const placed = moving ? events.find((e) => e.type === 'placed') : undefined
 
+  // 가림 처리도 최종 자리가 아니라 지금 그려지는 자리를 본다. 순간이동으로 가라앉는 큐브가 벽에 묻힌다
   const faded = [
-    ...occludingCells(heights, player, standHeight(game, player)),
+    ...occludingCells(heights, cubeCell, Math.round(cube.level)),
     ...leaningLadders
       .filter((l) => (l.direction === 'right' || l.direction === 'down') && same(l, player))
       .flatMap((l) => occludingCells(heights, l, heights[l.y][l.x])),
