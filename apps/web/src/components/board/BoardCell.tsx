@@ -64,6 +64,12 @@ const SWITCH_SCALE = 0.66
 // 구멍은 같은 크기 판 두 장을 어긋나게 겹쳐 두께를 낸다
 const HOLE = { scale: 0.62, wall: 7 }
 
+// 발판 길 칸은 구덩이로 그린다. 바닥은 높이 0 칸의 윗면보다 이만큼 아래다
+export const PIT_FLOOR = 11
+const RAIL_HALF = 0.13
+// 길 끝에서 방향이 뒤집히는 자리에 서는 블록
+const STOP = { offset: 0.36, scale: 0.2, depth: 9 }
+
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
 const spotPoints = (x: number, y: number, spots: [number, number][]) =>
@@ -73,6 +79,30 @@ const spotPoints = (x: number, y: number, spots: [number, number][]) =>
       return `${x + d.x},${y + d.y}`
     })
     .join(' ')
+
+// 칸 가운데에서 (dx, dy) 쪽 모서리까지 가는 레일 띠
+const railSpots = (dx: number, dy: number): [number, number][] =>
+  dx !== 0
+    ? [
+        [-RAIL_HALF * dx, -RAIL_HALF],
+        [dx / 2, -RAIL_HALF],
+        [dx / 2, RAIL_HALF],
+        [-RAIL_HALF * dx, RAIL_HALF],
+      ]
+    : [
+        [-RAIL_HALF, -RAIL_HALF * dy],
+        [-RAIL_HALF, dy / 2],
+        [RAIL_HALF, dy / 2],
+        [RAIL_HALF, -RAIL_HALF * dy],
+      ]
+
+// 구덩이 뒤쪽 벽. 옆 칸 윗면 모서리에서 구덩이 바닥까지 내려온다
+const wallPoints = (x: number, y: number, h: number, side: number) => {
+  const top = y - h * TILE.layer
+  const hw = (TILE.width / 2) * side
+  const hh = TILE.height / 2
+  return `${x},${top - hh} ${x + hw},${top} ${x + hw},${y + PIT_FLOOR} ${x},${y - hh + PIT_FLOOR}`
+}
 
 interface BoardCellProps {
   x: number
@@ -97,6 +127,10 @@ interface BoardCellProps {
   switchDepth: number
   doorDepth: number
   box: boolean
+  rail: string // 이웃한 발판 길 칸 방향을 "x,y"로 이은 값, 빈 값이면 길 칸이 아님
+  railNext: boolean // 발판이 다음 수에 들어올 칸
+  pitWallLeft: number // 위 칸의 왼면 자리에 서는 벽의 높이, -1이면 벽 없음
+  pitWallRight: number // 왼 칸의 오른면 자리에 서는 벽의 높이, -1이면 벽 없음
   blockOpacity: number // 칸 블록 투명도
   flatLadder: number // 투명도, 0이면 없음
   leaning: string // "방향:투명도"를 |로 이은 값
@@ -126,6 +160,10 @@ const BoardCell = ({
   switchDepth,
   doorDepth,
   box,
+  rail,
+  railNext,
+  pitWallLeft,
+  pitWallRight,
   blockOpacity,
   flatLadder,
   leaning,
@@ -190,10 +228,53 @@ const BoardCell = ({
     : []
   // 칸 위의 상자도 큐브를 가려서 칸과 같이 흐려진다
   const fade = { opacity: faded ? 0.5 : 1, transition: 'opacity 320ms var(--ease-soft)' }
+  const neighbors = rail ? rail.split('|').map((d) => d.split(',').map(Number)) : []
+  // 길 끝 칸은 이웃이 하나라 반대쪽으로도 띠를 이어 칸을 채우고, 그 자리가 멈춤 블록 자리다
+  const stopAt = neighbors.length === 1 ? [-neighbors[0][0], -neighbors[0][1]] : null
+  const rails = stopAt ? [neighbors[0], stopAt] : neighbors
+  const stopOffset = stopAt ? isoDelta(STOP.offset * stopAt[0], STOP.offset * stopAt[1]) : null
 
   return (
     <g>
-      {!hidden && (
+      {rail !== '' && (
+        <g>
+          <polygon
+            points={blockFaces(x, y + PIT_FLOOR, TILE.width, 0).top}
+            style={{ fill: 'var(--color-pit-floor)' }}
+          />
+          {pitWallLeft >= 0 && (
+            <polygon
+              points={wallPoints(x, y, pitWallLeft, 1)}
+              style={{ fill: 'var(--color-pit-wall-left)' }}
+            />
+          )}
+          {pitWallRight >= 0 && (
+            <polygon
+              points={wallPoints(x, y, pitWallRight, -1)}
+              style={{ fill: 'var(--color-pit-wall-right)' }}
+            />
+          )}
+          {rails.map(([dx, dy]) => (
+            <polygon
+              key={`${dx},${dy}`}
+              points={spotPoints(x, y + PIT_FLOOR, railSpots(dx, dy))}
+              style={{ fill: railNext ? 'var(--color-tram-rail-next)' : 'var(--color-tram-rail)' }}
+            />
+          ))}
+          {stopOffset && (
+            <BoardBlock
+              x={x + stopOffset.x}
+              y={y + PIT_FLOOR + stopOffset.y - STOP.depth}
+              width={TILE.width * STOP.scale}
+              depth={STOP.depth}
+              top="var(--color-tram-stop-top)"
+              left="var(--color-tram-stop-left)"
+              right="var(--color-tram-stop-right)"
+            />
+          )}
+        </g>
+      )}
+      {rail === '' && !hidden && (
         <g style={fade}>
           {crackShadow > 0 && (
             <polygon

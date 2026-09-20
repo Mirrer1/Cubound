@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 
 import BoardBox from './BoardBox'
-import BoardCell from './BoardCell'
+import BoardCell, { PIT_FLOOR } from './BoardCell'
 import BoardLadder from './BoardLadder'
+import BoardTram from './BoardTram'
 import ClearEffect from './ClearEffect'
 import { rollingCubeFaces } from './cube'
 import {
@@ -23,8 +24,10 @@ import { useBoardAnimation } from './useBoardAnimation'
 import { useCamera } from './useCamera'
 import { TILE, toScreen } from '@/game/iso'
 import { occludingCells } from '@/game/occlusion'
-import { isDoorOpen, isIce, isLiftRaised } from '@/game/rules'
-import type { Entity, GameEvent, GameState, Point } from '@/game/types'
+import { isDoorOpen, isIce, isLiftRaised, nextTramSpot } from '@/game/rules'
+import type { Entity, GameEvent, GameState, Point, TramSpot } from '@/game/types'
+
+type Tram = Extract<Entity, { type: 'tram' }>
 
 interface BoardProps {
   game: GameState
@@ -44,6 +47,16 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
 // 무너지는 칸이 앞으로 견디는 횟수. 목록에 없는 칸은 바닥 없는 칸과 같게 본다
 const crackLeft = (state: GameState, p: Point) => state.cracks.find((c) => same(c, p))?.left ?? -1
+
+const tramNext = (tram: Tram, spot: TramSpot) => tram.cells[nextTramSpot(tram.cells, spot).at]
+
+// 코는 지금 가는 쪽을 가리킨다. 끝에 닿으면 오던 쪽 그대로 둔다
+const tramFacing = (tram: Tram, spot: TramSpot) => {
+  const at = tram.cells[spot.at]
+  const ahead = tram.cells[spot.at + spot.dir]
+  const back = tram.cells[spot.at - spot.dir]
+  return ahead ? { x: ahead.x - at.x, y: ahead.y - at.y } : { x: at.x - back.x, y: at.y - back.y }
+}
 
 const GUIDE_MARGIN = 12
 
@@ -84,6 +97,10 @@ const Board = ({
   const dropping = restarting && t < 1
 
   const { stage, heights, boxes, ladders, leaningLadders, player } = game
+  const trams = useMemo(
+    () => stage.entities.filter((e): e is Tram => e.type === 'tram'),
+    [stage.entities],
+  )
   const cube = playerFrame(prevGame, game, events, t, chain)
   const cubeCell = { x: Math.round(cube.x), y: Math.round(cube.y) }
   // 카메라는 최종 자리가 아니라 지금 그려지는 자리를 따라간다. 순간이동은 나온 뒤에 움직인다
@@ -100,19 +117,46 @@ const Board = ({
       .flatMap((l) => occludingCells(heights, l, heights[l.y][l.x], boxes)),
   ]
 
+  // 발판 길 칸은 바닥이 없어도 구덩이로 그린다. 값은 이웃한 길 칸의 방향이다
+  const railDirs = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const tram of trams)
+      tram.cells.forEach((cell, i) =>
+        map.set(
+          `${cell.x}-${cell.y}`,
+          [tram.cells[i - 1], tram.cells[i + 1]]
+            .filter((near) => near !== undefined)
+            .map((near) => `${near.x - cell.x},${near.y - cell.y}`)
+            .join('|'),
+        ),
+      )
+    return map
+  }, [trams])
+
   // x, y는 화면 좌표, p는 칸 좌표. 메운 칸이 다시 구멍이 될 때는 사라지기 전 높이로 그린다
   const cells = useMemo(
     () =>
       heights
         .flatMap((row, y) =>
           row.map((_, x) => {
-            const h = Math.max(heights[y][x], before.heights[y][x])
-            return { ...toScreen({ x, y }, h), h, p: { x, y }, key: `${x}-${y}` }
+            const rail = railDirs.get(`${x}-${y}`) ?? ''
+            const h = rail === '' ? Math.max(heights[y][x], before.heights[y][x]) : 0
+            return { ...toScreen({ x, y }, h), h, rail, p: { x, y }, key: `${x}-${y}` }
           }),
         )
         .filter((cell) => cell.h >= 0)
         .sort((a, b) => a.p.x + a.p.y - (b.p.x + b.p.y)),
-    [heights, before.heights],
+    [heights, before.heights, railDirs],
+  )
+
+  // 구덩이 벽은 옆 칸 윗면에서 시작한다. 옆 칸도 길이면 구덩이가 이어져 벽이 없다
+  const wallHeight = (x: number, y: number) =>
+    railDirs.has(`${x}-${y}`) ? -1 : Math.max(heights[y]?.[x] ?? -1, before.heights[y]?.[x] ?? -1)
+  const nextRails = new Set(
+    trams.map((tram, i) => {
+      const cell = tramNext(tram, game.trams[i])
+      return `${cell.x}-${cell.y}`
+    }),
   )
 
   const cubeDrop = dropping ? restartDrop(t, 0, boxes.length) : null
@@ -224,6 +268,9 @@ const Board = ({
             : []),
         ].join('|')
 
+        const tramIndex = trams.findIndex((tram, i) => same(tram.cells[game.trams[i].at], cell.p))
+        const tram = tramIndex >= 0 ? trams[tramIndex] : null
+        const facing = tram ? tramFacing(tram, game.trams[tramIndex]) : null
         const drawCube = same(cube.cell, cell.p) && !(game.cleared && !moving)
         const drawBox = box !== null && same(box.cell, cell.p)
         const boxScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
@@ -234,7 +281,7 @@ const Board = ({
         const restored = dropping
           ? Math.sign(before.heights[cell.p.y][cell.p.x] - heights[cell.p.y][cell.p.x])
           : 0
-        const overlay = drawBox || drawCube || goalEffect || boxDrop !== null
+        const overlay = drawBox || drawCube || goalEffect || boxDrop !== null || tram !== null
 
         return (
           <BoardCell
@@ -261,6 +308,10 @@ const Board = ({
             switchDepth={lerp(pressed(before) ? 2 : 9, pressed(game) ? 2 : 9, switchPhase)}
             doorDepth={lerp(doorDepth(before), doorDepth(game), doorPhase)}
             box={has(boxes, cell.p) && !(box && same(box.to, cell.p)) && boxDrop === null}
+            rail={cell.rail}
+            railNext={nextRails.has(cell.key)}
+            pitWallLeft={cell.rail === '' ? -1 : wallHeight(cell.p.x, cell.p.y - 1)}
+            pitWallRight={cell.rail === '' ? -1 : wallHeight(cell.p.x - 1, cell.p.y)}
             blockOpacity={
               restored > 0 ? 1 - t : restored < 0 ? (cubeDrop?.opacity ?? 1) : crumble.opacity
             }
@@ -269,6 +320,15 @@ const Board = ({
           >
             {overlay ? (
               <>
+                {tram && facing && (
+                  <BoardTram
+                    x={cell.x}
+                    y={cell.y - tram.level * TILE.layer}
+                    depth={PIT_FLOOR + tram.level * TILE.layer}
+                    dx={facing.x}
+                    dy={facing.y}
+                  />
+                )}
                 {drawBox && boxScreen && (
                   <BoardBox x={boxScreen.x} y={boxScreen.y - TILE.layer + boxSink} />
                 )}

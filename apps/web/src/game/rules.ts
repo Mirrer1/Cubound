@@ -8,6 +8,7 @@ import type {
   MoveResult,
   Point,
   Stage,
+  TramSpot,
 } from './types'
 
 type Lift = Extract<Entity, { type: 'lift' }>
@@ -397,6 +398,13 @@ const crumble = (before: GameState, after: GameState): MoveResult => {
 }
 
 // 이동 한 번마다 발판이 길을 한 칸 가고 끝에 닿으면 방향을 뒤집는다. 위에 있던 큐브와 상자는 같이 간다
+// 발판이 다음 수에 갈 자리. 길 끝에 닿아 있으면 방향을 뒤집는다
+export const nextTramSpot = (cells: Point[], spot: TramSpot): TramSpot => {
+  const ahead = spot.at + spot.dir
+  const dir = ahead < 0 || ahead >= cells.length ? ((spot.dir * -1) as 1 | -1) : spot.dir
+  return { id: spot.id, at: spot.at + dir, dir }
+}
+
 const rideTrams = (state: GameState): MoveResult => {
   if (state.trams.length === 0) return { state, events: [] }
 
@@ -407,17 +415,15 @@ const rideTrams = (state: GameState): MoveResult => {
 
   const moved = state.trams.map((spot, i) => {
     const { cells } = list[i]
-    const ahead = spot.at + spot.dir
-    const dir = ahead < 0 || ahead >= cells.length ? ((spot.dir * -1) as 1 | -1) : spot.dir
-    const at = spot.at + dir
+    const next = nextTramSpot(cells, spot)
     const from = { x: cells[spot.at].x, y: cells[spot.at].y }
-    const to = { x: cells[at].x, y: cells[at].y }
+    const to = { x: cells[next.at].x, y: cells[next.at].y }
 
     events.push({ type: 'tram', id: spot.id, from, to })
     if (same(player, from)) player = to
     boxes = boxes.map((box) => (same(box, from) ? to : box))
 
-    return { id: spot.id, at, dir }
+    return next
   })
 
   return { state: { ...state, player, boxes, trams: moved }, events }
