@@ -244,6 +244,19 @@ export const switchProgress = (
   return at === null ? t : Math.min(1, Math.max(0, (t * durationOf(events) - at) / SWITCH_SECONDS))
 }
 
+// 스위치 자신이 눌리고 풀리는 시간. 닿아서 생기는 일이라 멀리 있는 문과 발판보다 짧다
+const PRESS_SECONDS = 0.06
+
+// 스위치는 접촉이 바뀌는 순간에 맞춘다. 눌림은 닿는 때에 끝나고 풀림은 떠나는 때에 시작한다
+export const pressProgress = (events: GameEvent[], p: Point, pressed: boolean, t: number) => {
+  const { arrive, leave } = touchAt(events, p)
+  const at = pressed ? arrive : leave
+  if (at === null) return t
+
+  const start = pressed ? at - PRESS_SECONDS : at
+  return Math.min(1, Math.max(0, (t * durationOf(events) - start) / PRESS_SECONDS))
+}
+
 // 사다리를 집어 드는 진행도 0~1. 집지 않는 이동은 이동 전체에 걸쳐 섞는다
 export const pickUpProgress = (events: GameEvent[], t: number) => {
   const at = pickUpAt(events)

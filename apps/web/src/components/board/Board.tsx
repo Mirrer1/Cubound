@@ -12,6 +12,7 @@ import {
   movingBox,
   pickUpProgress,
   playerFrame,
+  pressProgress,
   restartDrop,
   restartDuration,
   switchCells,
@@ -191,7 +192,9 @@ const Board = ({
             ? 1
             : linkedPhase(switchCells(stage, lift.id), isLiftRaised(game, lift.id))
         const switchPhase =
-          entity?.type === 'switch' ? linkedPhase([cell.p], pressed(game)) : progress
+          entity?.type === 'switch' && moving
+            ? pressProgress(events, cell.p, pressed(game), t)
+            : progress
         const doorPhase =
           entity?.type === 'door'
             ? linkedPhase([...switchCells(stage, entity.id), cell.p], isDoorOpen(game, entity.id))
