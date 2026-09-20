@@ -9,6 +9,7 @@ import {
   moveEase,
   movingBox,
   pickUpProgress,
+  pipsOf,
   playerFrame,
   restartDrop,
   restartDuration,
@@ -206,6 +207,34 @@ describe('switchProgress', () => {
     expect(switchProgress(events, cells, false, 0)).toBe(0)
     expect(switchProgress(events, cells, false, 0.2)).toBeGreaterThan(0)
     expect(switchProgress(events, cells, false, 1)).toBeCloseTo(1)
+  })
+})
+
+describe('pipsOf', () => {
+  const pips = (entities: Stage['entities']) => pipsOf({ ...STAGE, entities })
+
+  it('나온 순서대로 1부터 매긴다', () => {
+    expect(
+      pips([
+        { type: 'switch', x: 0, y: 0, target: 'b' },
+        { type: 'door', x: 1, y: 0, id: 'b' },
+        { type: 'switch', x: 2, y: 0, target: 'a' },
+        { type: 'lift', x: 3, y: 0, id: 'a' },
+      ]),
+    ).toEqual({ b: 1, a: 2 })
+  })
+
+  it('연결이 하나뿐이어도 1을 매긴다', () => {
+    expect(pips([{ type: 'door', x: 1, y: 0, id: 'a' }])).toEqual({ a: 1 })
+  })
+
+  it('연결이 없는 오브젝트는 세지 않는다', () => {
+    expect(
+      pips([
+        { type: 'box', x: 0, y: 0 },
+        { type: 'ladder', x: 1, y: 0 },
+      ]),
+    ).toEqual({})
   })
 })
 

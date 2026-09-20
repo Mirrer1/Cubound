@@ -238,6 +238,16 @@ export const pickUpProgress = (events: GameEvent[], t: number) => {
 export const switchCells = (stage: Stage, target: string): Point[] =>
   stage.entities.filter((e) => e.type === 'switch' && e.target === target)
 
+// 짝지어진 스위치와 문과 발판에 같은 수의 핍을 찍는다. 나온 순서가 곧 개수다
+export const pipsOf = (stage: Stage): Record<string, number> => {
+  const pips: Record<string, number> = {}
+  for (const e of stage.entities) {
+    const id = e.type === 'switch' ? e.target : e.type === 'door' || e.type === 'lift' ? e.id : null
+    if (id !== null && pips[id] === undefined) pips[id] = Object.keys(pips).length + 1
+  }
+  return pips
+}
+
 // 칸 하나의 자국 진하기 0~1. 겹치면 진한 쪽을 쓴다
 export const frostAt = (events: GameEvent[], p: Point, t: number) => {
   if (!events.some((e) => e.type === 'slid')) return 0

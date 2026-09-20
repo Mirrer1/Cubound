@@ -4,7 +4,7 @@ import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
 import BoardLadder from './BoardLadder'
 import { crackThickness } from './frame'
-import { blend, checker, darken, dim, shade, tint } from './shade'
+import { blend, checker, darken, dim, shade } from './shade'
 import { TILE, blockFaces, isoDelta } from '@/game/iso'
 import type { Direction } from '@/game/types'
 
@@ -62,6 +62,9 @@ const SWITCH_SCALE = 0.66
 // 구멍은 같은 크기 판 두 장을 어긋나게 겹쳐 두께를 낸다
 const HOLE = { scale: 0.62, wall: 7 }
 
+// 짝지어진 칸끼리 같은 수를 찍는다. 뒤쪽 모서리에 두어야 앞의 높은 칸에 덮이지 않는다
+const PIP = { corner: -0.16, spread: 18, width: 5.4, height: 2.7 }
+
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
 const spotPoints = (x: number, y: number, spots: [number, number][]) =>
@@ -71,6 +74,13 @@ const spotPoints = (x: number, y: number, spots: [number, number][]) =>
       return `${x + d.x},${y + d.y}`
     })
     .join(' ')
+
+const pipPoints = (x: number, y: number, index: number, count: number) => {
+  const d = isoDelta(PIP.corner, PIP.corner)
+  const cx = x + d.x + (index - (count - 1) / 2) * PIP.spread
+  const cy = y + d.y
+  return `${cx - PIP.width},${cy} ${cx},${cy - PIP.height} ${cx + PIP.width},${cy} ${cx},${cy + PIP.height}`
+}
 
 interface BoardCellProps {
   x: number
@@ -91,6 +101,7 @@ interface BoardCellProps {
   faded: boolean
   entity: 'switch' | 'door' | null
   lift: boolean
+  pips: number // 연결 표시 점 수
   switchDepth: number
   doorDepth: number
   box: boolean
@@ -119,6 +130,7 @@ const BoardCell = ({
   faded,
   entity,
   lift,
+  pips,
   switchDepth,
   doorDepth,
   box,
@@ -221,15 +233,24 @@ const BoardCell = ({
               />
             )}
             {lift && (
-              <BoardBlock
-                x={x}
-                y={y - PLATE.rise}
-                width={TILE.width * PLATE.scale}
-                depth={PLATE.depth}
-                top="var(--color-machine-top)"
-                left="var(--color-machine-left)"
-                right="var(--color-machine-right)"
-              />
+              <>
+                <BoardBlock
+                  x={x}
+                  y={y - PLATE.rise}
+                  width={TILE.width * PLATE.scale}
+                  depth={PLATE.depth}
+                  top="var(--color-machine-top)"
+                  left="var(--color-machine-left)"
+                  right="var(--color-machine-right)"
+                />
+                {Array.from({ length: pips }, (_, i) => (
+                  <polygon
+                    key={i}
+                    points={pipPoints(x, y - PLATE.rise, i, pips)}
+                    style={{ fill: 'var(--color-pip)' }}
+                  />
+                ))}
+              </>
             )}
             {icy && (
               <polygon
@@ -271,15 +292,24 @@ const BoardCell = ({
         </g>
       )}
       {entity === 'switch' && (
-        <BoardBlock
-          x={x}
-          y={y - switchDepth}
-          width={TILE.width * SWITCH_SCALE}
-          depth={switchDepth}
-          top={shade('tool', 'top')}
-          left={shade('tool', 'left')}
-          right={shade('tool', 'right')}
-        />
+        <>
+          <BoardBlock
+            x={x}
+            y={y - switchDepth}
+            width={TILE.width * SWITCH_SCALE}
+            depth={switchDepth}
+            top={shade('tool', 'top')}
+            left={shade('tool', 'left')}
+            right={shade('tool', 'right')}
+          />
+          {Array.from({ length: pips }, (_, i) => (
+            <polygon
+              key={i}
+              points={pipPoints(x, y - switchDepth, i, pips)}
+              style={{ fill: darken('tool', 45) }}
+            />
+          ))}
+        </>
       )}
       {entity === 'door' && (
         <>
@@ -288,14 +318,26 @@ const BoardCell = ({
             y={y - doorDepth}
             width={TILE.width}
             depth={doorDepth}
-            top={tint('var(--color-door)', 22)}
-            left={tint(darken('door', 20), 16)}
-            right={tint(darken('door', 10), 18)}
+            top="var(--color-machine-frame-top)"
+            left="var(--color-machine-frame-left)"
+            right="var(--color-machine-frame-right)"
           />
-          <polygon
-            points={blockFaces(x, y - doorDepth, TILE.width * 0.46, 0).top}
-            style={{ fill: shade('tool', 'top'), opacity: 0.9 }}
+          <BoardBlock
+            x={x}
+            y={y - doorDepth - PLATE.rise}
+            width={TILE.width * PLATE.scale}
+            depth={PLATE.depth}
+            top="var(--color-machine-top)"
+            left="var(--color-machine-left)"
+            right="var(--color-machine-right)"
           />
+          {Array.from({ length: pips }, (_, i) => (
+            <polygon
+              key={i}
+              points={pipPoints(x, y - doorDepth - PLATE.rise, i, pips)}
+              style={{ fill: 'var(--color-pip)' }}
+            />
+          ))}
         </>
       )}
       {box && <BoardBox x={x} y={y - TILE.layer} />}

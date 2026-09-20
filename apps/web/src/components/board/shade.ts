@@ -13,10 +13,6 @@ export const shade = (token: string, face: Face) =>
 export const darken = (token: string, amount: number) =>
   `color-mix(in srgb, var(--color-${token}), black ${amount}%)`
 
-// 색에 도구색을 조금 섞는다
-export const tint = (color: string, amount: number) =>
-  `color-mix(in srgb, ${color}, var(--color-tool) ${amount}%)`
-
 // 두 색 사이를 진행도만큼 섞는다
 export const blend = (a: string, b: string, t: number) =>
   `color-mix(in srgb, ${a}, ${b} ${t * 100}%)`
