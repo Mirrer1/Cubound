@@ -153,8 +153,8 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
           ref={sectionRef}
           className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-line bg-base-bg"
         >
-          <header className="flex items-start justify-between gap-6 px-(--panel-pad) pt-(--panel-pad) short:items-center short:pt-3">
-            <div className="flex flex-col gap-1.5 short:flex-row short:items-baseline short:gap-3">
+          <header className="flex items-start justify-between gap-6 px-(--panel-pad) pt-(--panel-pad) short:items-center short:pt-3 narrow:gap-3">
+            <div className="flex min-w-0 flex-col gap-1.5 short:flex-row short:items-baseline short:gap-3">
               <span className="font-mono text-[11px] tracking-[0.22em] text-mute">
                 STAGE {String(stageNumber).padStart(2, '0')}
               </span>
@@ -162,41 +162,47 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                 {t(stageTextKey(game.stage.id))}
               </span>
             </div>
-            <div className="flex items-center gap-5 wide:gap-7">
-              {pushesOver !== null && (
+            <div className="flex shrink-0 items-center gap-5 wide:gap-7 narrow:flex-col-reverse narrow:items-end narrow:gap-3">
+              <div className="flex items-center gap-5 wide:gap-7">
+                {pushesOver !== null && (
+                  <div
+                    data-guide="pushes"
+                    className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"
+                  >
+                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
+                      PUSHES
+                    </span>
+                    <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl">
+                      {pushesOver}
+                    </span>
+                  </div>
+                )}
+                {climbsOver !== null && (
+                  <div
+                    data-guide="climbs"
+                    className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"
+                  >
+                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
+                      CLIMBS
+                    </span>
+                    <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl">
+                      {climbsOver}
+                    </span>
+                  </div>
+                )}
                 <div
-                  data-guide="pushes"
+                  data-guide="moves"
                   className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"
                 >
-                  <span className="font-mono text-[10px] tracking-[0.22em] text-mute">PUSHES</span>
+                  <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
+                    {left === null ? 'MOVES' : 'LEFT'}
+                  </span>
                   <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl">
-                    {pushesOver}
+                    {left ?? game.moves}
                   </span>
                 </div>
-              )}
-              {climbsOver !== null && (
-                <div
-                  data-guide="climbs"
-                  className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"
-                >
-                  <span className="font-mono text-[10px] tracking-[0.22em] text-mute">CLIMBS</span>
-                  <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl">
-                    {climbsOver}
-                  </span>
-                </div>
-              )}
-              <div
-                data-guide="moves"
-                className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"
-              >
-                <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
-                  {left === null ? 'MOVES' : 'LEFT'}
-                </span>
-                <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl">
-                  {left ?? game.moves}
-                </span>
               </div>
-              <div className="hidden gap-2.5 sm:flex">
+              <div className="flex gap-2.5">
                 {hasGuide && (
                   <Button variant="icon" onClick={handleOpenGuide} title={t('play.guide')}>
                     ?
@@ -230,15 +236,6 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
               restarting={restarting}
               guideCell={guideCell}
             />
-          </div>
-          <div
-            className={`grid gap-3 panel-pad whitespace-nowrap sm:hidden ${hasGuide ? 'grid-cols-3' : 'grid-cols-2'}`}
-          >
-            <Button strong={outOfMoves} onClick={askOrRestart} data-guide="restart">
-              ↺ {t('play.restartShort')}
-            </Button>
-            {hasGuide && <Button onClick={handleOpenGuide}>? {t('play.guideShort')}</Button>}
-            <Button onClick={handleSelect}>≡ {t('play.menuShort')}</Button>
           </div>
           <AnimatePresence>
             {game.cleared && (

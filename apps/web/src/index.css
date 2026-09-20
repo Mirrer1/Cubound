@@ -4,6 +4,8 @@
 @custom-variant short (@media (height < 500px));
 /* 높이가 넉넉한 넓은 화면. short와 겹치지 않아 적용 순서에 기대지 않는다 */
 @custom-variant wide (@media (width >= 40rem) and (height >= 500px));
+/* 폰 세로처럼 높이는 넉넉하고 폭이 좁은 화면. wide, short와 셋이 화면을 나눠 가진다 */
+@custom-variant narrow (@media (width < 40rem) and (height >= 500px));
 
 @theme static {
   --ease-soft: cubic-bezier(0.37, 0, 0.63, 1);
