@@ -1120,6 +1120,20 @@ const leftAt = (state: GameState, p: Point) =>
   state.cracks.find((crack) => crack.x === p.x && crack.y === p.y)?.left
 
 describe('move 무너지는 칸', () => {
+  // 왼쪽 끝 무너지는 칸 옆에 얼음 길이 있어 닳아 사라진 자리로 미끄러져 들어갈 수 있다
+  const CRACK_ICE_STAGE: Stage = {
+    ...CRACK_STAGE,
+    heights: [
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+    ],
+    start: { x: 0, y: 0 },
+    goal: { x: 4, y: 2 },
+    cracks: ['.....', '1....', '.....'],
+    ice: ['.....', '.##..', '.....'],
+  }
+
   it('올라선 동안에는 남은 횟수가 그대로다', () => {
     const { state, events } = move(createState(CRACK_STAGE), 'right')
 
@@ -1244,6 +1258,137 @@ describe('move 무너지는 칸', () => {
     expect(climbed.state.heights[1][1]).toBe(0)
     expect(climbed.events.every((e) => e.type !== 'cracked' || !e.gone)).toBe(true)
   })
+
+  it('다 닳은 칸의 기대 놓은 사다리를 도로 들고 떠나면 그때 무너진다', () => {
+    const stage: Stage = {
+      ...CRACK_STAGE,
+      heights: withCrackRow([0, 0, 1, 0]),
+      cracks: ['....', '.1..', '....'],
+      entities: [{ type: 'ladder', x: 0, y: 2 }],
+    }
+    const picked = play(stage, ['down', 'up', 'right', 'right', 'right', 'left'])
+    const { state, events } = move(picked.state, 'left')
+
+    expect(picked.state.carrying).toBe(true)
+    expect(picked.state.leaningLadders).toEqual([])
+    expect(picked.state.heights[1][1]).toBe(0)
+    expect(state.heights[1][1]).toBe(-1)
+    expect(events).toContainEqual({ type: 'cracked', at: CRACK, left: 0, gone: true })
+  })
+
+  it('얼음으로 미끄러져 떠나도 남은 횟수가 준다', () => {
+    const stage: Stage = { ...CRACK_STAGE, ice: ['....', '..##', '....'] }
+    const { state, events } = play(stage, ['right', 'right'])
+
+    expect(state.player).toEqual({ x: 3, y: 1 })
+    expect(leftAt(state, CRACK)).toBe(1)
+    expect(events).toContainEqual({ type: 'cracked', at: CRACK, left: 1, gone: false })
+  })
+
+  it('미끄러져 무너지는 칸에 도착해 멈추면 줄지 않는다', () => {
+    const stage: Stage = {
+      ...CRACK_STAGE,
+      cracks: ['....', '...2', '....'],
+      ice: ['....', '.##.', '....'],
+    }
+    const { state, events } = move(createState(stage), 'right')
+
+    expect(state.player).toEqual({ x: 3, y: 1 })
+    expect(leftAt(state, { x: 3, y: 1 })).toBe(2)
+    expect(events.some((e) => e.type === 'cracked')).toBe(false)
+  })
+
+  it('순간이동으로 떠나도 남은 횟수가 준다', () => {
+    const stage: Stage = {
+      ...CRACK_STAGE,
+      entities: [
+        { type: 'warp', x: 2, y: 1, id: 'a' },
+        { type: 'warp', x: 3, y: 2, id: 'a' },
+      ],
+    }
+    const { state, events } = play(stage, ['right', 'right'])
+
+    expect(state.player).toEqual({ x: 3, y: 2 })
+    expect(leftAt(state, CRACK)).toBe(1)
+    expect(events).toContainEqual({ type: 'cracked', at: CRACK, left: 1, gone: false })
+  })
+
+  it('미끄러지다 무너져 사라진 자리를 만나면 그 앞에서 멈춘다', () => {
+    const { state, events } = play(CRACK_ICE_STAGE, [
+      'down',
+      'up',
+      'right',
+      'right',
+      'right',
+      'down',
+      'left',
+    ])
+
+    expect(state.heights[1][0]).toBe(-1)
+    expect(state.player).toEqual({ x: 1, y: 1 })
+    expect(events).toEqual([
+      { type: 'moved', from: { x: 3, y: 1 }, to: { x: 2, y: 1 } },
+      { type: 'slid', subject: 'player', from: { x: 2, y: 1 }, to: { x: 1, y: 1 } },
+    ])
+  })
+
+  it('미끄러지던 상자가 무너져 사라진 자리를 메운다', () => {
+    const stage: Stage = { ...CRACK_ICE_STAGE, entities: [{ type: 'box', x: 3, y: 1 }] }
+    const { state, events } = play(stage, [
+      'down',
+      'up',
+      'right',
+      'right',
+      'right',
+      'right',
+      'down',
+      'left',
+    ])
+
+    expect(state.boxes).toEqual([])
+    expect(state.heights[1][0]).toBe(0)
+    expect(state.player).toEqual({ x: 3, y: 1 })
+    expect(events).toEqual([
+      { type: 'pushed', from: { x: 3, y: 1 }, to: { x: 2, y: 1 }, result: 'slid' },
+      { type: 'slid', subject: 'box', from: { x: 2, y: 1 }, to: { x: 1, y: 1 } },
+      { type: 'pushed', from: { x: 1, y: 1 }, to: { x: 0, y: 1 }, result: 'filled' },
+      { type: 'moved', from: { x: 4, y: 1 }, to: { x: 3, y: 1 } },
+    ])
+  })
+
+  it('상자가 얼음을 타고 다른 무너지는 칸에 멈추면 떠난 칸만 닳는다', () => {
+    const stage: Stage = {
+      ...CRACK_ICE_STAGE,
+      start: { x: 0, y: 1 },
+      cracks: ['.....', '.2.2.', '.....'],
+      ice: ['.....', '..#..', '.....'],
+      entities: [{ type: 'box', x: 1, y: 1 }],
+    }
+    const { state, events } = move(createState(stage), 'right')
+
+    expect(state.boxes).toEqual([{ x: 3, y: 1 }])
+    expect(leftAt(state, { x: 1, y: 1 })).toBe(1)
+    expect(leftAt(state, { x: 3, y: 1 })).toBe(2)
+    expect(events.filter((e) => e.type === 'cracked')).toEqual([
+      { type: 'cracked', at: { x: 1, y: 1 }, left: 1, gone: false },
+    ])
+  })
+
+  it('올라가기 제한을 다 써 오르지 못하면 제자리라 남은 횟수가 줄지 않는다', () => {
+    const stage: Stage = {
+      ...CRACK_STAGE,
+      heights: withCrackRow([0, 0, 0, 1]),
+      entities: [{ type: 'box', x: 2, y: 1 }],
+      rules: { climbLimit: 1 },
+    }
+    const onCrack = play(stage, ['right', 'right', 'left']).state
+    const { state, events } = move(onCrack, 'right')
+
+    expect(onCrack.player).toEqual(CRACK)
+    expect(state).toBe(onCrack)
+    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+    expect(leftAt(state, CRACK)).toBe(1)
+  })
 })
 
 const WARP_STAGE: Stage = {
@@ -1366,6 +1511,57 @@ describe('move 짝 칸', () => {
       { type: 'fell', from: { x: 0, y: 1 }, to: { x: 1, y: 1 }, drop: 1 },
       { type: 'warped', from: { x: 1, y: 1 }, to: { x: 4, y: 1 } },
     ])
+  })
+
+  it('미끄러져 멈춘 짝 칸의 나올 칸에 상자가 있으면 멈춘 그 칸에 선다', () => {
+    const stage: Stage = {
+      ...WARP_STAGE,
+      ice: ['.....', '.##..', '.....'],
+      entities: [
+        { type: 'warp', x: 3, y: 1, id: 'a' },
+        { type: 'warp', x: 4, y: 2, id: 'a' },
+        { type: 'box', x: 4, y: 2 },
+      ],
+    }
+    const { state, events } = move(createState(stage), 'right')
+
+    expect(state.player).toEqual({ x: 3, y: 1 })
+    expect(state.moves).toBe(1)
+    expect(events).toEqual([
+      { type: 'moved', from: { x: 0, y: 1 }, to: { x: 1, y: 1 } },
+      { type: 'slid', subject: 'player', from: { x: 1, y: 1 }, to: { x: 3, y: 1 } },
+    ])
+  })
+
+  it('상자를 민 뒤 선 칸이 짝 칸이면 순간이동한다', () => {
+    const stage: Stage = {
+      ...WARP_STAGE,
+      start: { x: 1, y: 1 },
+      goal: { x: 0, y: 0 },
+      entities: [
+        { type: 'warp', x: 3, y: 1, id: 'a' },
+        { type: 'warp', x: 4, y: 2, id: 'a' },
+        { type: 'box', x: 2, y: 1 },
+      ],
+    }
+    const { state, events } = play(stage, ['right', 'right'])
+
+    expect(state.player).toEqual({ x: 4, y: 2 })
+    expect(state.boxes).toEqual([{ x: 4, y: 1 }])
+    expect(events).toEqual([
+      { type: 'pushed', from: { x: 3, y: 1 }, to: { x: 4, y: 1 }, result: 'slid' },
+      { type: 'moved', from: { x: 2, y: 1 }, to: { x: 3, y: 1 } },
+      { type: 'warped', from: { x: 3, y: 1 }, to: { x: 4, y: 2 } },
+    ])
+  })
+
+  it('순간이동한 이동도 이동 제한을 1만 쓴다', () => {
+    const stage: Stage = { ...WARP_STAGE, rules: { moveLimit: 2 } }
+    const { state } = move(createState(stage), 'right')
+
+    expect(state.player).toEqual({ x: 4, y: 1 })
+    expect(state.moves).toBe(1)
+    expect(movesLeft(state)).toBe(1)
   })
 
   it('순간이동으로 도착한 칸이 목표면 클리어한다', () => {
