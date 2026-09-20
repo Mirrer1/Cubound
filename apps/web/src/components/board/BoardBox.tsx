@@ -1,7 +1,7 @@
 import BoardBlock from './BoardBlock'
 import { CUBE } from './cube'
-import { darken, shade } from './shade'
-import { TILE, blockFaces } from '@/game/iso'
+import { shade } from './shade'
+import { TILE } from '@/game/iso'
 
 interface BoardBoxProps {
   x: number
@@ -10,21 +10,15 @@ interface BoardBoxProps {
 
 const BoardBox = ({ x, y }: BoardBoxProps) => {
   return (
-    <>
-      <BoardBlock
-        x={x}
-        y={y}
-        width={TILE.width * CUBE}
-        depth={TILE.layer}
-        top={shade('tool', 'top')}
-        left={shade('tool', 'left')}
-        right={shade('tool', 'right')}
-      />
-      <polygon
-        points={blockFaces(x, y, TILE.width * CUBE * 0.52, 0).top}
-        style={{ fill: darken('tool', 13) }}
-      />
-    </>
+    <BoardBlock
+      x={x}
+      y={y}
+      width={TILE.width * CUBE}
+      depth={TILE.layer}
+      top={shade('tool', 'top')}
+      left={shade('tool', 'left')}
+      right={shade('tool', 'right')}
+    />
   )
 }
 
