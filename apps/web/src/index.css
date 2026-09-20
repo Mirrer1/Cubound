@@ -96,6 +96,28 @@ body {
   padding: var(--panel-pad) calc(var(--panel-pad) - var(--panel-trim, 0px));
 }
 
+/* 스테이지 카드 격자. 카드 폭 240px을 넘지 않는 선에서 칸 수가 화면 폭을 따라간다 */
+@utility stage-grid {
+  display: grid;
+  justify-content: center;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 240px));
+
+  @media (width >= 40rem) {
+    gap: 1rem;
+  }
+  /* 폰 가로는 높이가 낮아 칸을 늘려 두 줄에 담는다 */
+  @media (width >= 40rem) and (height < 500px) {
+    grid-template-columns: repeat(5, minmax(0, 240px));
+  }
+  @media (width >= 47.5rem) and (height >= 500px) {
+    grid-template-columns: repeat(4, minmax(0, 240px));
+  }
+  @media (width >= 62.5rem) {
+    grid-template-columns: repeat(5, minmax(0, 240px));
+  }
+}
+
 /* 호버와 누름 전환. 색은 천천히, 누름 크기는 빠르게 */
 @utility transition-soft {
   transition:

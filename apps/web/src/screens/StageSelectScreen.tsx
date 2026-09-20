@@ -143,10 +143,7 @@ const StageSelectScreen = ({ world }: StageSelectScreenProps) => {
             </span>
           </div>
         </header>
-        <div
-          ref={gridRef}
-          className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(5,minmax(0,240px))] sm:justify-center sm:gap-4"
-        >
+        <div ref={gridRef} className="stage-grid">
           {cards.map((card) => (
             <StageCard key={card.id} {...card} onSelect={() => handleSelect(card.id)} />
           ))}
