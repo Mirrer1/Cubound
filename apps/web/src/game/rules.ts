@@ -94,6 +94,12 @@ export const pushesLeft = (state: GameState) => {
   return limit === undefined ? null : Math.max(limit - state.pushes, 0)
 }
 
+// 보스 올라가기 제한이 없으면 null
+export const climbsLeft = (state: GameState) => {
+  const limit = state.stage.rules?.climbLimit
+  return limit === undefined ? null : Math.max(limit - state.climbs, 0)
+}
+
 export const readCracks = (stage: Stage): Crack[] =>
   (stage.cracks ?? []).flatMap((row, y) =>
     [...row].flatMap((c, x) => (c === '.' ? [] : [{ x, y, left: Number(c) }])),
@@ -110,6 +116,7 @@ export const createState = (stage: Stage): GameState => ({
   player: stage.start,
   moves: 0,
   pushes: 0,
+  climbs: 0,
   cleared: false,
 })
 
@@ -211,7 +218,10 @@ const climbOrPlaceLadder = (
   if (hasBox(state, from) || toFloor !== standHeight(state, from) + 1) return null
 
   if (state.leaningLadders.some((l) => same(l, from) && l.direction === direction)) {
-    return arrive(state, to, direction, { type: 'climbed', from, to, via: 'ladder' })
+    if (climbsLeft(state) === 0) return null
+
+    const climbing: GameState = { ...state, climbs: state.climbs + 1 }
+    return arrive(climbing, to, direction, { type: 'climbed', from, to, via: 'ladder' })
   }
 
   if (!state.carrying) return null
@@ -323,8 +333,10 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
 
   const pushed = pushesLeft(state) === 0 ? null : pushBox(state, to, direction)
   if (pushed) return pushed
+  if (climbsLeft(state) === 0) return blocked
 
-  return arrive(state, to, direction, { type: 'climbed', from, to, via: 'box' })
+  const climbing: GameState = { ...state, climbs: state.climbs + 1 }
+  return arrive(climbing, to, direction, { type: 'climbed', from, to, via: 'box' })
 }
 
 // 칸을 딛고 있는 것. 상자 위에 선 큐브는 칸을 딛지 않는다

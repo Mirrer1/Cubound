@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  climbsLeft,
   createState,
   isDoorOpen,
   isLiftRaised,
@@ -988,6 +989,111 @@ describe('pushesLeft', () => {
     expect(pushesLeft(createState(stage))).toBe(2)
     expect(pushesLeft(play(stage, ['right']).state)).toBe(1)
     expect(pushesLeft(play(stage, ['right', 'right']).state)).toBe(0)
+  })
+})
+
+// 상자 오른쪽 칸이 한 층 높아 상자가 밀리지 않고 큐브가 딛고 오른다
+const CLIMB_BOX_STAGE: Stage = { ...BOX_STAGE, heights: withMiddleRow([0, 0, 1, 0, 0]) }
+
+describe('move 오른 횟수', () => {
+  it('상자를 딛고 오르면 오른 횟수가 1 오른다', () => {
+    const { state, events } = move(createState(CLIMB_BOX_STAGE), 'right')
+
+    expect(events).toEqual([
+      { type: 'climbed', from: { x: 0, y: 1 }, to: { x: 1, y: 1 }, via: 'box' },
+    ])
+    expect(state.climbs).toBe(1)
+  })
+
+  it('기대 놓은 사다리로 오르면 오른 횟수가 1 오른다', () => {
+    const { state } = play(LADDER_STAGE, ['right', 'right', 'right', 'right'])
+
+    expect(state.climbs).toBe(1)
+  })
+
+  it('사다리를 줍거나 놓는 이동은 오른 횟수가 오르지 않는다', () => {
+    expect(move(createState(LADDER_STAGE), 'right').state.climbs).toBe(0)
+    expect(play(LADDER_STAGE, ['right', 'right', 'right']).state.climbs).toBe(0)
+  })
+
+  it('사다리를 타고 내려오는 이동은 오른 횟수가 오르지 않는다', () => {
+    const { state } = play(LADDER_STAGE, ['right', 'right', 'right', 'right', 'left'])
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(state.climbs).toBe(1)
+  })
+
+  it('발판을 타고 높이가 올라가도 오른 횟수가 오르지 않는다', () => {
+    const stage: Stage = {
+      ...LIFT_STAGE,
+      start: { x: 1, y: 1 },
+      entities: [
+        { type: 'switch', x: 3, y: 1, target: 'a' },
+        { type: 'lift', x: 2, y: 1, id: 'a' },
+        { type: 'box', x: 2, y: 1 },
+      ],
+    }
+    const { state } = move(createState(stage), 'right')
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(standHeight(state, { x: 2, y: 1 })).toBe(1)
+    expect(state.climbs).toBe(0)
+  })
+})
+
+describe('move 올라가기 제한', () => {
+  const LIMITED_STAGE: Stage = { ...CLIMB_BOX_STAGE, rules: { climbLimit: 1 } }
+
+  it('제한 안에서는 그대로 오른다', () => {
+    const { state } = move(createState(LIMITED_STAGE), 'right')
+
+    expect(state.player).toEqual({ x: 1, y: 1 })
+    expect(state.climbs).toBe(1)
+  })
+
+  it('제한을 다 쓰면 상자를 딛고 오르지 못한다', () => {
+    const { state, events } = play(LIMITED_STAGE, ['right', 'left', 'right'])
+
+    expect(state.player).toEqual({ x: 0, y: 1 })
+    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+  })
+
+  it('제한을 다 쓰면 기대 놓은 사다리로도 오르지 못한다', () => {
+    const stage: Stage = { ...LADDER_STAGE, rules: { climbLimit: 1 } }
+    const { state, events } = play(stage, [
+      'right',
+      'right',
+      'right',
+      'right',
+      'left',
+      'right',
+      'right',
+    ])
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(state.leaningLadders).toEqual([{ x: 2, y: 1, direction: 'right' }])
+    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+  })
+
+  it('제한을 다 써도 오르지 않는 쪽으로는 계속 이동한다', () => {
+    const { state } = play(LIMITED_STAGE, ['right', 'left', 'up'])
+
+    expect(state.player).toEqual({ x: 0, y: 0 })
+    expect(state.moves).toBe(3)
+  })
+})
+
+describe('climbsLeft', () => {
+  it('제한이 없으면 null을 돌려준다', () => {
+    expect(climbsLeft(createState(CLIMB_BOX_STAGE))).toBe(null)
+  })
+
+  it('제한이 있으면 남은 올라가기 수를 돌려준다', () => {
+    const stage: Stage = { ...CLIMB_BOX_STAGE, rules: { climbLimit: 2 } }
+
+    expect(climbsLeft(createState(stage))).toBe(2)
+    expect(climbsLeft(play(stage, ['right']).state)).toBe(1)
+    expect(climbsLeft(play(stage, ['right', 'left', 'right']).state)).toBe(0)
   })
 })
 

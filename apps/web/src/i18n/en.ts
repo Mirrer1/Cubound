@@ -45,6 +45,7 @@ export const en = {
   'guide.lift': 'The switch lifts the plate while something holds it down',
   'guide.crack': 'Tiles crack as you step off them, then fall away',
   'guide.warp': 'Step onto a linked tile to come out at its pair',
+  'guide.climbLimit': 'You can climb {n} times. Choose where to spend them',
 
   'world.1': 'Land of Low Steps',
   'stage.1-1': 'First Steps',
@@ -80,6 +81,7 @@ export const en = {
   'stage.3-7': 'Thin Ice',
   'stage.3-8': 'The Step Up',
   'stage.3-9': 'The Tangle',
+  'stage.3-10': 'The Collapse',
 }
 
 export type Texts = typeof en

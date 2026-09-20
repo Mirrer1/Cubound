@@ -18,6 +18,7 @@ export type Entity = (
 export interface StageRules {
   moveLimit?: number // 보스 이동 제한, 없으면 제한 없음
   pushLimit?: number // 보스 밀기 제한, 없으면 제한 없음
+  climbLimit?: number // 보스 올라가기 제한, 없으면 제한 없음
 }
 
 export interface Stage {
@@ -36,7 +37,8 @@ export interface Stage {
   zones?: Zone[] // 카메라 구역, 없으면 맵 전체
 }
 
-export type GuideTarget = Point | 'restart' | 'moves' | 'pushes' // 칸 좌표나 화면 요소 이름
+// 칸 좌표나 화면 요소 이름
+export type GuideTarget = Point | 'restart' | 'moves' | 'pushes' | 'climbs'
 
 export interface Guide {
   id: string // 문구 모음의 키
@@ -67,6 +69,7 @@ export interface GameState {
   player: Point
   moves: number
   pushes: number // 상자를 민 이동의 수
+  climbs: number // 한 층 올라선 이동의 수
   cleared: boolean
 }
 

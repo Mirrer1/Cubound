@@ -5,7 +5,7 @@ import Board from '@/components/board/Board'
 import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
-import { movesLeft, pushesLeft } from '@/game/rules'
+import { climbsLeft, movesLeft, pushesLeft } from '@/game/rules'
 import { stageTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
 import { directionFromKey, directionFromSwipe, isRestartKey } from '@/platform/input'
@@ -51,6 +51,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const guideCell = typeof guideTarget === 'object' ? guideTarget : undefined
   const left = game ? movesLeft(game) : null
   const pushesOver = game ? pushesLeft(game) : null
+  const climbsOver = game ? climbsLeft(game) : null
   const outOfMoves = left === 0 && !game?.cleared
 
   const handleNext = () => {
@@ -154,6 +155,17 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                   </span>
                 </div>
               )}
+              {climbsOver !== null && (
+                <div
+                  data-guide="climbs"
+                  className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"
+                >
+                  <span className="font-mono text-[10px] tracking-[0.22em] text-mute">CLIMBS</span>
+                  <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl">
+                    {climbsOver}
+                  </span>
+                </div>
+              )}
               <div
                 data-guide="moves"
                 className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"
@@ -226,7 +238,11 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
               <GuideOverlay
                 guides={guides}
                 step={guideStep}
-                limit={game.stage.rules?.moveLimit ?? game.stage.rules?.pushLimit}
+                limit={
+                  game.stage.rules?.moveLimit ??
+                  game.stage.rules?.pushLimit ??
+                  game.stage.rules?.climbLimit
+                }
                 containerRef={sectionRef}
                 onNext={nextGuide}
                 onSkip={closeGuide}
