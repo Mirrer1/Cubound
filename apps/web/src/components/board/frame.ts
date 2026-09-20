@@ -14,7 +14,7 @@ const SLIDE = { perCell: 0.1, max: 0.9 }
 const TILT = 0.24
 
 // 짝 칸으로 가라앉는 시간, 짝인 칸에서 솟아오르는 시간, 잠기는 층 수
-const WARP = { sink: 0.14, rise: 0.14, depth: 0.6 }
+const WARP = { sink: 0.2, rise: 0.2, depth: 0.6 }
 
 const easeIn = (t: number) => t * t
 const easeOut = (t: number) => 1 - (1 - t) ** 2
@@ -398,15 +398,17 @@ export const playerFrame = (
       : Math.min(1, (elapsed - warpStart - WARP.sink) / WARP.rise)
     const cell = sinking ? warped.from : warped.to
     const last = segments.at(-1)
+    // 들어갈 때는 점점 빨라지고 나올 때는 점점 느려져야 이동과 이어진다
+    const deep = sinking ? easeIn(p) : 1 - easeOut(p)
 
     return {
       ...cell,
-      level: (sinking ? pathLevel + riding : endLevel) - WARP.depth * (sinking ? p : 1 - p),
+      level: (sinking ? pathLevel + riding : endLevel) - WARP.depth * deep,
       direction: last ? directionBetween(last.event.from, last.event.to) : still.direction,
       angle: 0,
       cell,
       squash: 0,
-      fade: sinking ? 1 - p : p,
+      fade: 1 - deep,
     }
   }
 
