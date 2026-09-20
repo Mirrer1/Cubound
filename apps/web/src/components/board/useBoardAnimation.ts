@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { type Chain, durationOf } from './frame'
 import type { GameEvent } from '@/game/types'
 
-// 기다리는 입력 수마다의 재생 속도. 밀린 만큼 빨리 소화해야 입력이 버려지지 않는다
-const CATCH_UP = [1, 1.3, 1.6, 1.8]
+// 기다리는 입력이 있으면 조금 빠르게 재생해 다음 입력을 일찍 받는다
+const CATCH_UP = [1, 1.3]
 const SPEED_RAMP = 0.15
 
 const speedFor = (queued: number) => CATCH_UP[Math.min(queued, CATCH_UP.length - 1)]

@@ -107,7 +107,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
       const direction = directionFromKey(e.key)
       if (direction) {
         e.preventDefault()
-        move(direction, e.repeat)
+        move(direction)
       } else if (isRestartKey(e.key)) {
         restart()
       } else if (e.key === 'Escape' && guideStep === null) {

@@ -7,7 +7,8 @@ import type { Direction, GameEvent, GameState } from '@/game/types'
 import { localProgressStorage, localSessionStorage } from '@/platform/storage'
 import { STAGES } from '@/stages'
 
-const MAX_QUEUE = 3
+// 기다리는 입력은 하나만 받는다. 더 받아 두면 손을 뗀 뒤에도 큐브가 움직여 이동 수를 까먹는다
+const MAX_QUEUE = 1
 
 interface GameStore {
   progress: Progress
@@ -21,7 +22,7 @@ interface GameStore {
   chained: boolean // 지금 연출이 대기열에서 이어진 이동
   guideStep: number | null // 보고 있는 가이드 단계
   enter: (stageId: string) => void
-  move: (direction: Direction, repeat?: boolean, chained?: boolean) => void
+  move: (direction: Direction, chained?: boolean) => void
   finishAnimation: () => void
   restart: () => void
   openGuide: () => void
@@ -61,12 +62,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         guideStep: !saved && shouldShowGuide(stage, progress) ? 0 : null,
       }
     }),
-  move: (direction, repeat = false, chained = false) =>
+  move: (direction, chained = false) =>
     set(({ game, progress, animating, restarting, queue, turn, guideStep }) => {
       if (!game || guideStep !== null || restarting) return {}
-      // 키를 누르고 있을 때는 1개만 기다리게 해 손을 뗀 뒤 밀려 움직이지 않게 한다
       if (animating) {
-        return queue.length < (repeat ? 1 : MAX_QUEUE) ? { queue: [...queue, direction] } : {}
+        return queue.length < MAX_QUEUE ? { queue: [...queue, direction] } : {}
       }
 
       const result = move(game, direction)
@@ -97,7 +97,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   finishAnimation: () => {
     const [next, ...rest] = get().queue
     set({ animating: false, restarting: false, queue: rest })
-    if (next) get().move(next, false, true)
+    if (next) get().move(next, true)
   },
   // 연출 중에 다시 눌러도 기다리지 않고 처음부터 다시 시작한다
   restart: () =>
