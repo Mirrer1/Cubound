@@ -44,6 +44,7 @@ export const en = {
   'guide.ice': 'You slide across ice until something stops you',
   'guide.lift': 'The switch lifts the plate while something holds it down',
   'guide.crack': 'Tiles crack as you step off them, then fall away',
+  'guide.warp': 'Step onto a linked tile to come out at its pair',
 
   'world.1': 'Land of Low Steps',
   'stage.1-1': 'First Steps',
@@ -73,6 +74,7 @@ export const en = {
   'stage.3-1': 'The Cracked Path',
   'stage.3-2': 'The Patch',
   'stage.3-3': 'The One Way',
+  'stage.3-4': 'The Link',
 }
 
 export type Texts = typeof en
