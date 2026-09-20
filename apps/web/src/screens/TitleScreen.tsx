@@ -3,7 +3,7 @@ import LanguageMenu from '@/components/ui/LanguageMenu'
 import Logo from '@/components/ui/Logo'
 import TitleScene from '@/components/ui/TitleScene'
 import { useText } from '@/i18n/useText'
-import { goTo, showAll } from '@/platform/route'
+import { goTo, setShowingAll } from '@/platform/route'
 import { WORLDS, currentWorld } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
 
@@ -11,10 +11,14 @@ const TitleScreen = () => {
   const progress = useGameStore((s) => s.progress)
   const t = useText()
 
-  const handleStart = () => goTo({ screen: 'select', world: currentWorld(progress) })
+  // 앞서 모든 스테이지를 열어 뒀어도 시작으로 들어오면 다시 순서대로 푼다
+  const handleStart = () => {
+    setShowingAll(false)
+    goTo({ screen: 'select', world: currentWorld(progress) })
+  }
   // 순서대로 깨지 않고 아무 판이나 골라 본다
   const handleSelect = () => {
-    showAll()
+    setShowingAll(true)
     goTo({ screen: 'select', world: WORLDS[0] })
   }
 

@@ -17,9 +17,11 @@ let all: boolean | undefined
 
 export const showingAll = () => (all ??= new URLSearchParams(window.location.search).has('all'))
 
-export const showAll = () => {
-  all = true
-  window.history.replaceState(null, '', `?all${window.location.hash}`)
+// 경로까지 적지 않으면 지금 주소를 기준으로 읽혀서 쿼리가 그대로 남는다
+export const setShowingAll = (on: boolean) => {
+  const { pathname, hash } = window.location
+  all = on
+  window.history.replaceState(null, '', `${pathname}${on ? '?all' : ''}${hash}`)
 }
 
 const STAGES_PATH = /^\/stages\/(\d+)$/
