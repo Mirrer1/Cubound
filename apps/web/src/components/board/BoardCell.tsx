@@ -58,14 +58,11 @@ const FROST_OPACITY = 0.7
 
 // 승강 발판은 칸 크기의 틀 위에 얹힌 판이다. 틀과 판의 밝기 차이가 기계로 읽힌다
 const PLATE = { scale: 0.84, rise: 4, depth: 4 }
-// 짝 칸은 판보다 낮은 자리에 면을 한 장 더 얹어 우묵하게 보인다. 뒤쪽 핍과 겹치지 않게 앞으로 민다
-const DISH = { scale: 0.46, front: 3 }
+// 짝 칸은 판보다 낮은 자리에 면을 한 장 더 얹어 우묵하게 보인다
+const DISH = 0.46
 const SWITCH_SCALE = 0.66
 // 구멍은 같은 크기 판 두 장을 어긋나게 겹쳐 두께를 낸다
 const HOLE = { scale: 0.62, wall: 7 }
-
-// 짝지어진 칸끼리 같은 수를 찍는다. 뒤쪽 모서리에 두어야 앞의 높은 칸에 덮이지 않는다
-const PIP = { corner: -0.16, spread: 18, width: 5.4, height: 2.7 }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
@@ -76,13 +73,6 @@ const spotPoints = (x: number, y: number, spots: [number, number][]) =>
       return `${x + d.x},${y + d.y}`
     })
     .join(' ')
-
-const pipPoints = (x: number, y: number, index: number, count: number) => {
-  const d = isoDelta(PIP.corner, PIP.corner)
-  const cx = x + d.x + (index - (count - 1) / 2) * PIP.spread
-  const cy = y + d.y
-  return `${cx - PIP.width},${cy} ${cx},${cy - PIP.height} ${cx + PIP.width},${cy} ${cx},${cy + PIP.height}`
-}
 
 interface BoardCellProps {
   x: number
@@ -104,7 +94,6 @@ interface BoardCellProps {
   entity: 'switch' | 'door' | null
   lift: boolean
   warp: boolean
-  pips: number // 연결 표시 점 수
   switchDepth: number
   doorDepth: number
   box: boolean
@@ -134,7 +123,6 @@ const BoardCell = ({
   entity,
   lift,
   warp,
-  pips,
   switchDepth,
   doorDepth,
   box,
@@ -249,17 +237,10 @@ const BoardCell = ({
                 />
                 {warp && (
                   <polygon
-                    points={blockFaces(x, y + DISH.front, TILE.width * DISH.scale, 0).top}
+                    points={blockFaces(x, y - 1, TILE.width * DISH, 0).top}
                     style={{ fill: 'var(--color-machine-dish)' }}
                   />
                 )}
-                {Array.from({ length: pips }, (_, i) => (
-                  <polygon
-                    key={i}
-                    points={pipPoints(x, y - PLATE.rise, i, pips)}
-                    style={{ fill: 'var(--color-pip)' }}
-                  />
-                ))}
               </>
             )}
             {icy && (
@@ -302,24 +283,15 @@ const BoardCell = ({
         </g>
       )}
       {entity === 'switch' && (
-        <>
-          <BoardBlock
-            x={x}
-            y={y - switchDepth}
-            width={TILE.width * SWITCH_SCALE}
-            depth={switchDepth}
-            top={shade('tool', 'top')}
-            left={shade('tool', 'left')}
-            right={shade('tool', 'right')}
-          />
-          {Array.from({ length: pips }, (_, i) => (
-            <polygon
-              key={i}
-              points={pipPoints(x, y - switchDepth, i, pips)}
-              style={{ fill: darken('tool', 45) }}
-            />
-          ))}
-        </>
+        <BoardBlock
+          x={x}
+          y={y - switchDepth}
+          width={TILE.width * SWITCH_SCALE}
+          depth={switchDepth}
+          top={shade('tool', 'top')}
+          left={shade('tool', 'left')}
+          right={shade('tool', 'right')}
+        />
       )}
       {entity === 'door' && (
         <>
@@ -341,13 +313,6 @@ const BoardCell = ({
             left="var(--color-machine-left)"
             right="var(--color-machine-right)"
           />
-          {Array.from({ length: pips }, (_, i) => (
-            <polygon
-              key={i}
-              points={pipPoints(x, y - doorDepth - PLATE.rise, i, pips)}
-              style={{ fill: 'var(--color-pip)' }}
-            />
-          ))}
         </>
       )}
       {box && <BoardBox x={x} y={y - TILE.layer} />}

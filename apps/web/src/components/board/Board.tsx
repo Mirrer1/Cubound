@@ -11,7 +11,6 @@ import {
   frostAt,
   movingBox,
   pickUpProgress,
-  pipsOf,
   playerFrame,
   restartDrop,
   restartDuration,
@@ -112,8 +111,6 @@ const Board = ({
     [heights, before.heights],
   )
 
-  const pips = useMemo(() => pipsOf(stage), [stage])
-
   const cubeDrop = dropping ? restartDrop(t, 0, boxes.length) : null
   const cubeLevel = cube.level + (cubeDrop?.lift ?? 0)
   const cubeScreen = toScreen({ x: cube.x, y: cube.y }, cubeLevel)
@@ -181,16 +178,6 @@ const Board = ({
         const warp = stage.entities.find(
           (e): e is Extract<Entity, { type: 'warp' }> => e.type === 'warp' && same(e, cell.p),
         )
-        const cellPips =
-          entity?.type === 'switch'
-            ? pips[entity.target]
-            : entity?.type === 'door'
-              ? pips[entity.id]
-              : lift !== undefined
-                ? pips[lift.id]
-                : warp !== undefined
-                  ? pips[warp.id]
-                  : 0
         const left = crackLeft(game, cell.p)
         const was = crackLeft(before, cell.p)
         // 처음부터 구멍이던 칸과 무너진 뒤 메워진 칸 둘 다 상자가 만든 바닥이다
@@ -265,7 +252,6 @@ const Board = ({
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
             lift={lift !== undefined}
             warp={warp !== undefined}
-            pips={cellPips}
             switchDepth={lerp(pressed(before) ? 2 : 9, pressed(game) ? 2 : 9, switchPhase)}
             doorDepth={lerp(doorDepth(before), doorDepth(game), doorPhase)}
             box={has(boxes, cell.p) && !(box && same(box.to, cell.p)) && boxDrop === null}
