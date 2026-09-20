@@ -7,7 +7,7 @@ import type { Direction, GameEvent, GameState } from '@/game/types'
 import { localProgressStorage, localSessionStorage } from '@/platform/storage'
 import { STAGES } from '@/stages'
 
-const MAX_QUEUE = 2
+const MAX_QUEUE = 3
 
 interface GameStore {
   progress: Progress

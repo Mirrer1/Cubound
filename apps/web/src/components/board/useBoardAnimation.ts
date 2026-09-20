@@ -4,10 +4,11 @@ import { useEffect, useRef, useState } from 'react'
 import { type Chain, durationOf } from './frame'
 import type { GameEvent } from '@/game/types'
 
-// 입력이 2개 밀렸을 때만 이만큼 살짝 빠르게 재생하고 속도는 서서히 바꾼다
-const CATCH_UP_SPEED = 1.3
-const CATCH_UP_QUEUE = 2
+// 기다리는 입력 수마다의 재생 속도. 밀린 만큼 빨리 소화해야 입력이 버려지지 않는다
+const CATCH_UP = [1, 1.5, 2.1, 2.5]
 const SPEED_RAMP = 0.15
+
+const speedFor = (queued: number) => CATCH_UP[Math.min(queued, CATCH_UP.length - 1)]
 
 // 이동 한 번의 연출 진행도 t와 앞뒤 이동과의 이어짐
 export const useBoardAnimation = (
@@ -23,7 +24,7 @@ export const useBoardAnimation = (
   const queuedRef = useRef(queued)
   const reduced = useReducedMotion()
   const duration = (restartSeconds || durationOf(events)) * (reduced ? 0.35 : 1)
-  const hurry = queued >= CATCH_UP_QUEUE
+  const speed = speedFor(queued)
 
   useEffect(() => {
     queuedRef.current = queued
@@ -32,14 +33,14 @@ export const useBoardAnimation = (
   useEffect(() => {
     const current = controls.current
     if (!current) return
-    const ramp = animate(current.speed, hurry ? CATCH_UP_SPEED : 1, {
+    const ramp = animate(current.speed, speed, {
       duration: SPEED_RAMP,
-      onUpdate: (speed) => {
-        current.speed = speed
+      onUpdate: (value) => {
+        current.speed = value
       },
     })
     return () => ramp.stop()
-  }, [hurry])
+  }, [speed])
 
   useEffect(() => {
     if (duration === 0) {
@@ -58,7 +59,7 @@ export const useBoardAnimation = (
       },
       onComplete: onEnd,
     })
-    current.speed = queuedRef.current >= CATCH_UP_QUEUE ? CATCH_UP_SPEED : 1
+    current.speed = speedFor(queuedRef.current)
     controls.current = current
     return () => current.stop()
   }, [turn, duration, onEnd])

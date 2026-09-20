@@ -54,13 +54,30 @@ describe('directionFromSwipe', () => {
     expect(directionFromSwipe(24, -24)).toBe('up')
   })
 
-  it('수평에 가까우면 세로 부호로 위아래를 가른다', () => {
-    expect(directionFromSwipe(40, -3)).toBe('up')
-    expect(directionFromSwipe(40, 3)).toBe('right')
+  it('미는 중에는 축에 가까우면 판정하지 않는다', () => {
+    expect(directionFromSwipe(40, -3)).toBeNull()
+    expect(directionFromSwipe(40, 3)).toBeNull()
+    expect(directionFromSwipe(3, -40)).toBeNull()
+    expect(directionFromSwipe(-3, -40)).toBeNull()
   })
 
-  it('수직에 가까우면 가로 부호로 좌우를 가른다', () => {
-    expect(directionFromSwipe(3, -40)).toBe('up')
-    expect(directionFromSwipe(-3, -40)).toBe('left')
+  it('손을 뗄 때는 수평에 가까워도 세로 부호로 위아래를 가른다', () => {
+    expect(directionFromSwipe(40, -3, true)).toBe('up')
+    expect(directionFromSwipe(40, 3, true)).toBe('right')
+  })
+
+  it('손을 뗄 때는 수직에 가까워도 가로 부호로 좌우를 가른다', () => {
+    expect(directionFromSwipe(3, -40, true)).toBe('up')
+    expect(directionFromSwipe(-3, -40, true)).toBe('left')
+  })
+
+  it('손을 떼도 최소 거리보다 짧으면 방향이 없다', () => {
+    expect(directionFromSwipe(10, -10, true)).toBeNull()
+  })
+
+  it('작은 흔들림으로 방향이 뒤집히지 않는다', () => {
+    expect(directionFromSwipe(-30, -14)).toBe('left')
+    expect(directionFromSwipe(-30, -2)).toBeNull()
+    expect(directionFromSwipe(-30, 2)).toBeNull()
   })
 })

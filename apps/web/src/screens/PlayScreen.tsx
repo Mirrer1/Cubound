@@ -78,8 +78,16 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     swiped.current = true
     move(direction)
   }
-  const handlePointerEnd = () => {
+  // 축에 가까워 미는 중에 판정하지 못한 제스처는 손을 뗄 때 받는다
+  const handlePointerEnd = (e: PointerEvent<HTMLElement>) => {
+    const start = swipeStart.current
     swipeStart.current = null
+    if (!start) return
+
+    const direction = directionFromSwipe(e.clientX - start.x, e.clientY - start.y, true)
+    if (!direction) return
+    swiped.current = true
+    move(direction)
   }
   // 스와이프로 판정한 제스처는 이어지는 클릭을 버려서 버튼이 눌리지 않게 한다
   const handleClickCapture = (e: MouseEvent<HTMLElement>) => {
