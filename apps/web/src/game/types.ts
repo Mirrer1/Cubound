@@ -12,6 +12,7 @@ export type Entity = (
   | { type: 'lift'; id: string }
   | { type: 'warp'; id: string }
   | { type: 'ladder' }
+  | { type: 'tram'; id: string; level: number; cells: Point[]; dir: 1 | -1 } // x, y는 cells 안의 시작 자리
 ) &
   Point
 
@@ -58,11 +59,18 @@ export type LeaningLadder = Point & { direction: Direction }
 // 무너지는 칸이 앞으로 견디는 횟수. -1은 이미 무너진 칸
 export type Crack = Point & { left: number }
 
+export interface TramSpot {
+  id: string
+  at: number // cells 안의 자리
+  dir: 1 | -1
+}
+
 export interface GameState {
   stage: Stage
   heights: number[][] // 상자로 메운 칸이 반영된 높이
   boxes: Point[]
   cracks: Crack[]
+  trams: TramSpot[]
   ladders: Point[] // 바닥에 놓인 사다리
   leaningLadders: LeaningLadder[]
   carrying: boolean
@@ -85,6 +93,7 @@ export type GameEvent =
   | { type: 'door'; id: string; open: boolean }
   | { type: 'lift'; id: string; up: boolean }
   | { type: 'warped'; from: Point; to: Point }
+  | { type: 'tram'; id: string; from: Point; to: Point }
   | { type: 'blocked'; direction: Direction }
   | { type: 'cleared' }
 

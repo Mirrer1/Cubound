@@ -1,7 +1,7 @@
 import { readCracks } from './rules'
-import type { Crack, Direction, GameState, LeaningLadder, Point, Stage } from './types'
+import type { Crack, Direction, GameState, LeaningLadder, Point, Stage, TramSpot } from './types'
 
-export const SESSION_VERSION = 6
+export const SESSION_VERSION = 7
 
 export interface Session {
   version: typeof SESSION_VERSION
@@ -9,6 +9,7 @@ export interface Session {
   heights: number[][] // 상자로 메운 칸이 반영된 높이
   boxes: Point[]
   cracks: Crack[]
+  trams: TramSpot[]
   ladders: Point[]
   leaningLadders: LeaningLadder[]
   carrying: boolean
@@ -34,6 +35,7 @@ export const toSession = (game: GameState): Session => ({
   heights: game.heights,
   boxes: game.boxes,
   cracks: game.cracks,
+  trams: game.trams,
   ladders: game.ladders,
   leaningLadders: game.leaningLadders,
   carrying: game.carrying,
@@ -67,6 +69,23 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
       )
     })
   if (!sameCracks) return null
+
+  const stageTrams = stage.entities.filter((e) => e.type === 'tram')
+  const savedTrams = saved.trams
+  const sameTrams =
+    Array.isArray(savedTrams) &&
+    savedTrams.length === stageTrams.length &&
+    stageTrams.every((tram, i) => {
+      const value = savedTrams[i]
+      return (
+        isObject(value) &&
+        value.id === tram.id &&
+        isCount(value.at) &&
+        (value.at as number) < tram.cells.length &&
+        (value.dir === 1 || value.dir === -1)
+      )
+    })
+  if (!sameTrams) return null
 
   const crackKeys = new Set(cracks.map(({ x, y }) => `${x},${y}`))
   const rows = saved.heights
@@ -115,6 +134,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     heights,
     boxes: boxes.map(({ x, y }) => ({ x, y })),
     cracks: (savedCracks as Crack[]).map(({ x, y, left }) => ({ x, y, left })),
+    trams: (savedTrams as TramSpot[]).map(({ id, at, dir }) => ({ id, at, dir })),
     ladders: ladders.map(({ x, y }) => ({ x, y })),
     leaningLadders: leaningLadders.map(({ x, y, direction }) => ({ x, y, direction })),
     carrying,

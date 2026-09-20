@@ -247,3 +247,44 @@ describe('statesWithin', () => {
     expect(inside.count).toBe(all.states - all.dead)
   })
 })
+
+const TRAM_STAGE: Stage = {
+  version: 1,
+  id: 'test-solver-tram',
+  name: '발판 풀이 테스트',
+  heights: [
+    [0, 0, 0, 0, -1],
+    [0, -1, -1, -1, 0],
+    [0, 0, 0, 0, -1],
+  ],
+  start: { x: 0, y: 1 },
+  goal: { x: 4, y: 1 },
+  entities: [
+    {
+      type: 'tram',
+      x: 1,
+      y: 1,
+      id: 'tram-a',
+      level: 0,
+      cells: [
+        { x: 1, y: 1 },
+        { x: 2, y: 1 },
+        { x: 3, y: 1 },
+      ],
+      dir: 1,
+    },
+  ],
+}
+
+describe('solve 움직이는 발판', () => {
+  it('발판을 타고 건너는 최소 이동 경로를 찾는다', () => {
+    const result = solve(TRAM_STAGE)
+
+    expect(result.status).toBe('solved')
+    if (result.status !== 'solved') return
+
+    const end = result.path.reduce((state, d) => move(state, d).state, createState(TRAM_STAGE))
+    expect(end.cleared).toBe(true)
+    expect(result.moves).toBe(3)
+  })
+})

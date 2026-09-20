@@ -20,6 +20,7 @@ const MID = {
   heights: STAGE.heights,
   boxes: [{ x: 2, y: 0 }],
   cracks: [],
+  trams: [],
   ladders: [],
   leaningLadders: [],
   carrying: false,
@@ -214,5 +215,56 @@ describe('restoreSession 발판', () => {
 
     expect(restoreSession(session, stage)).toEqual(state)
     expect(isLiftRaised(restoreSession(session, stage)!, 'a')).toBe(true)
+  })
+})
+
+const TRAM_STAGE: Stage = {
+  version: 1,
+  id: '4-1',
+  heights: [
+    [0, 0, 0, 0, 0],
+    [0, -1, -1, -1, 0],
+  ],
+  start: { x: 0, y: 1 },
+  goal: { x: 4, y: 1 },
+  entities: [
+    {
+      type: 'tram',
+      x: 1,
+      y: 1,
+      id: 'tram-a',
+      level: 0,
+      cells: [
+        { x: 1, y: 1 },
+        { x: 2, y: 1 },
+        { x: 3, y: 1 },
+      ],
+      dir: 1,
+    },
+  ],
+}
+
+describe('restoreSession 움직이는 발판', () => {
+  it('발판 자리와 방향을 그대로 이어간다', () => {
+    const state = move(createState(TRAM_STAGE), 'up').state
+
+    expect(state.trams).toEqual([{ id: 'tram-a', at: 1, dir: 1 }])
+    expect(restoreSession(toSession(state), TRAM_STAGE)).toEqual(state)
+  })
+
+  it('스테이지의 발판과 어긋나면 버린다', () => {
+    const session = toSession(move(createState(TRAM_STAGE), 'up').state)
+
+    expect(restoreSession({ ...session, trams: [] }, TRAM_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, trams: undefined }, TRAM_STAGE)).toBeNull()
+    expect(
+      restoreSession({ ...session, trams: [{ id: 'tram-b', at: 1, dir: 1 }] }, TRAM_STAGE),
+    ).toBeNull()
+    expect(
+      restoreSession({ ...session, trams: [{ id: 'tram-a', at: 3, dir: 1 }] }, TRAM_STAGE),
+    ).toBeNull()
+    expect(
+      restoreSession({ ...session, trams: [{ id: 'tram-a', at: 1, dir: 0 }] }, TRAM_STAGE),
+    ).toBeNull()
   })
 })

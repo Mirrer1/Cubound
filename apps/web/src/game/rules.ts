@@ -11,6 +11,7 @@ import type {
 } from './types'
 
 type Lift = Extract<Entity, { type: 'lift' }>
+type Tram = Extract<Entity, { type: 'tram' }>
 
 const OFFSETS: Record<Direction, Point> = {
   up: { x: 0, y: -1 },
@@ -33,6 +34,20 @@ const doors = (stage: Stage) => stage.entities.filter((e) => e.type === 'door')
 const lifts = (stage: Stage) => stage.entities.filter((e) => e.type === 'lift')
 
 const warps = (stage: Stage) => stage.entities.filter((e) => e.type === 'warp')
+
+const trams = (stage: Stage) => stage.entities.filter((e): e is Tram => e.type === 'tram')
+
+// 발판이 지금 서 있는 칸이면 그 윗면 높이
+const tramLevelAt = (state: GameState, p: Point): number | null => {
+  if (state.trams.length === 0) return null
+
+  const here = trams(state.stage).find((tram, i) => same(tram.cells[state.trams[i].at], p))
+  return here ? here.level : null
+}
+
+// 어느 발판이든 오가는 길에 든 칸
+const onTramPath = (stage: Stage, p: Point) =>
+  trams(stage).some((tram) => tram.cells.some((cell) => same(cell, p)))
 
 // 짝 칸이면 같은 id를 가진 나머지 한 칸, 아니면 null
 const warpExit = (stage: Stage, p: Point): Point | null => {
@@ -60,6 +75,9 @@ export const isLiftRaised = (state: GameState, id: string) => isSwitchOn(state, 
 const rawHeight = (state: GameState, p: Point): number | undefined => {
   const h = state.heights[p.y]?.[p.x]
   if (h === undefined) return undefined
+
+  const tramLevel = tramLevelAt(state, p)
+  if (tramLevel !== null) return tramLevel
 
   const lift = state.stage.entities.find((e): e is Lift => e.type === 'lift' && same(e, p))
   return lift && isLiftRaised(state, lift.id) ? h + 1 : h
@@ -110,6 +128,11 @@ export const createState = (stage: Stage): GameState => ({
   heights: stage.heights,
   boxes: stage.entities.filter((e) => e.type === 'box').map(({ x, y }) => ({ x, y })),
   cracks: readCracks(stage),
+  trams: trams(stage).map(({ id, cells, dir, x, y }) => ({
+    id,
+    at: cells.findIndex((cell) => same(cell, { x, y })),
+    dir,
+  })),
   ladders: stage.entities.filter((e) => e.type === 'ladder').map(({ x, y }) => ({ x, y })),
   leaningLadders: [],
   carrying: false,
@@ -242,6 +265,8 @@ const climbOrPlaceLadder = (
 const boxLanding = (state: GameState, p: Point, level: number): number | null => {
   const floor = rawHeight(state, p)
   if (floor === undefined || floor > level) return null
+  // 발판이 떠난 길 칸을 상자가 메우면 발판이 다시 지날 수 없다
+  if (floor < 0 && onTramPath(state.stage, p)) return null
   if (
     hasBox(state, p) ||
     state.ladders.some((l) => same(l, p)) ||
@@ -371,14 +396,48 @@ const crumble = (before: GameState, after: GameState): MoveResult => {
   return { state: { ...after, cracks, heights }, events }
 }
 
+// 이동 한 번마다 발판이 길을 한 칸 가고 끝에 닿으면 방향을 뒤집는다. 위에 있던 큐브와 상자는 같이 간다
+const rideTrams = (state: GameState): MoveResult => {
+  if (state.trams.length === 0) return { state, events: [] }
+
+  const events: GameEvent[] = []
+  const list = trams(state.stage)
+  let player = state.player
+  let boxes = state.boxes
+
+  const moved = state.trams.map((spot, i) => {
+    const { cells } = list[i]
+    const ahead = spot.at + spot.dir
+    const dir = ahead < 0 || ahead >= cells.length ? ((spot.dir * -1) as 1 | -1) : spot.dir
+    const at = spot.at + dir
+    const from = { x: cells[spot.at].x, y: cells[spot.at].y }
+    const to = { x: cells[at].x, y: cells[at].y }
+
+    events.push({ type: 'tram', id: spot.id, from, to })
+    if (same(player, from)) player = to
+    boxes = boxes.map((box) => (same(box, from) ? to : box))
+
+    return { id: spot.id, at, dir }
+  })
+
+  return { state: { ...state, player, boxes, trams: moved }, events }
+}
+
 export const move = (state: GameState, direction: Direction): MoveResult => {
   if (state.cleared) return { state, events: [] }
   if (movesLeft(state) === 0) return { state, events: [{ type: 'blocked', direction }] }
 
   const result = moveOnce(state, direction)
-  if (result.state === state) return result
+  // 발판 위에서 막힌 이동은 계속 타고 가겠다는 뜻이라 제자리에 서서 이동 1회로 센다
+  const riding = result.state === state && tramLevelAt(state, state.player) !== null
+  if (result.state === state && !riding) return result
 
-  const { state: moved, events: crackEvents } = crumble(state, result.state)
+  const acted: MoveResult = riding
+    ? { state: { ...state, moves: state.moves + 1 }, events: [] }
+    : result
+
+  const { state: crumbled, events: crackEvents } = crumble(state, acted.state)
+  const { state: moved, events: tramEvents } = rideTrams(crumbled)
 
   const doorEvents: GameEvent[] = doors(state.stage)
     .map((door) => ({
@@ -396,8 +455,9 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
   return {
     state: moved,
     events: [
-      ...result.events,
+      ...acted.events,
       ...crackEvents,
+      ...tramEvents,
       ...doorEvents,
       ...liftEvents,
       ...(moved.cleared ? [{ type: 'cleared' } as const] : []),

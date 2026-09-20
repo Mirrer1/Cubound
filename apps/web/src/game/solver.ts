@@ -34,6 +34,9 @@ const stateKey = (state: GameState) => {
     leaning.join(' '),
     state.carrying,
     ...(cracks.length > 0 ? [cracks.join('')] : []),
+    ...(state.trams.length > 0
+      ? [state.trams.map(({ at, dir }) => `${at}${dir > 0 ? '+' : '-'}`).join(' ')]
+      : []),
   ].join('|')
 }
 
