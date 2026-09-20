@@ -178,6 +178,9 @@ const Board = ({
         )
         const liftLevel = (state: GameState) =>
           lift !== undefined && isLiftRaised(state, lift.id) ? 1 : 0
+        const warp = stage.entities.find(
+          (e): e is Extract<Entity, { type: 'warp' }> => e.type === 'warp' && same(e, cell.p),
+        )
         const cellPips =
           entity?.type === 'switch'
             ? pips[entity.target]
@@ -185,7 +188,9 @@ const Board = ({
               ? pips[entity.id]
               : lift !== undefined
                 ? pips[lift.id]
-                : 0
+                : warp !== undefined
+                  ? pips[warp.id]
+                  : 0
         const left = crackLeft(game, cell.p)
         const was = crackLeft(before, cell.p)
         // 처음부터 구멍이던 칸과 무너진 뒤 메워진 칸 둘 다 상자가 만든 바닥이다
@@ -259,6 +264,7 @@ const Board = ({
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
             lift={lift !== undefined}
+            warp={warp !== undefined}
             pips={cellPips}
             switchDepth={lerp(pressed(before) ? 2 : 9, pressed(game) ? 2 : 9, switchPhase)}
             doorDepth={lerp(doorDepth(before), doorDepth(game), doorPhase)}

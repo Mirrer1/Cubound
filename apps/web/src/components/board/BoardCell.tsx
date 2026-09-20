@@ -58,6 +58,8 @@ const FROST_OPACITY = 0.7
 
 // 승강 발판은 칸 크기의 틀 위에 얹힌 판이다. 틀과 판의 밝기 차이가 기계로 읽힌다
 const PLATE = { scale: 0.84, rise: 4, depth: 4 }
+// 짝 칸은 판보다 낮은 자리에 면을 한 장 더 얹어 우묵하게 보인다. 뒤쪽 핍과 겹치지 않게 앞으로 민다
+const DISH = { scale: 0.46, front: 3 }
 const SWITCH_SCALE = 0.66
 // 구멍은 같은 크기 판 두 장을 어긋나게 겹쳐 두께를 낸다
 const HOLE = { scale: 0.62, wall: 7 }
@@ -101,6 +103,7 @@ interface BoardCellProps {
   faded: boolean
   entity: 'switch' | 'door' | null
   lift: boolean
+  warp: boolean
   pips: number // 연결 표시 점 수
   switchDepth: number
   doorDepth: number
@@ -130,6 +133,7 @@ const BoardCell = ({
   faded,
   entity,
   lift,
+  warp,
   pips,
   switchDepth,
   doorDepth,
@@ -140,8 +144,8 @@ const BoardCell = ({
   children,
 }: BoardCellProps) => {
   const icy = ice && !goal && !filled
-  // 상자가 메운 칸, 얼음, 발판, 구멍은 바닥 대신 제 색으로 칠한다
-  const surface = goal ? 'hole' : filled ? 'tool' : icy ? 'ice' : lift ? 'machine' : null
+  // 상자가 메운 칸, 얼음, 발판, 짝 칸, 구멍은 바닥 대신 제 색으로 칠한다
+  const surface = goal ? 'hole' : filled ? 'tool' : icy ? 'ice' : lift || warp ? 'machine' : null
   // 닳은 단계 사이에서는 앞뒤 단계 색을 섞는다
   const worn = Math.min(1, Math.floor(crackStage))
   const crackFace = (face: string) =>
@@ -232,7 +236,7 @@ const BoardCell = ({
                 right={faces.right}
               />
             )}
-            {lift && (
+            {(lift || warp) && (
               <>
                 <BoardBlock
                   x={x}
@@ -243,6 +247,12 @@ const BoardCell = ({
                   left="var(--color-machine-left)"
                   right="var(--color-machine-right)"
                 />
+                {warp && (
+                  <polygon
+                    points={blockFaces(x, y + DISH.front, TILE.width * DISH.scale, 0).top}
+                    style={{ fill: 'var(--color-machine-dish)' }}
+                  />
+                )}
                 {Array.from({ length: pips }, (_, i) => (
                   <polygon
                     key={i}

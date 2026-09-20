@@ -359,6 +359,7 @@ guideText(language, id, touch, n?) // 터치 기기면 guide.<id>.touch를 먼�
 | `ice`와 `ice-left/right/gloss` | `#DDEEF5` 외              | 얼음 세 면과 광택 면             |
 | `machine-frame-*`              | `#E5E2DB` 외              | 기계의 틀 (문, 승강 발판, 짝 칸) |
 | `machine-*`                    | `#F7F5F0` 외              | 기계의 판. 땅보다 밝다           |
+| `machine-dish`                 | `#DEDAD2`                 | 짝 칸 가운데 우묵한 면           |
 | `crack-*-0~2`                  | `#E4E0D7`에서 `#C6C0B2`로 | 무너지는 칸의 닳은 단계 세 벌    |
 | `crack-chip`, `crack-shadow`   | `#BCB7AB`, `#C4C0B8`      | 닳은 자국과 무너진 자리 그림자   |
 | `pip`                          | `#6E6B66`                 | 연결 표시 (스위치와 문과 발판)   |
