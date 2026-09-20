@@ -30,6 +30,8 @@ export const stageTextKey = (id: string) => `stage.${id}` as TextKey
 
 export const worldTextKey = (world: number) => `world.${world}` as TextKey
 
+export const worldNoteKey = (world: number) => `world.${world}.note` as TextKey
+
 export const isLanguage = (value: unknown): value is Language =>
   LANGUAGES.some((language) => language.code === value)
 

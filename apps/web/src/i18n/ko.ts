@@ -50,6 +50,7 @@ export const ko: Partial<Texts> = {
   'guide.tram': '발판은 한 수마다 한 칸 가요. 막힌 쪽으로 밀면 그대로 타고 가요',
 
   'world.1': '낮은 계단의 땅',
+  'world.1.note': '한 칸씩 오르내리는 법을 익히는 열 판입니다.',
   'stage.1-1': '첫걸음',
   'stage.1-2': '내리막',
   'stage.1-3': '디딤돌',
@@ -62,6 +63,7 @@ export const ko: Partial<Texts> = {
   'stage.1-10': '먼 길',
 
   'world.2': '얼음이 흐르는 땅',
+  'world.2.note': '한번 미끄러지면 무언가에 막힐 때까지 갑니다.',
   'stage.2-1': '미끄럼',
   'stage.2-2': '썰매',
   'stage.2-3': '벼랑',
@@ -74,6 +76,7 @@ export const ko: Partial<Texts> = {
   'stage.2-10': '눈보라',
 
   'world.3': '무너지는 땅',
+  'world.3.note': '딛고 지나온 자리가 뒤에서 무너져 내립니다.',
   'stage.3-1': '금길',
   'stage.3-2': '메움',
   'stage.3-3': '외길',
@@ -86,6 +89,7 @@ export const ko: Partial<Texts> = {
   'stage.3-10': '무너짐',
 
   'world.4': '때를 맞추는 땅',
+  'world.4.note': '발판은 쉬지 않습니다. 언제 타고 언제 내릴지 고릅니다.',
   'stage.4-1': '첫차',
   'stage.4-2': '짐칸',
   'stage.4-3': '환승',

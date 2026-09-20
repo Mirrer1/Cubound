@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import Button from '@/components/ui/Button'
 import StageCard, { type StageCardState } from '@/components/ui/StageCard'
 import { isUnlocked, isWorldUnlocked, totalStars } from '@/game/progress'
-import { worldTextKey } from '@/i18n'
+import { worldNoteKey, worldTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
 import { goTo, showingAll } from '@/platform/route'
 import { WORLDS, isBossStage, parseStageId, stageIdsOf, worldUnlockStageId } from '@/stages'
@@ -60,6 +60,7 @@ const StageSelectScreen = ({ world }: StageSelectScreenProps) => {
       state,
       stars: record?.stars ?? 0,
       boss: isBossStage(id),
+      bestMoves: record?.bestMoves,
     }
   })
   const now = Math.max(
@@ -103,30 +104,42 @@ const StageSelectScreen = ({ world }: StageSelectScreenProps) => {
 
   return (
     <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
-      <section className="scroll-area flex min-h-0 flex-1 flex-col gap-6 rounded-[22px] border border-line bg-base-bg panel-pad sm:gap-8">
-        <header className="flex items-start gap-4">
-          <Button variant="icon" onClick={handleBack} aria-label={t('select.back')}>
+      <section className="scroll-area flex min-h-0 flex-1 flex-col gap-6 rounded-[22px] border border-line bg-base-bg panel-pad min-[1700px]:flex-row min-[1700px]:items-center min-[1700px]:gap-12! sm:gap-8">
+        <header className="flex items-start gap-4 min-[1700px]:ml-10 min-[1700px]:w-90 min-[1700px]:shrink-0 min-[1700px]:flex-col min-[1700px]:gap-6 narrow:flex-wrap narrow:items-center narrow:gap-x-3 narrow:gap-y-3">
+          <Button
+            variant="icon"
+            onClick={handleBack}
+            aria-label={t('select.back')}
+            className="min-[1700px]:size-13 narrow:size-8.5"
+          >
             ←
           </Button>
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <span className="flex items-baseline justify-between gap-3 font-mono text-mute">
-              <span className="text-[11px] tracking-[0.22em]">WORLD {world}</span>
-              <span className="text-xs tracking-[0.15em] whitespace-nowrap">
-                {totalStars(progress, ids)} / {ids.length * 3} ◆
+          <div className="flex min-w-0 flex-1 flex-col gap-1 min-[1700px]:w-full min-[1700px]:flex-none min-[1700px]:gap-4 narrow:contents">
+            {/* 넓은 화면에서는 두 줄이 풀려 왼쪽 기둥 한 줄기로 서서 order로 차례를 정한다 */}
+            <span className="flex items-baseline justify-between gap-3 font-mono text-mute min-[1700px]:contents narrow:order-last narrow:w-full narrow:justify-center narrow:gap-4 narrow:[&>*+*]:border-l narrow:[&>*+*]:border-line narrow:[&>*+*]:pl-4">
+              <span className="text-[11px] tracking-[0.22em] min-[1700px]:order-1">
+                WORLD {world}
+              </span>
+              <span className="text-xs tracking-[0.15em] whitespace-nowrap min-[1700px]:order-4 narrow:text-[11px]">
+                <span className="min-[1700px]:text-[30px] min-[1700px]:text-ink">
+                  {totalStars(progress, ids)}
+                </span>{' '}
+                / {ids.length * 3} ◆
               </span>
             </span>
-            <span className="flex items-start gap-1">
-              <span className="min-w-0 flex-1 text-2xl tracking-tight break-keep sm:text-3xl">
+            <span className="flex items-start gap-1 min-[1700px]:contents narrow:contents">
+              <span className="min-w-0 flex-1 text-2xl tracking-tight break-keep min-[1700px]:order-2 min-[1700px]:flex-none min-[1700px]:text-[44px]/[1.2]! sm:text-3xl narrow:truncate narrow:text-xl">
                 {t(worldTextKey(world))}
               </span>
               {showArrows ? (
-                <>
+                <span className="flex items-start gap-1 min-[1700px]:order-5 narrow:shrink-0">
                   <Button
                     ref={previousRef}
                     variant="ghost"
                     disabled={index === 0}
                     onClick={handlePrevious}
                     aria-label={t('select.previousWorld')}
+                    className="min-[1700px]:size-13 narrow:size-8.5"
                   >
                     ‹
                   </Button>
@@ -135,15 +148,19 @@ const StageSelectScreen = ({ world }: StageSelectScreenProps) => {
                     disabled={!nextOpen}
                     onClick={handleNext}
                     aria-label={t('select.nextWorld')}
+                    className="min-[1700px]:size-13 narrow:size-8.5"
                   >
                     ›
                   </Button>
-                </>
+                </span>
               ) : null}
+            </span>
+            <span className="hidden text-sm break-keep text-mute min-[1700px]:order-3 min-[1700px]:block">
+              {t(worldNoteKey(world))}
             </span>
           </div>
         </header>
-        <div ref={gridRef} className="stage-grid">
+        <div ref={gridRef} className="stage-grid min-[1700px]:mr-10 min-[1700px]:flex-1">
           {cards.map((card) => (
             <StageCard key={card.id} {...card} onSelect={() => handleSelect(card.id)} />
           ))}

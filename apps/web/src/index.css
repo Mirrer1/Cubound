@@ -132,6 +132,11 @@ body {
   @media (width >= 62.5rem) {
     grid-template-columns: repeat(5, minmax(0, 240px));
   }
+  /* 왼쪽 기둥과 나란히 서는 넓은 화면. 남는 폭을 카드가 먹는다 */
+  @media (width >= 106.25rem) {
+    gap: 1.25rem;
+    grid-template-columns: repeat(5, minmax(0, 280px));
+  }
 }
 
 /* 호버와 누름 전환. 색은 천천히, 누름 크기는 빠르게 */

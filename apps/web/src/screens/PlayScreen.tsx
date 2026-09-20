@@ -153,26 +153,27 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
           ref={sectionRef}
           className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-line bg-base-bg"
         >
-          <header className="flex items-start justify-between gap-6 px-(--panel-pad) pt-(--panel-pad) short:items-center short:pt-3 narrow:gap-3">
-            <div className="flex min-w-0 flex-col gap-1.5 short:flex-row short:items-baseline short:gap-3">
-              <span className="font-mono text-[11px] tracking-[0.22em] text-mute">
-                STAGE {String(stageNumber).padStart(2, '0')}
+          <header className="flex items-start justify-between gap-6 px-(--panel-pad) pt-(--panel-pad) short:items-center short:pt-3 narrow:flex-wrap narrow:items-center narrow:gap-x-3 narrow:gap-y-3">
+            <div className="flex min-w-0 flex-col gap-1.5 short:flex-row short:items-baseline short:gap-3 narrow:flex-1 narrow:flex-row narrow:items-baseline narrow:gap-2">
+              <span className="shrink-0 font-mono text-[11px] tracking-[0.22em] text-mute">
+                <span className="narrow:hidden">{'STAGE '}</span>
+                {String(stageNumber).padStart(2, '0')}
               </span>
-              <span className="text-2xl tracking-tight short:text-xl wide:text-[27px]">
+              <span className="text-2xl tracking-tight short:text-xl wide:text-[27px] narrow:min-w-0 narrow:truncate narrow:text-xl">
                 {t(stageTextKey(game.stage.id))}
               </span>
             </div>
-            <div className="flex shrink-0 items-center gap-5 wide:gap-7 narrow:flex-col-reverse narrow:items-end narrow:gap-3">
-              <div className="flex items-center gap-5 wide:gap-7">
+            <div className="flex shrink-0 items-center gap-5 wide:gap-7 narrow:contents">
+              <div className="flex items-center gap-5 wide:gap-7 narrow:order-last narrow:w-full narrow:justify-center narrow:gap-4 narrow:[&>*+*]:border-l narrow:[&>*+*]:border-line narrow:[&>*+*]:pl-4">
                 {pushesOver !== null && (
                   <div
                     data-guide="pushes"
-                    className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"
+                    className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                   >
                     <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
                       PUSHES
                     </span>
-                    <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl">
+                    <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]">
                       {pushesOver}
                     </span>
                   </div>
@@ -180,29 +181,30 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                 {climbsOver !== null && (
                   <div
                     data-guide="climbs"
-                    className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"
+                    className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                   >
                     <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
                       CLIMBS
                     </span>
-                    <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl">
+                    <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]">
                       {climbsOver}
                     </span>
                   </div>
                 )}
                 <div
                   data-guide="moves"
-                  className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2"
+                  className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                 >
                   <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
                     {left === null ? 'MOVES' : 'LEFT'}
                   </span>
-                  <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl">
+                  <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]">
                     {left ?? game.moves}
                   </span>
                 </div>
               </div>
-              <div className="flex gap-2.5">
+              {/* 320px에서 버튼과 긴 이름이 한 줄에 들어가도록 폰 세로에서만 버튼을 줄인다 */}
+              <div className="flex gap-2.5 narrow:gap-1.5 narrow:[&>button]:size-8.5">
                 {hasGuide && (
                   <Button variant="icon" onClick={handleOpenGuide} title={t('play.guide')}>
                     ?

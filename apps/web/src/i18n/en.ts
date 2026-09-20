@@ -49,6 +49,7 @@ export const en = {
   'guide.tram': 'The platform moves one tile per turn. Push into a blocked side to ride along',
 
   'world.1': 'Land of Low Steps',
+  'world.1.note': 'Ten stages to learn stepping up and down, one tile at a time.',
   'stage.1-1': 'First Steps',
   'stage.1-2': 'Downhill',
   'stage.1-3': 'Stepping Stone',
@@ -61,6 +62,7 @@ export const en = {
   'stage.1-10': 'The Long Way',
 
   'world.2': 'Land of Sliding Ice',
+  'world.2.note': 'Once you slip, you keep going until something stops you.',
   'stage.2-1': 'The Slide',
   'stage.2-2': 'The Sled',
   'stage.2-3': 'The Ledge',
@@ -73,6 +75,7 @@ export const en = {
   'stage.2-10': 'The Blizzard',
 
   'world.3': 'Land of Crumbling Ground',
+  'world.3.note': 'The ground falls away behind every step you take.',
   'stage.3-1': 'The Cracked Path',
   'stage.3-2': 'The Patch',
   'stage.3-3': 'The One Way',
@@ -85,6 +88,7 @@ export const en = {
   'stage.3-10': 'The Collapse',
 
   'world.4': 'Land of Moving Ground',
+  'world.4.note': 'The platforms never rest. Choose when to ride and when to step off.',
   'stage.4-1': 'The First Ride',
   'stage.4-2': 'The Freight Car',
   'stage.4-3': 'The Transfer',
