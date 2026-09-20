@@ -2,7 +2,7 @@ import type { Stage } from './types'
 
 export const STAGE_VERSION = 1
 
-const ENTITY_TYPES = ['box', 'switch', 'door', 'lift', 'ladder']
+const ENTITY_TYPES = ['box', 'switch', 'door', 'lift', 'warp', 'ladder']
 const GUIDE_TARGETS = ['restart', 'moves', 'pushes']
 const MAX_GUIDES = 3
 
@@ -97,6 +97,8 @@ export const validateStage = (data: unknown): ValidateResult => {
   const reserved = new Set([data.start, data.goal].filter(isFloor).map(key))
   // 스위치는 문과 발판을 같은 target으로 가리켜 id를 함께 관리한다
   const targetIds = new Set<string>()
+  const iceRows = Array.isArray(data.ice) ? (data.ice as string[]) : []
+  const warpCells = new Map<string, { x: number; y: number }[]>()
 
   entities.forEach((entity, i) => {
     if (!isObject(entity) || !ENTITY_TYPES.includes(entity.type as string)) {
@@ -120,6 +122,26 @@ export const validateStage = (data: unknown): ValidateResult => {
       if (typeof entity.id !== 'string') add(`entities[${i}]의 ${label} id가 없다`)
       else if (targetIds.has(entity.id)) add(`${label} id ${entity.id}가 겹친다`)
       else targetIds.add(entity.id)
+    }
+
+    if (entity.type === 'warp') {
+      if (typeof entity.id !== 'string' || entity.id === '') {
+        add(`entities[${i}]의 짝 칸 id가 비어 있다`)
+      } else {
+        warpCells.set(entity.id, [
+          ...(warpCells.get(entity.id) ?? []),
+          { x: entity.x, y: entity.y },
+        ])
+      }
+      if (iceRows[entity.y]?.[entity.x] === '#') add(`entities[${i}]이 얼음 칸에 있다`)
+    }
+  })
+
+  warpCells.forEach((cells, id) => {
+    if (targetIds.has(id)) add(`짝 칸 id ${id}가 겹친다`)
+    if (cells.length !== 2) add(`짝 칸 id ${id}는 두 칸이어야 한다`)
+    else if (grid[cells[0].y][cells[0].x] !== grid[cells[1].y][cells[1].x]) {
+      add(`짝 칸 id ${id}의 두 칸 높이가 다르다`)
     }
   })
 

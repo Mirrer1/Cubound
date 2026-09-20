@@ -32,6 +32,15 @@ const doors = (stage: Stage) => stage.entities.filter((e) => e.type === 'door')
 
 const lifts = (stage: Stage) => stage.entities.filter((e) => e.type === 'lift')
 
+const warps = (stage: Stage) => stage.entities.filter((e) => e.type === 'warp')
+
+// 짝 칸이면 같은 id를 가진 나머지 한 칸, 아니면 null
+const warpExit = (stage: Stage, p: Point): Point | null => {
+  const here = warps(stage).find((w) => same(w, p))
+  const pair = here && warps(stage).find((w) => w.id === here.id && !same(w, p))
+  return pair ? { x: pair.x, y: pair.y } : null
+}
+
 const isPressed = (state: GameState, p: Point) => same(state.player, p) || hasBox(state, p)
 
 const isSwitchOn = (state: GameState, target: string) =>
@@ -139,7 +148,7 @@ const arrive = (
   const slide =
     event.type === 'fell' ? { rest: to, landed: null } : slidePlayer(state, to, direction)
   const { rest, landed } = slide
-  const at = landed ?? rest
+  const stop = landed ?? rest
   const events = [...pre, event]
 
   if (!same(rest, to)) events.push({ type: 'slid', subject: 'player', from: to, to: rest })
@@ -147,6 +156,12 @@ const arrive = (
     const drop = (floorAt(state, rest) ?? 0) - (floorAt(state, landed) ?? 0)
     events.push({ type: 'fell', from: rest, to: landed, drop })
   }
+
+  // 상자 위에 올라선 큐브는 짝 칸을 밟지 않은 것으로 보고, 나올 칸이 상자로 막히면 그대로 선다
+  const exit = warpExit(state.stage, stop)
+  const warped = exit && !hasBox(state, stop) && !hasBox(state, exit) ? exit : null
+  const at = warped ?? stop
+  if (warped) events.push({ type: 'warped', from: stop, to: warped })
 
   const next: GameState = {
     ...state,

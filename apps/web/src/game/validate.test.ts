@@ -183,6 +183,71 @@ describe('validateStage', () => {
     ).toContain('발판 id b가 겹친다')
   })
 
+  it('짝 칸은 같은 id로 정확히 두 칸이어야 한다', () => {
+    const entities = (list: unknown[]) => errorsOf({ ...VALID, entities: list })
+
+    expect(
+      entities([
+        { type: 'warp', x: 1, y: 0, id: 'w' },
+        { type: 'warp', x: 0, y: 1, id: 'w' },
+      ]),
+    ).toEqual([])
+    expect(entities([{ type: 'warp', x: 1, y: 0, id: 'w' }])).toContain(
+      '짝 칸 id w는 두 칸이어야 한다',
+    )
+    expect(
+      entities([
+        { type: 'warp', x: 1, y: 0, id: 'w' },
+        { type: 'warp', x: 0, y: 1, id: 'w' },
+        { type: 'warp', x: 2, y: 0, id: 'w' },
+      ]),
+    ).toContain('짝 칸 id w는 두 칸이어야 한다')
+  })
+
+  it('짝 칸 id가 비어 있으면 실패한다', () => {
+    expect(errorsOf({ ...VALID, entities: [{ type: 'warp', x: 1, y: 0, id: '' }] })).toContain(
+      'entities[0]의 짝 칸 id가 비어 있다',
+    )
+  })
+
+  it('짝 칸 id는 문이나 발판 id와 겹칠 수 없다', () => {
+    expect(
+      errorsOf({
+        ...VALID,
+        entities: [
+          { type: 'door', x: 2, y: 0, id: 'a' },
+          { type: 'warp', x: 1, y: 0, id: 'a' },
+          { type: 'warp', x: 0, y: 1, id: 'a' },
+        ],
+      }),
+    ).toContain('짝 칸 id a가 겹친다')
+  })
+
+  it('짝인 두 칸의 높이가 다르면 실패한다', () => {
+    expect(
+      errorsOf({
+        ...VALID,
+        entities: [
+          { type: 'warp', x: 1, y: 0, id: 'w' },
+          { type: 'warp', x: 2, y: 0, id: 'w' },
+        ],
+      }),
+    ).toContain('짝 칸 id w의 두 칸 높이가 다르다')
+  })
+
+  it('얼음 칸에는 짝 칸을 둘 수 없다', () => {
+    expect(
+      errorsOf({
+        ...VALID,
+        ice: ['.#.', '...'],
+        entities: [
+          { type: 'warp', x: 1, y: 0, id: 'w' },
+          { type: 'warp', x: 0, y: 1, id: 'w' },
+        ],
+      }),
+    ).toContain('entities[0]이 얼음 칸에 있다')
+  })
+
   it('best는 양의 정수여야 한다', () => {
     expect(errorsOf({ ...VALID, best: 0 })).toContain('best는 양의 정수여야 한다')
   })

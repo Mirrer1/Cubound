@@ -10,6 +10,7 @@ export type Entity = (
   | { type: 'switch'; target: string }
   | { type: 'door'; id: string }
   | { type: 'lift'; id: string }
+  | { type: 'warp'; id: string }
   | { type: 'ladder' }
 ) &
   Point
@@ -80,6 +81,7 @@ export type GameEvent =
   | { type: 'placed'; ladder: LeaningLadder }
   | { type: 'door'; id: string; open: boolean }
   | { type: 'lift'; id: string; up: boolean }
+  | { type: 'warped'; from: Point; to: Point }
   | { type: 'blocked'; direction: Direction }
   | { type: 'cleared' }
 

@@ -242,7 +242,12 @@ export const switchCells = (stage: Stage, target: string): Point[] =>
 export const pipsOf = (stage: Stage): Record<string, number> => {
   const pips: Record<string, number> = {}
   for (const e of stage.entities) {
-    const id = e.type === 'switch' ? e.target : e.type === 'door' || e.type === 'lift' ? e.id : null
+    const id =
+      e.type === 'switch'
+        ? e.target
+        : e.type === 'door' || e.type === 'lift' || e.type === 'warp'
+          ? e.id
+          : null
     if (id !== null && pips[id] === undefined) pips[id] = Object.keys(pips).length + 1
   }
   return pips
