@@ -27,11 +27,11 @@ const TitleScreen = () => {
       <section className="relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[22px] border border-line bg-base-bg">
         <TitleScene
           opacity={0.4}
-          className="pointer-events-none absolute -top-10 -left-16 w-64 sm:w-72"
+          className="pointer-events-none absolute -top-10 -left-16 w-64 min-[1700px]:-top-16! min-[1700px]:-left-24! min-[1700px]:w-[38rem]! sm:w-72"
         />
         <TitleScene
           opacity={0.6}
-          className="pointer-events-none absolute -right-10 bottom-40 w-72 sm:-bottom-8 sm:w-96"
+          className="pointer-events-none absolute -right-10 bottom-40 w-72 min-[1700px]:-right-20! min-[1700px]:-bottom-16! min-[1700px]:w-[46rem]! sm:-bottom-8 sm:w-96"
         />
         <div className="absolute top-0 right-0 z-10 panel-pad">
           <LanguageMenu />
