@@ -80,4 +80,10 @@ describe('directionFromSwipe', () => {
     expect(directionFromSwipe(-30, -2)).toBeNull()
     expect(directionFromSwipe(-30, 2)).toBeNull()
   })
+
+  it('축에 가까워도 충분히 길게 밀면 손을 떼기 전에 판정한다', () => {
+    expect(directionFromSwipe(-80, -2)).toBe('left')
+    expect(directionFromSwipe(-80, 2)).toBe('down')
+    expect(directionFromSwipe(-2, -80)).toBe('left')
+  })
 })
