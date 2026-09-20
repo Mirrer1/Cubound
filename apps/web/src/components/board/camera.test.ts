@@ -10,7 +10,7 @@ import {
   zoneBox,
 } from './camera'
 import { rollingCubeFaces } from './cube'
-import { TILE } from '@/game/iso'
+import { TILE, toScreen } from '@/game/iso'
 import type { Direction } from '@/game/types'
 
 const VIEWS = [
@@ -255,5 +255,78 @@ describe('viewBoxFor', () => {
       box.maxX - box.minX,
       box.maxY - box.minY,
     ])
+  })
+})
+
+describe('viewBoxFor 칸 폭 하한', () => {
+  // 10x9 구역이 가로세로 모두 담기지 않는 크기
+  const TIGHT = { width: 400, height: 280 }
+  const BIG = flat(10, 9, 2)
+  const big = zoneBox(BIG)
+  const at = (x: number, y: number) => toScreen({ x, y }, BIG[y][x])
+
+  it('하한에 닿지 않는 구역은 비출 칸을 줘도 전과 같다', () => {
+    const small = zoneBox(flat(6, 5, 1))
+
+    for (const view of VIEWS) {
+      expect(viewBoxFor(small, view, toScreen({ x: 0, y: 0 }, 1))).toEqual(viewBoxFor(small, view))
+    }
+  })
+
+  it('구역이 커서 칸이 작아지면 칸 폭을 하한으로 고정한다', () => {
+    const [, , vw, vh] = viewBoxFor(big, TIGHT, at(4, 4))
+
+    expect(vw).toBeLessThan(big.maxX - big.minX)
+    expect(vh).toBeLessThan(big.maxY - big.minY)
+    expect(tilePx(viewBoxFor(big, TIGHT, at(4, 4)), TIGHT)).toBeCloseTo(48)
+  })
+
+  it('비출 자리가 구역 한가운데면 화면 한가운데에 둔다', () => {
+    const middle = { x: (big.minX + big.maxX) / 2, y: (big.minY + big.maxY) / 2 }
+    const [vx, vy, vw, vh] = viewBoxFor(big, TIGHT, middle)
+
+    expect(vx + vw / 2).toBeCloseTo(middle.x)
+    expect(vy + vh / 2).toBeCloseTo(middle.y)
+  })
+
+  it('비출 칸이 구석이어도 구역 가장자리에서 멈추고 밖이 보이지 않는다', () => {
+    for (const corner of [at(0, 0), at(9, 0), at(0, 8), at(9, 8)]) {
+      const [vx, vy, vw, vh] = viewBoxFor(big, TIGHT, corner)
+
+      expect(vx).toBeGreaterThanOrEqual(big.minX)
+      expect(vy).toBeGreaterThanOrEqual(big.minY)
+      expect(vx + vw).toBeLessThanOrEqual(big.maxX)
+      expect(vy + vh).toBeLessThanOrEqual(big.maxY)
+    }
+  })
+
+  it('한 축만 담기지 않으면 그 축만 따라가고 다른 축은 가운데에 둔다', () => {
+    const wide = zoneBox(flat(16, 2, 1))
+    const view = { width: 340, height: 628 }
+    const [vx, vy, vw, vh] = viewBoxFor(wide, view, toScreen({ x: 15, y: 1 }, 1))
+
+    expect(vw).toBeLessThan(wide.maxX - wide.minX)
+    expect(vh).toBeGreaterThan(wide.maxY - wide.minY)
+    expect(vx + vw).toBeCloseTo(wide.maxX)
+    expect(vy + vh / 2).toBeCloseTo((wide.minY + wide.maxY) / 2)
+  })
+
+  it('데스크톱에서는 가장 큰 구역도 하한에 걸리지 않는다', () => {
+    const zone = zoneBox(flat(10, 9, 2))
+    const corner = toScreen({ x: 0, y: 0 }, 2)
+
+    for (const view of [
+      { width: 1166, height: 592 }, // 1280x800 데스크톱의 필드 영역
+      { width: 1806, height: 876 },
+    ]) {
+      expect(viewBoxFor(zone, view, corner)).toEqual(viewBoxFor(zone, view))
+      expect(inside(viewBoxFor(zone, view, corner), zone)).toBe(true)
+    }
+  })
+
+  it('화면 크기를 아직 재지 못했으면 비출 칸을 줘도 구역 범위를 그대로 쓴다', () => {
+    expect(viewBoxFor(big, { width: 0, height: 0 }, at(0, 0))).toEqual(
+      viewBoxFor(big, { width: 0, height: 0 }),
+    )
   })
 })
