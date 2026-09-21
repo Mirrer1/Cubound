@@ -18,6 +18,7 @@ export interface Session {
   pushes: number
   climbs: number
   rides?: number // 전에 저장된 것에는 없다
+  dirUses?: number // 전에 저장된 것에는 없다
 }
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
@@ -45,6 +46,7 @@ export const toSession = (game: GameState): Session => ({
   pushes: game.pushes,
   climbs: game.climbs,
   rides: game.rides,
+  dirUses: game.dirUses,
 })
 
 // 스테이지 데이터가 바뀌었거나 값이 깨졌으면 처음부터 시작하도록 null을 돌려준다
@@ -138,6 +140,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   if (ladders.length + leaningLadders.length + (carrying ? 1 : 0) > ladderCount) return null
   if (!isCount(saved.moves) || !isCount(saved.pushes) || !isCount(saved.climbs)) return null
   if (saved.rides !== undefined && !isCount(saved.rides)) return null
+  if (saved.dirUses !== undefined && !isCount(saved.dirUses)) return null
   if (!onFloor(saved.player)) return null
 
   return {
@@ -154,6 +157,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     pushes: saved.pushes as number,
     climbs: saved.climbs as number,
     rides: (saved.rides as number) ?? 0,
+    dirUses: (saved.dirUses as number) ?? 0,
     cleared: false,
   }
 }

@@ -21,6 +21,7 @@ export interface StageRules {
   pushLimit?: number // 보스 밀기 제한, 없으면 제한 없음
   climbLimit?: number // 보스 올라가기 제한, 없으면 제한 없음
   rideLimit?: number // 보스 타는 횟수 제한, 없으면 제한 없음
+  dirLimit?: { dir: Direction; count: number } // 보스 방향 제한, 없으면 제한 없음
 }
 
 export interface Stage {
@@ -40,7 +41,7 @@ export interface Stage {
 }
 
 // 칸 좌표나 화면 요소 이름
-export type GuideTarget = Point | 'restart' | 'moves' | 'pushes' | 'climbs' | 'rides'
+export type GuideTarget = Point | 'restart' | 'moves' | 'pushes' | 'climbs' | 'rides' | 'dir'
 
 export interface Guide {
   id: string // 문구 모음의 키
@@ -80,6 +81,7 @@ export interface GameState {
   pushes: number // 상자를 민 이동의 수
   climbs: number // 한 층 올라선 이동의 수
   rides: number // 발판에 올라탄 횟수
+  dirUses: number // 제한된 방향으로 센 이동의 수
   cleared: boolean
 }
 

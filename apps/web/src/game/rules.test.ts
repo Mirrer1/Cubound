@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   climbsLeft,
   createState,
+  dirLeft,
   isDoorOpen,
   isLiftRaised,
   move,
@@ -2001,5 +2002,107 @@ describe('ridesLeft', () => {
 
     expect(ridesLeft(createState(stage))).toBe(2)
     expect(ridesLeft(move(createState(stage), 'right').state)).toBe(1)
+  })
+})
+
+const DIR_STAGE: Stage = {
+  version: 1,
+  id: 'test-dir',
+  name: '방향 제한 테스트',
+  heights: [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+  ],
+  start: { x: 2, y: 1 },
+  goal: { x: 4, y: 0 },
+  entities: [],
+}
+
+const withDirLimit = (stage: Stage, dir: Direction, count: number): Stage => ({
+  ...stage,
+  rules: { dirLimit: { dir, count } },
+})
+
+describe('보스 방향 제한', () => {
+  it('제한한 방향으로 한 칸 가면 쓴 횟수가 는다', () => {
+    const { state } = move(createState(withDirLimit(DIR_STAGE, 'left', 3)), 'left')
+
+    expect(state.player).toEqual({ x: 1, y: 1 })
+    expect(state.dirUses).toBe(1)
+  })
+
+  it('다른 방향으로 가면 쓴 횟수가 늘지 않는다', () => {
+    const { state } = move(createState(withDirLimit(DIR_STAGE, 'left', 3)), 'right')
+
+    expect(state.player).toEqual({ x: 3, y: 1 })
+    expect(state.dirUses).toBe(0)
+  })
+
+  it('벽에 막혀 제자리면 쓴 횟수가 늘지 않는다', () => {
+    const stage = withDirLimit({ ...DIR_STAGE, start: { x: 0, y: 1 } }, 'left', 3)
+    const { state, events } = move(createState(stage), 'left')
+
+    expect(state.dirUses).toBe(0)
+    expect(events).toEqual([{ type: 'blocked', direction: 'left' }])
+  })
+
+  it('얼음으로 여러 칸 미끄러져도 한 번만 쓴다', () => {
+    const { state } = move(createState(withDirLimit(ICE_STAGE, 'right', 3)), 'right')
+
+    expect(state.player).toEqual({ x: 4, y: 1 })
+    expect(state.dirUses).toBe(1)
+  })
+
+  it('상자를 밀어도 한 번 쓴다', () => {
+    const stage = withDirLimit(
+      { ...DIR_STAGE, entities: [{ type: 'box', x: 3, y: 1 }] },
+      'right',
+      3,
+    )
+    const { state } = move(createState(stage), 'right')
+
+    expect(state.player).toEqual({ x: 3, y: 1 })
+    expect(state.pushes).toBe(1)
+    expect(state.dirUses).toBe(1)
+  })
+
+  it('짝 칸으로 튀어 나가도 한 번 쓴다', () => {
+    const { state } = move(createState(withDirLimit(WARP_STAGE, 'right', 3)), 'right')
+
+    expect(state.player).toEqual({ x: 4, y: 1 })
+    expect(state.dirUses).toBe(1)
+  })
+
+  it('발판 길 쪽으로 밀어 기다려도 한 번 쓴다', () => {
+    const stage = withDirLimit(withTram({ x: 3, y: 1 }), 'right', 3)
+    const { state } = move(createState(stage), 'right')
+
+    expect(state.player).toEqual({ x: 0, y: 1 })
+    expect(state.moves).toBe(1)
+    expect(state.dirUses).toBe(1)
+  })
+
+  it('제한을 다 쓰면 그 방향만 막히고 다른 방향은 그대로 된다', () => {
+    const stage = withDirLimit(DIR_STAGE, 'left', 1)
+    const used: GameState = { ...createState(stage), dirUses: 1 }
+    const { state, events } = move(used, 'left')
+
+    expect(state).toBe(used)
+    expect(events).toEqual([{ type: 'blocked', direction: 'left' }])
+    expect(move(used, 'right').state.player).toEqual({ x: 3, y: 1 })
+  })
+})
+
+describe('dirLeft', () => {
+  it('제한이 없으면 null을 돌려준다', () => {
+    expect(dirLeft(createState(DIR_STAGE))).toBe(null)
+  })
+
+  it('제한이 있으면 남은 횟수를 돌려준다', () => {
+    const stage = withDirLimit(DIR_STAGE, 'left', 2)
+
+    expect(dirLeft(createState(stage))).toBe(2)
+    expect(dirLeft(move(createState(stage), 'left').state)).toBe(1)
   })
 })

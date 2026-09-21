@@ -29,6 +29,7 @@ const MID = {
   pushes: 1,
   climbs: 0,
   rides: 0,
+  dirUses: 0,
 }
 
 const saved = (state: object) => ({ version: SESSION_VERSION, stageId: '1-3', ...state })
@@ -152,6 +153,24 @@ describe('restoreSession', () => {
   it('탄 횟수가 없는 예전 저장은 0으로 읽는다', () => {
     const { rides: _rides, ...old } = MID
     expect(restoreSession(saved(old), STAGE)?.rides).toBe(0)
+  })
+
+  it('제한 방향을 쓴 횟수가 음수이거나 정수가 아니면 버린다', () => {
+    expect(restoreSession(saved({ ...MID, dirUses: -1 }), STAGE)).toBeNull()
+    expect(restoreSession(saved({ ...MID, dirUses: 1.5 }), STAGE)).toBeNull()
+  })
+
+  it('제한 방향을 쓴 횟수가 없는 예전 저장은 0으로 읽는다', () => {
+    const { dirUses: _dirUses, ...old } = MID
+    expect(restoreSession(saved(old), STAGE)?.dirUses).toBe(0)
+  })
+
+  it('제한 방향을 쓴 횟수를 그대로 이어간다', () => {
+    const stage: Stage = { ...STAGE, rules: { dirLimit: { dir: 'right', count: 3 } } }
+    const state = move(createState(stage), 'right').state
+
+    expect(state.dirUses).toBe(1)
+    expect(restoreSession(toSession(state), stage)?.dirUses).toBe(1)
   })
 
   it('이어서 시작한 상태는 클리어 전이다', () => {

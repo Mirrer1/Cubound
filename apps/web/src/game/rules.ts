@@ -127,6 +127,12 @@ export const ridesLeft = (state: GameState) => {
   return limit === undefined ? null : Math.max(limit - state.rides, 0)
 }
 
+// 보스 방향 제한이 없으면 null
+export const dirLeft = (state: GameState) => {
+  const limit = state.stage.rules?.dirLimit
+  return limit === undefined ? null : Math.max(limit.count - state.dirUses, 0)
+}
+
 export const readCracks = (stage: Stage): Crack[] =>
   (stage.cracks ?? []).flatMap((row, y) =>
     [...row].flatMap((c, x) => (c === '.' ? [] : [{ x, y, left: Number(c) }])),
@@ -150,6 +156,7 @@ export const createState = (stage: Stage): GameState => ({
   pushes: 0,
   climbs: 0,
   rides: 0,
+  dirUses: 0,
   cleared: false,
 })
 
@@ -448,6 +455,9 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
   if (state.cleared) return { state, events: [] }
   if (movesLeft(state) === 0) return { state, events: [{ type: 'blocked', direction }] }
 
+  const limitedDir = state.stage.rules?.dirLimit?.dir === direction
+  if (limitedDir && dirLeft(state) === 0) return { state, events: [{ type: 'blocked', direction }] }
+
   const result = moveOnce(state, direction)
   // 타는 횟수를 다 쓰면 올라타는 이동만 실패하고 기다린 것으로 돌린다
   const boarded = boardsTram(state, result.state)
@@ -466,7 +476,12 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
         ? { ...result, state: { ...result.state, rides: result.state.rides + 1 } }
         : result
 
-  const { state: crumbled, events: crackEvents } = crumble(state, acted.state)
+  // 이동 수로 세는 수면 그 방향을 쓴 것이다
+  const spent: GameState = limitedDir
+    ? { ...acted.state, dirUses: acted.state.dirUses + 1 }
+    : acted.state
+
+  const { state: crumbled, events: crackEvents } = crumble(state, spent)
   const { state: moved, events: tramEvents } = rideTrams(crumbled)
 
   const doorEvents: GameEvent[] = doors(state.stage)

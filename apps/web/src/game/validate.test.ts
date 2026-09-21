@@ -287,6 +287,7 @@ describe('validateStage', () => {
   it('가이드 대상 화면 요소는 정해진 이름만 허용한다', () => {
     expect(errorsOf({ ...VALID, guides: [{ id: 'a', target: 'climbs' }] })).toEqual([])
     expect(errorsOf({ ...VALID, guides: [{ id: 'a', target: 'rides' }] })).toEqual([])
+    expect(errorsOf({ ...VALID, guides: [{ id: 'a', target: 'dir' }] })).toEqual([])
     expect(errorsOf({ ...VALID, guides: [{ id: 'a', target: 'undo' }] })).toContain(
       'guides[0]의 target을 알 수 없다',
     )
@@ -342,6 +343,21 @@ describe('validateStage', () => {
     expect(limit(0)).toContain('rules.rideLimit은 양의 정수여야 한다')
     expect(limit(-1)).toContain('rules.rideLimit은 양의 정수여야 한다')
     expect(limit(2.5)).toContain('rules.rideLimit은 양의 정수여야 한다')
+  })
+
+  it('방향 제한은 네 방향 중 하나와 양의 정수여야 한다', () => {
+    const limit = (value: unknown) => errorsOf({ ...VALID, rules: { dirLimit: value } })
+
+    expect(limit({ dir: 'left', count: 4 })).toEqual([])
+    expect(limit(4)).toContain('rules.dirLimit.dir은 네 방향 중 하나여야 한다')
+    expect(limit({ dir: 'west', count: 4 })).toContain(
+      'rules.dirLimit.dir은 네 방향 중 하나여야 한다',
+    )
+    expect(limit({ dir: 'left', count: 0 })).toContain('rules.dirLimit.count는 양의 정수여야 한다')
+    expect(limit({ dir: 'left', count: -1 })).toContain('rules.dirLimit.count는 양의 정수여야 한다')
+    expect(limit({ dir: 'left', count: 2.5 })).toContain(
+      'rules.dirLimit.count는 양의 정수여야 한다',
+    )
   })
 })
 
