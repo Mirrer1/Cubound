@@ -47,6 +47,7 @@ export const en = {
   'guide.warp': 'Step onto a linked tile to come out at its pair',
   'guide.climbLimit': 'You can climb {n} times. Choose where to spend them',
   'guide.tram': 'The platform moves one tile per turn. Push into a blocked side to ride along',
+  'guide.rideLimit': 'You can ride a platform {n} times. Choose where to get off',
 
   'world.1': 'Land of Low Steps',
   'world.1.note': 'Ten stages to learn stepping up and down, one tile at a time.',

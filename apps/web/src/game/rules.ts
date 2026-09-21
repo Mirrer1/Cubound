@@ -38,13 +38,15 @@ const warps = (stage: Stage) => stage.entities.filter((e) => e.type === 'warp')
 
 const trams = (stage: Stage) => stage.entities.filter((e): e is Tram => e.type === 'tram')
 
-// 발판이 지금 서 있는 칸이면 그 윗면 높이
-const tramLevelAt = (state: GameState, p: Point): number | null => {
+// 발판이 지금 서 있는 칸이면 그 발판
+const tramAt = (state: GameState, p: Point): Tram | null => {
   if (state.trams.length === 0) return null
 
-  const here = trams(state.stage).find((tram, i) => same(tram.cells[state.trams[i].at], p))
-  return here ? here.level : null
+  return trams(state.stage).find((tram, i) => same(tram.cells[state.trams[i].at], p)) ?? null
 }
+
+// 발판이 지금 서 있는 칸이면 그 윗면 높이
+const tramLevelAt = (state: GameState, p: Point): number | null => tramAt(state, p)?.level ?? null
 
 // 어느 발판이든 오가는 길에 든 칸
 const onTramPath = (stage: Stage, p: Point) =>
@@ -119,6 +121,12 @@ export const climbsLeft = (state: GameState) => {
   return limit === undefined ? null : Math.max(limit - state.climbs, 0)
 }
 
+// 보스 타는 횟수 제한이 없으면 null
+export const ridesLeft = (state: GameState) => {
+  const limit = state.stage.rules?.rideLimit
+  return limit === undefined ? null : Math.max(limit - state.rides, 0)
+}
+
 export const readCracks = (stage: Stage): Crack[] =>
   (stage.cracks ?? []).flatMap((row, y) =>
     [...row].flatMap((c, x) => (c === '.' ? [] : [{ x, y, left: Number(c) }])),
@@ -141,6 +149,7 @@ export const createState = (stage: Stage): GameState => ({
   moves: 0,
   pushes: 0,
   climbs: 0,
+  rides: 0,
   cleared: false,
 })
 
@@ -429,11 +438,20 @@ const rideTrams = (state: GameState): MoveResult => {
   return { state: { ...state, player, boxes, trams: moved }, events }
 }
 
+// 다른 발판에 내려선 이동이면 새로 탄 것으로 센다. 타고 실려 가는 동안은 자리가 그대로라 세지 않는다
+const boardsTram = (before: GameState, after: GameState) => {
+  const to = tramAt(after, after.player)
+  return to !== null && to !== tramAt(before, before.player)
+}
+
 export const move = (state: GameState, direction: Direction): MoveResult => {
   if (state.cleared) return { state, events: [] }
   if (movesLeft(state) === 0) return { state, events: [{ type: 'blocked', direction }] }
 
   const result = moveOnce(state, direction)
+  // 타는 횟수를 다 쓰면 올라타는 이동만 실패하고 기다린 것으로 돌린다
+  const boarded = boardsTram(state, result.state)
+  const denied = boarded && ridesLeft(state) === 0
   // 발판 위에서 막힌 이동은 타고 가겠다는 뜻이고 발판 길 쪽으로 막힌 이동은 기다리겠다는 뜻이라 제자리에 서서 이동 1회로 센다
   const forTram =
     result.state === state &&
@@ -441,9 +459,12 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
       onTramPath(state.stage, step(state.player, direction)))
   if (result.state === state && !forTram) return result
 
-  const acted: MoveResult = forTram
-    ? { state: { ...state, moves: state.moves + 1 }, events: [] }
-    : result
+  const acted: MoveResult =
+    forTram || denied
+      ? { state: { ...state, moves: state.moves + 1 }, events: [] }
+      : boarded
+        ? { ...result, state: { ...result.state, rides: result.state.rides + 1 } }
+        : result
 
   const { state: crumbled, events: crackEvents } = crumble(state, acted.state)
   const { state: moved, events: tramEvents } = rideTrams(crumbled)

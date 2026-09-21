@@ -48,6 +48,7 @@ export const ko: Partial<Texts> = {
   'guide.warp': '짝 칸에 들어가면 이어진 칸으로 나와요',
   'guide.climbLimit': '{n}번만 올라갈 수 있어요. 오를 자리를 고르세요',
   'guide.tram': '발판은 한 수마다 한 칸 가요. 막힌 쪽으로 밀면 그대로 타고 가요',
+  'guide.rideLimit': '발판은 {n}번만 탈 수 있어요. 내릴 자리를 고르세요',
 
   'world.1': '낮은 계단의 땅',
   'world.1.note': '한 칸씩 오르내리는 법을 익히는 열 판입니다.',

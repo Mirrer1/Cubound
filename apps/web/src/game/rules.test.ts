@@ -8,6 +8,7 @@ import {
   move,
   movesLeft,
   pushesLeft,
+  ridesLeft,
   standHeight,
 } from './rules'
 import type { Direction, Entity, GameState, MoveResult, Point, Stage } from './types'
@@ -1876,5 +1877,129 @@ describe('move 발판 기다리기', () => {
 
     expect(state.moves).toBe(1)
     expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+  })
+})
+
+const TRANSFER_STAGE: Stage = {
+  version: 1,
+  id: 'test-tram-transfer',
+  name: '발판 옮겨 타기 테스트',
+  heights: [
+    [0, 0, 0, 0, 0],
+    [0, -1, -1, -1, 0],
+    [0, -1, -1, -1, 0],
+  ],
+  start: { x: 0, y: 1 },
+  goal: { x: 4, y: 1 },
+  entities: [
+    { type: 'tram', x: 1, y: 1, id: 'tram-a', level: 0, cells: TRAM_CELLS, dir: 1 },
+    {
+      type: 'tram',
+      x: 1,
+      y: 2,
+      id: 'tram-b',
+      level: 0,
+      cells: [
+        { x: 1, y: 2 },
+        { x: 2, y: 2 },
+        { x: 3, y: 2 },
+      ],
+      dir: 1,
+    },
+  ],
+}
+
+describe('move 발판에 탄 횟수', () => {
+  it('땅에서 발판으로 올라타면 한 번으로 센다', () => {
+    const { state } = move(createState(TRAM_STAGE), 'right')
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(state.rides).toBe(1)
+  })
+
+  it('탄 채로 여러 칸 실려 가도 더 세지 않는다', () => {
+    const { state } = play(TRAM_STAGE, ['right', 'right', 'right'])
+
+    expect(state.player).toEqual({ x: 4, y: 1 })
+    expect(state.moves).toBe(3)
+    expect(state.rides).toBe(1)
+  })
+
+  it('기다린 이동은 세지 않는다', () => {
+    const { state } = move(createState(withTram({ x: 3, y: 1 })), 'right')
+
+    expect(state.moves).toBe(1)
+    expect(state.rides).toBe(0)
+  })
+
+  it('발판에서 다른 발판으로 옮겨 타면 다시 센다', () => {
+    const { state } = play(TRANSFER_STAGE, ['right', 'down'])
+
+    expect(state.player).toEqual({ x: 3, y: 2 })
+    expect(state.rides).toBe(2)
+  })
+
+  it('상자가 발판에 실리는 것은 세지 않는다', () => {
+    const stage = withTram(
+      { x: 3, y: 1 },
+      { start: { x: 5, y: 1 }, entities: [{ type: 'box', x: 4, y: 1 }] },
+    )
+    const { state } = move(createState(stage), 'left')
+
+    expect(state.boxes).toEqual([{ x: 2, y: 1 }])
+    expect(state.player).toEqual({ x: 4, y: 1 })
+    expect(state.rides).toBe(0)
+  })
+
+  it('발판 위 상자에 올라서는 것도 탄 것으로 센다', () => {
+    const { state } = play(BOX_RIDE_STAGE, ['up', 'left', 'up', 'right'])
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(state.rides).toBe(1)
+  })
+})
+
+describe('보스 타는 횟수 제한', () => {
+  const LIMITED_STAGE: Stage = { ...TRAM_STAGE, rules: { rideLimit: 1 } }
+
+  it('제한이 남아 있으면 평소대로 올라탄다', () => {
+    const { state } = move(createState(LIMITED_STAGE), 'right')
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(state.rides).toBe(1)
+  })
+
+  it('제한을 다 쓰면 올라타지 못하고 기다리기가 된다', () => {
+    const used: GameState = { ...createState(LIMITED_STAGE), rides: 1 }
+    const { state, events } = move(used, 'right')
+
+    expect(state.player).toEqual({ x: 0, y: 1 })
+    expect(state.moves).toBe(1)
+    expect(state.rides).toBe(1)
+    expect(state.trams).toEqual([{ id: 'tram-a', at: 1, dir: 1 }])
+    expect(events).toEqual([
+      { type: 'tram', id: 'tram-a', from: { x: 1, y: 1 }, to: { x: 2, y: 1 } },
+    ])
+  })
+
+  it('제한을 다 써도 발판을 타지 않는 이동은 그대로 된다', () => {
+    const used: GameState = { ...createState(LIMITED_STAGE), rides: 1 }
+    const { state } = move(used, 'up')
+
+    expect(state.player).toEqual({ x: 0, y: 0 })
+    expect(state.moves).toBe(1)
+  })
+})
+
+describe('ridesLeft', () => {
+  it('제한이 없으면 null을 돌려준다', () => {
+    expect(ridesLeft(createState(TRAM_STAGE))).toBe(null)
+  })
+
+  it('제한이 있으면 남은 횟수를 돌려준다', () => {
+    const stage: Stage = { ...TRAM_STAGE, rules: { rideLimit: 2 } }
+
+    expect(ridesLeft(createState(stage))).toBe(2)
+    expect(ridesLeft(move(createState(stage), 'right').state)).toBe(1)
   })
 })

@@ -28,6 +28,7 @@ const MID = {
   moves: 1,
   pushes: 1,
   climbs: 0,
+  rides: 0,
 }
 
 const saved = (state: object) => ({ version: SESSION_VERSION, stageId: '1-3', ...state })
@@ -143,6 +144,16 @@ describe('restoreSession', () => {
     expect(restoreSession(saved({ ...MID, climbs: 1.5 }), STAGE)).toBeNull()
   })
 
+  it('탄 횟수가 음수이거나 정수가 아니면 버린다', () => {
+    expect(restoreSession(saved({ ...MID, rides: -1 }), STAGE)).toBeNull()
+    expect(restoreSession(saved({ ...MID, rides: 1.5 }), STAGE)).toBeNull()
+  })
+
+  it('탄 횟수가 없는 예전 저장은 0으로 읽는다', () => {
+    const { rides: _rides, ...old } = MID
+    expect(restoreSession(saved(old), STAGE)?.rides).toBe(0)
+  })
+
   it('이어서 시작한 상태는 클리어 전이다', () => {
     expect(restoreSession(saved(MID), STAGE)?.cleared).toBe(false)
   })
@@ -250,6 +261,14 @@ describe('restoreSession 움직이는 발판', () => {
 
     expect(state.trams).toEqual([{ id: 'tram-a', at: 1, dir: 1 }])
     expect(restoreSession(toSession(state), TRAM_STAGE)).toEqual(state)
+  })
+
+  it('탄 횟수를 그대로 이어간다', () => {
+    const rode = move(createState(TRAM_STAGE), 'right').state
+    const state = move(rode, 'up').state
+
+    expect(state.rides).toBe(1)
+    expect(restoreSession(toSession(state), TRAM_STAGE)?.rides).toBe(1)
   })
 
   it('스테이지의 발판과 어긋나면 버린다', () => {
