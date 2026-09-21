@@ -109,8 +109,16 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   if (!sameShape) return null
 
   const heights = rows as number[][]
+  // 발판이 선 칸은 바닥이 없어도 딛고 설 수 있다
+  const tramKeys = new Set(
+    stageTrams.map((tram, i) => {
+      const { x, y } = tram.cells[(savedTrams as TramSpot[])[i].at]
+      return `${x},${y}`
+    }),
+  )
   const onFloor = (value: unknown): value is Point => {
     if (!isObject(value) || !Number.isInteger(value.x) || !Number.isInteger(value.y)) return false
+    if (tramKeys.has(`${value.x},${value.y}`)) return true
     return (heights[value.y as number]?.[value.x as number] ?? -1) >= 0
   }
   const isLeaning = (value: unknown): value is LeaningLadder =>

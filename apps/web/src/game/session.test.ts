@@ -263,6 +263,14 @@ describe('restoreSession 움직이는 발판', () => {
     expect(restoreSession(toSession(state), TRAM_STAGE)).toEqual(state)
   })
 
+  it('발판에 탄 채로 나가도 그 자리에서 이어간다', () => {
+    const state = move(createState(TRAM_STAGE), 'right').state
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(TRAM_STAGE.heights[1][2]).toBe(-1)
+    expect(restoreSession(toSession(state), TRAM_STAGE)).toEqual(state)
+  })
+
   it('탄 횟수를 그대로 이어간다', () => {
     const rode = move(createState(TRAM_STAGE), 'right').state
     const state = move(rode, 'up').state
