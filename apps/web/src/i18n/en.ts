@@ -99,6 +99,7 @@ export const en = {
   'stage.4-7': 'The Detour',
   'stage.4-8': 'The Delay',
   'stage.4-9': 'The Junction',
+  'stage.4-10': 'The Last Ride',
 }
 
 export type Texts = typeof en

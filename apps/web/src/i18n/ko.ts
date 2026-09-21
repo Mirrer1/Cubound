@@ -100,4 +100,5 @@ export const ko: Partial<Texts> = {
   'stage.4-7': '우회',
   'stage.4-8': '연착',
   'stage.4-9': '분기',
+  'stage.4-10': '막차',
 }
