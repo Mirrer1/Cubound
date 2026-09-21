@@ -49,6 +49,7 @@ export const ko: Partial<Texts> = {
   'guide.climbLimit': '{n}번만 올라갈 수 있어요. 오를 자리를 고르세요',
   'guide.tram': '발판은 한 수마다 한 칸 가요. 막힌 쪽으로 밀면 그대로 타고 가요',
   'guide.rideLimit': '발판은 {n}번만 탈 수 있어요. 내릴 자리를 고르세요',
+  'guide.dirLimit': '이 방향으로는 {n}번만 갈 수 있어요. 갈 길을 고르세요',
 
   'world.1': '낮은 계단의 땅',
   'world.1.note': '한 칸씩 오르내리는 법을 익히는 열 판입니다.',
@@ -101,4 +102,16 @@ export const ko: Partial<Texts> = {
   'stage.4-8': '연착',
   'stage.4-9': '분기',
   'stage.4-10': '막차',
+
+  'world.5': '길이 겹치는 땅',
+  'world.5.note': '새로 배울 것은 없습니다. 지나온 길을 다른 쓸모로 다시 지납니다.',
+  'stage.5-1': '얼음길',
+  'stage.5-2': '뜀길',
+  'stage.5-3': '낡은 길',
+  'stage.5-4': '층계참',
+  'stage.5-5': '얼음빗장',
+  'stage.5-6': '허방',
+  'stage.5-7': '짐수레',
+  'stage.5-8': '돌림길',
+  'stage.5-9': '끊긴 길',
 }

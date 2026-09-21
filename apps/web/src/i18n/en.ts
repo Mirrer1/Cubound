@@ -48,6 +48,7 @@ export const en = {
   'guide.climbLimit': 'You can climb {n} times. Choose where to spend them',
   'guide.tram': 'The platform moves one tile per turn. Push into a blocked side to ride along',
   'guide.rideLimit': 'You can ride a platform {n} times. Choose where to get off',
+  'guide.dirLimit': 'You can move this way {n} times. Choose your route',
 
   'world.1': 'Land of Low Steps',
   'world.1.note': 'Ten stages to learn stepping up and down, one tile at a time.',
@@ -100,6 +101,19 @@ export const en = {
   'stage.4-8': 'The Delay',
   'stage.4-9': 'The Junction',
   'stage.4-10': 'The Last Ride',
+
+  'world.5': 'Land of Overlapping Paths',
+  'world.5.note':
+    'Nothing new to learn here. You walk the same paths again, for different reasons.',
+  'stage.5-1': 'The Ice Line',
+  'stage.5-2': 'The Hop',
+  'stage.5-3': 'The Worn Path',
+  'stage.5-4': 'The Landing',
+  'stage.5-5': 'The Frozen Gate',
+  'stage.5-6': 'The Pitfall',
+  'stage.5-7': 'The Handcart',
+  'stage.5-8': 'The Roundabout',
+  'stage.5-9': 'The Broken Line',
 }
 
 export type Texts = typeof en
