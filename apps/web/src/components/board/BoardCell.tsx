@@ -258,7 +258,10 @@ const BoardCell = ({
             <polygon
               key={`${dx},${dy}`}
               points={spotPoints(x, y + PIT_FLOOR, railSpots(dx, dy))}
-              style={{ fill: railNext ? 'var(--color-tram-rail-next)' : 'var(--color-tram-rail)' }}
+              style={{
+                fill: railNext ? 'var(--color-tram-rail-next)' : 'var(--color-tram-rail)',
+                transition: 'fill 200ms var(--ease-soft)',
+              }}
             />
           ))}
           {stopOffset && (
