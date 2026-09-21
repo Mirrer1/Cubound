@@ -95,4 +95,8 @@ export const ko: Partial<Texts> = {
   'stage.4-3': '환승',
   'stage.4-4': '신호',
   'stage.4-5': '지름길',
+  'stage.4-6': '교차',
+  'stage.4-7': '우회',
+  'stage.4-8': '연착',
+  'stage.4-9': '분기',
 }
