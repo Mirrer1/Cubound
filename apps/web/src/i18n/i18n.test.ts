@@ -25,7 +25,7 @@ describe('text', () => {
   })
 
   it('{n}을 넘긴 숫자로 바꾼다', () => {
-    expect(text('en', 'stars.label', 2)).toBe('2 stars')
+    expect(text('en', 'stars.label', 2)).toBe('2 of 3 stars')
     expect(text('ko', 'stars.label', 2)).toBe('별 2개')
   })
 })
@@ -33,7 +33,7 @@ describe('text', () => {
 describe('guideText', () => {
   it('터치 기기면 터치 문구를 쓴다', () => {
     expect(guideText('en', 'move', true)).toBe('Swipe diagonally to roll the cube')
-    expect(guideText('en', 'move', false)).toBe('Use the arrow keys to roll one tile')
+    expect(guideText('en', 'move', false)).toBe('Use the arrow keys to roll one tile at a time')
   })
 
   it('터치 문구가 없으면 기본 문구를 쓴다', () => {
