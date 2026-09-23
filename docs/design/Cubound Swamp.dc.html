@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="cubound-iso.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #E5E7DE; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+</style>
+</helmet>
+<div style="background:#E5E7DE;color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 80px;min-height:100vh">
+  <div style="max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:34px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771;text-transform:uppercase">
+      <span style="white-space:nowrap">CUBOUND · CYCLE 2 · 풀이 우거진 길</span>
+      <span style="white-space:nowrap">오브젝트 1 / 4 · 늪</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:780px">
+      <span style="font-size:32px;font-weight:400;letter-spacing:-0.01em">늪</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">들어가면 발이 묶여 같은 방향으로 두 번 눌러야 빠져나옵니다. 상자를 밀어 넣으면 가라앉아 평지가 됩니다.</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">칸 안쪽이 5px 꺼진 진흙 면입니다. 칸 테두리는 땅색 그대로 남아 땅에 난 웅덩이로 읽힙니다. 진흙은 목표 구멍(#4A4845)보다 훨씬 밝고 따뜻해서 둘이 섞이지 않고, 진흙 위의 낮은 덩이 세 개가 끈적함을 말합니다. 큐브가 빠지면 13px 잠기고 둘레에 밀려 올라온 밝은 진흙 테가 생깁니다.</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">상태 · 칸 하나</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px">
+        <sc-for list="{{ states }}" as="s" hint-placeholder-count="4">
+          <div style="background:#EFF1EA;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px">
+            <svg viewBox="{{ stVb }}" style="width:100%;height:auto;display:block">
+              <sc-for list="{{ s.shapes }}" as="p" hint-placeholder-count="6">
+                <polygon points="{{ p.d }}" fill="{{ p.f }}" opacity="{{ p.o }}"></polygon>
+              </sc-for>
+            </svg>
+            <span style="font-size:15px;font-weight:400">{{ s.label }}</span>
+            <span style="font-size:12.5px;color:#6E6C68;line-height:1.55;word-break:keep-all;text-wrap:pretty">{{ s.note }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">여러 칸</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:16px">
+        <sc-for list="{{ scenes }}" as="sc" hint-placeholder-count="3">
+          <div style="background:#EFF1EA;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:16px;font-weight:400">{{ sc.title }}</span>
+              <span style="font-size:13px;color:#6E6C68;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ sc.note }}</span>
+            </div>
+            <svg viewBox="{{ sc.vb }}" style="width:100%;height:auto;display:block">
+              <sc-for list="{{ sc.shapes }}" as="p" hint-placeholder-count="20">
+                <polygon points="{{ p.d }}" fill="{{ p.f }}" opacity="{{ p.o }}"></polygon>
+              </sc-for>
+            </svg>
+            <div style="display:flex;align-items:center;gap:12px;border-top:1px solid #E1E4DA;padding-top:10px">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.14em;color:#9A9C91;white-space:nowrap">60PX</span>
+              <svg viewBox="{{ sc.vb }}" style="width:58%;height:auto;display:block">
+                <sc-for list="{{ sc.shapes }}" as="p" hint-placeholder-count="20">
+                  <polygon points="{{ p.d }}" fill="{{ p.f }}" opacity="{{ p.o }}"></polygon>
+                </sc-for>
+              </svg>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">색</span>
+      <div style="background:#EFF1EA;border-radius:16px;padding:20px;display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:10px 28px">
+        <sc-for list="{{ colors }}" as="c" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:22px;height:22px;flex:none;border-radius:6px;border:1px solid rgba(58,57,54,0.12);background:{{ c.hex }}"></span>
+            <span style="font-size:13px;color:#5F5D59;flex:1;min-width:0">{{ c.name }}</span>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:11.5px">{{ c.hex }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:#EFF1EA;border-radius:16px;padding:20px;display:flex;flex-direction:column;font-family:'IBM Plex Mono', monospace;font-size:12.5px;line-height:1.85;color:#4A4845">
+        <sc-for list="{{ css }}" as="l" hint-placeholder-count="6">
+          <span>{{ l }}</span>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.wait(); }
+  componentWillUnmount() { clearTimeout(this.tm); }
+  wait() { if (!window.CuboundIso) { this.tm = setTimeout(() => this.wait(), 40); return; } this.forceUpdate(); }
+  renderVals() {
+    const K = window.CuboundIso;
+    if (!K) return { states: [], scenes: [], colors: [], css: [], stVb: '0 0 10 10' };
+    const sw = st => ({ g: [[0]], cells: { '0,0': { t: 'swamp', st } } });
+    const states = [
+      { label: '비어 있음', note: '들어가기 전. 꺼진 진흙 면과 덩이 셋.', def: sw('empty') },
+      { label: '큐브가 빠짐', note: '13px 잠기고 진흙 테가 둘레를 감쌉니다.', def: sw('stuck') },
+      { label: '한 번 누름', note: '6px까지 올라오지만 아직 칸 안입니다. 같은 방향으로 한 번 더.', def: sw('half') },
+      { label: '상자로 메움', note: '상자 윗면만 칸 높이에 남아 평지가 됩니다.', def: sw('filled') }
+    ].map(s => ({ label: s.label, note: s.note, shapes: K.scene(s.def) }));
+    const stVb = K.fit([].concat(...states.map(s => s.shapes)), 14);
+    const scenes = [
+      { title: '늪 띠를 건너는 길', note: '세 칸 띠가 길을 가로지릅니다. 맨 뒤 칸의 목표 구멍과 나란히 놓아도 명도와 온도가 달라 헷갈리지 않습니다.',
+        def: { g: [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]],
+          cells: { '2,0': { t: 'swamp', st: 'empty' }, '2,1': { t: 'swamp', st: 'empty' }, '2,2': { t: 'swamp', st: 'empty' } },
+          objs: { '1,1': [{ t: 'cube' }], '4,1': [{ t: 'hole' }] } } },
+      { title: '빠진 큐브와 메운 칸', note: '가운데 칸에 큐브가 빠져 있고, 뒤 칸은 상자로 메워 평지가 됐습니다. 앞 칸은 아직 비어 있습니다.',
+        def: { g: [[1, 1, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 1]],
+          cells: { '2,0': { t: 'swamp', st: 'filled' }, '2,1': { t: 'swamp', st: 'stuck' }, '2,2': { t: 'swamp', st: 'empty' }, '3,1': { t: 'swamp', st: 'empty' } },
+          objs: { '1,2': [{ t: 'box' }] } } },
+      { title: '숲 오브젝트 넷 한 판', note: '늪(앞 가운데 두 칸), 버섯, 덩굴, 심은 씨앗과 놓인 씨앗이 한 판에 있습니다.', def: K.mixed() }
+    ].map(s => { const shp = K.scene(s.def); return { title: s.title, note: s.note, shapes: shp, vb: K.fit(shp, 14) }; });
+    const C = K.C;
+    const colors = [
+      { name: '진흙 면', v: '--color-swamp-mud', hex: C.mud },
+      { name: '진흙 우묵 벽 (왼쪽)', v: '--color-swamp-wall-left', hex: C.mudWall },
+      { name: '진흙 우묵 벽 (오른쪽)', v: '--color-swamp-wall-right', hex: K.mix(C.mudWall, '#000000', 0.1) },
+      { name: '진흙 덩이 윗면', v: '--color-swamp-lump', hex: C.mudLump },
+      { name: '진흙 테 (큐브 둘레)', v: '--color-swamp-collar', hex: C.mudCollar },
+      { name: '메운 칸 윗면', v: '--color-swamp-filled', hex: K.tone(C.yellow).t },
+      { name: '메운 칸 가운데', v: '--color-swamp-filled-inner', hex: K.mix(C.yellow, '#000000', 0.13) }
+    ];
+    return { states, stVb, scenes, colors, css: colors.map(c => c.v + ': ' + c.hex + ';') };
+  }
+}
+</script>
+</body>
+</html>

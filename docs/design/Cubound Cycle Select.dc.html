@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #DEDCD6; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+</style>
+</helmet>
+<div style="background:#DEDCD6;color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 90px;min-height:100vh">
+  <div style="max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:40px">
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771;text-transform:uppercase">
+      <span style="white-space:nowrap">CUBOUND · 사이클 고르기</span>
+      <span style="white-space:nowrap">타이틀 → 사이클 → 월드 → 스테이지</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:800px">
+      <span style="font-size:30px;font-weight:400;letter-spacing:-0.01em">여덟 칸이 한 화면에</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">데스크톱과 노트북은 4×2, 폰은 한 줄씩 여덟 줄입니다. 사이클이 둘일 때도 여덟 자리를 모두 깔아 두어 나중에 배치가 바뀌지 않습니다. 카드 윗부분은 그 사이클의 세계 색으로 칠한 창이고, 그 안에 같은 파란 큐브가 서 있습니다. 잠긴 사이클은 이름만 보이고 창은 무채색 빈 땅입니다.</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+        <span style="font-size:17px;font-weight:400">데스크톱 · 1920 × 1080</span>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;color:#7A7771;letter-spacing:0.08em;white-space:nowrap">PANEL 1264 · CARD 290 × 304 · GAP 16</span>
+      </div>
+      <div ref="{{ fitRef }}" data-w="1920" style="width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;border-radius:14px;background:#E9E7E2">
+        <div style="position:absolute;top:0;left:0;width:1920px;height:1080px;transform-origin:top left;display:flex;align-items:center;justify-content:center">
+          <div style="width:1264px;box-sizing:border-box;background:#F2F1EE;border-radius:28px;padding:40px 40px 44px;display:flex;flex-direction:column;gap:32px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:24px">
+              <div style="display:flex;align-items:center;gap:20px">
+                <span style="width:48px;height:48px;border-radius:14px;background:#E9E7E2;display:flex;align-items:center;justify-content:center;font-size:18px">←</span>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:14px;letter-spacing:0.26em;color:#3A3936">CYCLES</span>
+              </div>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:13px;letter-spacing:0.16em;color:#8A8781;white-space:nowrap">{{ totalStars }}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px">
+              <sc-for list="{{ cycles }}" as="c" hint-placeholder-count="8">
+                <div style="height:304px;box-sizing:border-box;border-radius:20px;padding:12px 12px 20px;display:flex;flex-direction:column;gap:16px;background:{{ c.card }};box-shadow:{{ c.ring }}">
+                  <div style="height:148px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:{{ c.win }}">
+                    <svg viewBox="-120 -92 240 196" style="width:150px;height:auto;display:block">
+                      <sc-for list="{{ c.shapes }}" as="p" hint-placeholder-count="12">
+                        <polygon points="{{ p.d }}" fill="{{ p.f }}"></polygon>
+                      </sc-for>
+                    </svg>
+                  </div>
+                  <div style="padding:0 8px;display:flex;flex-direction:column;gap:8px;flex:1">
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+                      <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.22em;color:{{ c.labelColor }}">{{ c.label }}</span>
+                      <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.1em;color:{{ c.labelColor }}">{{ c.range }}</span>
+                    </div>
+                    <span style="font-size:22px;font-weight:400;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ c.nameColor }}">{{ c.name }}</span>
+                    <div style="margin-top:auto;display:flex;align-items:center;gap:12px">
+                      <div style="flex:1;display:grid;grid-template-columns:repeat(5, 1fr);gap:4px">
+                        <sc-for list="{{ c.segs }}" as="s" hint-placeholder-count="5">
+                          <span style="height:5px;border-radius:3px;overflow:hidden;display:block;background:{{ c.segBg }}">
+                            <span style="display:block;height:100%;background:#3A3936;width:{{ s.w }}"></span>
+                          </span>
+                        </sc-for>
+                      </div>
+                      <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.08em;white-space:nowrap;color:{{ c.labelColor }}">{{ c.stars }}</span>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+      <div style="flex:1 1 640px;min-width:0;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <span style="font-size:17px;font-weight:400">노트북 · 1280 × 800</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;color:#7A7771;letter-spacing:0.08em;white-space:nowrap">PANEL 1120 · CARD 256 × 252 · GAP 14</span>
+        </div>
+        <div ref="{{ fitRef }}" data-w="1280" style="width:100%;aspect-ratio:1280/800;position:relative;overflow:hidden;border-radius:14px;background:#E9E7E2">
+          <div style="position:absolute;top:0;left:0;width:1280px;height:800px;transform-origin:top left;display:flex;align-items:center;justify-content:center">
+            <div style="width:1120px;box-sizing:border-box;background:#F2F1EE;border-radius:24px;padding:32px 32px 36px;display:flex;flex-direction:column;gap:26px">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:20px">
+                <div style="display:flex;align-items:center;gap:16px">
+                  <span style="width:44px;height:44px;border-radius:13px;background:#E9E7E2;display:flex;align-items:center;justify-content:center;font-size:16px">←</span>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:13px;letter-spacing:0.24em;color:#3A3936">CYCLES</span>
+                </div>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.16em;color:#8A8781;white-space:nowrap">{{ totalStars }}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:14px">
+                <sc-for list="{{ cycles }}" as="c" hint-placeholder-count="8">
+                  <div style="height:252px;box-sizing:border-box;border-radius:18px;padding:10px 10px 16px;display:flex;flex-direction:column;gap:12px;background:{{ c.card }};box-shadow:{{ c.ring }}">
+                    <div style="height:118px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:{{ c.win }}">
+                      <svg viewBox="-120 -92 240 196" style="width:122px;height:auto;display:block">
+                        <sc-for list="{{ c.shapes }}" as="p" hint-placeholder-count="12">
+                          <polygon points="{{ p.d }}" fill="{{ p.f }}"></polygon>
+                        </sc-for>
+                      </svg>
+                    </div>
+                    <div style="padding:0 6px;display:flex;flex-direction:column;gap:6px;flex:1">
+                      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+                        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:{{ c.labelColor }}">{{ c.label }}</span>
+                        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.08em;color:{{ c.labelColor }}">{{ c.range }}</span>
+                      </div>
+                      <span style="font-size:19px;font-weight:400;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ c.nameColor }}">{{ c.name }}</span>
+                      <div style="margin-top:auto;display:flex;align-items:center;gap:10px">
+                        <div style="flex:1;display:grid;grid-template-columns:repeat(5, 1fr);gap:3px">
+                          <sc-for list="{{ c.segs }}" as="s" hint-placeholder-count="5">
+                            <span style="height:4px;border-radius:2px;overflow:hidden;display:block;background:{{ c.segBg }}">
+                              <span style="display:block;height:100%;background:#3A3936;width:{{ s.w }}"></span>
+                            </span>
+                          </sc-for>
+                        </div>
+                        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.06em;white-space:nowrap;color:{{ c.labelColor }}">{{ c.stars }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+          <span style="font-size:17px;font-weight:400">폰 세로 · 390 × 844</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;color:#7A7771;letter-spacing:0.08em;white-space:nowrap">ROW 76 · GAP 8</span>
+        </div>
+        <div style="width:390px;height:844px;box-sizing:border-box;background:#F2F1EE;border-radius:40px;overflow:hidden;display:flex;flex-direction:column">
+          <div style="height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+          <div style="display:flex;align-items:center;gap:14px;padding:16px 20px 18px">
+            <span style="width:44px;height:44px;flex:none;border-radius:13px;background:#E9E7E2;display:flex;align-items:center;justify-content:center;font-size:16px">←</span>
+            <span style="flex:1;min-width:0;font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.22em;color:#3A3936">CYCLES</span>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.1em;color:#8A8781;white-space:nowrap">{{ totalStarsShort }}</span>
+          </div>
+          <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ cycles }}" as="c" hint-placeholder-count="8">
+              <div style="height:76px;box-sizing:border-box;border-radius:16px;padding:8px 14px 8px 8px;display:flex;align-items:center;gap:14px;background:{{ c.card }};box-shadow:{{ c.ring }}">
+                <div style="width:60px;height:60px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;background:{{ c.win }}">
+                  <svg viewBox="-120 -92 240 196" style="width:50px;height:auto;display:block">
+                    <sc-for list="{{ c.shapes }}" as="p" hint-placeholder-count="12">
+                      <polygon points="{{ p.d }}" fill="{{ p.f }}"></polygon>
+                    </sc-for>
+                  </svg>
+                </div>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+                    <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.18em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{{ c.labelColor }}">{{ c.labelShort }}</span>
+                    <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.06em;flex:none;white-space:nowrap;color:{{ c.labelColor }}">{{ c.stars }}</span>
+                  </div>
+                  <span style="font-size:16px;font-weight:400;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ c.nameColor }}">{{ c.name }}</span>
+                  <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:3px">
+                    <sc-for list="{{ c.segs }}" as="s" hint-placeholder-count="5">
+                      <span style="height:3px;border-radius:2px;overflow:hidden;display:block;background:{{ c.segBg }}">
+                        <span style="display:block;height:100%;background:#3A3936;width:{{ s.w }}"></span>
+                      </span>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px">
+      <div style="background:#F2F1EE;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">진행도</span>
+        <span style="font-size:14px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">별 합계(최대 150)는 그대로 두고, 그 옆에 월드 다섯 칸짜리 막대를 붙였습니다. 각 칸은 그 월드의 별 30개 중 얻은 만큼 찹니다. "어느 월드까지 왔나"가 숫자를 읽기 전에 보입니다. 잠긴 사이클은 막대가 비어 있고 별 자리에 "잠김"이 옵니다.</span>
+      </div>
+      <div style="background:#F2F1EE;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">지금 사이클과 잠김</span>
+        <span style="font-size:14px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">지금 하는 사이클은 월드 목록의 NOW 카드처럼 진한 테두리 1.5px로 표시합니다(여기서는 2사이클). 잠긴 카드는 월드 목록의 잠긴 카드와 같은 #ECEAE6 바탕에, 창은 무채색 빈 땅과 큐브 없는 상태입니다. 세계 색은 사이클이 열릴 때 채웁니다. 3~8 이름은 자리를 보기 위한 가안입니다.</span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px">
+      <sc-for list="{{ specs }}" as="g" hint-placeholder-count="3">
+        <div style="background:#F2F1EE;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:15px;font-weight:400">{{ g.name }}</span>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="8">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="width:18px;height:18px;flex:none;border-radius:5px;border:1px solid rgba(58,57,54,0.1);background:{{ i.sw }}"></span>
+                <span style="font-size:13px;color:#5F5D59;flex:1;min-width:0">{{ i.k }}</span>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:11.5px;white-space:nowrap">{{ i.v }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1380}}">
+class Component extends DCLogic {
+  boxes = [];
+  componentDidMount() {
+    this.fit = () => this.boxes.forEach(el => {
+      const w = +el.dataset.w, inner = el.firstElementChild;
+      if (inner && w) inner.style.transform = 'scale(' + (el.clientWidth / w) + ')';
+    });
+    this.ro = new ResizeObserver(this.fit);
+    this.boxes.forEach(el => this.ro.observe(el));
+    this.fit();
+  }
+  componentWillUnmount() { if (this.ro) this.ro.disconnect(); }
+
+  mix(h, t, a) {
+    const p = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16));
+    const A = p(h), B = p(t);
+    return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * a).toString(16).padStart(2, '0')).join('').toUpperCase();
+  }
+  P(pts) { return pts.map(p => Math.round(p[0] * 10) / 10 + ',' + Math.round(p[1] * 10) / 10).join(' '); }
+  prism(cx, cy, w, th, t, l, r) {
+    const hw = w / 2, hh = w / 4;
+    return [
+      { d: this.P([[cx - hw, cy], [cx, cy + hh], [cx, cy + hh + th], [cx - hw, cy + th]]), f: l },
+      { d: this.P([[cx, cy + hh], [cx + hw, cy], [cx + hw, cy + th], [cx, cy + hh + th]]), f: r },
+      { d: this.P([[cx, cy - hh], [cx + hw, cy], [cx, cy + hh], [cx - hw, cy]]), f: t }
+    ];
+  }
+  toLab(hex) {
+    const f = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const [r, g, b] = [1, 3, 5].map(i => f(parseInt(hex.slice(i, i + 2), 16)));
+    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+    const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+    const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    const L = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s;
+    const A = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+    const B = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+    return { L, C: Math.hypot(A, B) };
+  }
+  oklch(L, C, h) {
+    const hr = h * Math.PI / 180, a = C * Math.cos(hr), b = C * Math.sin(hr);
+    const l = Math.pow(L + 0.3963377774 * a + 0.2158037573 * b, 3);
+    const m = Math.pow(L - 0.1055613458 * a - 0.0638541728 * b, 3);
+    const s = Math.pow(L - 0.0894841775 * a - 1.291485548 * b, 3);
+    const lin = [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s];
+    return '#' + lin.map(c => {
+      c = Math.min(1, Math.max(0, c));
+      const v = c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+      return Math.round(v * 255).toString(16).padStart(2, '0');
+    }).join('').toUpperCase();
+  }
+  world(h) {
+    // same lightness and chroma as the confirmed cycle-2 set; only hue changes
+    const ref = { bg: '#E2E6DB', panel: '#EDF0E7', a: '#F4F6EE', b: '#EAEDE3' }, out = {};
+    Object.keys(ref).forEach(k => { const o = this.toLab(ref[k]); out[k] = this.oklch(o.L, o.C, h); });
+    return out;
+  }
+  cubeAt(cx, cy, h) {
+    const c = '#8FB3CC';
+    return this.prism(cx, cy - h, 60, h, this.mix(c, '#FFFFFF', 0.12), this.mix(c, '#000000', 0.24), this.mix(c, '#000000', 0.09));
+  }
+  patch(a, b, variant) {
+    const out = [];
+    [[0, 0], [1, 0], [0, 1], [1, 1]].forEach(([x, y]) => {
+      const t = (x + y) % 2 ? b : a, lift = (variant === 'step' && x === 1 && y === 0) ? 30 : 0;
+      const cx = (x - y) * 52, cy = (x + y) * 26 - 26 - lift;
+      out.push(...this.prism(cx, cy, 104, 16 + lift, t, this.mix(t, '#000000', 0.2), this.mix(t, '#000000', 0.1)));
+      if (variant === 'step' && x === 0 && y === 1) out.push(...this.cubeAt(cx, cy, 30));
+      if (variant === 'swamp' && x === 1 && y === 1) {
+        const k = 5, s = 0.8, hw = 52 * s, hh = 26 * s;
+        const N = [cx, cy - hh], E = [cx + hw, cy], W = [cx - hw, cy];
+        out.push({ d: this.P([W, N, [N[0], N[1] + k], [W[0], W[1] + k]]), f: '#8C8A76' });
+        out.push({ d: this.P([N, E, [E[0], E[1] + k], [N[0], N[1] + k]]), f: '#7E7C6A' });
+        out.push(...this.prism(cx, cy + k, 104 * s, 0, '#A8A690', '#A8A690', '#A8A690').slice(2));
+        out.push(...this.prism(cx, cy + k, 104 * 0.72, 0, '#BFBDA8', '#BFBDA8', '#BFBDA8').slice(2));
+        out.push(...this.cubeAt(cx, cy + k, 17));
+      }
+    });
+    return out;
+  }
+
+  renderVals() {
+    const defs = [
+      { n: 1, name: '돌 위의 첫걸음', w: [30, 30, 28, 26, 22], win: '#E3DFD6', a: '#F7F6F4', b: '#EFEDE9', open: true, v: 'step' },
+      { n: 2, name: '풀이 우거진 길', w: [11, 0, 0, 0, 0], win: '#E2E6DB', a: '#F4F6EE', b: '#EAEDE3', open: true, now: true, v: 'swamp' },
+      { n: 3, name: '불씨가 남은 언덕' }, { n: 4, name: '물이 고인 골짜기' },
+      { n: 5, name: '바람이 지나는 능선' }, { n: 6, name: '눈 덮인 계단' },
+      { n: 7, name: '빛이 드는 방' }, { n: 8, name: '집으로' }
+    ];
+    let total = 0;
+    const cycles = defs.map(d => {
+      const got = (d.w || []).reduce((s, v) => s + v, 0);
+      total += got;
+      const lo = (d.n - 1) * 50 + 1, hi = d.n * 50;
+      return {
+        label: 'CYCLE ' + d.n, labelShort: 'CYCLE ' + d.n + ' · ' + lo + '–' + hi,
+        range: lo + '–' + hi, name: d.name,
+        stars: d.open ? got + ' / 150 ◆' : '잠김',
+        card: d.open ? '#F7F6F4' : '#ECEAE6',
+        ring: d.now ? 'inset 0 0 0 1.5px #3A3936' : 'none',
+        win: d.open ? d.win : '#E4E2DD',
+        nameColor: d.open ? '#3A3936' : '#8A8781',
+        labelColor: d.open ? '#8A8781' : '#A9A6A0',
+        segBg: d.open ? '#E3E1DC' : '#E1DFDA',
+        segs: [0, 1, 2, 3, 4].map(i => ({ w: d.open ? Math.round((d.w[i] / 30) * 100) + '%' : '0%' })),
+        shapes: d.open ? this.patch(d.a, d.b, d.v) : this.patch('#EDEBE7', '#E8E6E1', null)
+      };
+    });
+    const specs = [
+      { name: '색', items: [
+        { k: '화면 배경', v: '#E9E7E2', sw: '#E9E7E2' }, { k: '패널', v: '#F2F1EE', sw: '#F2F1EE' },
+        { k: '열린 카드', v: '#F7F6F4', sw: '#F7F6F4' }, { k: '잠긴 카드', v: '#ECEAE6', sw: '#ECEAE6' },
+        { k: '잠긴 창', v: '#E4E2DD', sw: '#E4E2DD' }, { k: '잠긴 창 땅', v: '#EDEBE7 / #E8E6E1', sw: '#EDEBE7' },
+        { k: '1사이클 창 (베이지)', v: '#E3DFD6 · 땅 #F7F6F4 / #EFEDE9', sw: '#E3DFD6' },
+        { k: '2사이클 창 (숲, 확정 C)', v: '#E2E6DB · 땅 #F4F6EE / #EAEDE3', sw: '#E2E6DB' },
+        { k: '2사이클 늪 (진흙 / 테 / 벽)', v: '#A8A690 / #BFBDA8 / #8C8A76', sw: '#A8A690' },
+        { k: '진행 막대 바탕 / 채움', v: '#E3E1DC / #3A3936', sw: '#E3E1DC' },
+        { k: '지금 사이클 테두리', v: 'inset 1.5px #3A3936', sw: '#3A3936' },
+        { k: '잠긴 이름 / 라벨', v: '#8A8781 / #A9A6A0', sw: '#8A8781' }
+      ] },
+      { name: '데스크톱 · 노트북 치수', items: [
+        { k: '패널 폭', v: '1264 / 1120', sw: '#F2F1EE' }, { k: '패널 여백', v: '40·40·44 / 32·32·36', sw: '#F2F1EE' },
+        { k: '패널 모서리', v: '28 / 24', sw: '#F2F1EE' }, { k: '헤더 ↔ 카드', v: '32 / 26', sw: '#F2F1EE' },
+        { k: '카드', v: '4열 · 높이 304 / 252 · 간격 16 / 14', sw: '#F7F6F4' },
+        { k: '카드 모서리 · 안쪽 여백', v: '20 · 12 / 18 · 10', sw: '#F7F6F4' },
+        { k: '창 높이 · 모서리', v: '148 · 13 / 118 · 11', sw: '#E5E7DE' },
+        { k: '이름', v: 'Jost 22 / 19 · 400', sw: '#3A3936' },
+        { k: '라벨 (CYCLE n, 구간, 별)', v: 'Mono 12 / 11 · 자간 0.22em', sw: '#8A8781' },
+        { k: '진행 막대', v: '5칸 · 높이 5 / 4 · 간격 4 / 3', sw: '#3A3936' }
+      ] },
+      { name: '폰 세로 치수', items: [
+        { k: '좌우 여백', v: '16', sw: '#F2F1EE' }, { k: '줄', v: '높이 76 · 간격 8 · 모서리 16', sw: '#F7F6F4' },
+        { k: '창', v: '60 × 60 · 모서리 11', sw: '#E5E7DE' }, { k: '이름', v: 'Jost 16 · 400', sw: '#3A3936' },
+        { k: '라벨 (CYCLE n · 구간 / 별)', v: 'Mono 9.5 · 자간 0.18em', sw: '#8A8781' },
+        { k: '진행 막대', v: '높이 3 · 간격 3', sw: '#3A3936' },
+        { k: '여덟 줄 합계', v: '664 (헤더 포함 약 790 / 844)', sw: '#F2F1EE' }
+      ] }
+    ];
+    return {
+      cycles, specs,
+      totalStars: total + ' / 1200 ◆', totalStarsShort: total + ' ◆',
+      fitRef: el => {
+        if (el && this.boxes.indexOf(el) === -1) {
+          this.boxes.push(el);
+          if (this.ro) this.ro.observe(el);
+          if (this.fit) this.fit();
+        }
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

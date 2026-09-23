@@ -729,6 +729,73 @@
 
     </div>
 
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>09 · CRUMBLING TILE</span>
+      <span style="white-space:nowrap">World 3 · 무채색만 · 5 시안</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(330px, 1fr));gap:16px">
+      <sc-for list="{{ crumb }}" as="c" hint-placeholder-count="5">
+        <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:20px 20px 16px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-size:17px;font-weight:400">{{ c.name }}</span>
+            <span style="font-size:13px;color:#6E6C68;word-break:keep-all;text-wrap:pretty">{{ c.note }}</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <sc-for list="{{ c.states }}" as="s" hint-placeholder-count="3">
+              <div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px">
+                <svg viewBox="0 0 150 130" style="width:100%;height:auto;display:block">
+                  <sc-for list="{{ s.shapes }}" as="p" hint-placeholder-count="4">
+                    <polygon points="{{ p.d }}" fill="{{ p.f }}" stroke="{{ p.k }}" strokeWidth="{{ p.w }}" opacity="{{ p.o }}"></polygon>
+                  </sc-for>
+                </svg>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.04em;white-space:nowrap">{{ s.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;border-top:1px solid #E6E3DE;padding-top:12px">
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.14em;color:#A9A6A0;white-space:nowrap">60PX</span>
+            <div style="display:flex;gap:6px">
+              <sc-for list="{{ c.states }}" as="s" hint-placeholder-count="3">
+                <svg viewBox="0 0 150 130" style="width:62px;height:auto;display:block">
+                  <sc-for list="{{ s.shapes }}" as="p" hint-placeholder-count="4">
+                    <polygon points="{{ p.d }}" fill="{{ p.f }}" stroke="{{ p.k }}" strokeWidth="{{ p.w }}" opacity="{{ p.o }}"></polygon>
+                  </sc-for>
+                </svg>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>10 · COLLAPSE</span>
+      <span style="white-space:nowrap">240ms · 2 안</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <sc-for list="{{ seqs }}" as="q" hint-placeholder-count="2">
+        <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:20px 20px 16px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-size:17px;font-weight:400">{{ q.name }}</span>
+            <span style="font-size:13px;color:#6E6C68;word-break:keep-all;text-wrap:pretty">{{ q.note }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:12px">
+            <sc-for list="{{ q.frames }}" as="f" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <svg viewBox="0 0 150 130" style="width:100%;height:auto;display:block">
+                  <sc-for list="{{ f.shapes }}" as="p" hint-placeholder-count="4">
+                    <polygon points="{{ p.d }}" fill="{{ p.f }}" stroke="{{ p.k }}" strokeWidth="{{ p.w }}" opacity="{{ p.o }}"></polygon>
+                  </sc-for>
+                </svg>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0;letter-spacing:0.08em">{{ f.t }}</span>
+                <span style="font-size:12.5px;color:#6E6C68;word-break:keep-all;text-wrap:pretty">{{ f.note }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
   </div>
 </div>
 </x-dc>
@@ -944,6 +1011,129 @@ class Component extends DCLogic {
     return base.concat(p);
   }
 
+  // ---- crumbling tile studies ----
+  cpt(cx, cy, u, v, z) { return [cx + (u - v) * 52, cy + (u + v) * 26 - (z || 0)]; }
+  diaPoly(cx, cy, s, z) { return [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]].map(p => this.cpt(cx, cy, p[0] * s, p[1] * s, z)); }
+  shift(pts, dx, dy) { return pts.map(p => [p[0] + dx, p[1] + dy]); }
+  extr(poly, cx, thick, tf, lf, rf, o) {
+    const out = [];
+    for (let i = 0; i < poly.length; i++) {
+      const a = poly[i], b = poly[(i + 1) % poly.length];
+      const f = (a[0] + b[0]) / 2 < cx ? (lf || '#B5B2AB') : (rf || '#CBC8C2');
+      out.push(this.sh(this.P([a, b, [b[0], b[1] + thick], [a[0], a[1] + thick]]), f, o));
+    }
+    const top = this.sh(this.P(poly), tf || '#E3E1DC', o);
+    top.k = '#D6D3CD'; top.w = 0.8;
+    out.push(top);
+    return out;
+  }
+  gapArm(cx, cy, p, w, fill, z) {
+    const d = Math.hypot(p[0], p[1]), nu = -(p[1] / d) * w, nv = (p[0] / d) * w;
+    const q = [[nu, nv], [p[0] + nu, p[1] + nv], [p[0] - nu, p[1] - nv], [-nu, -nv]];
+    return this.sh(this.P(q.map(t => this.cpt(cx, cy, t[0], t[1], z))), fill);
+  }
+  cutPoly(cx, cy, cuts, z) {
+    const c = [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]], out = [];
+    for (let i = 0; i < 4; i++) {
+      const k = cuts[i] || 0, prev = c[(i + 3) % 4], cur = c[i], next = c[(i + 1) % 4];
+      if (!k) { out.push(this.cpt(cx, cy, cur[0], cur[1], z)); continue; }
+      out.push(this.cpt(cx, cy, cur[0] + (prev[0] - cur[0]) * k, cur[1] + (prev[1] - cur[1]) * k, z));
+      out.push(this.cpt(cx, cy, cur[0] + (next[0] - cur[0]) * k, cur[1] + (next[1] - cur[1]) * k, z));
+    }
+    return out;
+  }
+  pieces(cx, cy, mode, spread, z) {
+    // mode 2 = two halves, 4 = four quadrants
+    const sets = mode === 2
+      ? [[[-0.5, -0.5], [0.5, -0.5], [0.5, 0], [-0.5, 0]], [[-0.5, 0], [0.5, 0], [0.5, 0.5], [-0.5, 0.5]]]
+      : [[[0, 0], [-0.5, 0], [-0.5, -0.5], [0, -0.5]], [[0, 0], [0, -0.5], [0.5, -0.5], [0.5, 0]],
+         [[0, 0], [0.5, 0], [0.5, 0.5], [0, 0.5]], [[0, 0], [0, 0.5], [-0.5, 0.5], [-0.5, 0]]];
+    return sets.map(s => {
+      const pts = s.map(p => this.cpt(cx, cy, p[0], p[1], z));
+      const mx = pts.reduce((a, p) => a + p[0], 0) / pts.length, my = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+      const d = Math.hypot(mx - cx, my - cy) || 1;
+      return this.shift(pts, (mx - cx) / d * spread, (my - cy) / d * spread * 0.5);
+    });
+  }
+
+  crumbTile(kind, st, cx, cy) {
+    const T = 16, plain = () => this.extr(this.diaPoly(cx, cy, 1, 0), cx, T);
+    if (kind === 'fracture') {
+      if (st === 0) return plain();
+      const out = plain();
+      if (st === 1) {
+        out.push(this.gapArm(cx, cy, [0.08, -0.5], 0.03, '#C2BFB8'));
+        out.push(this.gapArm(cx, cy, [-0.08, 0.5], 0.03, '#C2BFB8'));
+      } else {
+        [[0.02, -0.5], [0.48, 0.28], [-0.46, 0.32]].forEach(p => out.push(this.gapArm(cx, cy, p, 0.055, '#A3A099')));
+      }
+      return out;
+    }
+    if (kind === 'erode') {
+      if (st === 0) return plain();
+      const ringTone = st === 1 ? '#CFCCC6' : '#BEBBB4';
+      const out = this.extr(this.diaPoly(cx, cy, 1, 0), cx, T, ringTone);
+      const s = st === 1 ? 0.78 : 0.44, lift = st === 1 ? 5 : 7;
+      out.push.apply(out, this.extr(this.diaPoly(cx, cy, s, lift), cx, lift, '#E3E1DC', '#C6C3BC', '#D5D2CC'));
+      return out;
+    }
+    if (kind === 'sink') {
+      if (st === 0) return plain();
+      const sink = st === 1 ? 6 : 13, th = st === 1 ? 10 : 4;
+      const out = [this.sh(this.P(this.diaPoly(cx, cy, 1, 0)), st === 1 ? '#B8B5AE' : '#A6A39C')];
+      out.push.apply(out, this.extr(this.diaPoly(cx, cy, 0.95, -sink), cx, th, st === 1 ? '#DEDCD6' : '#D3D0CA'));
+      return out;
+    }
+    if (kind === 'bite') {
+      const cuts = st === 0 ? [0, 0, 0, 0] : st === 1 ? [0, 0.3, 0, 0] : [0.42, 0.58, 0, 0.36];
+      return this.extr(this.cutPoly(cx, cy, cuts, 0), cx, T);
+    }
+    // drift
+    if (st === 0) return plain();
+    const out = [this.sh(this.P(this.diaPoly(cx, cy, 1.02, 0)), '#ABA8A1')];
+    const mode = st === 1 ? 2 : 4, spread = st === 1 ? 3 : 6;
+    const ps = this.pieces(cx, cy, mode, spread, 0);
+    ps.forEach((p, i) => out.push.apply(out, this.extr(p, cx, st === 1 ? 14 : 11 - i, i % 2 ? '#DFDDD7' : '#E3E1DC')));
+    return out;
+  }
+
+  crumbConcepts() {
+    const defs = [
+      ['fracture', '금이 번짐', '가는 틈 하나 → 중심에서 갈라지는 굵은 Y자 틈'],
+      ['erode', '가장자리 잠식', '테두리가 한 단계 내려앉고 디딜 면이 좁아짐'],
+      ['sink', '침하', '칸이 제 구멍 속으로 내려앉아 두께가 사라짐'],
+      ['bite', '실루엣 결손', '모서리가 떨어져 나가 윤곽 자체가 달라짐'],
+      ['drift', '조각 이격', '면이 갈라져 벌어지고 아래 어둠이 비침']
+    ];
+    const labels = ['보통 칸', '두 번 남음', '한 번 남음'];
+    return defs.map(d => ({
+      key: d[0], name: d[1], note: d[2],
+      states: labels.map((l, i) => ({ label: l, shapes: this.crumbTile(d[0], i, 75, 64) }))
+    }));
+  }
+
+  collapseSeqs() {
+    const cx = 75, cy = 64;
+    const A = [0, 1, 2, 3].map(i => {
+      if (i === 0) return { t: '0ms', shapes: this.crumbTile('fracture', 2, cx, cy), note: '마지막 한 번을 밟고 떠남' };
+      const spread = [0, 5, 13, 22][i], drop = [0, 2, 12, 30][i], op = [1, 1, 0.6, 0.12][i];
+      const out = [this.sh(this.P(this.diaPoly(cx, cy, 1.02, 0)), '#ABA8A1', 0.5 - i * 0.12)];
+      this.pieces(cx, cy, 4, spread, -drop).forEach((p, k) => out.push.apply(out, this.extr(p, cx, Math.max(2, 14 - i * 4), '#E1DFD9', '#B5B2AB', '#CBC8C2', op)));
+      return { t: ['0ms', '80ms', '160ms', '240ms'][i], shapes: out, note: ['', '네 조각으로 갈라지며 살짝 벌어짐', '바깥으로 기울며 아래로 떨어짐', '자리에 옅은 자국만 남음'][i] };
+    });
+    const B = [0, 1, 2, 3].map(i => {
+      const drop = [0, 5, 16, 30][i], th = [16, 11, 5, 1][i], op = [1, 1, 0.7, 0.1][i];
+      const out = [this.sh(this.P(this.diaPoly(cx, cy, 1, 0)), '#B0ADA6', i ? 0.85 - i * 0.2 : 0)];
+      out.push.apply(out, this.extr(this.diaPoly(cx, cy, 0.97, -drop), cx, th, ['#E3E1DC', '#DCDAD4', '#CFCCC6', '#C6C3BC'][i], '#B5B2AB', '#CBC8C2', op));
+      if (i === 3) { const g = this.sh(this.P(this.diaPoly(cx, cy, 1, 0)), 'none'); g.k = '#C6C3BC'; g.w = 1; g.o = 0.7; out.push(g); }
+      return { t: ['0ms', '70ms', '150ms', '240ms'][i], shapes: out, note: ['', '한 번 내려앉으며 윗면이 어두워짐', '두께가 사라지며 투명해짐', '가는 윤곽선만 잠시 남았다 사라짐'][i] };
+    });
+    return [
+      { name: 'A · 갈라져 떨어짐', note: '네 조각이 벌어지며 각각 다른 속도로 낙하. 착지음 없이 240ms에 소멸', frames: A },
+      { name: 'B · 내려앉아 사라짐', note: '통째로 한 단계 내려앉은 뒤 두께가 줄며 투명해지고, 윤곽선이 한 박자 남음', frames: B }
+    ];
+  }
+
   // ---- interaction ----
   componentDidMount() {
     this.onKey = e => {
@@ -1051,7 +1241,9 @@ class Component extends DCLogic {
       mobileField: this.scene(this.grid, [
         { x: 3, y: 0, t: 'goal' }, { x: 0, y: 4, t: 'player' }, { x: 2, y: 3, t: 'box' },
         { x: 1, y: 3, t: 'switch' }, { x: 3, y: 3, t: 'ladder' }, { x: 2, y: 2, t: 'door' }
-      ], 280, 118)
+      ], 280, 118),
+      crumb: this.crumbConcepts(),
+      seqs: this.collapseSeqs()
     };
   }
 }

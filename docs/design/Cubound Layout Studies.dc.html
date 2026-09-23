@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #E9E7E2; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+</style>
+</helmet>
+<div style="background:#E9E7E2;color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 90px;min-height:100vh">
+  <div style="max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:44px">
+
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
+      <span>CUBOUND</span>
+      <span>Layout studies · 헤더와 스테이지 목록</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781">질문 1</span>
+        <span style="font-size:28px;font-weight:400;letter-spacing:-0.01em">폰 세로 게임 헤더</span>
+        <span style="font-size:14.5px;color:#5F5D59;line-height:1.65;max-width:720px;word-break:keep-all;text-wrap:pretty">어긋나 보이는 원인은 2×2 배치 자체가 아니라 네 덩이가 저마다 다른 기준선을 쓰고 있다는 점입니다. 세 안 모두 기준선을 하나로 줄였습니다. A는 지금 구조를 유지한 채 정렬만 고치고, B는 두 줄을 한 줄로 접고, C는 숫자를 필드 쪽으로 내려 헤더를 가장 낮게 만듭니다.</span>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:22px">
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <span style="font-size:16px;font-weight:400">A · 기준선 정리 (2×2 유지)</span>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.08em">HEADER 88PX</span>
+          </div>
+          <div style="width:390px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:34px;overflow:hidden">
+            <div style="height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+            <div style="padding:14px 20px 12px;display:flex;flex-direction:column;gap:8px">
+              <div style="height:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781;line-height:16px">STAGE 10</span>
+                <div style="display:flex;gap:22px">
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.18em;color:#8A8781;line-height:16px;width:56px;text-align:right">CLIMBS</span>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.18em;color:#8A8781;line-height:16px;width:56px;text-align:right">MOVES</span>
+                </div>
+              </div>
+              <div style="height:36px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+                <span style="font-size:26px;font-weight:400;line-height:32px;white-space:nowrap">무너짐</span>
+                <div style="display:flex;gap:22px">
+                  <span style="font-size:30px;font-weight:300;line-height:32px;width:56px;text-align:right;font-variant-numeric:tabular-nums">3</span>
+                  <span style="font-size:30px;font-weight:300;line-height:32px;width:56px;text-align:right;font-variant-numeric:tabular-nums">0</span>
+                </div>
+              </div>
+            </div>
+            <div style="padding:0 20px 14px;display:flex;justify-content:flex-end;gap:10px">
+              <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:15px;color:#3A3936">?</span>
+              <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:17px;color:#3A3936">↺</span>
+              <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:15px;color:#3A3936">≡</span>
+            </div>
+            <div style="height:440px;border-top:1px solid #E6E3DE;display:flex;align-items:center;justify-content:center">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#C2BFB8">FIELD</span>
+            </div>
+            <div style="height:120px;display:flex;align-items:center;justify-content:center;border-top:1px dashed #E1DED8">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#C2BFB8">SWIPE ZONE · 비움</span>
+            </div>
+          </div>
+          <span style="width:390px;font-size:13px;color:#6E6C68;line-height:1.6;word-break:keep-all;text-wrap:pretty">라벨 줄 16px, 값 줄 36px, 둘 사이 8px. 라벨은 line-height로 가운데, 값은 baseline(32px)으로 맞춥니다. 숫자 칸은 56px 고정이라 한 개일 때도 자리가 흔들리지 않습니다. 버튼은 값 줄 아래 별도 40px 줄로 내려 세 덩이가 아니라 두 줄 + 버튼 줄이 됩니다.</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <span style="font-size:16px;font-weight:400">B · 한 줄로 접기</span>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.08em">HEADER 56PX</span>
+          </div>
+          <div style="width:390px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:34px;overflow:hidden">
+            <div style="height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+            <div style="height:56px;padding:0 20px;display:flex;align-items:center;gap:14px">
+              <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781;line-height:13px">STAGE 10</span>
+                <span style="font-size:19px;font-weight:400;line-height:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">무너짐</span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:5px">
+                <span style="font-size:24px;font-weight:300;line-height:24px;font-variant-numeric:tabular-nums">3</span>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781">CLIMBS</span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:5px">
+                <span style="font-size:24px;font-weight:300;line-height:24px;font-variant-numeric:tabular-nums">0</span>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781">MOVES</span>
+              </div>
+            </div>
+            <div style="height:52px;padding:0 20px;display:flex;justify-content:flex-end;align-items:center;gap:10px">
+              <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:15px">?</span>
+              <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:17px">↺</span>
+              <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:15px">≡</span>
+            </div>
+            <div style="height:480px;border-top:1px solid #E6E3DE;display:flex;align-items:center;justify-content:center">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#C2BFB8">FIELD</span>
+            </div>
+            <div style="height:120px;display:flex;align-items:center;justify-content:center;border-top:1px dashed #E1DED8">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#C2BFB8">SWIPE ZONE · 비움</span>
+            </div>
+          </div>
+          <span style="width:390px;font-size:13px;color:#6E6C68;line-height:1.6;word-break:keep-all;text-wrap:pretty">이름과 숫자가 한 줄(56px)에서 같은 baseline을 씁니다. 라벨을 숫자 옆으로 붙여 라벨 줄 자체를 없앴습니다. 긴 영문 이름은 줄바꿈 대신 말줄임으로 처리합니다. 필드가 A보다 40px 넓어집니다.</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <span style="font-size:16px;font-weight:400">C · 숫자를 필드 쪽으로</span>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.08em">HEADER 48PX + 상태 줄 28PX</span>
+          </div>
+          <div style="width:390px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:34px;overflow:hidden">
+            <div style="height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+            <div style="height:48px;padding:0 20px;display:flex;align-items:center;gap:12px">
+              <div style="display:flex;align-items:baseline;gap:10px;flex:1;min-width:0">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">10</span>
+                <span style="font-size:19px;font-weight:400;line-height:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">무너짐</span>
+              </div>
+              <div style="display:flex;gap:8px">
+                <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:15px">?</span>
+                <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:17px">↺</span>
+                <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:15px">≡</span>
+              </div>
+            </div>
+            <div style="height:28px;padding:0 20px;display:flex;align-items:center;justify-content:center;gap:20px">
+              <div style="display:flex;align-items:baseline;gap:6px">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">CLIMBS</span>
+                <span style="font-size:17px;font-weight:400;line-height:20px;font-variant-numeric:tabular-nums">3</span>
+              </div>
+              <span style="width:1px;height:12px;background:#DCD9D3"></span>
+              <div style="display:flex;align-items:baseline;gap:6px">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">MOVES</span>
+                <span style="font-size:17px;font-weight:400;line-height:20px;font-variant-numeric:tabular-nums">0</span>
+              </div>
+            </div>
+            <div style="height:512px;display:flex;align-items:center;justify-content:center">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#C2BFB8">FIELD</span>
+            </div>
+            <div style="height:120px;display:flex;align-items:center;justify-content:center;border-top:1px dashed #E1DED8">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#C2BFB8">SWIPE ZONE · 비움</span>
+            </div>
+          </div>
+          <span style="width:390px;font-size:13px;color:#6E6C68;line-height:1.6;word-break:keep-all;text-wrap:pretty">헤더는 이름과 버튼만 남겨 48px, 숫자는 가운데 정렬 상태 줄 28px로 분리합니다. 숫자가 하나면 구분선과 함께 그대로 하나만 남아 좌우 균형이 깨지지 않습니다. 필드가 가장 넓지만 숫자가 작아 보스 판에는 A나 B가 낫습니다.</span>
+        </div>
+
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781">320 × 568 · 같은 세 안</span>
+        <div style="display:flex;flex-wrap:wrap;gap:20px">
+
+          <div style="width:320px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:28px;overflow:hidden">
+            <div style="height:28px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 18px 4px;font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+            <div style="padding:10px 16px 10px;display:flex;flex-direction:column;gap:6px">
+              <div style="height:14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781;line-height:14px">STAGE 10</span>
+                <div style="display:flex;gap:16px">
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#8A8781;line-height:14px;width:48px;text-align:right">CLIMBS</span>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#8A8781;line-height:14px;width:48px;text-align:right">MOVES</span>
+                </div>
+              </div>
+              <div style="height:30px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px">
+                <span style="font-size:21px;font-weight:400;line-height:26px;white-space:nowrap">무너짐</span>
+                <div style="display:flex;gap:16px">
+                  <span style="font-size:25px;font-weight:300;line-height:26px;width:48px;text-align:right;font-variant-numeric:tabular-nums">3</span>
+                  <span style="font-size:25px;font-weight:300;line-height:26px;width:48px;text-align:right;font-variant-numeric:tabular-nums">0</span>
+                </div>
+              </div>
+            </div>
+            <div style="padding:0 16px 12px;display:flex;justify-content:flex-end;gap:8px">
+              <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:14px">?</span>
+              <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:16px">↺</span>
+              <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:14px">≡</span>
+            </div>
+            <div style="height:288px;border-top:1px solid #E6E3DE;display:flex;align-items:center;justify-content:center">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#C2BFB8">FIELD</span>
+            </div>
+            <div style="height:96px;display:flex;align-items:center;justify-content:center;border-top:1px dashed #E1DED8">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#C2BFB8">SWIPE ZONE</span>
+            </div>
+          </div>
+
+          <div style="width:320px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:28px;overflow:hidden">
+            <div style="height:28px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 18px 4px;font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+            <div style="height:52px;padding:0 16px;display:flex;align-items:center;gap:10px">
+              <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.2em;color:#8A8781;line-height:12px">STAGE 10</span>
+                <span style="font-size:17px;font-weight:400;line-height:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">The Cracked Path</span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:4px">
+                <span style="font-size:21px;font-weight:300;line-height:22px;font-variant-numeric:tabular-nums">3</span>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:9px;letter-spacing:0.12em;color:#8A8781">CL</span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:4px">
+                <span style="font-size:21px;font-weight:300;line-height:22px;font-variant-numeric:tabular-nums">0</span>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:9px;letter-spacing:0.12em;color:#8A8781">MV</span>
+              </div>
+            </div>
+            <div style="height:48px;padding:0 16px;display:flex;justify-content:flex-end;align-items:center;gap:8px">
+              <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:14px">?</span>
+              <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:16px">↺</span>
+              <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:14px">≡</span>
+            </div>
+            <div style="height:316px;border-top:1px solid #E6E3DE;display:flex;align-items:center;justify-content:center">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#C2BFB8">FIELD</span>
+            </div>
+            <div style="height:96px;display:flex;align-items:center;justify-content:center;border-top:1px dashed #E1DED8">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#C2BFB8">SWIPE ZONE</span>
+            </div>
+          </div>
+
+          <div style="width:320px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:28px;overflow:hidden">
+            <div style="height:28px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 18px 4px;font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
+            <div style="height:46px;padding:0 16px;display:flex;align-items:center;gap:10px">
+              <div style="display:flex;align-items:baseline;gap:8px;flex:1;min-width:0">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.2em;color:#8A8781">10</span>
+                <span style="font-size:17px;font-weight:400;line-height:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">The Cracked Path</span>
+              </div>
+              <div style="display:flex;gap:7px">
+                <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:16px">↺</span>
+                <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:14px">≡</span>
+              </div>
+            </div>
+            <div style="height:26px;padding:0 16px;display:flex;align-items:center;justify-content:center;gap:16px">
+              <div style="display:flex;align-items:baseline;gap:6px">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#8A8781">CLIMBS</span>
+                <span style="font-size:16px;font-weight:400;line-height:18px;font-variant-numeric:tabular-nums">3</span>
+              </div>
+              <span style="width:1px;height:11px;background:#DCD9D3"></span>
+              <div style="display:flex;align-items:baseline;gap:6px">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#8A8781">MOVES</span>
+                <span style="font-size:16px;font-weight:400;line-height:18px;font-variant-numeric:tabular-nums">0</span>
+              </div>
+            </div>
+            <div style="height:344px;display:flex;align-items:center;justify-content:center">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#C2BFB8">FIELD</span>
+            </div>
+            <div style="height:96px;display:flex;align-items:center;justify-content:center;border-top:1px dashed #E1DED8">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#C2BFB8">SWIPE ZONE</span>
+            </div>
+          </div>
+
+        </div>
+        <span style="font-size:13.5px;color:#6E6C68;line-height:1.65;max-width:900px;word-break:keep-all;text-wrap:pretty">320px에서는 A의 숫자 칸을 48px, 라벨을 9.5px로 줄입니다. B는 긴 영문 이름이 들어가면 라벨을 CL/MV 두 글자로 줄여야 하므로, 영문 빌드에서는 A나 C를 권합니다. 가이드 버튼이 없는 판에서는 버튼이 둘만 남고 나머지 배치는 그대로입니다(C 예시).</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781">질문 2</span>
+        <span style="font-size:28px;font-weight:400;letter-spacing:-0.01em">2560px에서 스테이지 목록</span>
+        <span style="font-size:14.5px;color:#5F5D59;line-height:1.65;max-width:720px;word-break:keep-all;text-wrap:pretty">세 안 모두 2560×1440 실제 치수로 그리고 화면 폭에 맞게 축소해 보여 줍니다. 괄호 안 숫자는 모두 실제 px입니다.</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:16px;font-weight:400">D · 패널을 내용 폭으로 (1264 고정, 가운데)</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.08em">CARD 240 · GAP 16 · PANEL 1264 · 좌우 648 여백</span>
+        </div>
+        <div ref="{{ mockRef }}" style="width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;border:1px solid #DCD9D3;border-radius:16px;background:#E9E7E2">
+          <div style="position:absolute;top:0;left:0;width:2560px;height:1440px;transform-origin:top left;display:flex;align-items:center;justify-content:center">
+            <div style="width:1264px;display:flex;flex-direction:column;gap:40px">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:32px">
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:15px;letter-spacing:0.28em;color:#8A8781">WORLD 1</span>
+                  <span style="font-size:46px;font-weight:400;line-height:1">낮은 계단의 땅</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:26px">
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:15px;letter-spacing:0.18em;color:#8A8781">0 / 30 ◆</span>
+                  <span style="width:52px;height:52px;border:1px solid #DCD9D3;border-radius:15px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:18px">‹</span>
+                  <span style="width:52px;height:52px;border:1px solid #DCD9D3;border-radius:15px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:18px">›</span>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(5, 240px);gap:16px;justify-content:center">
+                <sc-for list="{{ cards }}" as="c" hint-placeholder-count="10">
+                  <div style="width:240px;height:240px;box-sizing:border-box;border-radius:24px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;border:{{ c.border }};background:{{ c.bg }}">
+                    <span style="font-family:'IBM Plex Mono', monospace;font-size:14px;letter-spacing:0.2em;color:{{ c.tag }}">{{ c.state }}</span>
+                    <span style="font-size:64px;font-weight:300;line-height:1;align-self:center;color:{{ c.num }}">{{ c.n }}</span>
+                    <div style="display:flex;gap:10px;align-self:center">
+                      <span style="width:16px;height:16px;transform:rotate(45deg);border-radius:3px;background:{{ c.s1 }};border:1px solid {{ c.sb }}"></span>
+                      <span style="width:16px;height:16px;transform:rotate(45deg);border-radius:3px;background:{{ c.s2 }};border:1px solid {{ c.sb }}"></span>
+                      <span style="width:16px;height:16px;transform:rotate(45deg);border-radius:3px;background:{{ c.s3 }};border:1px solid {{ c.sb }}"></span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span style="font-size:13.5px;color:#6E6C68;line-height:1.65;max-width:900px;word-break:keep-all;text-wrap:pretty">가장 손이 적게 가는 안입니다. 패널 배경을 없애고 카드 묶음 자체를 화면 가운데 고정 폭 덩이로 둡니다. 헤더도 같은 1264px 안에 맞춰 왼쪽 끝이 카드 01과, 오른쪽 끝이 카드 05와 정확히 맞습니다. 여백이 "패널이 덜 찼다"가 아니라 "가운데 놓인 물건"으로 읽힙니다.</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:16px;font-weight:400">E · 한 줄 10칸 · 세로 가운데 띠</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.08em">CARD 200 · GAP 16 · STRIP 2144 · 좌우 208 여백</span>
+        </div>
+        <div ref="{{ mockRef }}" style="width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;border:1px solid #DCD9D3;border-radius:16px;background:#E9E7E2">
+          <div style="position:absolute;top:0;left:0;width:2560px;height:1440px;transform-origin:top left;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:56px">
+            <div style="width:2144px;display:flex;justify-content:space-between;align-items:flex-end;gap:32px">
+              <div style="display:flex;align-items:baseline;gap:28px">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:15px;letter-spacing:0.28em;color:#8A8781">WORLD 1</span>
+                <span style="font-size:46px;font-weight:400;line-height:1">낮은 계단의 땅</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:26px">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:15px;letter-spacing:0.18em;color:#8A8781">0 / 30 ◆</span>
+                <span style="width:52px;height:52px;border:1px solid #DCD9D3;border-radius:15px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:18px">‹</span>
+                <span style="width:52px;height:52px;border:1px solid #DCD9D3;border-radius:15px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:18px">›</span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(10, 200px);gap:16px">
+              <sc-for list="{{ cards }}" as="c" hint-placeholder-count="10">
+                <div style="width:200px;height:200px;box-sizing:border-box;border-radius:22px;padding:20px;display:flex;flex-direction:column;justify-content:space-between;border:{{ c.border }};background:{{ c.bg }}">
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:13px;letter-spacing:0.2em;color:{{ c.tag }}">{{ c.state }}</span>
+                  <span style="font-size:54px;font-weight:300;line-height:1;align-self:center;color:{{ c.num }}">{{ c.n }}</span>
+                  <div style="display:flex;gap:9px;align-self:center">
+                    <span style="width:14px;height:14px;transform:rotate(45deg);border-radius:3px;background:{{ c.s1 }};border:1px solid {{ c.sb }}"></span>
+                    <span style="width:14px;height:14px;transform:rotate(45deg);border-radius:3px;background:{{ c.s2 }};border:1px solid {{ c.sb }}"></span>
+                    <span style="width:14px;height:14px;transform:rotate(45deg);border-radius:3px;background:{{ c.s3 }};border:1px solid {{ c.sb }}"></span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="width:2144px;display:flex;justify-content:center">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:14px;letter-spacing:0.24em;color:#A9A6A0">01 → 10</span>
+            </div>
+          </div>
+        </div>
+        <span style="font-size:13.5px;color:#6E6C68;line-height:1.65;max-width:900px;word-break:keep-all;text-wrap:pretty">10개가 정확히 고정이라는 점을 그대로 형태로 씁니다. 한 줄이면 순서가 경로처럼 읽히고 가로 폭도 자연스럽게 채워집니다. 세로로는 화면 가운데 띠 하나만 남아 위아래 여백이 대칭이 됩니다. 1440px 이하에서는 5×2로, 폰에서는 2열로 접습니다.</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:16px;font-weight:400">F · 카드에 최소 이동 수를 더하고 5×2 유지</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.08em">CARD 280 · GAP 20 · GRID 1480 · 좌우 540 여백</span>
+        </div>
+        <div ref="{{ mockRef }}" style="width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;border:1px solid #DCD9D3;border-radius:16px;background:#E9E7E2">
+          <div style="position:absolute;top:0;left:0;width:2560px;height:1440px;transform-origin:top left;display:flex;align-items:center;justify-content:center;gap:120px">
+            <div style="width:420px;display:flex;flex-direction:column;gap:28px">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:15px;letter-spacing:0.28em;color:#8A8781">WORLD 1</span>
+              <span style="font-size:58px;font-weight:400;line-height:1.15">낮은 계단의 땅</span>
+              <span style="font-size:22px;color:#6E6C68;line-height:1.7;word-break:keep-all">한 칸씩 오르내리는 법을 익히는 열 판입니다.</span>
+              <div style="display:flex;align-items:baseline;gap:14px;margin-top:8px">
+                <span style="font-size:52px;font-weight:300;line-height:1;font-variant-numeric:tabular-nums">0</span>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:15px;letter-spacing:0.18em;color:#8A8781">/ 30 ◆</span>
+              </div>
+              <div style="display:flex;gap:14px;margin-top:12px">
+                <span style="width:56px;height:56px;border:1px solid #DCD9D3;border-radius:16px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:19px">‹</span>
+                <span style="width:56px;height:56px;border:1px solid #DCD9D3;border-radius:16px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:19px">›</span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(5, 280px);gap:20px">
+              <sc-for list="{{ cards }}" as="c" hint-placeholder-count="10">
+                <div style="width:280px;height:280px;box-sizing:border-box;border-radius:26px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;border:{{ c.border }};background:{{ c.bg }}">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+                    <span style="font-family:'IBM Plex Mono', monospace;font-size:14px;letter-spacing:0.2em;color:{{ c.tag }}">{{ c.state }}</span>
+                    <span style="font-family:'IBM Plex Mono', monospace;font-size:14px;letter-spacing:0.12em;color:{{ c.tag }}">{{ c.best }}</span>
+                  </div>
+                  <span style="font-size:76px;font-weight:300;line-height:1;align-self:center;color:{{ c.num }}">{{ c.n }}</span>
+                  <div style="display:flex;gap:12px;align-self:center">
+                    <span style="width:18px;height:18px;transform:rotate(45deg);border-radius:4px;background:{{ c.s1 }};border:1px solid {{ c.sb }}"></span>
+                    <span style="width:18px;height:18px;transform:rotate(45deg);border-radius:4px;background:{{ c.s2 }};border:1px solid {{ c.sb }}"></span>
+                    <span style="width:18px;height:18px;transform:rotate(45deg);border-radius:4px;background:{{ c.s3 }};border:1px solid {{ c.sb }}"></span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <span style="font-size:13.5px;color:#6E6C68;line-height:1.65;max-width:900px;word-break:keep-all;text-wrap:pretty">카드에 더할 것은 최소 이동 수입니다. 이미 기록하고 있는 값이고, 깬 판에만 나타나며, 별과 달리 "다시 해 볼 이유"가 됩니다(보스 판은 제한 수 24를 같은 자리에 둡니다). 잠긴 판은 그 자리가 비어 상태 차이가 한 겹 더 생깁니다. 남는 가로 폭은 왼쪽 월드 설명 기둥이 받습니다. 카드는 280px까지만 키웁니다.</span>
+      </div>
+
+      <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">새 색 없음</span>
+        <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:900px;word-break:keep-all;text-wrap:pretty">세 안 모두 기존 팔레트만 씁니다. 다만 D와 E에서는 패널 배경(#F2F1EE)을 쓰지 않고 카드(#F7F6F4)를 화면 배경(#E9E7E2) 위에 직접 올립니다. 배경 두 겹이 사라지면서 같은 여백이 더 의도적으로 보입니다.</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1240}}">
+class Component extends DCLogic {
+  mocks = [];
+  componentDidMount() {
+    this.fitAll = () => this.mocks.forEach(el => {
+      if (!el || !el.firstElementChild) return;
+      el.firstElementChild.style.transform = 'scale(' + (el.clientWidth / 2560) + ')';
+    });
+    this.ro = new ResizeObserver(this.fitAll);
+    this.mocks.forEach(el => el && this.ro.observe(el));
+    this.fitAll();
+  }
+  componentWillUnmount() { if (this.ro) this.ro.disconnect(); }
+
+  renderVals() {
+    const ink = '#3A3936', mute = '#8A8781', line = '#DCD9D3', card = '#F7F6F4', lock = '#ECEAE6';
+    const mk = (n, state, kind, stars, best) => {
+      const boss = kind === 'boss';
+      const locked = kind === 'locked';
+      const fill = boss ? '#E3CD8E' : ink;
+      const empty = boss ? '#4A4845' : 'transparent';
+      const sb = boss ? '#5A5854' : (locked ? '#E1DED8' : '#CFCCC6');
+      return {
+        n, state, best: best || '',
+        bg: boss ? ink : (locked ? lock : card),
+        border: boss ? '1px solid ' + ink : (kind === 'now' ? '2px solid ' + ink : '1px solid ' + line),
+        num: boss ? '#F2F1EE' : (locked ? '#B5B2AB' : ink),
+        tag: boss ? '#E3CD8E' : (locked ? '#A9A6A0' : mute),
+        sb,
+        s1: stars > 0 ? fill : empty, s2: stars > 1 ? fill : empty, s3: stars > 2 ? fill : empty
+      };
+    };
+    return {
+      mockRef: el => {
+        if (el && this.mocks.indexOf(el) === -1) {
+          this.mocks.push(el);
+          if (this.ro) this.ro.observe(el);
+          if (this.fitAll) this.fitAll();
+        }
+      },
+      cards: [
+        mk('01', 'CLEAR', 'clear', 3, '12'),
+        mk('02', 'CLEAR', 'clear', 2, '19'),
+        mk('03', 'CLEAR', 'clear', 3, '08'),
+        mk('04', 'NOW', 'now', 0, ''),
+        mk('05', '잠김', 'locked', 0, ''),
+        mk('06', '잠김', 'locked', 0, ''),
+        mk('07', '잠김', 'locked', 0, ''),
+        mk('08', '잠김', 'locked', 0, ''),
+        mk('09', '잠김', 'locked', 0, ''),
+        mk('10', 'BOSS', 'boss', 0, '24')
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
