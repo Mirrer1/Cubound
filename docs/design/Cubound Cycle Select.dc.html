@@ -258,7 +258,7 @@ class Component extends DCLogic {
   }
   world(h) {
     // same lightness and chroma as the confirmed cycle-2 set; only hue changes
-    const ref = { bg: '#E2E6DB', panel: '#EDF0E7', a: '#F4F6EE', b: '#EAEDE3' }, out = {};
+    const ref = { bg: '#E5E7DE', panel: '#EFF1EA', a: '#F5F7F0', b: '#ECEEE6' }, out = {};
     Object.keys(ref).forEach(k => { const o = this.toLab(ref[k]); out[k] = this.oklch(o.L, o.C, h); });
     return out;
   }
@@ -289,7 +289,7 @@ class Component extends DCLogic {
   renderVals() {
     const defs = [
       { n: 1, name: '돌 위의 첫걸음', w: [30, 30, 28, 26, 22], win: '#E3DFD6', a: '#F7F6F4', b: '#EFEDE9', open: true, v: 'step' },
-      { n: 2, name: '풀이 우거진 길', w: [11, 0, 0, 0, 0], win: '#E2E6DB', a: '#F4F6EE', b: '#EAEDE3', open: true, now: true, v: 'swamp' },
+      { n: 2, name: '풀이 우거진 길', w: [11, 0, 0, 0, 0], win: '#E5E7DE', a: '#F5F7F0', b: '#ECEEE6', open: true, now: true, v: 'swamp' },
       { n: 3, name: '불씨가 남은 언덕' }, { n: 4, name: '물이 고인 골짜기' },
       { n: 5, name: '바람이 지나는 능선' }, { n: 6, name: '눈 덮인 계단' },
       { n: 7, name: '빛이 드는 방' }, { n: 8, name: '집으로' }
@@ -319,7 +319,7 @@ class Component extends DCLogic {
         { k: '열린 카드', v: '#F7F6F4', sw: '#F7F6F4' }, { k: '잠긴 카드', v: '#ECEAE6', sw: '#ECEAE6' },
         { k: '잠긴 창', v: '#E4E2DD', sw: '#E4E2DD' }, { k: '잠긴 창 땅', v: '#EDEBE7 / #E8E6E1', sw: '#EDEBE7' },
         { k: '1사이클 창 (베이지)', v: '#E3DFD6 · 땅 #F7F6F4 / #EFEDE9', sw: '#E3DFD6' },
-        { k: '2사이클 창 (숲, 확정 C)', v: '#E2E6DB · 땅 #F4F6EE / #EAEDE3', sw: '#E2E6DB' },
+        { k: '2사이클 창 (숲, B안)', v: '#E5E7DE · 땅 #F5F7F0 / #ECEEE6', sw: '#E5E7DE' },
         { k: '2사이클 늪 (진흙 / 테 / 벽)', v: '#A8A690 / #BFBDA8 / #8C8A76', sw: '#A8A690' },
         { k: '진행 막대 바탕 / 채움', v: '#E3E1DC / #3A3936', sw: '#E3E1DC' },
         { k: '지금 사이클 테두리', v: 'inset 1.5px #3A3936', sw: '#3A3936' },
