@@ -38,7 +38,7 @@ const TitleScreen = () => {
         </div>
         <div className="relative flex flex-1 flex-col items-center justify-center gap-5 sm:flex-none">
           <Logo />
-          <span className="font-mono text-xs tracking-[0.3em] text-mute">ISOMETRIC PUZZLE</span>
+          <span className="font-mono text-xs tracking-[0.3em] text-mute">FIND YOUR WAY HOME</span>
         </div>
         <div className="relative flex w-full flex-col items-center gap-4 panel-pad sm:mt-10 sm:w-auto sm:p-0">
           <Button variant="primary" className="w-full sm:w-52" onClick={handleStart}>
