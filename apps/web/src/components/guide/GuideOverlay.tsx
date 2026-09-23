@@ -25,28 +25,41 @@ type Hole = {
   borderRadius: number
 }
 
-type Place = 'top' | 'bottom' | 'left' | 'right'
+type Place = 'top' | 'under' | 'bottom' | 'left' | 'right'
 
 const ELEMENT_PADDING = 8
 const CARD_SPACE = 210 // 카드가 들어갈 위아래 최소 공간 px
-const SIDE_SPACE = 330 // 카드가 들어갈 좌우 최소 공간 px
+const NEAR_SPACE = 240 // 대상 쪽에 놓을 때 필요한 공간 px. 카드 높이와 화면 가장자리 여백
+const SIDE_SPACE = 320 // 카드가 들어갈 좌우 최소 공간 px. 카드 300과 가장자리 여백 16
+const UNDER_GAP = 12 // under일 때 대상과 카드 사이 px
 
 const PLACES: Record<Place, string> = {
   top: 'inset-x-4 top-4 wide:inset-x-8 wide:top-8',
+  under: 'inset-x-4 wide:inset-x-8',
   bottom: 'inset-x-4 bottom-4 wide:inset-x-8 wide:bottom-8',
   left: 'inset-y-4 left-4 w-[300px]',
   right: 'inset-y-4 right-4 w-[300px]',
 }
 
-// 위아래가 좁으면 좌우로 비켜 놓아 비추는 대상을 가리지 않는다
-const placeFor = (hole: Hole, width: number, height: number): Place => {
+// 위아래가 좁으면 좌우로 비켜 놓아 비추는 대상을 가리지 않는다.
+// 다만 헤더에 붙은 요소는 아래 띠로 보내면 화면 반대편이 되어 대상 바로 아래에 놓는다
+const placeFor = (hole: Hole, width: number, height: number, element: boolean): Place => {
   const above = hole.top
   const below = height - hole.top - hole.height
   const side = width - hole.left - hole.width >= hole.left ? 'right' : 'left'
   const sideRoom = Math.max(hole.left, width - hole.left - hole.width)
   const vertical = above > below ? 'top' : 'bottom'
+  const place = Math.max(above, below) >= CARD_SPACE || sideRoom < SIDE_SPACE ? vertical : side
 
-  return Math.max(above, below) >= CARD_SPACE || sideRoom < SIDE_SPACE ? vertical : side
+  return place === 'bottom' && element && above < NEAR_SPACE ? 'under' : place
+}
+
+// under는 가로로 띠라서 넓은 화면에서 카드가 가운데로 간다. 대상이 치우쳐 있으면 그쪽으로 붙인다
+const alignFor = (hole: Hole, width: number) => {
+  const center = hole.left + hole.width / 2
+  if (center > width * 0.6) return 'justify-end'
+  if (center < width * 0.4) return 'justify-start'
+  return 'justify-center'
 }
 
 const sameHole = (a: Hole, b: Hole) =>
@@ -55,7 +68,7 @@ const sameHole = (a: Hole, b: Hole) =>
 const stopClick = (e: MouseEvent) => e.stopPropagation()
 
 const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: GuideOverlayProps) => {
-  const [measured, setMeasured] = useState<{ hole: Hole; place: Place } | null>(null)
+  const [measured, setMeasured] = useState<{ hole: Hole; place: Place; align: string } | null>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const nextRef = useRef<HTMLButtonElement>(null)
   const reduced = useReducedMotion()
@@ -65,6 +78,7 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
   const isLast = step === guides.length - 1
   const hole = measured?.hole
   const place = measured?.place ?? 'bottom'
+  const align = measured?.align ?? 'justify-center'
   const speed = reduced ? 0.35 : 1
 
   useFocusTrap(cardRef)
@@ -94,11 +108,12 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
           height: Math.round(found.height + padding * 2),
           borderRadius: targetName === 'cell' ? 28 : 18,
         }
-        const nextPlace = placeFor(next, base.width, base.height)
+        const nextPlace = placeFor(next, base.width, base.height, targetName !== 'cell')
+        const nextAlign = alignFor(next, base.width)
         setMeasured((prev) =>
-          prev && sameHole(prev.hole, next) && prev.place === nextPlace
+          prev && sameHole(prev.hole, next) && prev.place === nextPlace && prev.align === nextAlign
             ? prev
-            : { hole: next, place: nextPlace },
+            : { hole: next, place: nextPlace, align: nextAlign },
         )
       }
       frame = requestAnimationFrame(measure)
@@ -146,7 +161,8 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
       )}
       <motion.div
         layout
-        className={`absolute flex items-center justify-center ${PLACES[place]}`}
+        className={`absolute flex items-center ${place === 'under' && hole ? align : 'justify-center'} ${PLACES[place]}`}
+        style={place === 'under' && hole ? { top: hole.top + hole.height + UNDER_GAP } : undefined}
         transition={{ duration: 0.35 * speed, ease: 'easeInOut' }}
       >
         <motion.div
