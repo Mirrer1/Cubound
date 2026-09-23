@@ -114,4 +114,5 @@ export const ko: Partial<Texts> = {
   'stage.5-7': '짐수레',
   'stage.5-8': '돌림길',
   'stage.5-9': '끊긴 길',
+  'stage.5-10': '온 길',
 }

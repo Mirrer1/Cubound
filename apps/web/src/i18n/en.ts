@@ -114,6 +114,7 @@ export const en = {
   'stage.5-7': 'The Handcart',
   'stage.5-8': 'The Roundabout',
   'stage.5-9': 'The Broken Line',
+  'stage.5-10': 'The Road So Far',
 }
 
 export type Texts = typeof en
