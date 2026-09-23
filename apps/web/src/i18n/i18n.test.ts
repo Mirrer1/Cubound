@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { DICTIONARIES, type Language, guideText, isLanguage, languageFrom, text } from '.'
 import { en } from './en'
+import { ko } from './ko'
 
 const STUB = 'stub' as Language
 
@@ -46,9 +47,20 @@ describe('guideText', () => {
   })
 })
 
+// 스테이지와 월드 이름은 판이 늘 때마다 채워야 해서 번역을 미룬다
+const isStageName = (key: string) => key.startsWith('stage.') || key.startsWith('world.')
+
 describe('사전', () => {
-  it.each(Object.keys(DICTIONARIES))('%s에 모든 문구가 있다', (code) => {
-    const missing = Object.keys(en).filter((key) => !(key in DICTIONARIES[code as Language]))
+  it.each(Object.keys(DICTIONARIES))('%s에 UI 문구가 다 있다', (code) => {
+    const missing = Object.keys(en)
+      .filter((key) => !isStageName(key))
+      .filter((key) => !(key in DICTIONARIES[code as Language]))
+
+    expect(missing).toEqual([])
+  })
+
+  it('한국어에는 스테이지와 월드 이름까지 다 있다', () => {
+    const missing = Object.keys(en).filter((key) => !(key in ko))
 
     expect(missing).toEqual([])
   })
@@ -66,6 +78,29 @@ describe('languageFrom', () => {
 
   it('먼저 오는 기기 언어를 우선한다', () => {
     expect(languageFrom(['en-US', 'ko-KR'])).toBe('en')
+  })
+
+  it('일본어와 스페인어는 지역을 떼고 고른다', () => {
+    expect(languageFrom(['ja-JP'])).toBe('ja')
+    expect(languageFrom(['ja'])).toBe('ja')
+    expect(languageFrom(['es-MX'])).toBe('es')
+    expect(languageFrom(['es'])).toBe('es')
+  })
+
+  it('번체를 쓰는 중국어 태그는 zh-Hant를 고른다', () => {
+    expect(languageFrom(['zh-TW'])).toBe('zh-Hant')
+    expect(languageFrom(['zh-HK'])).toBe('zh-Hant')
+    expect(languageFrom(['zh-MO'])).toBe('zh-Hant')
+    expect(languageFrom(['zh-Hant'])).toBe('zh-Hant')
+    expect(languageFrom(['zh-Hant-TW'])).toBe('zh-Hant')
+  })
+
+  it('나머지 중국어 태그는 zh-Hans를 고른다', () => {
+    expect(languageFrom(['zh'])).toBe('zh-Hans')
+    expect(languageFrom(['zh-CN'])).toBe('zh-Hans')
+    expect(languageFrom(['zh-SG'])).toBe('zh-Hans')
+    expect(languageFrom(['zh-Hans'])).toBe('zh-Hans')
+    expect(languageFrom(['zh-Hans-HK'])).toBe('zh-Hans')
   })
 })
 
