@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import { DICTIONARIES, type Language, guideText, isLanguage, languageFrom, text } from '.'
 import { en } from './en'
-import { ko } from './ko'
 
 const STUB = 'stub' as Language
 
@@ -47,20 +46,9 @@ describe('guideText', () => {
   })
 })
 
-// 스테이지와 월드 이름은 판이 늘 때마다 채워야 해서 번역을 미룬다
-const isStageName = (key: string) => key.startsWith('stage.') || key.startsWith('world.')
-
 describe('사전', () => {
-  it.each(Object.keys(DICTIONARIES))('%s에 UI 문구가 다 있다', (code) => {
-    const missing = Object.keys(en)
-      .filter((key) => !isStageName(key))
-      .filter((key) => !(key in DICTIONARIES[code as Language]))
-
-    expect(missing).toEqual([])
-  })
-
-  it('한국어에는 스테이지와 월드 이름까지 다 있다', () => {
-    const missing = Object.keys(en).filter((key) => !(key in ko))
+  it.each(Object.keys(DICTIONARIES))('%s에 모든 문구가 있다', (code) => {
+    const missing = Object.keys(en).filter((key) => !(key in DICTIONARIES[code as Language]))
 
     expect(missing).toEqual([])
   })
