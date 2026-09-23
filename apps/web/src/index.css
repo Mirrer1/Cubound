@@ -68,6 +68,19 @@
   --color-crack-shadow: #c4c0b8;
 }
 
+/* 세계 색은 사이클마다 갈린다. 1사이클은 위 기본값을 그대로 쓴다 */
+html[data-cycle='2'] {
+  --color-page-bg: #e5e7de;
+  --color-base-bg: #eff1ea;
+  --color-surface: #f5f7f0;
+  --color-locked: #e9ebe2;
+  --color-hover: #e8eae1;
+  --color-floor-top: #ebece2;
+  --color-floor-top-alt: #e4e6dd;
+  --color-floor-left: #c3c4b8;
+  --color-floor-right: #d6d7cc;
+}
+
 html,
 body {
   height: 100%;
@@ -75,10 +88,12 @@ body {
   overscroll-behavior: none;
 }
 
+/* 화면 뒤는 계속 보여서 사이클이 바뀔 때 색이 천천히 넘어가야 한다 */
 body {
   margin: 0;
   background: var(--color-page-bg);
   color: var(--color-ink);
+  transition: background-color 300ms var(--ease-soft);
 }
 
 :lang(ja) {

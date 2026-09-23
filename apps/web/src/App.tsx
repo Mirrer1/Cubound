@@ -2,7 +2,7 @@ import { AnimatePresence, MotionConfig, motion } from 'motion/react'
 import { useEffect } from 'react'
 
 import { isUnlocked, isWorldUnlocked } from '@/game/progress'
-import { hashOf, showingAll } from '@/platform/route'
+import { type Route, hashOf, showingAll } from '@/platform/route'
 import { documentTitle } from '@/platform/title'
 import { useRoute } from '@/platform/useRoute'
 import PlayScreen from '@/screens/PlayScreen'
@@ -12,12 +12,21 @@ import {
   STAGES,
   WORLDS,
   currentWorld,
+  cycleOf,
   parseStageId,
   stageIdsOf,
   worldUnlockStageId,
 } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
 import { useSettingsStore } from '@/store/settingsStore'
+
+// 타이틀은 월드가 없어 첫 월드로 둔다
+const worldOf = (route: Route) =>
+  route.screen === 'play'
+    ? parseStageId(route.stageId).world
+    : route.screen === 'select'
+      ? route.world
+      : WORLDS[0]
 
 const App = () => {
   const progress = useGameStore((s) => s.progress)
@@ -46,6 +55,14 @@ const App = () => {
     document.documentElement.lang = language
     document.title = documentTitle(route, language)
   }, [language, route])
+
+  // 세계 색은 지금 보는 월드가 속한 사이클을 따르고 폰 주소창 색도 같이 간다
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.cycle = String(cycleOf(worldOf(route)))
+    const color = getComputedStyle(root).getPropertyValue('--color-page-bg').trim()
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color)
+  }, [route])
 
   return (
     <MotionConfig reducedMotion="user">

@@ -2,6 +2,7 @@ import { type Progress, isWorldUnlocked } from '@/game/progress'
 import type { Stage } from '@/game/types'
 
 export const STAGES_PER_WORLD = 10
+export const WORLDS_PER_CYCLE = 5
 
 const modules = import.meta.glob<Stage>('./world-*/*.json', { eager: true, import: 'default' })
 
@@ -28,6 +29,9 @@ export const stageIdsOf = (world: number) =>
   )
 
 export const isBossStage = (id: string) => parseStageId(id).stage % STAGES_PER_WORLD === 0
+
+// 세계 색이 갈리는 단위. 월드 다섯이 한 사이클이다
+export const cycleOf = (world: number) => Math.ceil(world / WORLDS_PER_CYCLE)
 
 // 월드에서 마지막으로 만든 스테이지 다음은 다음 월드의 첫 스테이지
 export const nextStageId = (id: string) => {
