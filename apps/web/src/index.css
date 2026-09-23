@@ -81,7 +81,18 @@ body {
   color: var(--color-ink);
 }
 
-/* break-keep은 공백에서만 줄을 바꾼다. 공백이 없는 일본어와 중국어는 한 줄이 그대로 늘어나 카드 밖으로 나간다 */
+:lang(ja) {
+  --font-sans: 'Jost', 'IBM Plex Sans JP', 'IBM Plex Sans KR', ui-sans-serif, system-ui, sans-serif;
+}
+
+:lang(zh-Hant) {
+  --font-sans: 'Jost', 'Noto Sans TC', 'IBM Plex Sans KR', ui-sans-serif, system-ui, sans-serif;
+}
+
+:lang(zh-Hans) {
+  --font-sans: 'Jost', 'Noto Sans SC', 'IBM Plex Sans KR', ui-sans-serif, system-ui, sans-serif;
+}
+
 :lang(ja) .break-keep,
 :lang(zh-Hant) .break-keep,
 :lang(zh-Hans) .break-keep {
