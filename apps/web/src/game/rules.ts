@@ -5,6 +5,7 @@ import type {
   GameEvent,
   GameState,
   LeaningLadder,
+  Limit,
   MoveResult,
   Point,
   Stage,
@@ -22,6 +23,15 @@ const OFFSETS: Record<Direction, Point> = {
 }
 
 const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y
+
+// 보스 제약에 막혀 제자리에 선다. 이동 수를 쓰지 않는다
+const limitBlocked = (state: GameState, direction: Direction, limit: Limit): MoveResult => ({
+  state,
+  events: [
+    { type: 'blocked', direction },
+    { type: 'limit', limit },
+  ],
+})
 
 const step = (p: Point, direction: Direction) => ({
   x: p.x + OFFSETS[direction].x,
@@ -258,7 +268,7 @@ const climbOrPlaceLadder = (
   if (hasBox(state, from) || toFloor !== standHeight(state, from) + 1) return null
 
   if (state.leaningLadders.some((l) => same(l, from) && l.direction === direction)) {
-    if (climbsLeft(state) === 0) return null
+    if (climbsLeft(state) === 0) return limitBlocked(state, direction, 'climbs')
 
     const climbing: GameState = { ...state, climbs: state.climbs + 1 }
     return arrive(climbing, to, direction, { type: 'climbed', from, to, via: 'ladder' })
@@ -373,12 +383,18 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
   if (toFloor + 1 <= fromHeight) return walk(state, to, toFloor + 1, direction)
   if (toFloor > fromHeight) return blocked
 
-  const pushed = pushesLeft(state) === 0 ? null : pushBox(state, to, direction)
+  const outOfPushes = pushesLeft(state) === 0
+  const pushed = outOfPushes ? null : pushBox(state, to, direction)
   if (pushed) return pushed
-  if (climbsLeft(state) === 0) return blocked
+
+  const pre: GameEvent[] = outOfPushes ? [{ type: 'limit', limit: 'pushes' }] : []
+  if (climbsLeft(state) === 0) {
+    const stopped = limitBlocked(state, direction, 'climbs')
+    return { state, events: [...pre, ...stopped.events] }
+  }
 
   const climbing: GameState = { ...state, climbs: state.climbs + 1 }
-  return arrive(climbing, to, direction, { type: 'climbed', from, to, via: 'box' })
+  return arrive(climbing, to, direction, { type: 'climbed', from, to, via: 'box' }, pre)
 }
 
 // 칸을 딛고 있는 것. 상자 위에 선 큐브는 칸을 딛지 않는다
@@ -453,15 +469,16 @@ const boardsTram = (before: GameState, after: GameState) => {
 
 export const move = (state: GameState, direction: Direction): MoveResult => {
   if (state.cleared) return { state, events: [] }
-  if (movesLeft(state) === 0) return { state, events: [{ type: 'blocked', direction }] }
+  if (movesLeft(state) === 0) return limitBlocked(state, direction, 'moves')
 
   const limitedDir = state.stage.rules?.dirLimit?.dir === direction
-  if (limitedDir && dirLeft(state) === 0) return { state, events: [{ type: 'blocked', direction }] }
+  if (limitedDir && dirLeft(state) === 0) return limitBlocked(state, direction, 'dir')
 
   const result = moveOnce(state, direction)
-  // 타는 횟수를 다 쓰면 올라타는 이동만 실패하고 기다린 것으로 돌린다
+  // 타는 횟수를 다 쓰면 올라타는 이동만 막는다
   const boarded = boardsTram(state, result.state)
-  const denied = boarded && ridesLeft(state) === 0
+  if (boarded && ridesLeft(state) === 0) return limitBlocked(state, direction, 'rides')
+
   // 발판 위에서 막힌 이동은 타고 가겠다는 뜻이고 발판 길 쪽으로 막힌 이동은 기다리겠다는 뜻이라 제자리에 서서 이동 1회로 센다
   const forTram =
     result.state === state &&
@@ -469,12 +486,11 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
       onTramPath(state.stage, step(state.player, direction)))
   if (result.state === state && !forTram) return result
 
-  const acted: MoveResult =
-    forTram || denied
-      ? { state: { ...state, moves: state.moves + 1 }, events: [] }
-      : boarded
-        ? { ...result, state: { ...result.state, rides: result.state.rides + 1 } }
-        : result
+  const acted: MoveResult = forTram
+    ? { state: { ...state, moves: state.moves + 1 }, events: [] }
+    : boarded
+      ? { ...result, state: { ...result.state, rides: result.state.rides + 1 } }
+      : result
 
   // 이동 수로 세는 수면 그 방향을 쓴 것이다
   const spent: GameState = limitedDir

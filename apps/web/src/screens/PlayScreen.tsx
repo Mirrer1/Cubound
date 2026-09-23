@@ -1,5 +1,13 @@
-import { AnimatePresence } from 'motion/react'
-import { type MouseEvent, type PointerEvent, useCallback, useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import {
+  type MouseEvent,
+  type PointerEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 
 import Board from '@/components/board/Board'
 import GuideOverlay from '@/components/guide/GuideOverlay'
@@ -19,6 +27,20 @@ interface PlayScreenProps {
 }
 
 const ASK_FROM_MOVES = 5 // 이만큼 진행했으면 재시작 전에 물어본다
+
+// 보스 제약에 막힌 수에 숫자를 한 번 깜빡인다. hit은 막힌 수의 차례라 이어서 막혀도 다시 깜빡인다
+const LimitCount = ({ hit, children }: { hit: number | null; children: ReactNode }) => (
+  <motion.span
+    key={hit ?? 'idle'}
+    animate={
+      hit === null ? { opacity: 1, scale: 1 } : { opacity: [1, 0.3, 1], scale: [1, 1.12, 1] }
+    }
+    transition={{ duration: 0.28, ease: 'easeOut' }}
+    className="text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]"
+  >
+    {children}
+  </motion.span>
+)
 
 const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const loaded = useGameStore((s) => s.game)
@@ -59,6 +81,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const ridesOver = game ? ridesLeft(game) : null
   const dirOver = game ? dirLeft(game) : null
   const limitedDir = game?.stage.rules?.dirLimit?.dir
+  const limited = events.flatMap((e) => (e.type === 'limit' ? [e.limit] : []))[0]
   const outOfMoves = left === 0 && !game?.cleared
 
   const handleNext = () => {
@@ -176,9 +199,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                     <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
                       PUSHES
                     </span>
-                    <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]">
-                      {pushesOver}
-                    </span>
+                    <LimitCount hit={limited === 'pushes' ? turn : null}>{pushesOver}</LimitCount>
                   </div>
                 )}
                 {climbsOver !== null && (
@@ -189,9 +210,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                     <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
                       CLIMBS
                     </span>
-                    <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]">
-                      {climbsOver}
-                    </span>
+                    <LimitCount hit={limited === 'climbs' ? turn : null}>{climbsOver}</LimitCount>
                   </div>
                 )}
                 {ridesOver !== null && (
@@ -200,9 +219,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                     className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                   >
                     <span className="font-mono text-[10px] tracking-[0.22em] text-mute">RIDES</span>
-                    <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]">
-                      {ridesOver}
-                    </span>
+                    <LimitCount hit={limited === 'rides' ? turn : null}>{ridesOver}</LimitCount>
                   </div>
                 )}
                 {dirOver !== null && limitedDir && (
@@ -213,21 +230,17 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                     <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
                       {limitedDir.toUpperCase()}
                     </span>
-                    <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]">
-                      {dirOver}
-                    </span>
+                    <LimitCount hit={limited === 'dir' ? turn : null}>{dirOver}</LimitCount>
                   </div>
                 )}
                 <div
                   data-guide="moves"
                   className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                 >
-                  <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
-                    {left === null ? 'MOVES' : 'LEFT'}
-                  </span>
-                  <span className="text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]">
+                  <span className="font-mono text-[10px] tracking-[0.22em] text-mute">MOVES</span>
+                  <LimitCount hit={limited === 'moves' ? turn : null}>
                     {left ?? game.moves}
-                  </span>
+                  </LimitCount>
                 </div>
               </div>
               {/* 320px에서 버튼과 긴 이름이 한 줄에 들어가도록 폰 세로에서만 버튼을 줄인다 */}

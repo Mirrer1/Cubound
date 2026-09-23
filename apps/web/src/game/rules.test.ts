@@ -881,7 +881,10 @@ describe('move 이동 제한', () => {
     const { state, events } = move(used, 'up')
 
     expect(state).toBe(used)
-    expect(events).toEqual([{ type: 'blocked', direction: 'up' }])
+    expect(events).toEqual([
+      { type: 'blocked', direction: 'up' },
+      { type: 'limit', limit: 'moves' },
+    ])
   })
 
   it('제한을 다 쓰면 목표 칸을 바로 앞에 두고도 클리어하지 못한다', () => {
@@ -959,6 +962,7 @@ describe('move 밀기 제한', () => {
     expect(state.player).toEqual({ x: 2, y: 1 })
     expect(state.pushes).toBe(1)
     expect(events).toEqual([
+      { type: 'limit', limit: 'pushes' },
       { type: 'climbed', from: { x: 1, y: 1 }, to: { x: 2, y: 1 }, via: 'box' },
     ])
   })
@@ -1057,7 +1061,10 @@ describe('move 올라가기 제한', () => {
     const { state, events } = play(LIMITED_STAGE, ['right', 'left', 'right'])
 
     expect(state.player).toEqual({ x: 0, y: 1 })
-    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+    expect(events).toEqual([
+      { type: 'blocked', direction: 'right' },
+      { type: 'limit', limit: 'climbs' },
+    ])
   })
 
   it('제한을 다 쓰면 기대 놓은 사다리로도 오르지 못한다', () => {
@@ -1074,7 +1081,10 @@ describe('move 올라가기 제한', () => {
 
     expect(state.player).toEqual({ x: 2, y: 1 })
     expect(state.leaningLadders).toEqual([{ x: 2, y: 1, direction: 'right' }])
-    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+    expect(events).toEqual([
+      { type: 'blocked', direction: 'right' },
+      { type: 'limit', limit: 'climbs' },
+    ])
   })
 
   it('제한을 다 써도 오르지 않는 쪽으로는 계속 이동한다', () => {
@@ -1388,7 +1398,10 @@ describe('move 무너지는 칸', () => {
 
     expect(onCrack.player).toEqual(CRACK)
     expect(state).toBe(onCrack)
-    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+    expect(events).toEqual([
+      { type: 'blocked', direction: 'right' },
+      { type: 'limit', limit: 'climbs' },
+    ])
     expect(leftAt(state, CRACK)).toBe(1)
   })
 })
@@ -1877,7 +1890,10 @@ describe('move 발판 기다리기', () => {
     const { state, events } = move(waited.state, 'right')
 
     expect(state.moves).toBe(1)
-    expect(events).toEqual([{ type: 'blocked', direction: 'right' }])
+    expect(events).toEqual([
+      { type: 'blocked', direction: 'right' },
+      { type: 'limit', limit: 'moves' },
+    ])
   })
 })
 
@@ -1970,16 +1986,28 @@ describe('보스 타는 횟수 제한', () => {
     expect(state.rides).toBe(1)
   })
 
-  it('제한을 다 쓰면 올라타지 못하고 기다리기가 된다', () => {
+  it('제한을 다 쓰면 올라타지 못하고 이동 수도 늘지 않는다', () => {
     const used: GameState = { ...createState(LIMITED_STAGE), rides: 1 }
+    const { state, events } = move(used, 'right')
+
+    expect(state).toBe(used)
+    expect(state.moves).toBe(0)
+    expect(state.trams).toEqual([{ id: 'tram-a', at: 0, dir: 1 }])
+    expect(events).toEqual([
+      { type: 'blocked', direction: 'right' },
+      { type: 'limit', limit: 'rides' },
+    ])
+  })
+
+  it('제한을 다 써도 발판 길 쪽으로 밀어 기다리면 이동 수 1을 쓴다', () => {
+    const stage: Stage = { ...withTram({ x: 3, y: 1 }), rules: { rideLimit: 1 } }
+    const used: GameState = { ...createState(stage), rides: 1 }
     const { state, events } = move(used, 'right')
 
     expect(state.player).toEqual({ x: 0, y: 1 })
     expect(state.moves).toBe(1)
-    expect(state.rides).toBe(1)
-    expect(state.trams).toEqual([{ id: 'tram-a', at: 1, dir: 1 }])
     expect(events).toEqual([
-      { type: 'tram', id: 'tram-a', from: { x: 1, y: 1 }, to: { x: 2, y: 1 } },
+      { type: 'tram', id: 'tram-a', from: { x: 3, y: 1 }, to: { x: 2, y: 1 } },
     ])
   })
 
@@ -2089,7 +2117,10 @@ describe('보스 방향 제한', () => {
     const { state, events } = move(used, 'left')
 
     expect(state).toBe(used)
-    expect(events).toEqual([{ type: 'blocked', direction: 'left' }])
+    expect(events).toEqual([
+      { type: 'blocked', direction: 'left' },
+      { type: 'limit', limit: 'dir' },
+    ])
     expect(move(used, 'right').state.player).toEqual({ x: 3, y: 1 })
   })
 })
@@ -2104,5 +2135,67 @@ describe('dirLeft', () => {
 
     expect(dirLeft(createState(stage))).toBe(2)
     expect(dirLeft(move(createState(stage), 'left').state)).toBe(1)
+  })
+})
+
+describe('보스 제약에 막힌 신호', () => {
+  it('이동 제한을 다 쓰면 limit 이벤트를 낸다', () => {
+    const used = play({ ...FLAT_STAGE, rules: { moveLimit: 2 } }, ['left', 'right']).state
+    const { events } = move(used, 'up')
+
+    expect(events).toContainEqual({ type: 'limit', limit: 'moves' })
+  })
+
+  it('밀기 제한을 다 쓰면 상자 위로 오르면서 limit 이벤트를 낸다', () => {
+    const stage: Stage = { ...BOX_STAGE, rules: { pushLimit: 1 } }
+    const { events } = play(stage, ['right', 'right'])
+
+    expect(events).toContainEqual({ type: 'limit', limit: 'pushes' })
+    expect(events).toContainEqual({
+      type: 'climbed',
+      from: { x: 1, y: 1 },
+      to: { x: 2, y: 1 },
+      via: 'box',
+    })
+  })
+
+  it('올라가기 제한을 다 쓰면 limit 이벤트를 낸다', () => {
+    const stage: Stage = { ...CLIMB_BOX_STAGE, rules: { climbLimit: 1 } }
+    const { events } = play(stage, ['right', 'left', 'right'])
+
+    expect(events).toContainEqual({ type: 'limit', limit: 'climbs' })
+  })
+
+  it('사다리로 오르지 못할 때도 limit 이벤트를 낸다', () => {
+    const stage: Stage = { ...LADDER_STAGE, rules: { climbLimit: 1 } }
+    const { events } = play(stage, ['right', 'right', 'right', 'right', 'left', 'right', 'right'])
+
+    expect(events).toContainEqual({ type: 'limit', limit: 'climbs' })
+  })
+
+  it('타는 횟수 제한을 다 쓰면 limit 이벤트를 낸다', () => {
+    const stage: Stage = { ...TRAM_STAGE, rules: { rideLimit: 1 } }
+    const used: GameState = { ...createState(stage), rides: 1 }
+
+    expect(move(used, 'right').events).toContainEqual({ type: 'limit', limit: 'rides' })
+  })
+
+  it('방향 제한을 다 쓰면 limit 이벤트를 낸다', () => {
+    const used: GameState = { ...createState(withDirLimit(DIR_STAGE, 'left', 1)), dirUses: 1 }
+
+    expect(move(used, 'left').events).toContainEqual({ type: 'limit', limit: 'dir' })
+  })
+
+  it('제한이 없는 판에서는 막혀도 limit 이벤트가 나오지 않는다', () => {
+    const cases: MoveResult[] = [
+      play(BOX_STAGE, ['right', 'right']),
+      play(CLIMB_BOX_STAGE, ['right']),
+      play(FLAT_STAGE, ['up', 'up']),
+      move(createState(TRAM_STAGE), 'right'),
+    ]
+
+    for (const { events } of cases) {
+      expect(events.some((e) => e.type === 'limit')).toBe(false)
+    }
   })
 })

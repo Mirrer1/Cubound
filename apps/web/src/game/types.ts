@@ -16,6 +16,8 @@ export type Entity = (
 ) &
   Point
 
+export type Limit = 'moves' | 'pushes' | 'climbs' | 'rides' | 'dir'
+
 export interface StageRules {
   moveLimit?: number // 보스 이동 제한, 없으면 제한 없음
   pushLimit?: number // 보스 밀기 제한, 없으면 제한 없음
@@ -99,6 +101,7 @@ export type GameEvent =
   | { type: 'warped'; from: Point; to: Point }
   | { type: 'tram'; id: string; from: Point; to: Point }
   | { type: 'blocked'; direction: Direction }
+  | { type: 'limit'; limit: Limit } // 보스 제약에 막힘
   | { type: 'cleared' }
 
 export interface MoveResult {
