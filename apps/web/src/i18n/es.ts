@@ -128,4 +128,8 @@ export const es: Partial<Texts> = {
   'stage.6-3': 'La Bisagra',
   'stage.6-4': 'El Sendero',
   'stage.6-5': 'El Puntal',
+  'stage.6-6': 'El Tablón',
+  'stage.6-7': 'La Plataforma',
+  'stage.6-8': 'El Tren Lento',
+  'stage.6-9': 'El Travesaño',
 }

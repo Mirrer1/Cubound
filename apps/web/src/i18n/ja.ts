@@ -125,4 +125,8 @@ export const ja: Partial<Texts> = {
   'stage.6-3': '開き戸',
   'stage.6-4': '抜け道',
   'stage.6-5': '支柱',
+  'stage.6-6': '丸木橋',
+  'stage.6-7': '上げ板',
+  'stage.6-8': '鈍行',
+  'stage.6-9': '架け',
 }

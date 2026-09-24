@@ -125,4 +125,8 @@ export const ko: Partial<Texts> = {
   'stage.6-3': '여닫이',
   'stage.6-4': '샛길',
   'stage.6-5': '버팀목',
+  'stage.6-6': '외다리',
+  'stage.6-7': '올림판',
+  'stage.6-8': '늦은 차',
+  'stage.6-9': '걸침',
 }

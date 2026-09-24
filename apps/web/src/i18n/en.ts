@@ -125,6 +125,10 @@ export const en = {
   'stage.6-3': 'The Hinge',
   'stage.6-4': 'The Byway',
   'stage.6-5': 'The Prop',
+  'stage.6-6': 'The Plank',
+  'stage.6-7': 'The Lift',
+  'stage.6-8': 'The Late Ride',
+  'stage.6-9': 'The Span',
 }
 
 export type Texts = typeof en

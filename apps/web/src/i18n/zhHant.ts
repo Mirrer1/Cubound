@@ -125,4 +125,8 @@ export const zhHant: Partial<Texts> = {
   'stage.6-3': '開合',
   'stage.6-4': '小徑',
   'stage.6-5': '支柱',
+  'stage.6-6': '獨木橋',
+  'stage.6-7': '升降板',
+  'stage.6-8': '慢車',
+  'stage.6-9': '搭架',
 }

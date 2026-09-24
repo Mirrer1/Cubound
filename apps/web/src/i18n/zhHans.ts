@@ -125,4 +125,8 @@ export const zhHans: Partial<Texts> = {
   'stage.6-3': '开合',
   'stage.6-4': '小径',
   'stage.6-5': '支柱',
+  'stage.6-6': '独木桥',
+  'stage.6-7': '升降板',
+  'stage.6-8': '慢车',
+  'stage.6-9': '搭架',
 }
