@@ -251,6 +251,12 @@ body {
 @utility grid-box {
   container-type: size;
 
+  /* 폰 세로는 카드에 높이 상한을 걸지 않아 넘칠 수 있다. 자리가 같이 늘어나야
+     맨 아래까지 내렸을 때 패널 여백이 남는다 */
+  @media (width < 40rem) and (height >= 500px) {
+    container-type: normal;
+  }
+
   @media (width >= 106.25rem) {
     container-type: normal;
   }

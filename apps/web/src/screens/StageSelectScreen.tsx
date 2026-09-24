@@ -217,7 +217,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
         </header>
         <div
           ref={gridRef}
-          className="grid-box mx-auto min-h-0 w-full max-w-content flex-1 min-[1700px]:mx-0 min-[1700px]:mr-10 min-[1700px]:max-w-none"
+          className="grid-box mx-auto min-h-0 w-full max-w-content flex-1 min-[1700px]:mx-0 min-[1700px]:mr-10 min-[1700px]:max-w-none narrow:flex-none"
         >
           {/* 카드가 자리에서 바뀐다. key로 갈아 끼워야 새 카드가 바로 붙어 포커스가 따라간다 */}
           <motion.div
