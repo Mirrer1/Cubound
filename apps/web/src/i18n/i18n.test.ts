@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { DICTIONARIES, type Language, guideText, isLanguage, languageFrom, text } from '.'
+import {
+  DICTIONARIES,
+  type Language,
+  type TextKey,
+  guideText,
+  isLanguage,
+  languageFrom,
+  text,
+} from '.'
 import { en } from './en'
 
 const STUB = 'stub' as Language
@@ -28,6 +36,10 @@ describe('text', () => {
     expect(text('en', 'stars.label', 2)).toBe('2 of 3 stars')
     expect(text('ko', 'stars.label', 2)).toBe('별 2개')
   })
+
+  it('어느 사전에도 없는 키는 키 이름을 돌려준다', () => {
+    expect(text('ko', 'nothing.here' as TextKey)).toBe('nothing.here')
+  })
 })
 
 describe('guideText', () => {
@@ -43,6 +55,11 @@ describe('guideText', () => {
   it('{n}을 넘긴 숫자로 바꾼다', () => {
     expect(guideText('en', 'moveLimit', false, 24)).toBe('You have 24 moves to get home')
     expect(guideText('ko', 'moveLimit', false, 24)).toBe('24번 안에 도착해야 해요')
+  })
+
+  it('문구가 없는 id는 키 이름을 돌려준다', () => {
+    expect(guideText('ko', 'nothing', false)).toBe('guide.nothing')
+    expect(guideText('ko', 'nothing', true, 5)).toBe('guide.nothing')
   })
 })
 

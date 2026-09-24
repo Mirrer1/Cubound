@@ -129,7 +129,15 @@ describe('stars', () => {
 
 describe('deadEnds', () => {
   it('상자가 없는 맵은 막히는 상태가 없다', () => {
-    expect(deadEnds(STAGE)).toEqual({ status: 'ok', states: 8, dead: 0, earliest: null })
+    expect(deadEnds(STAGE)).toEqual({
+      status: 'ok',
+      states: 8,
+      dead: 0,
+      earliest: null,
+      beyond: 0,
+      beyondEarliest: null,
+      depth: Infinity,
+    })
   })
 
   it('상자를 엉뚱한 빈 칸에 밀어 넣으면 막힌 상태가 된다', () => {
@@ -155,7 +163,15 @@ describe('deadEnds', () => {
     }
 
     expect(solve(stage)).toEqual({ status: 'solved', moves: 2, path: ['right', 'right'] })
-    expect(deadEnds(stage)).toEqual({ status: 'ok', states: 7, dead: 1, earliest: 4 })
+    expect(deadEnds(stage)).toEqual({
+      status: 'ok',
+      states: 7,
+      dead: 1,
+      earliest: 4,
+      beyond: 1,
+      beyondEarliest: 4,
+      depth: Infinity,
+    })
   })
 })
 
@@ -324,6 +340,29 @@ const DEEP_SWAMP_STAGE: Stage = {
   swamp: ['.......', '.......', '.#.###.'],
   rules: { swampDeepen: true },
 }
+
+describe('deadEnds 깊어지는 늪', () => {
+  it('이동 제한까지만 펼치고 수에 걸린 막힘과 구조적 막힘을 따로 센다', () => {
+    const stage: Stage = { ...DEEP_SWAMP_STAGE, rules: { swampDeepen: true, moveLimit: 20 } }
+
+    const result = deadEnds(stage)
+
+    expect(result.status).toBe('ok')
+    if (result.status !== 'ok') return
+    expect(result.depth).toBe(20)
+    // 되돌릴 수 없는 것이 없는 맵이라 구조적으로는 막히지 않고 수에만 걸린다
+    expect(result.dead).toBe(0)
+    expect(result.beyond).toBeGreaterThan(0)
+  })
+
+  it('이동 제한이 없으면 ★★ 기준까지 펼쳐 끝낸다', () => {
+    const result = deadEnds(DEEP_SWAMP_STAGE)
+
+    expect(result.status).toBe('ok')
+    if (result.status !== 'ok') return
+    expect(result.depth).toBe(moveLimit(19))
+  })
+})
 
 describe('solve 깊어지는 늪', () => {
   it('빠진 횟수가 다르면 다른 상태로 보고 먼 길을 고른다', () => {

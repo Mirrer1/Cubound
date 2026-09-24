@@ -12,6 +12,7 @@ export const ko: Partial<Texts> = {
   'select.back': '타이틀로',
   'select.previousWorld': '이전 월드',
   'select.nextWorld': '다음 월드',
+  'select.chapters': '장 고르기',
 
   'play.guide': '가이드 다시 보기',
   'play.restart': '다시 하기 (R)',
@@ -52,6 +53,10 @@ export const ko: Partial<Texts> = {
   'guide.dirLimit': '이 방향으로는 {n}번만 갈 수 있으니 갈 길을 골라요',
   'guide.swamp': '늪에서는 빠져나올 때까지 방향키를 눌러요',
   'guide.swamp.touch': '늪에서는 빠져나올 때까지 밀어요',
+  'guide.swampDeepen': '늪에 빠질 때마다 깊어져서 나오는 데 한 수가 더 들어요',
+
+  'chapter.1': '돌 위의 첫걸음',
+  'chapter.2': '풀이 우거진 길',
 
   'world.1': '낮은 계단의 땅',
   'world.1.note': '한 칸씩 오르내리는 법을 익히는 열 판입니다.',
@@ -129,4 +134,5 @@ export const ko: Partial<Texts> = {
   'stage.6-7': '올림판',
   'stage.6-8': '늦은 차',
   'stage.6-9': '걸침',
+  'stage.6-10': '깊어짐',
 }

@@ -19,6 +19,9 @@ const pad = (text: string, size: number) => text + ' '.repeat(Math.max(0, size -
 
 const row = (label: string, value: string) => console.log(`  ${label}  ${value}`)
 
+const deadText = (count: number, earliest: number | null) =>
+  count === 0 ? '0개' : `${count}개 (가장 빨리 ${earliest}수)`
+
 const jsonIn = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true })
     .sort((a, b) => a.name.localeCompare(b.name))
@@ -112,14 +115,19 @@ const check = (file: string): Summary | null => {
             : ` (제한 ${pushLimit}번, 여유 ${pushLimit - pushed.pushes}번)`),
   )
   row('풀이', path.map((d) => ARROWS[d]).join(' '))
-  row('탐색', stuck.status === 'ok' ? `상태 ${stuck.states}개, ${ms}ms` : `한도 초과, ${ms}ms`)
+  row(
+    '탐색',
+    stuck.status !== 'ok'
+      ? `한도 초과, ${ms}ms`
+      : `상태 ${stuck.states}개${Number.isFinite(stuck.depth) ? ` (${stuck.depth}수까지)` : ''}, ${ms}ms`,
+  )
   row(
     '막힘',
     stuck.status !== 'ok'
       ? '탐색 한도 초과'
-      : stuck.dead === 0
-        ? '0개'
-        : `${stuck.dead}개 (가장 빨리 ${stuck.earliest}수)`,
+      : stuck.beyond === stuck.dead
+        ? deadText(stuck.dead, stuck.earliest)
+        : `제한 ${deadText(stuck.beyond, stuck.beyondEarliest)}, 구조 ${deadText(stuck.dead, stuck.earliest)}`,
   )
 
   const ways = counted.status === 'ok' ? counted.count : 0

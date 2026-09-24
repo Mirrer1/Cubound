@@ -12,6 +12,7 @@ export const zhHans: Partial<Texts> = {
   'select.back': '回到标题',
   'select.previousWorld': '上一个世界',
   'select.nextWorld': '下一个世界',
+  'select.chapters': '选择章节',
 
   'play.guide': '再看一次引导',
   'play.restart': '重新开始 (R)',
@@ -52,6 +53,10 @@ export const zhHans: Partial<Texts> = {
   'guide.dirLimit': '这个方向只能走 {n} 次，选好你的路',
   'guide.swamp': '在泥沼里要一直按方向键，直到脱身',
   'guide.swamp.touch': '在泥沼里要一直滑动，直到脱身',
+  'guide.swampDeepen': '每陷入一次泥沼就更深一层，脱身要多花一步',
+
+  'chapter.1': '踏石之路',
+  'chapter.2': '草木丛生之路',
 
   'world.1': '矮阶之地',
   'world.1.note': '十个关卡，练习一格一格地上下移动。',
@@ -129,4 +134,5 @@ export const zhHans: Partial<Texts> = {
   'stage.6-7': '升降板',
   'stage.6-8': '慢车',
   'stage.6-9': '搭架',
+  'stage.6-10': '渐深',
 }

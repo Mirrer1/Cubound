@@ -10,6 +10,7 @@ export const en = {
   'select.back': 'Back',
   'select.previousWorld': 'Previous world',
   'select.nextWorld': 'Next world',
+  'select.chapters': 'Choose a chapter',
 
   'play.guide': 'Show guide again',
   'play.restart': 'Restart (R)',
@@ -51,6 +52,10 @@ export const en = {
   'guide.dirLimit': 'You can move this way only {n} times, so choose your route',
   'guide.swamp': 'In the mire you keep pressing until you pull free',
   'guide.swamp.touch': 'In the mire you keep swiping until you pull free',
+  'guide.swampDeepen': 'Every mire sinks deeper, so pulling free takes one more move each time',
+
+  'chapter.1': 'The Stone Path',
+  'chapter.2': 'The Overgrown Path',
 
   'world.1': 'Land of Low Steps',
   'world.1.note': 'Ten stages to learn stepping up and down, one tile at a time.',
@@ -129,6 +134,7 @@ export const en = {
   'stage.6-7': 'The Lift',
   'stage.6-8': 'The Late Ride',
   'stage.6-9': 'The Span',
+  'stage.6-10': 'The Deepening',
 }
 
 export type Texts = typeof en

@@ -27,8 +27,9 @@ export const DICTIONARIES: Record<Language, Partial<Texts>> = {
   es,
 }
 
+// 어느 사전에도 없는 키는 키 이름을 그대로 쓴다. 문구 하나가 빠져도 화면은 열려야 한다
 const lookup = (language: Language, key: string) =>
-  DICTIONARIES[language]?.[key as TextKey] ?? en[key as TextKey]
+  DICTIONARIES[language]?.[key as TextKey] ?? en[key as TextKey] ?? key
 
 // n을 넘기면 문구의 {n} 자리를 채운다
 const fill = (value: string, n?: number) =>
@@ -46,6 +47,8 @@ export const stageTextKey = (id: string) => `stage.${id}` as TextKey
 export const worldTextKey = (world: number) => `world.${world}` as TextKey
 
 export const worldNoteKey = (world: number) => `world.${world}.note` as TextKey
+
+export const chapterTextKey = (chapter: number) => `chapter.${chapter}` as TextKey
 
 export const isLanguage = (value: unknown): value is Language =>
   LANGUAGES.some((language) => language.code === value)

@@ -12,6 +12,7 @@ export const ja: Partial<Texts> = {
   'select.back': 'タイトルへ',
   'select.previousWorld': '前のワールド',
   'select.nextWorld': '次のワールド',
+  'select.chapters': '章を選ぶ',
 
   'play.guide': 'ガイドをもう一度見る',
   'play.restart': 'やり直す (R)',
@@ -52,6 +53,10 @@ export const ja: Partial<Texts> = {
   'guide.dirLimit': 'この向きへ進めるのは {n} 回なので、道を選びましょう',
   'guide.swamp': '沼では抜け出すまで方向キーを押します',
   'guide.swamp.touch': '沼では抜け出すまでスワイプします',
+  'guide.swampDeepen': '沼は入るたびに深まり、抜け出すのに一手ずつ多くかかります',
+
+  'chapter.1': '石を踏む道',
+  'chapter.2': '草が茂る道',
 
   'world.1': '低い段差の地',
   'world.1.note': '一マスずつ上り下りする動きを覚える十のステージです。',
@@ -129,4 +134,5 @@ export const ja: Partial<Texts> = {
   'stage.6-7': '上げ板',
   'stage.6-8': '鈍行',
   'stage.6-9': '架け',
+  'stage.6-10': '深まり',
 }

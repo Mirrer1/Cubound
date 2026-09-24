@@ -12,6 +12,7 @@ export const es: Partial<Texts> = {
   'select.back': 'Volver',
   'select.previousWorld': 'Mundo anterior',
   'select.nextWorld': 'Mundo siguiente',
+  'select.chapters': 'Elegir capítulo',
 
   'play.guide': 'Ver la guía otra vez',
   'play.restart': 'Reiniciar (R)',
@@ -54,6 +55,10 @@ export const es: Partial<Texts> = {
   'guide.dirLimit': 'Solo puedes moverte en esta dirección {n} veces, así que elige tu ruta',
   'guide.swamp': 'En el lodazal sigues pulsando hasta salir',
   'guide.swamp.touch': 'En el lodazal sigues deslizando hasta salir',
+  'guide.swampDeepen': 'Cada lodazal se hunde más, así que salir cuesta un movimiento más cada vez',
+
+  'chapter.1': 'El Camino de Piedra',
+  'chapter.2': 'El Camino Cubierto de Hierba',
 
   'world.1': 'Tierra de Escalones Bajos',
   'world.1.note': 'Diez niveles para aprender a subir y bajar, una casilla cada vez.',
@@ -132,4 +137,5 @@ export const es: Partial<Texts> = {
   'stage.6-7': 'La Plataforma',
   'stage.6-8': 'El Tren Lento',
   'stage.6-9': 'El Travesaño',
+  'stage.6-10': 'La Hondura',
 }
