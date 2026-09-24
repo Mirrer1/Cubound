@@ -515,11 +515,11 @@ const BoardCell = ({
       ))}
       {sunk ? (
         <>
-          <clipPath id="swamp-clip">
+          <clipPath id={`swamp-clip-${x}-${y}`}>
             <polygon points={mudClipPoints(x, mudY, swampStage >= 0 ? MUD_DIP : 0)} />
           </clipPath>
-          <g clipPath="url(#swamp-clip)" transform={`translate(0 ${sink})`}>
-            {children}
+          <g clipPath={`url(#swamp-clip-${x}-${y})`}>
+            <g transform={`translate(0 ${sink})`}>{children}</g>
           </g>
         </>
       ) : (
