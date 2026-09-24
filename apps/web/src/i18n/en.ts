@@ -29,7 +29,7 @@ export const en = {
   'guide.next': 'Next',
   'guide.move': 'Use the arrow keys to roll one tile at a time',
   'guide.move.touch': 'Swipe diagonally to roll the cube',
-  'guide.goal': 'This is home. Head for the hole',
+  'guide.goal': 'The hole is home, so head for it',
   'guide.height': 'You can roll down, but not up',
   'guide.box': 'Roll into the box to push it',
   'guide.restart': 'Stuck? Start over here, or press R',
@@ -38,17 +38,19 @@ export const en = {
   'guide.door': 'The door opens while the switch is pressed',
   'guide.ladder': 'Roll onto the ladder tile to pick it up',
   'guide.climb':
-    'Set the ladder against a tile one level up, then climb. Roll back down to pick it up again',
+    'Set the ladder against a tile one level up and climb, then roll back down to pick it up',
   'guide.moveLimit': 'You have {n} moves to get home',
-  'guide.pushLimit': 'You can push a box {n} times. Let the ice carry it',
+  'guide.pushLimit': 'You can push a box only {n} times, so let the ice carry it',
   'guide.ice': 'You slide across ice until something stops you',
   'guide.lift': 'The switch lifts the plate while something holds it down',
   'guide.crack': 'Tiles crack as you step off them, then fall away',
   'guide.warp': 'Step onto a linked tile to come out at the other one',
-  'guide.climbLimit': 'You can climb {n} times. Choose where to spend them',
-  'guide.tram': 'The platform moves one tile per turn. Roll into a blocked side to ride along',
-  'guide.rideLimit': 'You can ride a platform {n} times. Choose where to get off',
-  'guide.dirLimit': 'You can move this way {n} times. Choose your route',
+  'guide.climbLimit': 'You can climb only {n} times, so choose where to spend them',
+  'guide.tram': 'The platform moves one tile per turn, so roll into a blocked side to ride along',
+  'guide.rideLimit': 'You can ride a platform only {n} times, so choose where to get off',
+  'guide.dirLimit': 'You can move this way only {n} times, so choose your route',
+  'guide.swamp': 'In the mire you keep pressing until you pull free',
+  'guide.swamp.touch': 'In the mire you keep swiping until you pull free',
 
   'world.1': 'Land of Low Steps',
   'world.1.note': 'Ten stages to learn stepping up and down, one tile at a time.',
@@ -115,6 +117,10 @@ export const en = {
   'stage.5-8': 'The Roundabout',
   'stage.5-9': 'The Broken Line',
   'stage.5-10': 'The Road So Far',
+
+  'world.6': 'Land of Clinging Mud',
+  'world.6.note': 'The mud holds your feet. Choose where to step in before you do.',
+  'stage.6-1': 'The Mire',
 }
 
 export type Texts = typeof en
