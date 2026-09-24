@@ -22,7 +22,98 @@
 
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#6E6C68">
       <span style="white-space:nowrap">CUBOUND · CHAPTER 문 v2</span>
-      <span style="white-space:nowrap">누를 수 있다 · 누르면 장이 바뀐다</span>
+      <span style="white-space:nowrap">확정 · 3안 (뒤에 겹친 판)</span>
+    </div>
+
+    <div id="decision" style="background:#EDF0E7;border-radius:20px;padding:26px 28px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.18em;background:#3A3936;color:#EDF0E7;padding:4px 9px;border-radius:6px;white-space:nowrap;flex:none">확정</span>
+        <span style="font-size:24px;font-weight:400">3안 · 뒤에 겹친 판</span>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;color:#6E6C68;letter-spacing:0.1em">구현됨 · 2026-09</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:12px">
+        <div style="background:#F4F6EE;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#8A8781">1안을 뺀 이유</span>
+          <span style="font-size:13.5px;line-height:1.6;color:#3A3936;word-break:keep-all;text-wrap:pretty">이 게임은 방향키로 움직입니다. ↑가 "위 방향키로 올라간다"로 읽힙니다.</span>
+        </div>
+        <div style="background:#F4F6EE;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#8A8781">2안을 뺀 이유</span>
+          <span style="font-size:13.5px;line-height:1.6;color:#3A3936;word-break:keep-all;text-wrap:pretty">작은 세계 창이 장이 아니라 "이 월드의 썸네일"로 읽힙니다.</span>
+        </div>
+        <div style="background:#F4F6EE;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;color:#8A8781">구조가 시안과 다름</span>
+          <span style="font-size:13.5px;line-height:1.6;color:#3A3936;word-break:keep-all;text-wrap:pretty">장 고르기는 별도 화면이 아닙니다. 스테이지 목록 안에서 카드 격자만 장 카드로 바뀌고(0.2초 페이드), 헤더(←, 별, ‹ ›)는 그대로입니다. 뒤로 가기가 어디로 가는지, ←가 한 층 위인지 타이틀인지, 누르면 무엇이 뜨는지를 따로 알릴 필요가 없어졌습니다.</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">흐름 · 기준 (v1 A안 흐름표를 옮기고 확정 구조에 맞춤)</span>
+        <div style="background:#F4F6EE;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ flow }}" as="r" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;align-items:baseline">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#8A8781">{{ r.k }}</span>
+              <span style="font-size:13.5px;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ r.v }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">펼친 장 카드 · 목록 격자 자리</span>
+        <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="width:360px;box-sizing:border-box;background:#E2E6DB;border-radius:26px;padding:14px 8px 14px">
+              <div style="background:#EDF0E7;border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="2">
+                  <div style="min-height:76px;box-sizing:border-box;border-radius:16px;padding:8px 14px 8px 8px;display:flex;align-items:center;gap:14px;background:#F4F6EE;box-shadow:{{ c.ring }}">
+                    <div style="width:60px;height:60px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;background:{{ c.win }}">
+                      <svg viewBox="-120 -92 240 196" style="width:50px;height:auto;display:block"><sc-for list="{{ c.shapes }}" as="p" hint-placeholder-count="12"><polygon points="{{ p.d }}" fill="{{ p.f }}"></polygon></sc-for></svg>
+                    </div>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+                      <div style="display:flex;justify-content:space-between;gap:8px;font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#8A8781;white-space:nowrap"><span>{{ c.label }}</span><span>{{ c.stars }}</span></div>
+                      <span style="font-size:16px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span>
+                      <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:3px"><sc-for list="{{ c.segs }}" as="s" hint-placeholder-count="5"><span style="height:3px;border-radius:2px;overflow:hidden;display:block;background:#E3E1DC"><span style="display:block;height:100%;background:#3A3936;width:{{ s.w }}"></span></span></sc-for></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#6E6C68">폰 · 가로 화면 · 가로 줄</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:#E2E6DB;border-radius:22px;padding:14px">
+              <div style="background:#EDF0E7;border-radius:18px;padding:18px;display:flex;gap:16px">
+                <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="2">
+                  <div style="width:290px;height:304px;box-sizing:border-box;border-radius:20px;padding:12px 12px 20px;display:flex;flex-direction:column;gap:16px;background:#F4F6EE;box-shadow:{{ c.ring }}">
+                    <div style="height:148px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:{{ c.win }}">
+                      <svg viewBox="-120 -92 240 196" style="width:150px;height:auto;display:block"><sc-for list="{{ c.shapes }}" as="p" hint-placeholder-count="12"><polygon points="{{ p.d }}" fill="{{ p.f }}"></polygon></sc-for></svg>
+                    </div>
+                    <div style="padding:0 8px;display:flex;flex-direction:column;gap:8px;flex:1">
+                      <div style="display:flex;justify-content:space-between;gap:10px;font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em;color:#8A8781"><span>{{ c.label }}</span><span style="letter-spacing:0.08em">{{ c.range }}</span></div>
+                      <span style="font-size:22px;font-weight:400;white-space:nowrap">{{ c.name }}</span>
+                      <div style="margin-top:auto;display:flex;align-items:center;gap:12px">
+                        <div style="flex:1;display:grid;grid-template-columns:repeat(5, 1fr);gap:4px"><sc-for list="{{ c.segs }}" as="s" hint-placeholder-count="5"><span style="height:5px;border-radius:3px;overflow:hidden;display:block;background:#E3E1DC"><span style="display:block;height:100%;background:#3A3936;width:{{ s.w }}"></span></span></sc-for></div>
+                        <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;color:#8A8781;white-space:nowrap">{{ c.stars }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#6E6C68">데스크톱 · 세로 카드 290 (1700px 이상 320)</span>
+          </div>
+        </div>
+        <div style="background:#F4F6EE;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ spec }}" as="i" hint-placeholder-count="8">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="width:18px;height:18px;flex:none;border-radius:5px;border:1px solid rgba(58,57,54,0.1);background:{{ i.sw }}"></span>
+              <span style="font-size:13px;color:#5F5D59;flex:1;min-width:0">{{ i.k }}</span>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:11.5px;text-align:right">{{ i.v }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <span style="font-size:13px;color:#6E6C68;line-height:1.6;word-break:keep-all;text-wrap:pretty">아래 1·2·3안은 결정 당시의 비교 시안입니다. 3안의 누름 상태가 구현 기준이고, 1·2안은 기록으로만 남깁니다.</span>
     </div>
 
     <div style="display:flex;flex-direction:column;gap:10px;max-width:840px">
@@ -33,8 +124,9 @@
 
     <div id="1" style="display:flex;flex-direction:column;gap:18px">
       <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
-        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.18em;background:#3A3936;color:#EDF0E7;padding:4px 9px;border-radius:6px">1</span>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.18em;background:#3A3936;color:#EDF0E7;padding:4px 9px;border-radius:6px;white-space:nowrap;flex:none">1</span>
         <span style="font-size:22px;font-weight:400">버튼 면 + 위 화살표</span>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;color:#6E6C68;letter-spacing:0.1em">뺌 · 방향키와 겹침</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">
         <sc-for list="{{ widths }}" as="w" hint-placeholder-count="2">
@@ -119,9 +211,9 @@
 
     <div id="2" style="display:flex;flex-direction:column;gap:18px">
       <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
-        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.18em;background:#3A3936;color:#EDF0E7;padding:4px 9px;border-radius:6px">2</span>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.18em;background:#3A3936;color:#EDF0E7;padding:4px 9px;border-radius:6px;white-space:nowrap;flex:none">2</span>
         <span style="font-size:22px;font-weight:400">카드 면 + 장의 세계 창</span>
-        <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;color:#6E6C68;letter-spacing:0.1em">권장</span>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;color:#6E6C68;letter-spacing:0.1em">뺌 · 월드 썸네일로 읽힘 (당시 권장안)</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">
         <sc-for list="{{ widths }}" as="w" hint-placeholder-count="2">
@@ -220,8 +312,9 @@
 
     <div id="3" style="display:flex;flex-direction:column;gap:18px">
       <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
-        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.18em;background:#3A3936;color:#EDF0E7;padding:4px 9px;border-radius:6px">3</span>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.18em;background:#3A3936;color:#EDF0E7;padding:4px 9px;border-radius:6px;white-space:nowrap;flex:none">3</span>
         <span style="font-size:22px;font-weight:400">뒤에 겹친 판</span>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;color:#3A3936;letter-spacing:0.1em">확정</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">
         <sc-for list="{{ widths }}" as="w" hint-placeholder-count="2">
@@ -337,12 +430,49 @@ class Component extends DCLogic {
     out.push(...this.prism(0, -26 - 30, 60, 30, '#A1BFD6', '#6D889B', '#82A3BA'));
     return out;
   }
+  patch(a, b, sl, sr) {
+    const out = [];
+    [[0, 0], [1, 0], [0, 1], [1, 1]].forEach(([x, y]) => {
+      const t = (x + y) % 2 ? b : a, cx = (x - y) * 52, cy = (x + y) * 26 - 26;
+      out.push(...this.prism(cx, cy, 104, 16, t, sl, sr));
+    });
+    out.push(...this.prism(0, -26 - 30, 60, 30, '#A1BFD6', '#6D889B', '#82A3BA'));
+    return out;
+  }
   renderVals() {
+    const ch = (n, name, w, win, a, b, sl, sr, now) => ({
+      label: 'CHAPTER ' + n, range: ((n - 1) * 50 + 1) + '–' + (n * 50), name, win,
+      stars: w.reduce((s, v) => s + v, 0) + ' / 150 ◆', ring: now ? 'inset 0 0 0 1.5px #3A3936' : 'none',
+      segs: w.map(v => ({ w: Math.round(v / 30 * 100) + '%' })), shapes: this.patch(a, b, sl, sr)
+    });
+    const flow = [
+      { k: '여는 곳', v: '목록 헤더의 월드 이름 덩이(뒤에 겹친 CHAPTER 판 포함) 전체. 누르면 카드 격자가 장 카드로 바뀝니다(0.2초 페이드). 헤더는 그대로입니다.' },
+      { k: '고른 뒤', v: '다른 장을 고르면 그 장에서 열린 마지막 월드 목록으로 갑니다. 지금 있는 장을 다시 고르면 보던 월드로 돌아갑니다.' },
+      { k: '빠져나가기', v: '덩이를 다시 누르거나 Esc, 브라우저 뒤로 가기로 보던 월드 목록으로 돌아갑니다. ←는 펼친 상태에서도 타이틀로 갑니다.' },
+      { k: '주소', v: '#/stages/6 → #/stages/6/chapters. 새로고침하면 펼친 채로 돌아오고, 뒤로 가기가 목록으로 갑니다.' },
+      { k: '‹ ›', v: '한 장 안에서만 움직입니다(시안에서 바뀜). 장의 끝에서 다음 장으로 이어 넘기지 않습니다. 장을 넘는 길은 덩이 하나뿐입니다.' },
+      { k: '키보드', v: 'Tab 순서는 ← → 이름 덩이 → ‹ › → 카드. 폰에서 덩이가 아랫줄로 내려가도 DOM 순서는 같습니다. 펼치면 초점이 지금 장 카드로 가고, 방향키로 칸을 옮기고 Enter로 고릅니다.' }
+    ];
+    const spec = [
+      { k: 'CHAPTER 1 창', v: '#E9E7E2 · 땅 #EDEBE6 / #E7E5E0 · 옆면 #C6C3BC / #D9D6D0', sw: '#E9E7E2' },
+      { k: 'CHAPTER 2 창', v: '#E2E6DB · 땅 #EAEBE0 / #E2E5DA · 옆면 #BFC1B4 / #D2D4C8', sw: '#E2E6DB' },
+      { k: '장 카드 면', v: '그 목록 화면의 카드 면 (CHAPTER 2 화면 #F4F6EE)', sw: '#F4F6EE' },
+      { k: '지금 장 표시', v: 'inset 1.5px #3A3936', sw: '#3A3936' },
+      { k: '진행 막대', v: '월드 5칸 · 바탕 #E3E1DC · 채움 #3A3936', sw: '#E3E1DC' },
+      { k: '폰 · 가로 화면', v: '가로 줄 · 창 60×60 왼쪽 · 모서리 16 · 이름 Jost 16', sw: '#F4F6EE' },
+      { k: '데스크톱', v: '세로 카드 290 × 304 (1700px 이상 320) · 창 높이 148 · 이름 Jost 22', sw: '#F4F6EE' },
+      { k: '창 안', v: '그 장의 세계 색 칸 넷 + 큐브 #8FB3CC 하나', sw: '#8FB3CC' }
+    ];
+    const chapters = [
+      ch(1, '돌 위의 첫걸음', [30, 30, 28, 26, 22], '#E9E7E2', '#EDEBE6', '#E7E5E0', '#C6C3BC', '#D9D6D0', false),
+      ch(2, '풀이 우거진 길', [11, 0, 0, 0, 0], '#E2E6DB', '#EAEBE0', '#E2E5DA', '#BFC1B4', '#D2D4C8', true)
+    ];
     const stub = (n, kind) => ({
       n, bg: kind === 'lock' ? '#E7EAE0' : '#F4F6EE', ink: kind === 'lock' ? '#A9A6A0' : '#3A3936',
       ring: kind === 'now' ? 'inset 0 0 0 1.5px #3A3936' : 'none'
     });
     return {
+      flow, spec, chapters,
       widths: [{ px: '320px', label: '320' }, { px: '360px', label: '360' }],
       stubs: [stub('01', 'now'), stub('02', 'lock')],
       win: this.win(),
@@ -356,7 +486,7 @@ class Component extends DCLogic {
         { k: '처음 보는 사람', v: '스테이지 카드와 같은 카드 면이라 누르는 것이고, 왼쪽 창이 장 고르기 화면의 카드 창과 같은 그림이라 "이 장의 창을 열면 장들이 나온다"로 이어집니다.' },
         { k: '누름', v: '면이 #F4F6EE → #E2E5DA로 내려가고 테두리 1.5px #3A3936이 붙고 1px 내려앉습니다. 동시에 세계 창이 1.06배로 커지며 테두리를 받습니다. 창이 커지는 것이 장 고르기 화면의 창으로 이어지는 전환의 첫 프레임이 됩니다(창이 그 자리에서 장 카드로 커지는 240ms).' },
         { k: '‹ › 넘길 때', v: '창은 월드가 아니라 장을 그리므로 같은 장 안에서는 그대로입니다. WORLD 5 → 6처럼 장의 경계를 넘을 때만 창의 색이 바뀌고, 그 순간이 "이 창은 장이다"를 가르칩니다.' },
-        { k: '권하는 이유', v: '두 문제를 한 물건이 같이 풉니다. 카드 면이 "누른다"를, 세계 창이 "어디로"를 말하고, 장이 바뀌었다는 것을 색으로 알린다는 이 게임의 원칙과도 맞습니다. 세 안 중 새 기호(↑, 삼각)를 배우지 않아도 되는 유일한 안입니다.' }
+        { k: '당시 권한 이유', v: '두 문제를 한 물건이 같이 풉니다. 카드 면이 "누른다"를, 세계 창이 "어디로"를 말하고, 장이 바뀌었다는 것을 색으로 알린다는 이 게임의 원칙과도 맞습니다. 세 안 중 새 기호(↑, 삼각)를 배우지 않아도 되는 유일한 안입니다.' }
       ],
       info3: [
         { k: '처음 보는 사람', v: '월드 카드 뒤에 CHAPTER 2 판이 한 겹 더 보여 "이 월드는 저 장 안에 있다"가 그림으로 읽히고, 탭 오른쪽 끝의 위를 향한 삼각이 뒤 판으로 올라간다는 것을 가리킵니다.' },

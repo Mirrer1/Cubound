@@ -84,14 +84,24 @@
     return out;
   };
 
-  const MUSH = { idle: { st: 14, cs: 0.48, ct: 6, d: 3 }, pressed: { st: 9, cs: 0.54, ct: 5, d: 2 }, spring: { st: 18, cs: 0.44, ct: 6, d: 3 } };
+  const MUSH = {
+    idle: { st: 14, cs: 0.48, ct: 6, d: 3 }, pressed: { st: 9, cs: 0.54, ct: 5, d: 2 }, spring: { st: 18, cs: 0.44, ct: 6, d: 3 },
+    occupied: { st: 2, cs: 0.66, ct: 3, d: 0 },
+    wilting: { st: 8, cs: 0.5, ct: 4, d: 2, w: 0.5 },
+    withered: { st: 3, cs: 0.56, ct: 3, d: 2, w: 1 }
+  };
+  const wither = w => ({
+    t: mix(C.capT, C.stemL, 0.9 * w), l: mix(C.capL, mix(C.stemL, '#000000', 0.12), 0.9 * w), r: mix(C.capR, C.stemL, 0.9 * w),
+    s: mix(C.stemT, C.stemL, 0.5 * w)
+  });
   const mushroom = (cx, cy, st) => {
-    const S = MUSH[st] || MUSH.idle, out = [];
+    const S = MUSH[st] || MUSH.idle, out = [], k = wither(S.w || 0);
     out.push(plate(cx, cy, 0.4, mix(C.a, '#000000', 0.08)));
-    out.push(...block(cx, cy, 0.2, 0, S.st, C.stemT, C.stemL, C.stemR));
-    out.push(...block(cx, cy, S.cs, S.st, S.ct, C.capT, C.capL, C.capR));
-    out.push(...block(cx, cy, S.cs * 0.6, S.st + S.ct, S.d, mix(C.capT, '#FFFFFF', 0.12), C.capL, C.capR));
-    return { shapes: out, top: S.st + S.ct + S.d };
+    out.push(...block(cx, cy, 0.2, 0, S.st, k.s, C.stemL, C.stemR));
+    const c = S.du ? pt(cx, cy, S.du, -S.du) : [cx, cy], z = S.st - (S.dz || 0);
+    out.push(...block(c[0], c[1], S.cs, z, S.ct, k.t, k.l, k.r));
+    if (S.d) out.push(...block(c[0], c[1], S.cs * 0.6, z + S.ct, S.d, mix(k.t, '#FFFFFF', 0.12), k.l, k.r));
+    return { shapes: out, top: z + S.ct + S.d };
   };
 
   const vineCell = (cx, cy, cd) => {
@@ -201,5 +211,5 @@
     }
   });
 
-  window.CuboundIso = { TW, TH, LV, TK, D, C, mix, tone, side, scene, fit, mixed };
+  window.CuboundIso = { TW, TH, LV, TK, D, C, mix, tone, side, scene, fit, mixed, wither, MUSH };
 })();

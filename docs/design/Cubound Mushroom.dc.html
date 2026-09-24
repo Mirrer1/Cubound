@@ -26,7 +26,7 @@
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;max-width:780px">
       <span style="font-size:32px;font-weight:400;letter-spacing:-0.01em">버섯</span>
-      <span style="font-size:14.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">밟으면 그 방향으로 두 칸 건너뜁니다. 사이 칸이 벽이든 구덩이든 넘고, 착지할 칸이 막혀 있으면 뛰지 않습니다.</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">밟으면 그 방향으로 두 칸 건너뜁니다. 사이 칸은 높이를 보지 않고 넘습니다. 착지할 칸이 지금 칸보다 두 층 이상 높거나, 맵 밖이거나, 바닥 없는 구덩이면 뛰지 않고 버섯 위에 올라섭니다. 한 층 높은 칸까지는 뛰어오르고, 내려가는 것은 제한이 없습니다. 착지한 칸이 또 버섯이면 이어서 튀고, 상자도 같은 규칙으로 날아갑니다. 평소에는 밟아도 사라지지 않습니다.</span>
       <span style="font-size:14.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">짧은 대 위에 넓은 갓을 얹었습니다. 대가 좁고 갓이 넓어 칸 위에 놓인 물건, 발을 얹는 판으로 읽힙니다. 밟히면 대가 갓 아래로 숨으며 갓이 넓고 얇아지고, 펴질 때는 대가 길어지고 갓이 좁아집니다. 가장 높은 순간도 27px로 한 층(30)보다 낮습니다. 갓은 지형 무채색과 도구 옐로 사이의 옅은 흙분홍이라 둘과 섞이지 않습니다.</span>
     </div>
 
@@ -42,6 +42,35 @@
             </svg>
             <span style="font-size:15px;font-weight:400">{{ s.label }}</span>
             <span style="font-size:12.5px;color:#6E6C68;line-height:1.55;word-break:keep-all;text-wrap:pretty">{{ s.note }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">70번 보스 · 밟히면 시듦</span>
+      <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:820px;word-break:keep-all;text-wrap:pretty">시든 버섯은 대가 거의 사라지고 갓이 바닥에 주저앉은 판 위에, 멀쩡할 때와 같은 비율의 작은 머리 판이 하나 얹힌 8px 형태입니다. 갓과 머리 두 단이 남아 "버섯이 있었다"가 읽힙니다. 멀쩡한 버섯(23px, 흙분홍)과는 높이와 색이 둘 다 다르고, 평지와는 칸 위에 남은 판 하나로 갈립니다. 색은 새로 만들지 않고 갓 색을 대의 그늘 색(#CFC9B9) 쪽으로 90% 옮겨 흙분홍이 거의 남지 않은 따뜻한 회색이 됩니다. 분홍이 남은 것만 세면 됩니다. 3월드 무너지는 칸이 내려앉는 것처럼 "낮아졌다"가 곧 "다 썼다"입니다.</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px">
+        <sc-for list="{{ frames }}" as="s" hint-placeholder-count="4">
+          <div style="background:#EFF1EA;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px">
+            <svg viewBox="{{ frVb }}" style="width:100%;height:auto;display:block">
+              <sc-for list="{{ s.shapes }}" as="p" hint-placeholder-count="6">
+                <polygon points="{{ p.d }}" fill="{{ p.f }}" opacity="{{ p.o }}"></polygon>
+              </sc-for>
+            </svg>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+              <span style="font-size:15px;font-weight:400">{{ s.label }}</span>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#9A9C91;letter-spacing:0.08em">{{ s.t }}</span>
+            </div>
+            <span style="font-size:12.5px;color:#6E6C68;line-height:1.55;word-break:keep-all;text-wrap:pretty">{{ s.note }}</span>
+            <div style="display:flex;align-items:center;gap:10px;border-top:1px solid #E1E4DA;padding-top:8px">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.14em;color:#9A9C91;white-space:nowrap">60PX</span>
+              <svg viewBox="{{ frVb }}" style="width:62px;height:auto;display:block">
+                <sc-for list="{{ s.shapes }}" as="p" hint-placeholder-count="6">
+                  <polygon points="{{ p.d }}" fill="{{ p.f }}" opacity="{{ p.o }}"></polygon>
+                </sc-for>
+              </svg>
+            </div>
           </div>
         </sc-for>
       </div>
@@ -101,13 +130,21 @@ class Component extends DCLogic {
   wait() { if (!window.CuboundIso) { this.tm = setTimeout(() => this.wait(), 40); return; } this.forceUpdate(); }
   renderVals() {
     const K = window.CuboundIso;
-    if (!K) return { states: [], scenes: [], colors: [], css: [], stVb: '0 0 10 10' };
+    if (!K) return { states: [], frames: [], frVb: '0 0 10 10', scenes: [], colors: [], css: [], stVb: '0 0 10 10' };
     const C = K.C;
     const one = o => ({ g: [[0]], objs: { '0,0': [o] } });
     const states = [
       { label: '평소', note: '대 14 + 갓 6 + 머리 3 = 23px. 갓 아래로 대가 7px 보입니다.', def: one({ t: 'mush' }) },
-      { label: '밟히는 순간', note: '대가 9px로 눌려 갓 아래로 숨고, 갓이 0.48 → 0.54로 넓어집니다. 합계 16px.', def: one({ t: 'mush', st: 'pressed', rider: true }) },
-      { label: '펴지는 순간', note: '대가 18px로 늘어 12px 드러나고 갓이 0.44로 좁아지며 큐브를 밀어 올립니다. 합계 27px.', def: one({ t: 'mush', st: 'spring', rider: true, lift: 22 }) }
+      { label: '밟히는 순간', note: '뛰기 직전. 대가 9px로 눌려 갓 아래로 숨고, 갓이 0.48 → 0.54로 넓어집니다. 합계 16px.', def: one({ t: 'mush', st: 'pressed', rider: true }) },
+      { label: '펴지는 순간', note: '대가 18px로 늘어 12px 드러나고 갓이 0.44로 좁아지며 큐브를 밀어 올립니다. 합계 27px.', def: one({ t: 'mush', st: 'spring', rider: true, lift: 22 }) },
+      { label: '못 뛰어서 올라섬', note: '갓이 5px 판으로 납작하게 눌리고 큐브보다 넓게 퍼져 둘레에 분홍 테가 남습니다. 큐브는 바닥에서 5px만 떠 있어 한 층(30)과 헷갈리지 않습니다.', def: one({ t: 'mush', st: 'occupied', rider: true }) },
+      { label: '시든 버섯 (70번)', note: '대 3 + 갓 3 + 머리 2 = 8px. 머리는 갓의 0.6배로 평소와 같은 비율이고, 색이 따뜻한 회색으로 빠집니다.', def: one({ t: 'mush', st: 'withered' }) }
+    ];
+    const frames = [
+      { label: '밟힘', t: '0ms', note: '멀쩡한 버섯. 평소처럼 눌립니다.', def: one({ t: 'mush', st: 'pressed', rider: true }) },
+      { label: '튕김', t: '80ms', note: '펴지며 큐브를 올려 보냅니다. 여기까지는 평소와 같습니다.', def: one({ t: 'mush', st: 'spring', rider: true, lift: 22 }) },
+      { label: '시드는 중', t: '160ms', note: '큐브가 떠난 뒤 대가 8px로 꺾이고 색이 절반쯤 빠집니다.', def: one({ t: 'mush', st: 'wilting' }) },
+      { label: '시듦', t: '240ms', note: '두 단 판으로 주저앉아 멈춥니다. 이후 다시 밟아도 튀지 않습니다.', def: one({ t: 'mush', st: 'withered' }) }
     ];
     const scenes = [
       { title: '벽 너머로 두 칸', note: '버섯을 밟으면 한 층 벽을 넘어 두 칸 앞에 내립니다. 옅은 큐브는 궤적입니다.',
@@ -115,8 +152,14 @@ class Component extends DCLogic {
           objs: { '1,0': [{ t: 'mush', st: 'spring' }, { t: 'cube', z: 40, o: 0.3 }], '2,0': [{ t: 'cube', z: 22, o: 0.5 }], '3,0': [{ t: 'cube' }] } } },
       { title: '구덩이 너머', note: '밟히는 순간. 앞의 구덩이를 건너 두 칸 앞 땅에 내립니다.',
         def: { g: [[0, 0, 'p', 0, 0], [0, 0, 0, 0, 0]], objs: { '1,0': [{ t: 'mush', st: 'pressed', rider: true }] } } },
-      { title: '착지할 칸이 막혀 있을 때', note: '두 칸 앞에 상자가 있어 뛰지 않습니다. 버섯은 눌린 채 큐브를 그대로 받칩니다.',
-        def: { g: [[0, 0, 1, 0], [0, 0, 0, 0]], objs: { '1,0': [{ t: 'mush', st: 'pressed', rider: true }], '3,0': [{ t: 'box' }] } } },
+      { title: '착지할 칸이 두 층 높을 때', note: '두 칸 앞이 두 층 높아 뛰지 않습니다. 큐브는 버섯 칸에 올라서고, 갓은 납작한 판으로 눌려 큐브를 받칩니다.',
+        def: { g: [[0, 0, 0, 2], [0, 0, 0, 0]], objs: { '1,0': [{ t: 'mush', st: 'occupied', rider: true }] } } },
+      { title: '올라선 큐브와 한 층 높은 칸', note: '왼쪽부터 평지 위 큐브, 버섯에 올라선 큐브, 한 층 높은 칸 위 큐브. 버섯 위 큐브는 평지 쪽에 붙어 있고, 한 층 위 큐브와는 25px 차이가 납니다.',
+        def: { g: [[0, 0, 1], [0, 0, 0]], objs: { '0,0': [{ t: 'cube' }], '1,0': [{ t: 'mush', st: 'occupied', rider: true }], '2,0': [{ t: 'cube' }] } } },
+      { title: '70번 보스 · 남은 버섯 세기', note: '시든 것 둘, 멀쩡한 것 넷. 앞 가운데 버섯은 막혀서 올라서기만 해 시들지 않았습니다. 분홍이 남은 것만 세면 됩니다.',
+        def: { g: [[1, 1, 0, 0, 0], [1, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]],
+          objs: { '2,0': [{ t: 'mush', st: 'withered' }], '3,2': [{ t: 'mush', st: 'withered' }], '4,0': [{ t: 'mush' }],
+            '2,1': [{ t: 'mush' }], '0,2': [{ t: 'mush' }], '2,3': [{ t: 'mush', st: 'occupied', rider: true }], '0,0': [{ t: 'hole' }] } } },
       { title: '숲 오브젝트 넷 한 판', note: '버섯은 오른쪽 가운데. 상자 옆에 있어도 형태와 색이 모두 다릅니다.', def: K.mixed() }
     ];
     const colors = [
@@ -127,12 +170,19 @@ class Component extends DCLogic {
       { name: '대 윗면', v: '--color-mushroom-stem-top', hex: C.stemT },
       { name: '대 왼쪽', v: '--color-mushroom-stem-left', hex: C.stemL },
       { name: '대 오른쪽', v: '--color-mushroom-stem-right', hex: C.stemR },
-      { name: '바닥 자국', v: '--color-mushroom-shadow', hex: K.mix(C.a, '#000000', 0.08) }
+      { name: '바닥 자국', v: '--color-mushroom-shadow', hex: K.mix(C.a, '#000000', 0.08) },
+      { name: '시든 갓 윗면', v: '--color-mushroom-withered-top', hex: K.wither(1).t },
+      { name: '시든 갓 왼쪽', v: '--color-mushroom-withered-left', hex: K.wither(1).l },
+      { name: '시든 갓 오른쪽', v: '--color-mushroom-withered-right', hex: K.wither(1).r },
+      { name: '시든 대 윗면', v: '--color-mushroom-withered-stem', hex: K.wither(1).s },
+      { name: '시드는 중 갓 윗면 (160ms)', v: '--color-mushroom-wilting-top', hex: K.wither(0.5).t }
     ];
     const S = states.map(s => ({ label: s.label, note: s.note, shapes: K.scene(s.def) }));
+    const F = frames.map(s => ({ label: s.label, t: s.t, note: s.note, shapes: K.scene(s.def) }));
+    const frVb = K.fit([].concat(...F.map(s => s.shapes)), 14);
     const stVb = K.fit([].concat(...S.map(s => s.shapes)), 14);
     const SC = scenes.map(s => { const shp = K.scene(s.def); return { title: s.title, note: s.note, shapes: shp, vb: K.fit(shp, 14) }; });
-    return { states: S, stVb, scenes: SC, colors, css: colors.map(c => c.v + ': ' + c.hex + ';') };
+    return { states: S, stVb, frames: F, frVb, scenes: SC, colors, css: colors.map(c => c.v + ': ' + c.hex + ';') };
   }
 }
 </script>
