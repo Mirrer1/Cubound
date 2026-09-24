@@ -359,6 +359,14 @@ describe('validateStage', () => {
       'rules.dirLimit.count는 양의 정수여야 한다',
     )
   })
+
+  it('깊어지는 늪은 참이나 거짓이어야 한다', () => {
+    const deepen = (value: unknown) => errorsOf({ ...VALID, rules: { swampDeepen: value } })
+
+    expect(deepen(true)).toEqual([])
+    expect(deepen(false)).toEqual([])
+    expect(deepen(1)).toContain('rules.swampDeepen은 참이나 거짓이어야 한다')
+  })
 })
 
 const TRAM = {

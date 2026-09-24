@@ -111,8 +111,13 @@ export const isIce = (state: GameState, { x, y }: Point) => state.stage.ice?.[y]
 
 const isSwamp = (state: GameState, p: Point) => state.swamps.some((cell) => same(cell, p))
 
-// 늪에 선 큐브는 두 수를 버둥거린 뒤에야 나갈 수 있다
-const struggling = (state: GameState) => state.struggles < STRUGGLES && isSwamp(state, state.player)
+// 깊어지는 늪에서는 빠진 횟수만큼 버둥이 는다. 지금 선 늪이 몇 번째로 빠진 것이냐로 센다
+const strugglesNeeded = (state: GameState) =>
+  state.stage.rules?.swampDeepen ? STRUGGLES + state.sinks - 1 : STRUGGLES
+
+// 늪에 선 큐브는 정해진 수를 버둥거린 뒤에야 나갈 수 있다
+const struggling = (state: GameState) =>
+  isSwamp(state, state.player) && state.struggles < strugglesNeeded(state)
 
 // 상자 위에 올라선 큐브는 얼음 바닥을 밟지 않은 것으로 본다
 const onIce = (state: GameState, p: Point) => isIce(state, p) && !hasBox(state, p)
@@ -145,6 +150,10 @@ export const ridesLeft = (state: GameState) => {
   return limit === undefined ? null : Math.max(limit - state.rides, 0)
 }
 
+// 깊어지는 늪이 아니면 null. 다음에 빠질 늪 칸에 드는 총 수다
+export const nextSwampCost = (state: GameState) =>
+  state.stage.rules?.swampDeepen ? STRUGGLES + state.sinks + 2 : null
+
 // 보스 방향 제한이 없으면 null
 export const dirLeft = (state: GameState) => {
   const limit = state.stage.rules?.dirLimit
@@ -171,6 +180,7 @@ export const createState = (stage: Stage): GameState => ({
   })),
   swamps: readSwamps(stage),
   struggles: 0,
+  sinks: 0,
   ladders: stage.entities.filter((e) => e.type === 'ladder').map(({ x, y }) => ({ x, y })),
   leaningLadders: [],
   carrying: false,
@@ -233,11 +243,13 @@ const arrive = (
   const at = warped ?? stop
   if (warped) events.push({ type: 'warped', from: stop, to: warped })
 
+  // 걸어 들어가든 떨어져 내려앉든 늪 칸에 닿은 이동이 빠진 것이다
   const next: GameState = {
     ...state,
     player: at,
     moves: state.moves + 1,
     struggles: 0,
+    sinks: state.sinks + (isSwamp(state, at) ? 1 : 0),
     cleared: same(at, state.stage.goal),
   }
   if (state.carrying) return { state: next, events }

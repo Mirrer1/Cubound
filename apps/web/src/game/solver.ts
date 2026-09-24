@@ -15,6 +15,12 @@ const points = (list: Point[]) =>
     .sort()
     .join(' ')
 
+// 보스 제한은 빼고 늪이 깊어지는 것은 남긴다. 제한이 너무 작을 때도 진짜 최소 이동 수가 나오고 늪에 드는 수는 그대로다
+const forSearch = (stage: Stage): Stage => ({
+  ...stage,
+  rules: stage.rules?.swampDeepen ? { swampDeepen: true } : undefined,
+})
+
 // 게임 결과가 같은 상태는 같은 키
 const stateKey = (state: GameState) => {
   const filled = state.heights.flatMap((row, y) =>
@@ -36,6 +42,8 @@ const stateKey = (state: GameState) => {
     ...(cracks.length > 0 ? [cracks.join('')] : []),
     // 늪에 선 같은 자리라도 버둥거린 수가 다르면 다른 상태다
     ...(state.stage.swamp ? [`${state.struggles}`, points(state.swamps)] : []),
+    // 깊어지는 늪은 빠진 횟수에 따라 앞으로 드는 수가 다르다
+    ...(state.stage.rules?.swampDeepen ? [`${state.sinks}`] : []),
     ...(state.trams.length > 0
       ? [state.trams.map(({ at, dir }) => `${at}${dir > 0 ? '+' : '-'}`).join(' ')]
       : []),
@@ -44,8 +52,7 @@ const stateKey = (state: GameState) => {
 
 // 너비 우선 탐색으로 최소 이동 경로를 찾는다
 export const solve = (stage: Stage, { maxStates = 1_000_000 } = {}): SolveResult => {
-  // 보스 이동 제한을 빼고 찾아야 제한이 너무 작을 때도 진짜 최소 이동 수가 나온다
-  const start = createState({ ...stage, rules: undefined })
+  const start = createState(forSearch(stage))
   const seen = new Map<string, { parent: string | null; direction: Direction | null }>([
     [stateKey(start), { parent: null, direction: null }],
   ])
@@ -90,7 +97,7 @@ export type PushResult =
 
 // 미는 이동만 한 걸음으로 치는 너비 우선 탐색으로 가장 적게 미는 풀이를 찾는다
 export const minPushes = (stage: Stage, { maxStates = 1_000_000 } = {}): PushResult => {
-  const start = createState({ ...stage, rules: undefined })
+  const start = createState(forSearch(stage))
   const seen = new Set<string>([stateKey(start)])
   let layer: GameState[] = [start]
   let pushes = 0
@@ -147,7 +154,7 @@ interface Explored {
 
 // 시작에서 닿는 모든 상태를 펼친다. 클리어한 상태는 더 두지 않는다
 const explore = (stage: Stage, maxStates: number): Explored | null => {
-  const start = createState({ ...stage, rules: undefined })
+  const start = createState(forSearch(stage))
   const startKey = stateKey(start)
   const found: Explored = {
     keys: [startKey],

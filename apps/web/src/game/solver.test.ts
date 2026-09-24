@@ -308,3 +308,38 @@ describe('solve 늪', () => {
     expect(swamp.status === 'solved' && swamp.moves).toBe(5)
   })
 })
+
+// 늪을 지나는 짧은 길과 늪이 없는 먼 길이 같은 갈림목에서 만난다
+const DEEP_SWAMP_STAGE: Stage = {
+  version: 1,
+  id: 'test-swamp-deepen-solver',
+  heights: [
+    [0, 0, 0, -1, -1, -1, -1],
+    [0, -1, 0, -1, -1, -1, -1],
+    [0, 0, 0, 0, 0, 0, 0],
+  ],
+  start: { x: 0, y: 2 },
+  goal: { x: 6, y: 2 },
+  entities: [],
+  swamp: ['.......', '.......', '.#.###.'],
+  rules: { swampDeepen: true },
+}
+
+describe('solve 깊어지는 늪', () => {
+  it('빠진 횟수가 다르면 다른 상태로 보고 먼 길을 고른다', () => {
+    const plain = solve({ ...DEEP_SWAMP_STAGE, rules: undefined })
+    const deepen = solve(DEEP_SWAMP_STAGE)
+
+    expect(plain.status === 'solved' && plain.moves).toBe(14)
+    expect(deepen.status === 'solved' && deepen.moves).toBe(19)
+    expect(deepen.status === 'solved' && deepen.path[0]).toBe('up')
+  })
+
+  it('깊어짐은 남기고 이동 제한만 빼고 찾는다', () => {
+    const stage: Stage = { ...DEEP_SWAMP_STAGE, rules: { swampDeepen: true, moveLimit: 3 } }
+
+    const result = solve(stage)
+
+    expect(result.status === 'solved' && result.moves).toBe(19)
+  })
+})

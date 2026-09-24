@@ -8,6 +8,7 @@ import {
   isLiftRaised,
   move,
   movesLeft,
+  nextSwampCost,
   pushesLeft,
   ridesLeft,
   standHeight,
@@ -2410,5 +2411,128 @@ describe('move 늪', () => {
     expect(state.boxes).toEqual([])
     expect(state.swamps).toEqual([])
     expect(events).toContainEqual({ type: 'sank', at: { x: 3, y: 1 } })
+  })
+})
+
+const DEEP_SWAMP_STAGE: Stage = {
+  version: 1,
+  id: 'test-swamp-deepen',
+  name: '깊어지는 늪 테스트',
+  heights: [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+  ],
+  start: { x: 0, y: 1 },
+  goal: { x: 4, y: 0 },
+  entities: [],
+  swamp: ['.....', '.#.#.', '.....'],
+  rules: { swampDeepen: true },
+}
+
+describe('move 깊어지는 늪', () => {
+  it('걸어서 늪에 들어가면 빠진 횟수가 는다', () => {
+    const { state } = move(createState(DEEP_SWAMP_STAGE), 'right')
+
+    expect(state.player).toEqual({ x: 1, y: 1 })
+    expect(state.sinks).toBe(1)
+  })
+
+  it('버둥거리는 수는 빠진 횟수를 세지 않는다', () => {
+    const { state } = play(DEEP_SWAMP_STAGE, ['right', 'right', 'right'])
+
+    expect(state.struggles).toBe(2)
+    expect(state.sinks).toBe(1)
+  })
+
+  it('늪에서 나가는 수는 빠진 횟수를 세지 않는다', () => {
+    const { state } = play(DEEP_SWAMP_STAGE, ['right', 'right', 'right', 'right'])
+
+    expect(state.player).toEqual({ x: 2, y: 1 })
+    expect(state.sinks).toBe(1)
+  })
+
+  it('두 번째 늪은 버둥이 한 수 더 든다', () => {
+    const entered = play(DEEP_SWAMP_STAGE, ['right', 'right', 'right', 'right', 'right'])
+    const struggled = play(DEEP_SWAMP_STAGE, Array<Direction>(8).fill('right'))
+    const out = move(struggled.state, 'right')
+
+    expect(entered.state.player).toEqual({ x: 3, y: 1 })
+    expect(entered.state.sinks).toBe(2)
+    expect(struggled.state.player).toEqual({ x: 3, y: 1 })
+    expect(struggled.state.struggles).toBe(3)
+    expect(out.state.player).toEqual({ x: 4, y: 1 })
+    expect(out.state.moves).toBe(9)
+  })
+
+  it('같은 늪에 다시 들어가도 센다', () => {
+    const back = play(DEEP_SWAMP_STAGE, ['right', 'right', 'right', 'right', 'left'])
+    const struggled = play(DEEP_SWAMP_STAGE, [
+      'right',
+      'right',
+      'right',
+      'right',
+      'left',
+      'up',
+      'up',
+    ])
+
+    expect(back.state.player).toEqual({ x: 1, y: 1 })
+    expect(back.state.sinks).toBe(2)
+    expect(struggled.state.player).toEqual({ x: 1, y: 1 })
+    expect(struggled.state.struggles).toBe(2)
+  })
+
+  it('떨어져서 늪에 착지해도 센다', () => {
+    const stage: Stage = {
+      ...DEEP_SWAMP_STAGE,
+      heights: [
+        [0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+    }
+    const { state, events } = move(createState(stage), 'right')
+
+    expect(state.sinks).toBe(1)
+    expect(events).toContainEqual({
+      type: 'fell',
+      from: { x: 0, y: 1 },
+      to: { x: 1, y: 1 },
+      drop: 1,
+    })
+  })
+
+  it('상자가 늪에 가라앉은 것은 세지 않는다', () => {
+    const stage: Stage = {
+      ...DEEP_SWAMP_STAGE,
+      swamp: ['.....', '..#..', '.....'],
+      entities: [{ type: 'box', x: 1, y: 1 }],
+    }
+    const { state, events } = move(createState(stage), 'right')
+
+    expect(state.player).toEqual({ x: 1, y: 1 })
+    expect(state.sinks).toBe(0)
+    expect(events).toContainEqual({ type: 'sank', at: { x: 2, y: 1 } })
+  })
+
+  it('깊어짐을 켜지 않은 판은 버둥이 언제나 두 수다', () => {
+    const stage: Stage = { ...DEEP_SWAMP_STAGE, rules: undefined }
+    const struggled = play(stage, Array<Direction>(7).fill('right'))
+    const out = move(struggled.state, 'right')
+
+    expect(struggled.state.player).toEqual({ x: 3, y: 1 })
+    expect(struggled.state.sinks).toBe(2)
+    expect(struggled.state.struggles).toBe(2)
+    expect(out.state.player).toEqual({ x: 4, y: 1 })
+    expect(out.state.moves).toBe(8)
+  })
+
+  it('다음에 빠질 늪 칸에 드는 총 수를 알려준다', () => {
+    const start = createState(DEEP_SWAMP_STAGE)
+
+    expect(nextSwampCost(start)).toBe(4)
+    expect(nextSwampCost(move(start, 'right').state)).toBe(5)
+    expect(nextSwampCost(createState({ ...DEEP_SWAMP_STAGE, rules: undefined }))).toBeNull()
   })
 })

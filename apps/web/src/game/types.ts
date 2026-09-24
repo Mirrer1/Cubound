@@ -24,6 +24,7 @@ export interface StageRules {
   climbLimit?: number // 보스 올라가기 제한, 없으면 제한 없음
   rideLimit?: number // 보스 타는 횟수 제한, 없으면 제한 없음
   dirLimit?: { dir: Direction; count: number } // 보스 방향 제한, 없으면 제한 없음
+  swampDeepen?: boolean // 늪에 빠질수록 버둥이 한 수씩 는다
 }
 
 export interface Stage {
@@ -78,6 +79,7 @@ export interface GameState {
   trams: TramSpot[]
   swamps: Point[] // 남아 있는 늪 칸. 상자가 가라앉은 칸은 빠진다
   struggles: number // 지금 선 늪 칸에서 버둥거린 수
+  sinks: number // 늪에 빠진 횟수
   ladders: Point[] // 바닥에 놓인 사다리
   leaningLadders: LeaningLadder[]
   carrying: boolean

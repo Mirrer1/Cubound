@@ -32,6 +32,7 @@ const MID = {
   climbs: 0,
   rides: 0,
   dirUses: 0,
+  sinks: 0,
 }
 
 const saved = (state: object) => ({ version: SESSION_VERSION, stageId: '1-3', ...state })
@@ -354,5 +355,39 @@ describe('restoreSession 늪', () => {
     expect(restoreSession({ ...session, swamps: [{ x: 0, y: 0 }] }, SWAMP_STAGE)).toBeNull()
     expect(restoreSession({ ...session, struggles: 3 }, SWAMP_STAGE)).toBeNull()
     expect(restoreSession({ ...session, struggles: -1 }, SWAMP_STAGE)).toBeNull()
+  })
+})
+
+const DEEP_SWAMP_STAGE: Stage = {
+  version: 1,
+  id: '6-10',
+  heights: [[0, 0, 0, 0]],
+  start: { x: 0, y: 0 },
+  goal: { x: 3, y: 0 },
+  entities: [],
+  swamp: ['.#..'],
+  rules: { swampDeepen: true },
+}
+
+describe('restoreSession 깊어지는 늪', () => {
+  it('빠진 횟수를 그대로 이어간다', () => {
+    const state = move(createState(DEEP_SWAMP_STAGE), 'right').state
+
+    expect(state.sinks).toBe(1)
+    expect(restoreSession(toSession(state), DEEP_SWAMP_STAGE)).toEqual(state)
+  })
+
+  it('깊어지는 늪이 없던 때 저장한 것은 빠진 횟수 0으로 읽는다', () => {
+    const session = { ...toSession(createState(DEEP_SWAMP_STAGE)), sinks: undefined }
+
+    expect(restoreSession(session, DEEP_SWAMP_STAGE)?.sinks).toBe(0)
+  })
+
+  it('빠진 횟수가 깨졌거나 버둥 수가 그보다 많으면 버린다', () => {
+    const session = toSession(createState(DEEP_SWAMP_STAGE))
+
+    expect(restoreSession({ ...session, sinks: -1 }, DEEP_SWAMP_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, sinks: 2, struggles: 5 }, DEEP_SWAMP_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, sinks: 2, struggles: 3 }, DEEP_SWAMP_STAGE)).not.toBeNull()
   })
 })

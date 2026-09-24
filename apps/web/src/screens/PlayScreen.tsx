@@ -14,7 +14,7 @@ import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
 import RestartCard from '@/components/ui/RestartCard'
-import { climbsLeft, dirLeft, movesLeft, pushesLeft, ridesLeft } from '@/game/rules'
+import { climbsLeft, dirLeft, movesLeft, nextSwampCost, pushesLeft, ridesLeft } from '@/game/rules'
 import { stageTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
 import { directionFromKey, directionFromSwipe, isRestartKey } from '@/platform/input'
@@ -80,6 +80,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const climbsOver = game ? climbsLeft(game) : null
   const ridesOver = game ? ridesLeft(game) : null
   const dirOver = game ? dirLeft(game) : null
+  const mudCost = game ? nextSwampCost(game) : null
   const limitedDir = game?.stage.rules?.dirLimit?.dir
   const limited = events.flatMap((e) => (e.type === 'limit' ? [e.limit] : []))[0]
   const outOfMoves = left === 0 && !game?.cleared
@@ -231,6 +232,12 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                       {limitedDir.toUpperCase()}
                     </span>
                     <LimitCount hit={limited === 'dir' ? turn : null}>{dirOver}</LimitCount>
+                  </div>
+                )}
+                {mudCost !== null && (
+                  <div className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2">
+                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">MUD</span>
+                    <LimitCount hit={null}>{mudCost}</LimitCount>
                   </div>
                 )}
                 <div

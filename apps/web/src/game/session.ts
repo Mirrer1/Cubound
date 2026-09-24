@@ -12,6 +12,7 @@ export interface Session {
   trams: TramSpot[]
   swamps?: Point[] // 전에 저장된 것에는 없다
   struggles?: number // 전에 저장된 것에는 없다
+  sinks?: number // 전에 저장된 것에는 없다
   ladders: Point[]
   leaningLadders: LeaningLadder[]
   carrying: boolean
@@ -42,6 +43,7 @@ export const toSession = (game: GameState): Session => ({
   trams: game.trams,
   swamps: game.swamps,
   struggles: game.struggles,
+  sinks: game.sinks,
   ladders: game.ladders,
   leaningLadders: game.leaningLadders,
   carrying: game.carrying,
@@ -105,8 +107,12 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
       savedSwamps.length <= swamps.length &&
       savedSwamps.every((value) => isObject(value) && swampKeys.has(`${value.x},${value.y}`)))
   if (!sameSwamps) return null
+  const sinks = saved.sinks === undefined ? 0 : saved.sinks
+  if (!isCount(sinks)) return null
+  // 깊어지는 늪에서는 빠진 횟수만큼 버둥이 는다
   const struggles = saved.struggles
-  if (struggles !== undefined && !(isCount(struggles) && (struggles as number) <= STRUGGLES)) {
+  const mostStruggles = STRUGGLES + (sinks as number)
+  if (struggles !== undefined && !(isCount(struggles) && (struggles as number) <= mostStruggles)) {
     return null
   }
 
@@ -171,6 +177,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     swamps:
       savedSwamps === undefined ? swamps : (savedSwamps as Point[]).map(({ x, y }) => ({ x, y })),
     struggles: (struggles as number) ?? 0,
+    sinks: sinks as number,
     ladders: ladders.map(({ x, y }) => ({ x, y })),
     leaningLadders: leaningLadders.map(({ x, y, direction }) => ({ x, y, direction })),
     carrying,
