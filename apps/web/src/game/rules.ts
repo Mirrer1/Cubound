@@ -15,6 +15,9 @@ import type {
 type Lift = Extract<Entity, { type: 'lift' }>
 type Tram = Extract<Entity, { type: 'tram' }>
 
+// 늪에서 나가기 전에 제자리에서 버둥거리는 수
+export const STRUGGLES = 2
+
 const OFFSETS: Record<Direction, Point> = {
   up: { x: 0, y: -1 },
   right: { x: 1, y: 0 },
@@ -106,6 +109,11 @@ const isClosedDoor = (state: GameState, p: Point) =>
 
 export const isIce = (state: GameState, { x, y }: Point) => state.stage.ice?.[y]?.[x] === '#'
 
+const isSwamp = (state: GameState, p: Point) => state.swamps.some((cell) => same(cell, p))
+
+// 늪에 선 큐브는 두 수를 버둥거린 뒤에야 나갈 수 있다
+const struggling = (state: GameState) => state.struggles < STRUGGLES && isSwamp(state, state.player)
+
 // 상자 위에 올라선 큐브는 얼음 바닥을 밟지 않은 것으로 본다
 const onIce = (state: GameState, p: Point) => isIce(state, p) && !hasBox(state, p)
 
@@ -148,6 +156,9 @@ export const readCracks = (stage: Stage): Crack[] =>
     [...row].flatMap((c, x) => (c === '.' ? [] : [{ x, y, left: Number(c) }])),
   )
 
+export const readSwamps = (stage: Stage): Point[] =>
+  (stage.swamp ?? []).flatMap((row, y) => [...row].flatMap((c, x) => (c === '#' ? [{ x, y }] : [])))
+
 export const createState = (stage: Stage): GameState => ({
   stage,
   heights: stage.heights,
@@ -158,6 +169,8 @@ export const createState = (stage: Stage): GameState => ({
     at: cells.findIndex((cell) => same(cell, { x, y })),
     dir,
   })),
+  swamps: readSwamps(stage),
+  struggles: 0,
   ladders: stage.entities.filter((e) => e.type === 'ladder').map(({ x, y }) => ({ x, y })),
   leaningLadders: [],
   carrying: false,
@@ -224,6 +237,7 @@ const arrive = (
     ...state,
     player: at,
     moves: state.moves + 1,
+    struggles: 0,
     cleared: same(at, state.stage.goal),
   }
   if (state.carrying) return { state: next, events }
@@ -347,21 +361,27 @@ const pushBox = (state: GameState, box: Point, direction: Direction): MoveResult
   if (!same(rest, target)) events.push({ type: 'slid', subject: 'box', from: target, to: rest })
   if (landed) events.push({ type: 'pushed', from: rest, to: landed.to, result: landed.result })
 
+  const stop = landed?.to ?? rest
+  const sank = isSwamp(state, stop)
+  if (sank) events.push({ type: 'sank', at: stop })
+
   const others = state.boxes.filter((b) => !same(b, box))
   const filled = landing < 0 ? target : landed?.result === 'filled' ? landed.to : null
   const fillHeight = landing < 0 ? boxFloor : landing
 
   // 미끄러짐과 낙하까지 한 번의 밀기로 센다
   const pushing: GameState = { ...state, pushes: state.pushes + 1 }
-  const next: GameState = filled
-    ? {
-        ...pushing,
-        boxes: others,
-        heights: state.heights.map((row, y) =>
-          y === filled.y ? row.map((h, x) => (x === filled.x ? fillHeight : h)) : row,
-        ),
-      }
-    : { ...pushing, boxes: [...others, landed?.to ?? rest] }
+  const next: GameState = sank
+    ? { ...pushing, boxes: others, swamps: state.swamps.filter((cell) => !same(cell, stop)) }
+    : filled
+      ? {
+          ...pushing,
+          boxes: others,
+          heights: state.heights.map((row, y) =>
+            y === filled.y ? row.map((h, x) => (x === filled.x ? fillHeight : h)) : row,
+          ),
+        }
+      : { ...pushing, boxes: [...others, stop] }
 
   return walk(next, box, boxFloor, direction, events)
 }
@@ -467,9 +487,50 @@ const boardsTram = (before: GameState, after: GameState) => {
   return to !== null && to !== tramAt(before, before.player)
 }
 
+// 이동으로 센 수마다 무너지는 칸이 닳고 발판이 한 칸 가고 문과 엘리베이터 발판이 따라 바뀐다
+const tick = (before: GameState, after: GameState, events: GameEvent[]): MoveResult => {
+  const { state: crumbled, events: crackEvents } = crumble(before, after)
+  const { state: moved, events: tramEvents } = rideTrams(crumbled)
+
+  const doorEvents: GameEvent[] = doors(before.stage)
+    .map((door) => ({
+      id: door.id,
+      before: isDoorOpen(before, door.id),
+      after: isDoorOpen(moved, door.id),
+    }))
+    .filter((change) => change.before !== change.after)
+    .map(({ id, after: open }) => ({ type: 'door', id, open }))
+
+  const liftEvents: GameEvent[] = lifts(before.stage)
+    .filter((lift) => isLiftRaised(before, lift.id) !== isLiftRaised(moved, lift.id))
+    .map((lift) => ({ type: 'lift', id: lift.id, up: isLiftRaised(moved, lift.id) }))
+
+  return {
+    state: moved,
+    events: [
+      ...events,
+      ...crackEvents,
+      ...tramEvents,
+      ...doorEvents,
+      ...liftEvents,
+      ...(moved.cleared ? [{ type: 'cleared' } as const] : []),
+    ],
+  }
+}
+
 export const move = (state: GameState, direction: Direction): MoveResult => {
   if (state.cleared) return { state, events: [] }
   if (movesLeft(state) === 0) return limitBlocked(state, direction, 'moves')
+
+  // 버둥은 방향이 없는 수라 방향 제한을 보지 않고 상자와 사다리도 건드리지 않는다
+  if (struggling(state)) {
+    const struggled: GameState = {
+      ...state,
+      moves: state.moves + 1,
+      struggles: state.struggles + 1,
+    }
+    return tick(state, struggled, [{ type: 'struggled', at: state.player }])
+  }
 
   const limitedDir = state.stage.rules?.dirLimit?.dir === direction
   if (limitedDir && dirLeft(state) === 0) return limitBlocked(state, direction, 'dir')
@@ -497,31 +558,5 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
     ? { ...acted.state, dirUses: acted.state.dirUses + 1 }
     : acted.state
 
-  const { state: crumbled, events: crackEvents } = crumble(state, spent)
-  const { state: moved, events: tramEvents } = rideTrams(crumbled)
-
-  const doorEvents: GameEvent[] = doors(state.stage)
-    .map((door) => ({
-      id: door.id,
-      before: isDoorOpen(state, door.id),
-      after: isDoorOpen(moved, door.id),
-    }))
-    .filter(({ before, after }) => before !== after)
-    .map(({ id, after }) => ({ type: 'door', id, open: after }))
-
-  const liftEvents: GameEvent[] = lifts(state.stage)
-    .filter((lift) => isLiftRaised(state, lift.id) !== isLiftRaised(moved, lift.id))
-    .map((lift) => ({ type: 'lift', id: lift.id, up: isLiftRaised(moved, lift.id) }))
-
-  return {
-    state: moved,
-    events: [
-      ...acted.events,
-      ...crackEvents,
-      ...tramEvents,
-      ...doorEvents,
-      ...liftEvents,
-      ...(moved.cleared ? [{ type: 'cleared' } as const] : []),
-    ],
-  }
+  return tick(state, spent, acted.events)
 }

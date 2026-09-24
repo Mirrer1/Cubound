@@ -34,6 +34,8 @@ const stateKey = (state: GameState) => {
     leaning.join(' '),
     state.carrying,
     ...(cracks.length > 0 ? [cracks.join('')] : []),
+    // 늪에 선 같은 자리라도 버둥거린 수가 다르면 다른 상태다
+    ...(state.stage.swamp ? [`${state.struggles}`, points(state.swamps)] : []),
     ...(state.trams.length > 0
       ? [state.trams.map(({ at, dir }) => `${at}${dir > 0 ? '+' : '-'}`).join(' ')]
       : []),

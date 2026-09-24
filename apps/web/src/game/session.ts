@@ -1,4 +1,4 @@
-import { readCracks } from './rules'
+import { STRUGGLES, readCracks, readSwamps } from './rules'
 import type { Crack, Direction, GameState, LeaningLadder, Point, Stage, TramSpot } from './types'
 
 export const SESSION_VERSION = 7
@@ -10,6 +10,8 @@ export interface Session {
   boxes: Point[]
   cracks: Crack[]
   trams: TramSpot[]
+  swamps?: Point[] // 전에 저장된 것에는 없다
+  struggles?: number // 전에 저장된 것에는 없다
   ladders: Point[]
   leaningLadders: LeaningLadder[]
   carrying: boolean
@@ -38,6 +40,8 @@ export const toSession = (game: GameState): Session => ({
   boxes: game.boxes,
   cracks: game.cracks,
   trams: game.trams,
+  swamps: game.swamps,
+  struggles: game.struggles,
   ladders: game.ladders,
   leaningLadders: game.leaningLadders,
   carrying: game.carrying,
@@ -90,6 +94,21 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
       )
     })
   if (!sameTrams) return null
+
+  const swamps = readSwamps(stage)
+  const swampKeys = new Set(swamps.map(({ x, y }) => `${x},${y}`))
+  const savedSwamps = saved.swamps
+  // 상자가 가라앉으면 늪 칸은 빠지기만 한다
+  const sameSwamps =
+    savedSwamps === undefined ||
+    (Array.isArray(savedSwamps) &&
+      savedSwamps.length <= swamps.length &&
+      savedSwamps.every((value) => isObject(value) && swampKeys.has(`${value.x},${value.y}`)))
+  if (!sameSwamps) return null
+  const struggles = saved.struggles
+  if (struggles !== undefined && !(isCount(struggles) && (struggles as number) <= STRUGGLES)) {
+    return null
+  }
 
   const crackKeys = new Set(cracks.map(({ x, y }) => `${x},${y}`))
   const rows = saved.heights
@@ -149,6 +168,9 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     boxes: boxes.map(({ x, y }) => ({ x, y })),
     cracks: (savedCracks as Crack[]).map(({ x, y, left }) => ({ x, y, left })),
     trams: (savedTrams as TramSpot[]).map(({ id, at, dir }) => ({ id, at, dir })),
+    swamps:
+      savedSwamps === undefined ? swamps : (savedSwamps as Point[]).map(({ x, y }) => ({ x, y })),
+    struggles: (struggles as number) ?? 0,
     ladders: ladders.map(({ x, y }) => ({ x, y })),
     leaningLadders: leaningLadders.map(({ x, y, direction }) => ({ x, y, direction })),
     carrying,

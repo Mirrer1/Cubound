@@ -21,6 +21,8 @@ const MID = {
   boxes: [{ x: 2, y: 0 }],
   cracks: [],
   trams: [],
+  swamps: [],
+  struggles: 0,
   ladders: [],
   leaningLadders: [],
   carrying: false,
@@ -312,5 +314,45 @@ describe('restoreSession 움직이는 발판', () => {
     expect(
       restoreSession({ ...session, trams: [{ id: 'tram-a', at: 1, dir: 0 }] }, TRAM_STAGE),
     ).toBeNull()
+  })
+})
+
+const SWAMP_STAGE: Stage = {
+  version: 1,
+  id: '6-1',
+  heights: [[0, 0, 0]],
+  start: { x: 0, y: 0 },
+  goal: { x: 2, y: 0 },
+  entities: [],
+  swamp: ['.#.'],
+}
+
+describe('restoreSession 늪', () => {
+  it('버둥거린 수와 남은 늪 칸을 그대로 이어간다', () => {
+    const entered = move(createState(SWAMP_STAGE), 'right').state
+    const state = move(entered, 'right').state
+
+    expect(state.struggles).toBe(1)
+    expect(restoreSession(toSession(state), SWAMP_STAGE)).toEqual(state)
+  })
+
+  it('늪이 없던 때 저장한 것은 늪 칸 전부와 버둥 0으로 읽는다', () => {
+    const session = {
+      ...toSession(createState(SWAMP_STAGE)),
+      swamps: undefined,
+      struggles: undefined,
+    }
+    const state = restoreSession(session, SWAMP_STAGE)
+
+    expect(state?.swamps).toEqual([{ x: 1, y: 0 }])
+    expect(state?.struggles).toBe(0)
+  })
+
+  it('스테이지에 없는 늪 칸이나 버둥 수가 들어오면 버린다', () => {
+    const session = toSession(createState(SWAMP_STAGE))
+
+    expect(restoreSession({ ...session, swamps: [{ x: 0, y: 0 }] }, SWAMP_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, struggles: 3 }, SWAMP_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, struggles: -1 }, SWAMP_STAGE)).toBeNull()
   })
 })

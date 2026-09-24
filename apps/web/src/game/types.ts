@@ -32,6 +32,7 @@ export interface Stage {
   name?: string // 유저가 만든 맵의 이름. 공식 스테이지 이름은 사전에 둔다
   heights: number[][] // 행(y) 먼저, -1은 바닥 없음
   ice?: string[] // heights와 같은 모양에서 '#'이 얼음
+  swamp?: string[] // heights와 같은 모양에서 '#'이 늪
   cracks?: string[] // heights와 같은 모양에서 1~9가 무너지기까지 견디는 횟수
   start: Point
   goal: Point
@@ -75,6 +76,8 @@ export interface GameState {
   boxes: Point[]
   cracks: Crack[]
   trams: TramSpot[]
+  swamps: Point[] // 남아 있는 늪 칸. 상자가 가라앉은 칸은 빠진다
+  struggles: number // 지금 선 늪 칸에서 버둥거린 수
   ladders: Point[] // 바닥에 놓인 사다리
   leaningLadders: LeaningLadder[]
   carrying: boolean
@@ -94,6 +97,8 @@ export type GameEvent =
   | { type: 'slid'; subject: 'player' | 'box'; from: Point; to: Point } // 얼음 위 미끄러짐이라 from과 to가 이웃하지 않을 수 있다
   | { type: 'pushed'; from: Point; to: Point; result: 'slid' | 'fell' | 'filled' }
   | { type: 'cracked'; at: Point; left: number; gone: boolean } // gone은 바닥 없는 칸이 되었는지
+  | { type: 'struggled'; at: Point } // 늪에서 제자리에 선 수
+  | { type: 'sank'; at: Point } // 늪에 밀려 들어간 상자가 가라앉음
   | { type: 'pickedUp'; at: Point }
   | { type: 'placed'; ladder: LeaningLadder }
   | { type: 'door'; id: string; open: boolean }

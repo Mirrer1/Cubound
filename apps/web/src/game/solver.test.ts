@@ -288,3 +288,23 @@ describe('solve 움직이는 발판', () => {
     expect(result.moves).toBe(3)
   })
 })
+
+const SWAMP_STAGE: Stage = {
+  version: 1,
+  id: 'test-swamp-solver',
+  heights: [[0, 0, 0, 0]],
+  start: { x: 0, y: 0 },
+  goal: { x: 3, y: 0 },
+  entities: [],
+  swamp: ['.#..'],
+}
+
+describe('solve 늪', () => {
+  it('늪 한 칸을 지나면 버둥거리는 두 수가 더 든다', () => {
+    const plain = solve({ ...SWAMP_STAGE, swamp: undefined })
+    const swamp = solve(SWAMP_STAGE)
+
+    expect(plain).toEqual({ status: 'solved', moves: 3, path: ['right', 'right', 'right'] })
+    expect(swamp.status === 'solved' && swamp.moves).toBe(5)
+  })
+})
