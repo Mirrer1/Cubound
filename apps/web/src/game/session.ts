@@ -1,4 +1,4 @@
-import { STRUGGLES, readCracks, readSwamps } from './rules'
+import { STRUGGLES, readCracks, readMushrooms, readSwamps } from './rules'
 import type { Crack, Direction, GameState, LeaningLadder, Point, Stage, TramSpot } from './types'
 
 export const SESSION_VERSION = 7
@@ -11,6 +11,7 @@ export interface Session {
   cracks: Crack[]
   trams: TramSpot[]
   swamps?: Point[] // 전에 저장된 것에는 없다
+  mushrooms?: Point[] // 전에 저장된 것에는 없다
   struggles?: number // 전에 저장된 것에는 없다
   sinks?: number // 전에 저장된 것에는 없다
   ladders: Point[]
@@ -42,6 +43,7 @@ export const toSession = (game: GameState): Session => ({
   cracks: game.cracks,
   trams: game.trams,
   swamps: game.swamps,
+  mushrooms: game.mushrooms,
   struggles: game.struggles,
   sinks: game.sinks,
   ladders: game.ladders,
@@ -107,6 +109,17 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
       savedSwamps.length <= swamps.length &&
       savedSwamps.every((value) => isObject(value) && swampKeys.has(`${value.x},${value.y}`)))
   if (!sameSwamps) return null
+
+  const mushrooms = readMushrooms(stage)
+  const mushroomKeys = new Set(mushrooms.map(({ x, y }) => `${x},${y}`))
+  const savedMushrooms = saved.mushrooms
+  // 밟힌 버섯은 시들어 빠지기만 한다
+  const sameMushrooms =
+    savedMushrooms === undefined ||
+    (Array.isArray(savedMushrooms) &&
+      savedMushrooms.length <= mushrooms.length &&
+      savedMushrooms.every((value) => isObject(value) && mushroomKeys.has(`${value.x},${value.y}`)))
+  if (!sameMushrooms) return null
   const sinks = saved.sinks === undefined ? 0 : saved.sinks
   if (!isCount(sinks)) return null
   // 깊어지는 늪에서는 빠진 횟수만큼 버둥이 는다
@@ -176,6 +189,10 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     trams: (savedTrams as TramSpot[]).map(({ id, at, dir }) => ({ id, at, dir })),
     swamps:
       savedSwamps === undefined ? swamps : (savedSwamps as Point[]).map(({ x, y }) => ({ x, y })),
+    mushrooms:
+      savedMushrooms === undefined
+        ? mushrooms
+        : (savedMushrooms as Point[]).map(({ x, y }) => ({ x, y })),
     struggles: (struggles as number) ?? 0,
     sinks: sinks as number,
     ladders: ladders.map(({ x, y }) => ({ x, y })),

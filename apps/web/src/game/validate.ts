@@ -112,6 +112,32 @@ export const validateStage = (data: unknown): ValidateResult => {
     }
   }
 
+  const mushroomCells = new Set<string>()
+  if (data.mushroom !== undefined) {
+    const mushroom = data.mushroom
+    const shaped =
+      Array.isArray(mushroom) &&
+      mushroom.length === grid.length &&
+      mushroom.every((row) => typeof row === 'string' && row.length === width)
+
+    if (!shaped) add('mushroom은 heights와 같은 모양의 문자열 배열이어야 한다')
+    else {
+      const ice = Array.isArray(data.ice) ? (data.ice as string[]) : []
+      const cells = (mushroom as string[]).flatMap((row, y) =>
+        [...row].flatMap((c, x) => (c === '#' ? [{ x, y }] : [])),
+      )
+
+      if (cells.some(({ x, y }) => grid[y][x] < 0)) add('바닥 없는 칸에 버섯이 있다')
+      if (cells.some(({ x, y }) => ice[y]?.[x] === '#')) add('얼음 칸에 버섯이 있다')
+      if (cells.some((cell) => crackCells.has(key(cell)))) add('무너지는 칸에 버섯이 있다')
+      if (cells.some((cell) => swampCells.has(key(cell)))) add('늪 칸에 버섯이 있다')
+
+      cells.forEach((cell) => mushroomCells.add(key(cell)))
+      if (isFloor(data.start) && mushroomCells.has(key(data.start))) add('start가 버섯 칸에 있다')
+      if (isFloor(data.goal) && mushroomCells.has(key(data.goal))) add('goal이 버섯 칸에 있다')
+    }
+  }
+
   if (!isFloor(data.start)) add('start가 바닥 칸이 아니다')
   if (!isFloor(data.goal)) add('goal이 바닥 칸이 아니다')
   if (isFloor(data.start) && isFloor(data.goal) && key(data.start) === key(data.goal)) {
@@ -195,6 +221,7 @@ export const validateStage = (data: unknown): ValidateResult => {
       add(`entities[${i}]이 무너지는 칸에 있다`)
     }
     if (swampCells.has(key(entity))) add(`entities[${i}]이 늪 칸에 있다`)
+    if (mushroomCells.has(key(entity))) add(`entities[${i}]이 버섯 칸에 있다`)
     occupied.add(key(entity))
 
     if (entity.type === 'door' || entity.type === 'lift') {
@@ -238,7 +265,8 @@ export const validateStage = (data: unknown): ValidateResult => {
   if (data.rules !== undefined) {
     if (!isObject(data.rules)) add('rules가 객체가 아니다')
     else {
-      const { moveLimit, pushLimit, climbLimit, rideLimit, dirLimit, swampDeepen } = data.rules
+      const { moveLimit, pushLimit, climbLimit, rideLimit, dirLimit } = data.rules
+      const { swampDeepen, mushroomWither } = data.rules
       if (moveLimit !== undefined) {
         if (!(isInt(moveLimit) && moveLimit > 0)) add('rules.moveLimit은 양의 정수여야 한다')
         else if (isInt(data.best) && moveLimit < data.best) add('rules.moveLimit이 best보다 작다')
@@ -261,6 +289,9 @@ export const validateStage = (data: unknown): ValidateResult => {
       }
       if (swampDeepen !== undefined && typeof swampDeepen !== 'boolean') {
         add('rules.swampDeepen은 참이나 거짓이어야 한다')
+      }
+      if (mushroomWither !== undefined && typeof mushroomWither !== 'boolean') {
+        add('rules.mushroomWither는 참이나 거짓이어야 한다')
       }
     }
   }

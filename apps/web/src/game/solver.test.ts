@@ -382,3 +382,53 @@ describe('solve 깊어지는 늪', () => {
     expect(result.status === 'solved' && result.moves).toBe(19)
   })
 })
+
+const MUSHROOM_STAGE: Stage = {
+  version: 1,
+  id: 'test-solver-mushroom',
+  heights: [
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+  ],
+  start: { x: 0, y: 1 },
+  goal: { x: 5, y: 1 },
+  entities: [],
+  mushroom: ['......', '.#....', '......'],
+}
+
+// (2,1) 버섯을 밟아야 끝나서 구멍을 지나쳐 다녀와야 한다
+const WITHER_STAGE: Stage = {
+  ...MUSHROOM_STAGE,
+  id: 'test-solver-wither',
+  goal: { x: 0, y: 0 },
+  mushroom: ['......', '..#...', '......'],
+  rules: { mushroomWither: true },
+}
+
+describe('solve 버섯', () => {
+  it('버섯으로 두 칸을 건너뛰는 최소 이동 수를 구한다', () => {
+    const result = solve(MUSHROOM_STAGE)
+
+    expect(result.status).toBe('solved')
+    if (result.status !== 'solved') return
+    expect(result.moves).toBe(3)
+
+    const end = result.path.reduce((state, d) => move(state, d).state, createState(MUSHROOM_STAGE))
+    expect(end.cleared).toBe(true)
+  })
+
+  it('시드는 판은 버섯을 다 밟아야 끝나는 것을 반영한다', () => {
+    const plain = solve({ ...WITHER_STAGE, rules: undefined })
+    const result = solve(WITHER_STAGE)
+
+    expect(plain.status === 'solved' && plain.moves).toBe(1)
+    expect(result.status).toBe('solved')
+    if (result.status !== 'solved') return
+    expect(result.moves).toBe(6)
+
+    const end = result.path.reduce((state, d) => move(state, d).state, createState(WITHER_STAGE))
+    expect(end.cleared).toBe(true)
+    expect(end.mushrooms).toEqual([])
+  })
+})

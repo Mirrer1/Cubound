@@ -72,6 +72,10 @@ const warpExit = (stage: Stage, p: Point): Point | null => {
   return pair ? { x: pair.x, y: pair.y } : null
 }
 
+// 밟힌 버섯이 시드는 판에서는 버섯을 다 밟아야 구멍에서 끝난다
+const clearedAt = (state: GameState, p: Point) =>
+  same(p, state.stage.goal) && !(state.stage.rules?.mushroomWither && state.mushrooms.length > 0)
+
 const isPressed = (state: GameState, p: Point) => same(state.player, p) || hasBox(state, p)
 
 const isSwitchOn = (state: GameState, target: string) =>
@@ -110,6 +114,15 @@ const isClosedDoor = (state: GameState, p: Point) =>
 export const isIce = (state: GameState, { x, y }: Point) => state.stage.ice?.[y]?.[x] === '#'
 
 const isSwamp = (state: GameState, p: Point) => state.swamps.some((cell) => same(cell, p))
+
+export const isMushroom = (state: GameState, p: Point) =>
+  state.mushrooms.some((cell) => same(cell, p))
+
+// 밟혀 튕긴 버섯은 시드는 판에서만 사라진다
+const wither = (state: GameState, sprung: Point[]) =>
+  state.stage.rules?.mushroomWither
+    ? state.mushrooms.filter((cell) => !sprung.some((s) => same(s, cell)))
+    : state.mushrooms
 
 // 깊어지는 늪에서는 빠진 횟수만큼 버둥이 는다. 지금 선 늪이 몇 번째로 빠진 것이냐로 센다
 const strugglesNeeded = (state: GameState) =>
@@ -154,6 +167,10 @@ export const ridesLeft = (state: GameState) => {
 export const nextSwampCost = (state: GameState) =>
   state.stage.rules?.swampDeepen ? STRUGGLES + state.sinks + 2 : null
 
+// 밟힌 버섯이 시드는 판이 아니면 null. 아직 밟지 않은 버섯 수다
+export const capsLeft = (state: GameState) =>
+  state.stage.rules?.mushroomWither ? state.mushrooms.length : null
+
 // 보스 방향 제한이 없으면 null
 export const dirLeft = (state: GameState) => {
   const limit = state.stage.rules?.dirLimit
@@ -168,6 +185,11 @@ export const readCracks = (stage: Stage): Crack[] =>
 export const readSwamps = (stage: Stage): Point[] =>
   (stage.swamp ?? []).flatMap((row, y) => [...row].flatMap((c, x) => (c === '#' ? [{ x, y }] : [])))
 
+export const readMushrooms = (stage: Stage): Point[] =>
+  (stage.mushroom ?? []).flatMap((row, y) =>
+    [...row].flatMap((c, x) => (c === '#' ? [{ x, y }] : [])),
+  )
+
 export const createState = (stage: Stage): GameState => ({
   stage,
   heights: stage.heights,
@@ -179,6 +201,7 @@ export const createState = (stage: Stage): GameState => ({
     dir,
   })),
   swamps: readSwamps(stage),
+  mushrooms: readMushrooms(stage),
   struggles: 0,
   sinks: 0,
   ladders: stage.entities.filter((e) => e.type === 'ladder').map(({ x, y }) => ({ x, y })),
@@ -250,7 +273,7 @@ const arrive = (
     moves: state.moves + 1,
     struggles: 0,
     sinks: state.sinks + (isSwamp(state, at) ? 1 : 0),
-    cleared: same(at, state.stage.goal),
+    cleared: clearedAt(state, at),
   }
   if (state.carrying) return { state: next, events }
 
@@ -270,6 +293,33 @@ const arrive = (
   return { state: next, events }
 }
 
+// 밟혀 튕긴 큐브가 내려설 자리와 지나며 밟은 버섯들. 첫 칸에서 못 뛰면 null
+const hop = (
+  state: GameState,
+  from: Point,
+  direction: Direction,
+): { to: Point; height: number; sprung: Point[] } | null => {
+  const sprung: Point[] = []
+  let at = from
+
+  for (;;) {
+    const level = floorAt(state, at) ?? 0
+    // 못 뛰면 연쇄가 멈춘 버섯 칸에 그대로 선다
+    const stopped = sprung.length > 0 ? { to: at, height: level, sprung } : null
+    // 사이 칸은 높이를 보지 않아 벽도 구덩이도 넘는다
+    const to = step(step(at, direction), direction)
+    const floor = floorAt(state, to)
+    if (floor === null || isClosedDoor(state, to)) return stopped
+
+    const height = floor + (hasBox(state, to) ? 1 : 0)
+    if (height > level + 1) return stopped
+
+    sprung.push(at)
+    if (!isMushroom(state, to)) return { to, height, sprung }
+    at = to
+  }
+}
+
 const walk = (
   state: GameState,
   to: Point,
@@ -282,6 +332,12 @@ const walk = (
   const event: GameEvent = drop > 0 ? { type: 'fell', from, to, drop } : { type: 'moved', from, to }
   return arrive(state, to, direction, event, pre)
 }
+
+const spring = (
+  state: GameState,
+  { to, height, sprung }: { to: Point; height: number; sprung: Point[] },
+  direction: Direction,
+) => walk({ ...state, mushrooms: wither(state, sprung) }, to, height, direction)
 
 // 한 층 높은 칸 앞에서 기대 놓인 사다리로 오르거나 들고 있던 사다리를 놓는다
 const climbOrPlaceLadder = (
@@ -331,6 +387,27 @@ const boxLanding = (state: GameState, p: Point, level: number): number | null =>
   return floor
 }
 
+// 밀려 든 상자가 버섯에 튕겨 내려설 자리와 지나며 밟은 버섯들. 내릴 자리가 없으면 null
+const hopBox = (
+  state: GameState,
+  from: Point,
+  direction: Direction,
+): { to: Point; floor: number; level: number; sprung: Point[] } | null => {
+  const sprung: Point[] = []
+  let at = from
+
+  for (;;) {
+    const level = floorAt(state, at) ?? 0
+    const to = step(step(at, direction), direction)
+    const floor = boxLanding(state, to, level)
+    if (floor === null) return null
+
+    sprung.push(at)
+    if (!isMushroom(state, to)) return { to, floor, level, sprung }
+    at = to
+  }
+}
+
 // 얼음에 올라선 상자가 멈출 칸까지 같은 방향으로 이어서 간다
 const slideBox = (
   state: GameState,
@@ -354,9 +431,18 @@ const slideBox = (
 
 const pushBox = (state: GameState, box: Point, direction: Direction): MoveResult | null => {
   const boxFloor = floorAt(state, box) ?? 0
-  const target = step(box, direction)
-  const landing = boxLanding(state, target, boxFloor)
-  if (landing === null) return null
+  const first = step(box, direction)
+  const entry = boxLanding(state, first, boxFloor)
+  if (entry === null) return null
+
+  // 버섯에 밀려 든 상자는 두 칸 날아가고 내릴 자리가 없으면 아예 안 밀린다
+  const onMushroom = isMushroom(state, first)
+  const flight = onMushroom ? hopBox(state, first, direction) : null
+  if (onMushroom && flight === null) return null
+
+  const target = flight?.to ?? first
+  const landing = flight?.floor ?? entry
+  const launch = flight?.level ?? boxFloor
 
   const slide = landing < 0 ? null : slideBox(state, target, direction, landing)
   const rest = slide?.rest ?? target
@@ -379,10 +465,14 @@ const pushBox = (state: GameState, box: Point, direction: Direction): MoveResult
 
   const others = state.boxes.filter((b) => !same(b, box))
   const filled = landing < 0 ? target : landed?.result === 'filled' ? landed.to : null
-  const fillHeight = landing < 0 ? boxFloor : landing
+  const fillHeight = landing < 0 ? launch : landing
 
   // 미끄러짐과 낙하까지 한 번의 밀기로 센다
-  const pushing: GameState = { ...state, pushes: state.pushes + 1 }
+  const pushing: GameState = {
+    ...state,
+    pushes: state.pushes + 1,
+    mushrooms: wither(state, flight?.sprung ?? []),
+  }
   const next: GameState = sank
     ? { ...pushing, boxes: others, swamps: state.swamps.filter((cell) => !same(cell, stop)) }
     : filled
@@ -405,10 +495,19 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
   const fromHeight = standHeight(state, from)
   const toFloor = floorAt(state, to)
 
+  // 버섯에 올라선 큐브는 튕겨 나가는 수밖에 없다
+  if (isMushroom(state, from)) {
+    const hopped = hop(state, from, direction)
+    return hopped ? spring(state, hopped, direction) : blocked
+  }
+
   if (toFloor === null || isClosedDoor(state, to)) return blocked
 
   if (!hasBox(state, to)) {
-    if (toFloor <= fromHeight) return walk(state, to, toFloor, direction)
+    if (toFloor <= fromHeight) {
+      const hopped = isMushroom(state, to) ? hop(state, to, direction) : null
+      return hopped ? spring(state, hopped, direction) : walk(state, to, toFloor, direction)
+    }
     return climbOrPlaceLadder(state, to, direction) ?? blocked
   }
 

@@ -25,6 +25,7 @@ export interface StageRules {
   rideLimit?: number // 보스 타는 횟수 제한, 없으면 제한 없음
   dirLimit?: { dir: Direction; count: number } // 보스 방향 제한, 없으면 제한 없음
   swampDeepen?: boolean // 늪에 빠질수록 버둥이 한 수씩 는다
+  mushroomWither?: boolean // 밟힌 버섯이 시들고 맵의 버섯을 다 밟아야 클리어된다
 }
 
 export interface Stage {
@@ -34,6 +35,7 @@ export interface Stage {
   heights: number[][] // 행(y) 먼저, -1은 바닥 없음
   ice?: string[] // heights와 같은 모양에서 '#'이 얼음
   swamp?: string[] // heights와 같은 모양에서 '#'이 늪
+  mushroom?: string[] // heights와 같은 모양에서 '#'이 버섯
   cracks?: string[] // heights와 같은 모양에서 1~9가 무너지기까지 견디는 횟수
   start: Point
   goal: Point
@@ -78,6 +80,7 @@ export interface GameState {
   cracks: Crack[]
   trams: TramSpot[]
   swamps: Point[] // 남아 있는 늪 칸. 상자가 가라앉은 칸은 빠진다
+  mushrooms: Point[] // 남아 있는 버섯 칸. 시드는 판에서 밟힌 칸은 빠진다
   struggles: number // 지금 선 늪 칸에서 버둥거린 수
   sinks: number // 늪에 빠진 횟수
   ladders: Point[] // 바닥에 놓인 사다리

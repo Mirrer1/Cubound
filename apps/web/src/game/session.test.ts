@@ -22,6 +22,7 @@ const MID = {
   cracks: [],
   trams: [],
   swamps: [],
+  mushrooms: [],
   struggles: 0,
   ladders: [],
   leaningLadders: [],
