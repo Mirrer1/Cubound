@@ -66,6 +66,12 @@
   --color-crack-right-2: #9a9382;
   --color-crack-chip: #bcb7ab;
   --color-crack-shadow: #c4c0b8;
+  /* 늪은 6월드 전용이라 사이클을 따라 바뀌지 않는다 */
+  --color-swamp-mud: #a8a690;
+  --color-swamp-wall-left: #8c8a76;
+  --color-swamp-lump: #b6b49f;
+  --color-swamp-collar: #bfbda8;
+  --color-swamp-filled: color-mix(in srgb, var(--color-tool), white 14%);
 }
 
 /* 세계 색은 사이클마다 갈린다. 1사이클은 위 기본값을 그대로 쓴다 */

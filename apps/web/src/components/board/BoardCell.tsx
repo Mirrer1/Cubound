@@ -3,7 +3,8 @@ import { type ReactNode, memo } from 'react'
 import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
 import BoardLadder from './BoardLadder'
-import { crackThickness } from './frame'
+import { CUBE } from './cube'
+import { atStage, crackThickness } from './frame'
 import { blend, checker, darken, dim, shade } from './shade'
 import { TILE, blockFaces, isoDelta } from '@/game/iso'
 import type { Direction } from '@/game/types'
@@ -64,6 +65,25 @@ const SWITCH_SCALE = 0.66
 // 구멍은 같은 크기 판 두 장을 어긋나게 겹쳐 두께를 낸다
 const HOLE = { scale: 0.62, wall: 7 }
 
+// 늪은 칸 안쪽만 꺼진 진흙 면이다. 칸 테두리가 땅색으로 남아 땅에 난 웅덩이로 읽힌다
+const MUD = { scale: 0.8, drop: 5 }
+// 진흙 위에 앉은 낮은 덩이. 자리는 칸 가운데에서 잰 칸 단위 거리다
+const LUMP = { scale: 0.09, depth: 2.5 }
+const LUMP_SPOTS: [number, number][] = [
+  [-0.2, 0.14],
+  [0.17, -0.12],
+  [0.06, 0.22],
+]
+// 빠진 큐브는 버둥거릴수록 얕게 잠기고 둘레의 진흙 테도 같이 작아진다. 버둥 횟수로 고른다
+const MUD_SINK = [13, 9.5, 6]
+const MUD_COLLAR = [0.72, 0.69, 0.66]
+// 잠긴 큐브의 밑면 앞 모서리가 진흙 면 아래로 내려가는 거리
+const MUD_DIP = (TILE.width * CUBE) / 4
+// 가라앉는 상자가 진흙 아래로 다 들어가는 거리. 상자 윗면 꼭짓점이 진흙 면 밑까지 내려간다
+export const BOX_SINK = TILE.layer + MUD.drop + (TILE.width * CUBE) / 4
+// 메운 늪은 상자 윗면만 남는다
+const FILLED_INNER = 0.52
+
 // 발판 길 칸은 구덩이로 그린다. 바닥은 높이 0 칸의 윗면보다 이만큼 아래다
 export const PIT_FLOOR = 11
 const RAIL_HALF = 0.13
@@ -104,6 +124,19 @@ const wallPoints = (x: number, y: number, h: number, side: number) => {
   return `${x},${top - hh} ${x + hw},${top} ${x + hw},${y + PIT_FLOOR} ${x},${y - hh + PIT_FLOOR}`
 }
 
+// 늪 우묵면의 뒤쪽 두 벽. 안쪽 마름모의 뒤 모서리에서 진흙 면까지 내려온다
+const mudWallPoints = (x: number, y: number, side: number) => {
+  const hw = ((TILE.width * MUD.scale) / 2) * side
+  const hh = (TILE.height * MUD.scale) / 2
+  return `${x - hw},${y} ${x},${y - hh} ${x},${y - hh + MUD.drop} ${x - hw},${y + MUD.drop}`
+}
+
+// 잠긴 것의 진흙 면 아래를 가린다. dip이 있으면 자른 자리가 큐브 밑면 앞 모서리를 따라간다
+const mudClipPoints = (x: number, y: number, dip: number) => {
+  const hw = (TILE.width * CUBE) / 2
+  return `${x - 4000},${y} ${x - hw},${y} ${x},${y + dip} ${x + hw},${y} ${x + 4000},${y} ${x + 4000},${y - 4000} ${x - 4000},${y - 4000}`
+}
+
 interface BoardCellProps {
   x: number
   y: number
@@ -120,6 +153,10 @@ interface BoardCellProps {
   crackShadow: number // 무너진 자리에 깔리는 그림자 진하기
   crackSeed: number // 자국 자리를 칸마다 어긋나게 하는 값
   hidden: boolean // 상자가 메우는 중인 칸
+  swamp: boolean // 늪 칸
+  swampFilled: number // 상자가 가라앉아 메워진 정도 0~1
+  swampStage: number // 잠긴 큐브의 깊이 단계 0~2, -1이면 가라앉는 상자
+  swampDeep: number // 잠긴 정도 0~1, 0이면 잠긴 것 없음
   faded: boolean
   entity: 'switch' | 'door' | null
   lift: boolean
@@ -153,6 +190,10 @@ const BoardCell = ({
   crackShadow,
   crackSeed,
   hidden,
+  swamp,
+  swampFilled,
+  swampStage,
+  swampDeep,
   faded,
   entity,
   lift,
@@ -233,6 +274,11 @@ const BoardCell = ({
   const stopAt = neighbors.length === 1 ? [-neighbors[0][0], -neighbors[0][1]] : null
   const rails = stopAt ? [neighbors[0], stopAt] : neighbors
   const stopOffset = stopAt ? isoDelta(STOP.offset * stopAt[0], STOP.offset * stopAt[1]) : null
+  const mudY = y + MUD.drop
+  const sunk = swampDeep > 0
+  // 큐브는 단계마다 정해진 깊이까지 칸째로 내려가고 가라앉는 상자는 Board가 내려 그린다
+  const sink = swampStage >= 0 ? (MUD.drop + atStage(MUD_SINK, swampStage)) * swampDeep : 0
+  const collar = swampStage >= 0 ? atStage(MUD_COLLAR, swampStage) * swampDeep : 0
 
   return (
     <g>
@@ -309,6 +355,57 @@ const BoardCell = ({
                 left={faces.left}
                 right={faces.right}
               />
+            )}
+            {swamp && (
+              <g opacity={1 - swampFilled}>
+                <polygon
+                  points={mudWallPoints(x, y, 1)}
+                  style={{ fill: 'var(--color-swamp-wall-left)' }}
+                />
+                <polygon
+                  points={mudWallPoints(x, y, -1)}
+                  style={{ fill: darken('swamp-wall-left', 10) }}
+                />
+                <polygon
+                  points={blockFaces(x, mudY, TILE.width * MUD.scale, 0).top}
+                  style={{ fill: 'var(--color-swamp-mud)' }}
+                />
+                <g opacity={1 - swampDeep}>
+                  {LUMP_SPOTS.map(([u, v]) => {
+                    const d = isoDelta(u, v)
+                    return (
+                      <BoardBlock
+                        key={`${u},${v}`}
+                        x={x + d.x}
+                        y={mudY + d.y - LUMP.depth}
+                        width={TILE.width * LUMP.scale}
+                        depth={LUMP.depth}
+                        top="var(--color-swamp-lump)"
+                        left={darken('swamp-lump', 18)}
+                        right={darken('swamp-lump', 8)}
+                      />
+                    )
+                  })}
+                </g>
+                {collar > 0 && (
+                  <polygon
+                    points={blockFaces(x, mudY, TILE.width * collar, 0).top}
+                    style={{ fill: 'var(--color-swamp-collar)' }}
+                  />
+                )}
+              </g>
+            )}
+            {swampFilled > 0 && (
+              <g opacity={swampFilled}>
+                <polygon
+                  points={blockFaces(x, y, TILE.width * MUD.scale, 0).top}
+                  style={{ fill: 'var(--color-swamp-filled)' }}
+                />
+                <polygon
+                  points={blockFaces(x, y, TILE.width * MUD.scale * FILLED_INNER, 0).top}
+                  style={{ fill: darken('tool', 13) }}
+                />
+              </g>
             )}
             {(lift || warp) && (
               <>
@@ -416,7 +513,18 @@ const BoardCell = ({
           <BoardLadder x={x} y={y} direction={direction} />
         </g>
       ))}
-      {children}
+      {sunk ? (
+        <>
+          <clipPath id="swamp-clip">
+            <polygon points={mudClipPoints(x, mudY, swampStage >= 0 ? MUD_DIP : 0)} />
+          </clipPath>
+          <g clipPath="url(#swamp-clip)" transform={`translate(0 ${sink})`}>
+            {children}
+          </g>
+        </>
+      ) : (
+        children
+      )}
     </g>
   )
 }
