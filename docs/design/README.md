@@ -13,8 +13,8 @@ Claude Design으로 받은 프로토타입이다. **모양과 색과 치수를 �
 | `Cubound Tram.dc.html` | 움직이는 발판. 구덩이와 레일과 멈춤 블록 | 4월드 |
 | `Cubound Layout Studies.dc.html` | 목록 화면과 폰 헤더 배치 안들 | 목록·헤더 |
 | `Cubound Cycle Select.dc.html` | 사이클 고르는 화면 | **아직 안 씀.** 2사이클 끝나고 |
-| `Cubound Cycle 2 Forest.dc.html` | 2사이클 세계 색 (숲) | **아직 안 씀.** 6월드부터 |
-| `Cubound Swamp.dc.html` | 늪 | **아직 안 씀.** 6월드 |
+| `Cubound Cycle 2 Forest.dc.html` | 2사이클 세계 색 (숲) | **썼다.** 셋 중 C안("조금 더")으로 갔다 |
+| `Cubound Swamp.dc.html` | 늪 | **썼다.** 6월드 |
 | `Cubound Mushroom.dc.html` | 버섯 | **아직 안 씀.** 7월드 |
 | `Cubound Vine.dc.html` | 덩굴 | **아직 안 씀.** 8월드 |
 | `Cubound Seed.dc.html` | 씨앗 | **아직 안 씀.** 9월드 |
