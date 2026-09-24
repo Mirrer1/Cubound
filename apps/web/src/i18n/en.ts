@@ -121,6 +121,10 @@ export const en = {
   'world.6': 'Land of Clinging Mud',
   'world.6.note': 'The mud holds your feet. Choose where to step in before you do.',
   'stage.6-1': 'The Mire',
+  'stage.6-2': 'The Sinking',
+  'stage.6-3': 'The Hinge',
+  'stage.6-4': 'The Byway',
+  'stage.6-5': 'The Prop',
 }
 
 export type Texts = typeof en

@@ -121,4 +121,8 @@ export const ja: Partial<Texts> = {
   'world.6': '足を取られる地',
   'world.6.note': 'ぬかるみは足を捕らえます。どこへ踏み込むかを先に選びます。',
   'stage.6-1': 'ぬかるみ',
+  'stage.6-2': '沈み',
+  'stage.6-3': '開き戸',
+  'stage.6-4': '抜け道',
+  'stage.6-5': '支柱',
 }

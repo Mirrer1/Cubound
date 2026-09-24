@@ -121,4 +121,8 @@ export const zhHant: Partial<Texts> = {
   'world.6': '陷足之地',
   'world.6.note': '泥濘會抓住你的腳。先想好從哪裡踏進去。',
   'stage.6-1': '泥濘',
+  'stage.6-2': '下沉',
+  'stage.6-3': '開合',
+  'stage.6-4': '小徑',
+  'stage.6-5': '支柱',
 }

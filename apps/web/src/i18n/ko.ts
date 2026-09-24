@@ -121,4 +121,8 @@ export const ko: Partial<Texts> = {
   'world.6': '발이 묶이는 땅',
   'world.6.note': '진창은 발을 붙잡습니다. 어디로 들어설지 먼저 고릅니다.',
   'stage.6-1': '진창',
+  'stage.6-2': '잠김',
+  'stage.6-3': '여닫이',
+  'stage.6-4': '샛길',
+  'stage.6-5': '버팀목',
 }

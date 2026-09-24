@@ -124,4 +124,8 @@ export const es: Partial<Texts> = {
   'world.6': 'Tierra de Pasos Atascados',
   'world.6.note': 'El lodo te sujeta los pies. Elige dónde pisar antes de hacerlo.',
   'stage.6-1': 'El Lodazal',
+  'stage.6-2': 'El Hundimiento',
+  'stage.6-3': 'La Bisagra',
+  'stage.6-4': 'El Sendero',
+  'stage.6-5': 'El Puntal',
 }
