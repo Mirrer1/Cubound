@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  boxSink,
   crackFrame,
   crackSink,
   crackThickness,
@@ -13,6 +14,8 @@ import {
   pressProgress,
   restartDrop,
   restartDuration,
+  swampFrame,
+  swampTime,
   switchCells,
   switchProgress,
   tramProgress,
@@ -1081,5 +1084,195 @@ describe('movingBox 발판에서 구덩이로', () => {
       expect(frame.level).toBeGreaterThanOrEqual(-1)
       last = frame.level
     }
+  })
+})
+
+const SWAMP_STAGE: Stage = {
+  version: 1,
+  id: 'test-swamp',
+  name: '늪',
+  heights: [[0, 0, 0, 0, 0]],
+  swamp: ['..#..'],
+  start: { x: 1, y: 0 },
+  goal: { x: 4, y: 0 },
+  entities: [],
+}
+
+// 늪 옆에 선 큐브가 상자를 늪으로 밀어 넣는 판
+const SINK_STAGE: Stage = {
+  ...SWAMP_STAGE,
+  start: { x: 0, y: 0 },
+  entities: [{ type: 'box', x: 1, y: 0 }],
+}
+
+const enterSwamp = () => {
+  const prev = createState(SWAMP_STAGE)
+  return { prev, ...move(prev, 'right') }
+}
+
+const struggleSwamp = () => {
+  const prev = enterSwamp().state
+  return { prev, ...move(prev, 'right') }
+}
+
+const leaveSwamp = () => {
+  const prev = move(struggleSwamp().state, 'right').state
+  return { prev, ...move(prev, 'right') }
+}
+
+const sinkBox = () => {
+  const prev = createState(SINK_STAGE)
+  return { prev, ...move(prev, 'right') }
+}
+
+describe('durationOf 늪', () => {
+  it('늪이 없는 판은 지금까지와 길이가 같다', () => {
+    const prev = createState(STAGE)
+    const { state, events } = move(prev, 'right')
+
+    expect(swampTime(prev, state)).toEqual({ lead: 0, tail: 0 })
+    expect(durationOf(events, swampTime(prev, state))).toBe(durationOf(events))
+    expect(durationOf(events)).toBe(WALK)
+  })
+
+  it('늪에 들어가는 이동은 걷고 나서 가라앉는 만큼 길다', () => {
+    const { prev, state, events } = enterSwamp()
+
+    expect(swampTime(prev, state).lead).toBe(0)
+    expect(durationOf(events, swampTime(prev, state))).toBeGreaterThan(WALK)
+  })
+
+  it('버둥거리는 이동은 제자리라도 연출 시간이 있다', () => {
+    const { prev, state, events } = struggleSwamp()
+
+    expect(events).toEqual([{ type: 'struggled', at: { x: 2, y: 0 } }])
+    expect(swampTime(prev, state)).toEqual({ lead: 0, tail: 0 })
+    expect(durationOf(events)).toBeGreaterThan(0)
+  })
+
+  it('늪에서 나오는 이동은 뽑혀 나오기를 기다린 뒤 걷는다', () => {
+    const { prev, state, events } = leaveSwamp()
+
+    expect(swampTime(prev, state).lead).toBeGreaterThan(0)
+    expect(durationOf(events, swampTime(prev, state))).toBeCloseTo(
+      WALK + swampTime(prev, state).lead,
+    )
+  })
+
+  it('상자가 가라앉는 이동은 밀기가 끝난 뒤까지 이어진다', () => {
+    const { prev, state, events } = sinkBox()
+
+    expect(events.some((e) => e.type === 'sank')).toBe(true)
+    expect(durationOf(events, swampTime(prev, state))).toBeGreaterThan(WALK)
+  })
+})
+
+describe('swampFrame', () => {
+  it('들어가는 이동은 큐브가 칸에 닿은 뒤에 가라앉는다', () => {
+    const { prev, state, events } = enterSwamp()
+    const swamp = swampTime(prev, state)
+
+    for (let t = 0; t <= 1; t += 0.02) {
+      const frame = swampFrame(prev, state, events, t)
+      if (!frame) continue
+      if (frame.deep > 0) expect(playerFrame(prev, state, events, t).x).toBeCloseTo(2)
+    }
+
+    expect(swampFrame(prev, state, events, 0)?.deep).toBe(0)
+    expect(swampFrame(prev, state, events, 1)).toMatchObject({ stage: 0, deep: 1 })
+    expect(swamp.tail).toBeGreaterThan(0)
+  })
+
+  it('버둥은 다음 단계보다 더 솟았다가 그 단계에서 멈춘다', () => {
+    const { prev, state, events } = struggleSwamp()
+    let highest = 0
+
+    for (let t = 0; t <= 1; t += 0.02) {
+      const frame = swampFrame(prev, state, events, t)
+      expect(frame?.deep).toBe(1)
+      highest = Math.max(highest, frame?.stage ?? 0)
+    }
+
+    expect(swampFrame(prev, state, events, 0)?.stage).toBeCloseTo(0)
+    expect(highest).toBeGreaterThan(1)
+    expect(swampFrame(prev, state, events, 1)?.stage).toBeCloseTo(1)
+  })
+
+  it('나오는 이동은 다 올라오기 전에는 떠나기 전 칸에 그대로 선다', () => {
+    const { prev, state, events } = leaveSwamp()
+
+    expect(swampFrame(prev, state, events, 0)).toMatchObject({ cell: { x: 2, y: 0 }, deep: 1 })
+    for (let t = 0; t <= 1; t += 0.02) {
+      const frame = swampFrame(prev, state, events, t)
+      if (frame && frame.deep > 0) expect(playerFrame(prev, state, events, t).x).toBeCloseTo(2)
+    }
+
+    expect(swampFrame(prev, state, events, 1)).toBeNull()
+  })
+
+  it('늪에 선 큐브는 이동이 없으면 그 단계 깊이에 머문다', () => {
+    const { state } = struggleSwamp()
+
+    expect(swampFrame(null, state, [], 1)).toMatchObject({ stage: 1, deep: 1 })
+  })
+
+  it('늪이 없는 판은 잠긴 큐브가 없다', () => {
+    const prev = createState(STAGE)
+    const { state, events } = move(prev, 'right')
+
+    expect(swampFrame(prev, state, events, 0.5)).toBeNull()
+  })
+})
+
+describe('boxSink', () => {
+  it('상자는 밀기가 끝난 뒤부터 잠기고 그 자리가 드러난다', () => {
+    const { prev, state, events } = sinkBox()
+    const swamp = swampTime(prev, state)
+
+    expect(boxSink(events, swamp, 0)).toMatchObject({ at: { x: 2, y: 0 }, deep: 0, filled: 0 })
+    expect(boxSink(events, swamp, 1)).toMatchObject({ deep: 1, filled: 1 })
+    expect(state.swamps).toEqual([])
+  })
+
+  it('상자는 다 잠길 때까지 그 칸에 남는다', () => {
+    const { prev, state, events } = sinkBox()
+    const swamp = swampTime(prev, state)
+    let seen = 0
+
+    for (let t = 0; t <= 1; t += 0.02) {
+      const sinking = boxSink(events, swamp, t)
+      if (sinking && sinking.deep > 0 && sinking.deep < 1) {
+        expect(movingBox(prev, state, events, t)).toMatchObject({ cell: { x: 2, y: 0 } })
+        seen += 1
+      }
+    }
+
+    expect(seen).toBeGreaterThan(0)
+    expect(movingBox(prev, state, events, 1)).toBeNull()
+  })
+
+  it('가라앉는 상자가 없으면 null이다', () => {
+    expect(boxSink([{ type: 'blocked', direction: 'left' }], { lead: 0, tail: 0 }, 0.5)).toBeNull()
+  })
+})
+
+describe('playerFrame 늪', () => {
+  it('가라앉는 동안에는 들어간 칸에 그린다', () => {
+    const prev = move(createState({ ...SWAMP_STAGE, start: { x: 4, y: 0 } }), 'left').state
+    const { state, events } = move(prev, 'left')
+
+    expect(state.player).toEqual({ x: 2, y: 0 })
+    for (let t = 0; t <= 1; t += 0.02) {
+      const frame = swampFrame(prev, state, events, t)
+      if (frame && frame.deep > 0) {
+        expect(playerFrame(prev, state, events, t).cell).toEqual({ x: 2, y: 0 })
+      }
+    }
+  })
+
+  it('뽑혀 나오는 동안에는 떠나기 전 칸에 그린다', () => {
+    const { prev, state, events } = leaveSwamp()
+
+    expect(playerFrame(prev, state, events, 0).cell).toEqual({ x: 2, y: 0 })
   })
 })

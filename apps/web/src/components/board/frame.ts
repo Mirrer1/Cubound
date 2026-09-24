@@ -17,9 +17,15 @@ const TILT = 0.24
 // 짝 칸으로 가라앉는 시간, 짝인 칸에서 솟아오르는 시간, 잠기는 층 수
 const WARP = { sink: 0.2, rise: 0.2, depth: 0.6 }
 
+// 늪에 가라앉고 버둥거리고 뽑혀 나오는 시간, 밀려 들어간 상자가 잠기는 시간
+// over는 버둥에 한 단계보다 더 솟는 깊이 단계로 한 단계가 3.5px이라 3px쯤 솟는다
+// peak는 솟는 데 쓰는 몫, fill은 잠긴 상자 위로 땅이 드러나는 지점
+const SWAMP = { sink: 0.28, struggle: 0.3, rise: 0.2, box: 0.3, over: 0.857, peak: 0.42, fill: 0.5 }
+
 const easeIn = (t: number) => t * t
 const easeOut = (t: number) => 1 - (1 - t) ** 2
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
 // 연달아 이동할 때 앞뒤 이동과 이어지는 쪽은 멈추지 않고 굴러간다
 export interface Chain {
@@ -244,19 +250,50 @@ const tramEnd = (events: GameEvent[]) => {
   return at === null ? 0 : at + SECONDS.tram
 }
 
-export const durationOf = (events: GameEvent[]) =>
+// 늪 연출에 더 드는 시간. lead는 이동 앞쪽, tail은 뒤쪽에 붙는다
+export interface SwampTime {
+  lead: number // 뽑혀 나오기를 기다리는 시간
+  tail: number // 가라앉기를 기다리는 시간
+}
+
+const NO_SWAMP: SwampTime = { lead: 0, tail: 0 }
+
+const inSwamp = (state: GameState, p: Point) => state.swamps.some((cell) => same(cell, p))
+
+// 늪에 빠지거나 늪에서 나오는 이동에 더 드는 시간. 제자리에 선 이동은 버둥이라 길이를 따로 둔다
+export const swampTime = (prev: GameState | null, game: GameState): SwampTime => {
+  if (!prev || same(prev.player, game.player)) return NO_SWAMP
+
+  return {
+    lead: inSwamp(prev, prev.player) ? SWAMP.rise : 0,
+    tail: inSwamp(game, game.player) ? SWAMP.sink : 0,
+  }
+}
+
+// 늪에 밀려 들어간 상자가 다 잠기는 시각
+const sinkEnd = (events: GameEvent[]) =>
+  events.some((e) => e.type === 'sank') ? totalSeconds(segmentsOf(boxPath(events))) + SWAMP.box : 0
+
+export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
+  swamp.lead +
   Math.max(
     0,
-    totalSeconds(playerSegments(events)),
+    totalSeconds(playerSegments(events)) + swamp.tail,
     totalSeconds(segmentsOf(boxPath(events))),
     switchEnd(events),
     pickUpEnd(events),
     warpEnd(events),
     tramEnd(events),
+    sinkEnd(events),
     ...events.map((e) => (e.type === 'blocked' || e.type === 'placed' ? SECONDS[e.type] : 0)),
     ...events.map((e) => (e.type === 'cracked' && e.gone ? CRUMBLE_SECONDS : 0)),
+    ...events.map((e) => (e.type === 'struggled' ? SWAMP.struggle : 0)),
     ...frostStamps(events).map((stamp) => stamp.at + FROST_FADE),
   )
+
+// 이동이 시작한 뒤로 흐른 시간. 늪에서 뽑혀 나오기를 기다리는 동안은 0보다 작다
+const elapsedAt = (events: GameEvent[], swamp: SwampTime, t: number) =>
+  t * durationOf(events, swamp) - swamp.lead
 
 // cells 중 한 칸이 pressed 상태가 되는 시각. 이 이동에서 닿지 않는 칸뿐이면 null
 const pressedAt = (events: GameEvent[], cells: Point[], pressed: boolean) => {
@@ -273,46 +310,57 @@ export const switchProgress = (
   cells: Point[],
   pressed: boolean,
   t: number,
+  swamp: SwampTime = NO_SWAMP,
 ) => {
   const at = pressedAt(events, cells, pressed)
-  return at === null ? t : Math.min(1, Math.max(0, (t * durationOf(events) - at) / SWITCH_SECONDS))
+  return at === null
+    ? t
+    : Math.min(1, Math.max(0, (elapsedAt(events, swamp, t) - at) / SWITCH_SECONDS))
 }
 
 // 스위치 자신이 눌리고 풀리는 시간. 닿아서 생기는 일이라 멀리 있는 문과 발판보다 짧다
 const PRESS_SECONDS = 0.06
 
 // 스위치는 접촉이 바뀌는 순간에 맞춘다. 눌림은 닿는 때에 끝나고 풀림은 떠나는 때에 시작한다
-export const pressProgress = (events: GameEvent[], p: Point, pressed: boolean, t: number) => {
+export const pressProgress = (
+  events: GameEvent[],
+  p: Point,
+  pressed: boolean,
+  t: number,
+  swamp: SwampTime = NO_SWAMP,
+) => {
   const { arrive, leave } = touchAt(events, p)
   const at = pressed ? arrive : leave
   if (at === null) return t
 
   const start = pressed ? at - PRESS_SECONDS : at
-  return Math.min(1, Math.max(0, (t * durationOf(events) - start) / PRESS_SECONDS))
+  return Math.min(1, Math.max(0, (elapsedAt(events, swamp, t) - start) / PRESS_SECONDS))
 }
 
 // 사다리를 집어 드는 진행도 0~1. 집지 않는 이동은 이동 전체에 걸쳐 섞는다
-export const pickUpProgress = (events: GameEvent[], t: number) => {
+export const pickUpProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
   const at = pickUpAt(events)
-  return at === null ? t : Math.min(1, Math.max(0, (t * durationOf(events) - at) / LADDER_SECONDS))
+  return at === null
+    ? t
+    : Math.min(1, Math.max(0, (elapsedAt(events, swamp, t) - at) / LADDER_SECONDS))
 }
 
 // 발판이 다음 칸으로 가는 진행도 0~1. 발판이 가지 않는 이동은 1
-export const tramProgress = (events: GameEvent[], t: number) => {
+export const tramProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
   const at = tramStart(events)
   if (at === null) return 1
 
-  return Math.min(1, Math.max(0, (t * durationOf(events) - at) / SECONDS.tram))
+  return Math.min(1, Math.max(0, (elapsedAt(events, swamp, t) - at) / SECONDS.tram))
 }
 
 export const switchCells = (stage: Stage, target: string): Point[] =>
   stage.entities.filter((e) => e.type === 'switch' && e.target === target)
 
 // 칸 하나의 자국 진하기 0~1. 겹치면 진한 쪽을 쓴다
-export const frostAt = (events: GameEvent[], p: Point, t: number) => {
+export const frostAt = (events: GameEvent[], p: Point, t: number, swamp: SwampTime = NO_SWAMP) => {
   if (!events.some((e) => e.type === 'slid')) return 0
 
-  const elapsed = t * durationOf(events)
+  const elapsed = elapsedAt(events, swamp, t)
   return frostStamps(events)
     .filter((stamp) => same(stamp.p, p))
     .reduce(
@@ -320,6 +368,69 @@ export const frostAt = (events: GameEvent[], p: Point, t: number) => {
         Math.max(deepest, elapsed < stamp.at ? 0 : 1 - (elapsed - stamp.at) / FROST_FADE),
       0,
     )
+}
+
+// 버둥은 다음 단계보다 살짝 더 솟았다가 도로 잠긴다
+const struggleStage = (from: number, to: number, p: number) =>
+  p < SWAMP.peak
+    ? lerp(from, to + SWAMP.over, easeOut(p / SWAMP.peak))
+    : lerp(to + SWAMP.over, to, moveEase((p - SWAMP.peak) / (1 - SWAMP.peak), NO_CHAIN))
+
+export interface SwampFrame {
+  cell: Point // 잠긴 칸
+  stage: number // 잠긴 깊이 단계 0~2. 오를수록 얕다
+  deep: number // 잠긴 정도 0~1
+}
+
+// 늪에 잠긴 큐브의 깊이. 잠긴 큐브가 없으면 null
+export const swampFrame = (
+  prev: GameState | null,
+  game: GameState,
+  events: GameEvent[],
+  t: number,
+): SwampFrame | null => {
+  const swamp = swampTime(prev, game)
+  const elapsed = elapsedAt(events, swamp, t)
+
+  // 나오는 이동은 걷기 전에 뽑혀 올라오고 다 올라오면 늪을 벗어난 것이다
+  if (prev && elapsed < 0) {
+    const p = clamp01((elapsed + swamp.lead) / swamp.lead)
+    return { cell: prev.player, stage: prev.struggles, deep: 1 - easeIn(p) }
+  }
+  if (!inSwamp(game, game.player)) return null
+
+  // 들어가는 이동은 큐브가 칸에 닿은 뒤부터 가라앉는다
+  if (swamp.tail > 0) {
+    const walked = totalSeconds(playerSegments(events))
+    return {
+      cell: game.player,
+      stage: game.struggles,
+      deep: easeIn(clamp01((elapsed - walked) / swamp.tail)),
+    }
+  }
+  if (prev && events.some((e) => e.type === 'struggled')) {
+    const p = clamp01(elapsed / SWAMP.struggle)
+    return { cell: game.player, stage: struggleStage(prev.struggles, game.struggles, p), deep: 1 }
+  }
+
+  return { cell: game.player, stage: game.struggles, deep: 1 }
+}
+
+export interface BoxSinkFrame {
+  at: Point // 상자가 가라앉는 칸
+  deep: number // 잠긴 정도 0~1
+  filled: number // 메운 자리가 드러난 정도 0~1
+}
+
+// 늪에 밀려 들어간 상자가 잠기는 정도. 가라앉는 상자가 없으면 null
+export const boxSink = (events: GameEvent[], swamp: SwampTime, t: number): BoxSinkFrame | null => {
+  const sank = events.find((e) => e.type === 'sank')
+  if (sank?.type !== 'sank') return null
+
+  const pushed = totalSeconds(segmentsOf(boxPath(events)))
+  const p = clamp01((elapsedAt(events, swamp, t) - pushed) / SWAMP.box)
+
+  return { at: sank.at, deep: easeIn(p), filled: clamp01((p - SWAMP.fill) / (1 - SWAMP.fill)) }
 }
 
 // 미끄러져 멈춘 이동은 다음 입력과 이어 붙이지 않는다
@@ -407,13 +518,19 @@ const carriedBy = (carry: TramEvent, p: number) => ({
 })
 
 // 그 칸의 발판이 오르내리는 진행도. 발판 칸이 아니면 이동 전체에 걸쳐 섞는다
-const ridePhase = (game: GameState, events: GameEvent[], p: Point, t: number) => {
+const ridePhase = (game: GameState, events: GameEvent[], p: Point, t: number, swamp: SwampTime) => {
   const lift = game.stage.entities.find(
     (e): e is Extract<Entity, { type: 'lift' }> => e.type === 'lift' && same(e, p),
   )
   return lift === undefined
     ? t
-    : switchProgress(events, switchCells(game.stage, lift.id), isLiftRaised(game, lift.id), t)
+    : switchProgress(
+        events,
+        switchCells(game.stage, lift.id),
+        isLiftRaised(game, lift.id),
+        t,
+        swamp,
+      )
 }
 
 // 큐브가 제 힘으로 간 몫만 그린 프레임. 발판에 실린 몫은 playerFrame이 더한다
@@ -440,10 +557,11 @@ const pathFrame = (
   const segments = playerSegments(events)
   const startLevel = prev ? standHeight(prev, prev.player) : endLevel
   const pathLevel = segments.reduce((level, s) => levelAfter(level, s.event), startLevel)
+  const swamp = swampTime(prev, game)
   // 이동 경로로 설명되지 않는 높이 차이는 발판이 오르내린 몫이라 칸과 같은 속도로 따라간다
-  const riding = (endLevel - pathLevel) * ridePhase(game, events, player, t)
+  const riding = (endLevel - pathLevel) * ridePhase(game, events, player, t, swamp)
   // 연출이 이동보다 길 수 있어 큐브는 제 길을 다 가면 그 자리에서 기다린다
-  const elapsed = t * durationOf(events)
+  const elapsed = elapsedAt(events, swamp, t)
 
   const warped = events.find((e) => e.type === 'warped')
   const warpStart = warpAt(events)
@@ -469,7 +587,11 @@ const pathFrame = (
     }
   }
 
-  const step = stepAt(segments, elapsed, slideChain(events, chain))
+  // 늪에 가라앉는 동안은 걸음이 끝나 들어간 칸에 서 있다. 그 칸에 그려야 진흙에 가려진다
+  if (swamp.tail > 0 && elapsed >= totalSeconds(segments)) return still
+
+  // 늪에서 뽑혀 나오기를 기다리는 동안은 떠나기 전 칸에 그대로 선다
+  const step = elapsed < 0 ? null : stepAt(segments, elapsed, slideChain(events, chain))
   if (prev && step) {
     const span = slideSpan(segments)
     const { event, index, p } = step
@@ -524,7 +646,7 @@ export const playerFrame = (
   const carry = prev && t < 1 ? carryOf(events, rest) : null
   if (carry === null) return frame
 
-  const p = tramProgress(events, t)
+  const p = tramProgress(events, t, swampTime(prev, game))
   const shift = carriedBy(carry, p)
 
   return {
@@ -561,12 +683,15 @@ export const movingBox = (
 ): BoxFrame | null => {
   const path = boxPath(events)
   const segments = segmentsOf(path)
+  const swamp = swampTime(prev, game)
   // 상자가 제자리에 앉으면 바로 사라져 메운 바닥이 드러난다. 큐브는 그 뒤에 그 칸으로 간다
-  const elapsed = t * durationOf(events)
+  const elapsed = elapsedAt(events, swamp, t)
   const carry = carryOf(events, path.at(-1)?.to ?? null)
-  const ride = carry === null ? 0 : tramProgress(events, t)
+  const ride = carry === null ? 0 : tramProgress(events, t, swamp)
   const settled = elapsed >= totalSeconds(segments) && (carry === null || ride >= 1)
-  if (!prev || settled) return null
+  // 늪에 밀려 들어간 상자는 밀기가 끝난 자리에서 다 잠길 때까지 남는다
+  const sinking = boxSink(events, swamp, t)
+  if (!prev || (settled && (sinking === null || sinking.deep >= 1))) return null
 
   const step = stepAt(segments, elapsed, slideChain(events, chain))
   if (!step) return null
@@ -583,7 +708,7 @@ export const movingBox = (
     event.type === 'slid' || p < 0.6 ? fromLevel : lerp(fromLevel, toLevel, easeIn((p - 0.6) / 0.4))
   // 도착 칸에 서는 높이에서 상자 한 층을 뺀 값이 상자가 앉을 높이다. 발판이 오르내린 몫이 여기서 드러난다
   const endLevel = path.reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
-  const riding = (standHeight(game, to) - 1 - endLevel) * ridePhase(game, events, to, t)
+  const riding = (standHeight(game, to) - 1 - endLevel) * ridePhase(game, events, to, t, swamp)
   const shift = carry ? carriedBy(carry, ride) : { x: 0, y: 0 }
 
   return {
@@ -591,8 +716,13 @@ export const movingBox = (
     y: lerp(event.from.y, event.to.y, p) + shift.y,
     level: level + riding,
     to,
+    // 잠기는 상자는 멈춘 자리에 있어 그 칸에 그려야 진흙에 가려진다
     cell:
-      carry && ride > 0 ? slidingCell(carry.from, carry.to, ride) : frontOf(event.from, event.to),
+      sinking && settled
+        ? to
+        : carry && ride > 0
+          ? slidingCell(carry.from, carry.to, ride)
+          : frontOf(event.from, event.to),
   }
 }
 
@@ -615,7 +745,7 @@ export interface CrackFrame {
 const stageOf = (left: number) => (left > 1 ? 0 : left === 1 ? 1 : 2)
 
 // 단계 사이 값은 앞뒤 단계를 섞는다
-const atStage = (steps: number[], stage: number) => {
+export const atStage = (steps: number[], stage: number) => {
   const i = Math.min(steps.length - 2, Math.max(0, Math.floor(stage)))
   return lerp(steps[i], steps[i + 1], stage - i)
 }

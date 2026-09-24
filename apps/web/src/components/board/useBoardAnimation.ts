@@ -1,7 +1,7 @@
 import { type AnimationPlaybackControls, animate, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
-import { type Chain, durationOf } from './frame'
+import { type Chain, type SwampTime, durationOf } from './frame'
 import type { GameEvent } from '@/game/types'
 
 // 기다리는 입력이 있으면 조금 빠르게 재생해 다음 입력을 일찍 받는다
@@ -18,12 +18,13 @@ export const useBoardAnimation = (
   queued: number,
   chained: boolean,
   restartSeconds: number, // 재시작 연출 길이, 0이면 이동 연출
+  swamp: SwampTime, // 늪에 드나드는 데 더 드는 시간
 ): { t: number; chain: Chain } => {
   const [progress, setProgress] = useState({ turn: -1, t: 1, out: false })
   const controls = useRef<AnimationPlaybackControls | null>(null)
   const queuedRef = useRef(queued)
   const reduced = useReducedMotion()
-  const duration = (restartSeconds || durationOf(events)) * (reduced ? 0.35 : 1)
+  const duration = (restartSeconds || durationOf(events, swamp)) * (reduced ? 0.35 : 1)
   const speed = speedFor(queued)
 
   useEffect(() => {

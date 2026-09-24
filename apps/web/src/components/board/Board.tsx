@@ -1,12 +1,13 @@
 import { useMemo } from 'react'
 
 import BoardBox from './BoardBox'
-import BoardCell, { PIT_FLOOR } from './BoardCell'
+import BoardCell, { BOX_SINK, PIT_FLOOR } from './BoardCell'
 import BoardLadder from './BoardLadder'
 import BoardTram from './BoardTram'
 import ClearEffect from './ClearEffect'
 import { rollingCubeFaces } from './cube'
 import {
+  boxSink,
   crackFrame,
   crackSink,
   frostAt,
@@ -17,6 +18,8 @@ import {
   restartDrop,
   restartDuration,
   slidingCell,
+  swampFrame,
+  swampTime,
   switchCells,
   switchProgress,
   tramProgress,
@@ -86,6 +89,8 @@ const Board = ({
   guideCell,
 }: BoardProps) => {
   const restartSeconds = restarting ? restartDuration(game.boxes.length) : 0
+  // 늪에 드나드는 이동은 뽑혀 나오고 가라앉는 만큼 연출이 길다
+  const swampSeconds = swampTime(restarting ? null : prevGame, game)
   const { t, chain } = useBoardAnimation(
     turn,
     events,
@@ -93,6 +98,7 @@ const Board = ({
     queued,
     chained,
     restartSeconds,
+    swampSeconds,
   )
   const moving = t < 1 && prevGame !== null
   const before = moving ? prevGame : game
@@ -109,6 +115,8 @@ const Board = ({
   // 카메라는 최종 자리가 아니라 지금 그려지는 자리를 따라간다. 순간이동은 나온 뒤에 움직인다
   const { ref, viewBox } = useCamera(game, guideCell ?? cubeCell)
   const box = movingBox(prevGame, game, events, t, chain)
+  const sunk = swampFrame(dropping ? null : prevGame, game, events, t)
+  const sinkingBox = boxSink(events, swampSeconds, t)
   const pickedUp = moving ? events.find((e) => e.type === 'pickedUp') : undefined
   const placed = moving ? events.find((e) => e.type === 'placed') : undefined
 
@@ -156,7 +164,7 @@ const Board = ({
   const wallHeight = (x: number, y: number) =>
     railDirs.has(`${x}-${y}`) ? -1 : Math.max(heights[y]?.[x] ?? -1, before.heights[y]?.[x] ?? -1)
   // 발판은 이전 자리에서 다음 자리로 미끄러진다. 코와 밝은 레일은 도착하는 순간에 다음 쪽으로 넘어간다
-  const tramPhase = moving ? tramProgress(events, t) : 1
+  const tramPhase = moving ? tramProgress(events, t, swampSeconds) : 1
   const tramFrames = trams.map((tram, i) => {
     const from = tram.cells[before.trams[i].at]
     const to = tram.cells[game.trams[i].at]
@@ -194,13 +202,13 @@ const Board = ({
         )
       : ''
   // 사다리는 이동이 시작할 때가 아니라 큐브가 그 칸에 닿은 때부터 손으로 옮겨진다
-  const pickUpPhase = moving ? pickUpProgress(events, t) : 1
+  const pickUpPhase = moving ? pickUpProgress(events, t, swampSeconds) : 1
   const carriedOpacity =
     pickedUp && !game.carrying ? 0 : pickedUp ? pickUpPhase : placed ? 1 - t : game.carrying ? 1 : 0
   const progress = moving ? t : 1
   // 문과 발판은 이동이 시작할 때가 아니라 스위치가 눌리거나 풀린 때부터 움직인다
   const linkedPhase = (cells: Point[], pressed: boolean) =>
-    moving ? switchProgress(events, cells, pressed, t) : 1
+    moving ? switchProgress(events, cells, pressed, t, swampSeconds) : 1
 
   // 무너지는 칸은 닳을수록 내려앉아서 그 위에 선 것도 같은 만큼 내려간다
   const sinkAt = (p: Point) => {
@@ -227,7 +235,12 @@ const Board = ({
       ? [
           {
             x: pushedScreen.x,
-            y: pushedScreen.y - TILE.layer + standSink(box.x, box.y),
+            // 늪에 밀려 들어간 상자는 멈춘 자리에서 진흙 아래로 내려간다
+            y:
+              pushedScreen.y -
+              TILE.layer +
+              standSink(box.x, box.y) +
+              (sinkingBox ? BOX_SINK * sinkingBox.deep : 0),
             to: box.to,
             cell: box.cell,
           },
@@ -264,6 +277,11 @@ const Board = ({
         const warp = stage.entities.find(
           (e): e is Extract<Entity, { type: 'warp' }> => e.type === 'warp' && same(e, cell.p),
         )
+        const swampHere = (stage.swamp?.[cell.p.y]?.[cell.p.x] ?? '.') !== '.'
+        // 상자가 가라앉는 동안은 진흙이 남아 있고 그 위로 메운 자리가 드러난다
+        const swamp = swampHere && (has(game.swamps, cell.p) || has(before.swamps, cell.p))
+        const sunkHere = sunk && same(sunk.cell, cell.p) ? sunk : null
+        const sinkingHere = sinkingBox && same(sinkingBox.at, cell.p) ? sinkingBox : null
         const left = crackLeft(game, cell.p)
         const was = crackLeft(before, cell.p)
         // 처음부터 구멍이던 칸과 무너진 뒤 메워진 칸 둘 다 상자가 만든 바닥이다
@@ -278,7 +296,7 @@ const Board = ({
             : linkedPhase(switchCells(stage, lift.id), isLiftRaised(game, lift.id))
         const switchPhase =
           entity?.type === 'switch' && moving
-            ? pressProgress(events, cell.p, pressed(game), t)
+            ? pressProgress(events, cell.p, pressed(game), t, swampSeconds)
             : progress
         const doorPhase =
           entity?.type === 'door'
@@ -330,7 +348,7 @@ const Board = ({
             goal={same(cell.p, stage.goal)}
             filled={isFilled}
             ice={isIce(game, cell.p)}
-            frost={frostAt(events, cell.p, t)}
+            frost={frostAt(events, cell.p, t, swampSeconds)}
             crack={Math.max(left, was) >= 0}
             crackStage={crumble.stage}
             crackBroken={crumble.broken}
@@ -338,6 +356,10 @@ const Board = ({
             crackShadow={crumble.shadow}
             crackSeed={(cell.p.x * 3 + cell.p.y * 5) % 4}
             hidden={isFilled && movedBoxHere}
+            swamp={swamp}
+            swampFilled={swampHere && !has(game.swamps, cell.p) ? (sinkingHere?.filled ?? 1) : 0}
+            swampStage={sunkHere ? sunkHere.stage : -1}
+            swampDeep={sunkHere?.deep ?? sinkingHere?.deep ?? 0}
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
             lift={lift !== undefined}
