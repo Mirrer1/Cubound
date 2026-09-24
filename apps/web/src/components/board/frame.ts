@@ -1,4 +1,4 @@
-import { isLiftRaised, standHeight } from '@/game/rules'
+import { STRUGGLES, isLiftRaised, standHeight } from '@/game/rules'
 import type { Direction, Entity, GameEvent, GameState, Point, Stage } from '@/game/types'
 
 const SECONDS = {
@@ -18,7 +18,7 @@ const TILT = 0.24
 const WARP = { sink: 0.2, rise: 0.2, depth: 0.6 }
 
 // 늪에 가라앉고 버둥거리고 뽑혀 나오는 시간, 밀려 들어간 상자가 잠기는 시간
-// over는 버둥에 한 단계보다 더 솟는 깊이 단계로 한 단계가 3.5px이라 3px쯤 솟는다
+// over는 버둥에 그 수의 자리보다 더 솟는 몫으로 제일 깊은 곳에서 마지막 버둥까지가 7px이라 3px 솟는다
 // peak는 솟는 데 쓰는 몫, fill은 잠긴 상자 위로 땅이 드러나는 지점
 // lead는 상자가 칸에 닿기 전에 미리 가라앉는 시간으로 닿는 순간 이미 진흙에 밀려 들어가 보인다
 const SWAMP = {
@@ -27,7 +27,7 @@ const SWAMP = {
   rise: 0.2,
   box: 0.36,
   lead: 0.09,
-  over: 0.857,
+  over: 0.4285,
   peak: 0.42,
   fill: 0.5,
 }
@@ -382,15 +382,30 @@ export const frostAt = (events: GameEvent[], p: Point, t: number, swamp: SwampTi
     )
 }
 
-// 버둥은 다음 단계보다 살짝 더 솟았다가 도로 잠긴다
-const struggleStage = (from: number, to: number, p: number) =>
+// 빠진 큐브가 잠기는 깊이와 둘레에 걸리는 진흙 테. 제일 깊은 자리에서 마지막 버둥 자리까지다
+const MUD_SINK = { deepest: 13, risen: 6 }
+const MUD_COLLAR = { deepest: 0.72, risen: 0.66 }
+
+export const swampSink = (risen: number) => lerp(MUD_SINK.deepest, MUD_SINK.risen, risen)
+
+export const swampCollar = (risen: number) => lerp(MUD_COLLAR.deepest, MUD_COLLAR.risen, risen)
+
+// 깊어지는 늪은 빠진 횟수만큼 버둥이 는다
+const strugglesFor = (state: GameState) =>
+  state.stage.rules?.swampDeepen ? STRUGGLES + state.sinks - 1 : STRUGGLES
+
+// 버둥을 몇 수 하든 마지막 버둥에서 1이 되게 고르게 올라온다
+const risenIn = (state: GameState) => state.struggles / strugglesFor(state)
+
+// 버둥은 다음 자리보다 살짝 더 솟았다가 도로 잠긴다
+const struggleRise = (from: number, to: number, p: number) =>
   p < SWAMP.peak
     ? lerp(from, to + SWAMP.over, easeOut(p / SWAMP.peak))
     : lerp(to + SWAMP.over, to, moveEase((p - SWAMP.peak) / (1 - SWAMP.peak), NO_CHAIN))
 
 export interface SwampFrame {
   cell: Point // 잠긴 칸
-  stage: number // 잠긴 깊이 단계 0~2. 오를수록 얕다
+  risen: number // 올라온 정도. 0이면 제일 깊고 1이면 마지막 버둥 자리다
   deep: number // 잠긴 정도 0~1
 }
 
@@ -407,7 +422,7 @@ export const swampFrame = (
   // 나오는 이동은 걷기 전에 뽑혀 올라오고 다 올라오면 늪을 벗어난 것이다
   if (prev && elapsed < 0) {
     const p = clamp01((elapsed + swamp.lead) / swamp.lead)
-    return { cell: prev.player, stage: prev.struggles, deep: 1 - easeIn(p) }
+    return { cell: prev.player, risen: risenIn(prev), deep: 1 - easeIn(p) }
   }
   if (!inSwamp(game, game.player)) return null
 
@@ -416,16 +431,20 @@ export const swampFrame = (
     const walked = totalSeconds(playerSegments(events))
     return {
       cell: game.player,
-      stage: game.struggles,
+      risen: risenIn(game),
       deep: easeIn(clamp01((elapsed - walked) / swamp.tail)),
     }
   }
   if (prev && events.some((e) => e.type === 'struggled')) {
     const p = clamp01(elapsed / SWAMP.struggle)
-    return { cell: game.player, stage: struggleStage(prev.struggles, game.struggles, p), deep: 1 }
+    return {
+      cell: game.player,
+      risen: struggleRise(risenIn(prev), risenIn(game), p),
+      deep: 1,
+    }
   }
 
-  return { cell: game.player, stage: game.struggles, deep: 1 }
+  return { cell: game.player, risen: risenIn(game), deep: 1 }
 }
 
 export interface BoxSinkFrame {

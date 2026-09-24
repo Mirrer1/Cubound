@@ -358,7 +358,7 @@ const Board = ({
             hidden={isFilled && movedBoxHere}
             swamp={swamp}
             swampFilled={swampHere && !has(game.swamps, cell.p) ? (sinkingHere?.filled ?? 1) : 0}
-            swampStage={sunkHere ? sunkHere.stage : -1}
+            swampRisen={sunkHere ? sunkHere.risen : -1}
             swampDeep={sunkHere?.deep ?? sinkingHere?.deep ?? 0}
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}

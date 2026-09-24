@@ -14,7 +14,9 @@ import {
   pressProgress,
   restartDrop,
   restartDuration,
+  swampCollar,
   swampFrame,
+  swampSink,
   swampTime,
   switchCells,
   switchProgress,
@@ -1120,6 +1122,21 @@ const leaveSwamp = () => {
   return { prev, ...move(prev, 'right') }
 }
 
+// 늪에 times번 빠져 마지막 늪에 막 들어선 상태. n번째 늪은 버둥이 n+1수다
+const deepSwamp = (times: number) => {
+  let state = createState({ ...SWAMP_STAGE, rules: { swampDeepen: true } })
+  let side: 'left' | 'right' = 'right'
+
+  for (let n = 1; n <= times; n += 1) {
+    state = move(state, side).state
+    if (n === times) break
+    for (let done = 0; done <= n; done += 1) state = move(state, side).state
+    state = move(state, side).state
+    side = side === 'right' ? 'left' : 'right'
+  }
+  return state
+}
+
 const sinkBox = () => {
   const prev = createState(SINK_STAGE)
   return { prev, ...move(prev, 'right') }
@@ -1195,7 +1212,7 @@ describe('swampFrame', () => {
     }
 
     expect(swampFrame(prev, state, events, 0)?.deep).toBe(0)
-    expect(swampFrame(prev, state, events, 1)).toMatchObject({ stage: 0, deep: 1 })
+    expect(swampFrame(prev, state, events, 1)).toMatchObject({ risen: 0, deep: 1 })
     expect(swamp.tail).toBeGreaterThan(0)
   })
 
@@ -1206,12 +1223,12 @@ describe('swampFrame', () => {
     for (let t = 0; t <= 1; t += 0.02) {
       const frame = swampFrame(prev, state, events, t)
       expect(frame?.deep).toBe(1)
-      highest = Math.max(highest, frame?.stage ?? 0)
+      highest = Math.max(highest, frame?.risen ?? 0)
     }
 
-    expect(swampFrame(prev, state, events, 0)?.stage).toBeCloseTo(0)
-    expect(highest).toBeGreaterThan(1)
-    expect(swampFrame(prev, state, events, 1)?.stage).toBeCloseTo(1)
+    expect(swampFrame(prev, state, events, 0)?.risen).toBeCloseTo(0)
+    expect(highest).toBeGreaterThan(0.5)
+    expect(swampFrame(prev, state, events, 1)?.risen).toBeCloseTo(0.5)
   })
 
   it('나오는 이동은 다 올라오기 전에는 떠나기 전 칸에 그대로 선다', () => {
@@ -1229,7 +1246,7 @@ describe('swampFrame', () => {
   it('늪에 선 큐브는 이동이 없으면 그 단계 깊이에 머문다', () => {
     const { state } = struggleSwamp()
 
-    expect(swampFrame(null, state, [], 1)).toMatchObject({ stage: 1, deep: 1 })
+    expect(swampFrame(null, state, [], 1)).toMatchObject({ risen: 0.5, deep: 1 })
   })
 
   it('늪이 없는 판은 잠긴 큐브가 없다', () => {
@@ -1237,6 +1254,47 @@ describe('swampFrame', () => {
     const { state, events } = move(prev, 'right')
 
     expect(swampFrame(prev, state, events, 0.5)).toBeNull()
+  })
+
+  it('깊어지는 늪은 버둥이 6수여도 제일 깊은 곳에서 시작해 마지막 버둥에서 다 올라온다', () => {
+    let state = deepSwamp(5)
+
+    expect(swampFrame(null, state, [], 1)).toMatchObject({ risen: 0, deep: 1 })
+
+    for (let done = 1; done <= 6; done += 1) {
+      const prev = state
+      const result = move(prev, 'right')
+      state = result.state
+      expect(swampFrame(prev, state, result.events, 1)?.risen).toBeCloseTo(done / 6, 6)
+    }
+  })
+})
+
+describe('swampSink', () => {
+  it('버둥이 2수면 13 / 9.5 / 6 까지 올라오고 진흙 테는 0.72 / 0.69 / 0.66 이다', () => {
+    const sink = [13, 9.5, 6]
+    const collar = [0.72, 0.69, 0.66]
+
+    for (let done = 0; done <= 2; done += 1) {
+      expect(swampSink(done / 2)).toBeCloseTo(sink[done], 6)
+      expect(swampCollar(done / 2)).toBeCloseTo(collar[done], 6)
+    }
+  })
+
+  it('버둥 사이를 잇는 값도 고르게 이어진다', () => {
+    expect(swampSink(0.25)).toBeCloseTo(11.25, 6)
+    expect(swampCollar(0.25)).toBeCloseTo(0.705, 6)
+  })
+
+  it('버둥이 6수여도 같은 깊이에서 같은 깊이까지 고르게 올라온다', () => {
+    const sink = [0, 1, 2, 3, 4, 5, 6].map((done) => swampSink(done / 6))
+
+    expect(sink[0]).toBeCloseTo(13, 6)
+    expect(sink[6]).toBeCloseTo(6, 6)
+    for (let i = 1; i < sink.length; i += 1) expect(sink[i - 1] - sink[i]).toBeCloseTo(7 / 6, 6)
+
+    expect(swampCollar(0)).toBeCloseTo(0.72, 6)
+    expect(swampCollar(1)).toBeCloseTo(0.66, 6)
   })
 })
 

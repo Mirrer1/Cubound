@@ -4,7 +4,7 @@ import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
 import BoardLadder from './BoardLadder'
 import { CUBE } from './cube'
-import { atStage, crackThickness } from './frame'
+import { crackThickness, swampCollar, swampSink } from './frame'
 import { blend, checker, darken, dim, shade } from './shade'
 import { TILE, blockFaces, isoDelta } from '@/game/iso'
 import type { Direction } from '@/game/types'
@@ -74,9 +74,6 @@ const LUMP_SPOTS: [number, number][] = [
   [0.17, -0.12],
   [0.06, 0.22],
 ]
-// 빠진 큐브는 버둥거릴수록 얕게 잠기고 둘레의 진흙 테도 같이 작아진다. 버둥 횟수로 고른다
-const MUD_SINK = [13, 9.5, 6]
-const MUD_COLLAR = [0.72, 0.69, 0.66]
 // 잠긴 큐브와 상자의 밑면 앞 모서리가 진흙 면 아래로 내려가는 거리. 둘은 폭이 같다
 const MUD_DIP = (TILE.width * CUBE) / 4
 // 가라앉는 상자가 진흙 아래로 다 들어가는 거리. 상자 윗면 꼭짓점이 진흙 면 밑까지 내려간다
@@ -155,7 +152,7 @@ interface BoardCellProps {
   hidden: boolean // 상자가 메우는 중인 칸
   swamp: boolean // 늪 칸
   swampFilled: number // 상자가 가라앉아 메워진 정도 0~1
-  swampStage: number // 잠긴 큐브의 깊이 단계 0~2, -1이면 가라앉는 상자
+  swampRisen: number // 잠긴 큐브가 올라온 정도 0~1, -1이면 가라앉는 상자
   swampDeep: number // 잠긴 정도 0~1, 0이면 잠긴 것 없음
   faded: boolean
   entity: 'switch' | 'door' | null
@@ -192,7 +189,7 @@ const BoardCell = ({
   hidden,
   swamp,
   swampFilled,
-  swampStage,
+  swampRisen,
   swampDeep,
   faded,
   entity,
@@ -277,8 +274,8 @@ const BoardCell = ({
   const mudY = y + MUD.drop
   const sunk = swampDeep > 0
   // 큐브는 단계마다 정해진 깊이까지 칸째로 내려가고 가라앉는 상자는 Board가 내려 그린다
-  const sink = swampStage >= 0 ? (MUD.drop + atStage(MUD_SINK, swampStage)) * swampDeep : 0
-  const collar = swampStage >= 0 ? atStage(MUD_COLLAR, swampStage) * swampDeep : 0
+  const sink = swampRisen >= 0 ? (MUD.drop + swampSink(swampRisen)) * swampDeep : 0
+  const collar = swampRisen >= 0 ? swampCollar(swampRisen) * swampDeep : 0
 
   return (
     <g>
