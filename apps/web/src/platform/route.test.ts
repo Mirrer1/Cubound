@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { type RouteContext, hashOf, parseRoute, resolveRoute } from './route'
+import { type RouteContext, hashOf, parseRoute, resolveRoute, screenKeyOf } from './route'
 
 const CONTEXT: RouteContext = {
   canPlay: (stageId: string) => stageId === '1-1' || stageId === '1-2',
@@ -49,9 +49,24 @@ describe('hashOf', () => {
   it('만든 주소를 다시 읽으면 같은 화면이다', () => {
     const select = { screen: 'select', world: 2 } as const
     const play = { screen: 'play', stageId: '1-2' } as const
+    const chapters = { screen: 'select', world: 2, chapters: true } as const
 
     expect(parseRoute(hashOf(select))).toEqual(select)
     expect(parseRoute(hashOf(play))).toEqual(play)
+    expect(parseRoute(hashOf(chapters))).toEqual(chapters)
+  })
+
+  it('장 고르기는 목록 주소에 한 겹 더 붙인다', () => {
+    expect(hashOf({ screen: 'select', world: 6, chapters: true })).toBe('#/stages/6/chapters')
+  })
+})
+
+describe('screenKeyOf', () => {
+  it('장 고르기는 목록과 같은 화면이다', () => {
+    const list = screenKeyOf({ screen: 'select', world: 6 })
+
+    expect(screenKeyOf({ screen: 'select', world: 6, chapters: true })).toBe(list)
+    expect(screenKeyOf({ screen: 'select', world: 7 })).not.toBe(list)
   })
 })
 

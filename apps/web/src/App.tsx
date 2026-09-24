@@ -2,7 +2,7 @@ import { AnimatePresence, MotionConfig, motion } from 'motion/react'
 import { useEffect } from 'react'
 
 import { isUnlocked, isWorldUnlocked } from '@/game/progress'
-import { type Route, hashOf, showingAll } from '@/platform/route'
+import { type Route, screenKeyOf, showingAll } from '@/platform/route'
 import { documentTitle } from '@/platform/title'
 import { useRoute } from '@/platform/useRoute'
 import PlayScreen from '@/screens/PlayScreen'
@@ -46,7 +46,7 @@ const App = () => {
     route.screen === 'play' ? (
       <PlayScreen stageId={route.stageId} />
     ) : route.screen === 'select' ? (
-      <StageSelectScreen world={route.world} />
+      <StageSelectScreen world={route.world} chapters={route.chapters ?? false} />
     ) : (
       <TitleScreen />
     )
@@ -68,7 +68,7 @@ const App = () => {
     <MotionConfig reducedMotion="user">
       <AnimatePresence mode="wait">
         <motion.div
-          key={hashOf(route)}
+          key={screenKeyOf(route)}
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4, transition: { duration: 0.15 } }}

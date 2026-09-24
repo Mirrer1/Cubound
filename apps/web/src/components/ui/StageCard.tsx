@@ -34,7 +34,7 @@ const StageCard = ({ number, state, stars, boss, bestMoves, onSelect }: StageCar
       type="button"
       disabled={locked}
       onClick={onSelect}
-      className={`flex aspect-square cursor-pointer flex-col justify-between rounded-[18px] border p-4 text-left transition-soft-colors disabled:cursor-default sm:p-5 ${tone} ${locked ? '' : boss ? 'hover:bg-ink/90' : 'hover:bg-hover'}`}
+      className={`flex aspect-square cursor-pointer flex-col justify-between rounded-[18px] border p-4 text-left transition-soft-colors disabled:cursor-default short:p-2 wide:p-5 ${tone} ${locked ? '' : boss ? 'hover:bg-ink/90' : 'hover:bg-hover'}`}
     >
       <span className="flex justify-between gap-2 font-mono text-[11px] tracking-[0.2em] min-[1700px]:text-[13px]">
         <span className={`${labelTone} ${state === 'cleared' ? 'font-bold' : ''}`}>
@@ -49,7 +49,7 @@ const StageCard = ({ number, state, stars, boss, bestMoves, onSelect }: StageCar
       </span>
       <span className="flex items-center justify-center">
         <span
-          className={`text-4xl font-light min-[1700px]:text-[64px]/none! sm:text-5xl ${locked && !boss ? 'text-faint' : ''}`}
+          className={`text-4xl font-light min-[1700px]:text-[64px]/none! short:text-3xl wide:text-5xl ${locked && !boss ? 'text-faint' : ''}`}
         >
           {String(number).padStart(2, '0')}
         </span>

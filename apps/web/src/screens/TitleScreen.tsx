@@ -2,24 +2,34 @@ import Button from '@/components/ui/Button'
 import LanguageMenu from '@/components/ui/LanguageMenu'
 import Logo from '@/components/ui/Logo'
 import TitleScene from '@/components/ui/TitleScene'
+import { isWorldUnlocked } from '@/game/progress'
 import { useText } from '@/i18n/useText'
 import { goTo, setShowingAll } from '@/platform/route'
-import { WORLDS, currentWorld } from '@/stages'
+import { localWorldStorage } from '@/platform/storage'
+import { WORLDS, currentWorld, worldUnlockStageId } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
 
 const TitleScreen = () => {
   const progress = useGameStore((s) => s.progress)
   const t = useText()
 
+  // 목록에서 보던 자리로 돌아간다. 시작과 스테이지 선택이 서로 다른 자리를 기억한다
+  const lastWorld = (all: boolean, fallback: number) => {
+    const saved = localWorldStorage.load(all)
+    if (saved === undefined || !WORLDS.includes(saved)) return fallback
+    // 시작은 순서대로 푸는 자리라 그 사이에 잠긴 월드는 기억해도 열어주지 않는다
+    return all || isWorldUnlocked(progress, worldUnlockStageId(saved)) ? saved : fallback
+  }
+
   // 앞서 모든 스테이지를 열어 뒀어도 시작으로 들어오면 다시 순서대로 푼다
   const handleStart = () => {
     setShowingAll(false)
-    goTo({ screen: 'select', world: currentWorld(progress) })
+    goTo({ screen: 'select', world: lastWorld(false, currentWorld(progress)) })
   }
   // 순서대로 깨지 않고 아무 판이나 골라 본다
   const handleSelect = () => {
     setShowingAll(true)
-    goTo({ screen: 'select', world: WORLDS[0] })
+    goTo({ screen: 'select', world: lastWorld(true, WORLDS[0]) })
   }
 
   return (

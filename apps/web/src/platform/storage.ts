@@ -5,6 +5,7 @@ import { type Language, isLanguage, languageFrom } from '@/i18n'
 const KEY = 'cubound:progress'
 const LANGUAGE_KEY = 'cubound:language'
 const SESSION_KEY = 'cubound:session'
+const WORLD_KEY = 'cubound:world'
 
 export interface ProgressStorage {
   load: () => Progress
@@ -14,6 +15,12 @@ export interface ProgressStorage {
 export interface LanguageStorage {
   load: () => Language
   save: (language: Language) => void
+}
+
+// 목록에서 마지막으로 보던 월드. 시작과 스테이지 선택이 서로 다른 자리를 기억한다
+export interface WorldStorage {
+  load: (all: boolean) => number | undefined
+  save: (all: boolean, world: number) => void
 }
 
 export interface SessionStorage {
@@ -55,6 +62,34 @@ export const localLanguageStorage: LanguageStorage = {
   save: (language) => {
     try {
       localStorage.setItem(LANGUAGE_KEY, language)
+    } catch {
+      // 저장 실패는 이번 세션 진행에 영향 없음
+    }
+  },
+}
+
+// 두 자리를 한 칸에 담는다. 시작은 순서대로 푸는 자리, 스테이지 선택은 구경하는 자리다
+const readWorlds = (): Record<string, unknown> => {
+  try {
+    const saved = localStorage.getItem(WORLD_KEY)
+    const parsed: unknown = saved ? JSON.parse(saved) : null
+    return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {}
+  } catch {
+    return {}
+  }
+}
+
+export const localWorldStorage: WorldStorage = {
+  load: (all) => {
+    const world = readWorlds()[all ? 'all' : 'play']
+    return Number.isInteger(world) ? (world as number) : undefined
+  },
+  save: (all, world) => {
+    try {
+      localStorage.setItem(
+        WORLD_KEY,
+        JSON.stringify({ ...readWorlds(), [all ? 'all' : 'play']: world }),
+      )
     } catch {
       // 저장 실패는 이번 세션 진행에 영향 없음
     }

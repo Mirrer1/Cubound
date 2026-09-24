@@ -1,8 +1,11 @@
 export type Route =
-  { screen: 'title' } | { screen: 'select'; world: number } | { screen: 'play'; stageId: string }
+  | { screen: 'title' }
+  // chapters는 목록 위에 장 고르기가 펼쳐진 상태다. 화면을 갈아 끼우지 않는다
+  | { screen: 'select'; world: number; chapters?: boolean }
+  | { screen: 'play'; stageId: string }
 
 // 주소에 월드 번호가 없을 수 있어 parseRoute만 월드를 비워 둔다
-type ParsedRoute = Route | { screen: 'select'; world?: number }
+type ParsedRoute = Route | { screen: 'select'; world?: number; chapters?: boolean }
 
 export interface RouteContext {
   canPlay: (stageId: string) => boolean
@@ -24,7 +27,7 @@ export const setShowingAll = (on: boolean) => {
   window.history.replaceState(null, '', `${pathname}${on ? '?all' : ''}${hash}`)
 }
 
-const STAGES_PATH = /^\/stages\/(\d+)$/
+const STAGES_PATH = /^\/stages\/(\d+)(\/chapters)?$/
 const PLAY_PATH = /^\/play\/(\d+-\d+)$/
 
 // 정적 배포에서 어느 주소로 새로고침해도 404가 나지 않게 화면을 해시에 둔다
@@ -34,7 +37,9 @@ export const parseRoute = (hash: string): ParsedRoute | null => {
   if (path === '/stages') return { screen: 'select' }
 
   const stages = STAGES_PATH.exec(path)
-  if (stages) return { screen: 'select', world: Number(stages[1]) }
+  if (stages) {
+    return { screen: 'select', world: Number(stages[1]), ...(stages[2] ? { chapters: true } : {}) }
+  }
 
   const play = PLAY_PATH.exec(path)
   return play ? { screen: 'play', stageId: play[1] } : null
@@ -42,8 +47,13 @@ export const parseRoute = (hash: string): ParsedRoute | null => {
 
 export const hashOf = (route: Route) => {
   if (route.screen === 'play') return `#/play/${route.stageId}`
-  return route.screen === 'select' ? `#/stages/${route.world}` : '#/'
+  if (route.screen !== 'select') return '#/'
+  return `#/stages/${route.world}${route.chapters ? '/chapters' : ''}`
 }
+
+// 화면을 갈아 끼우는 단위. 장 고르기는 목록 안에서 펼쳐지므로 같은 화면으로 본다
+export const screenKeyOf = (route: Route) =>
+  route.screen === 'select' ? `select/${route.world}` : hashOf(route)
 
 // 모르는 주소는 타이틀로 보내고 없는 월드와 아직 열리지 않은 스테이지는 진행 중인 월드로 보낸다
 export const resolveRoute = (
@@ -54,10 +64,11 @@ export const resolveRoute = (
   if (!route) return TITLE
 
   if (route.screen === 'select') {
-    const { world } = route
+    const { world, chapters } = route
     return {
       screen: 'select',
       world: world !== undefined && worlds.includes(world) ? world : currentWorld,
+      ...(chapters ? { chapters: true } : {}),
     }
   }
 

@@ -151,30 +151,108 @@ body {
   padding: var(--panel-pad) calc(var(--panel-pad) - var(--panel-trim, 0px));
 }
 
-/* 스테이지 카드 격자. 카드 폭 240px을 넘지 않는 선에서 칸 수가 화면 폭을 따라간다 */
-@utility stage-grid {
+/* 목록 내용의 폭 상한. 카드 다섯 칸(240)과 그 사이 여백(16) 넷을 더한 값이다.
+   이보다 좁아지면 그대로 줄어들고 넓어지면 헤더와 카드가 같은 폭으로 가운데 선다 */
+@utility max-w-content {
+  max-width: 1264px;
+}
+
+/* 장 고르기 카드. 만든 장만 놓이므로 칸이 적고 넓다 */
+@utility chapter-grid {
   display: grid;
+  height: 100%;
   justify-content: center;
+  /* 툴바 바로 밑에서부터 놓는다. 넘칠 때도 위가 잘리지 않는다 */
+  align-content: safe start;
   gap: 0.75rem;
-  grid-template-columns: repeat(2, minmax(0, 240px));
+  grid-template-columns: minmax(0, 480px);
+
+  /* 높이가 낮은 화면은 가로 줄로 눕히므로 칸을 넓게 준다 */
+  @media (height < 500px) {
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 400px));
+  }
+  @media (width >= 40rem) and (height >= 500px) {
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 290px));
+  }
+  @media (width >= 106.25rem) {
+    gap: 1.25rem;
+    grid-template-columns: repeat(2, minmax(0, 320px));
+  }
+}
+
+/* 장 고르기 카드의 작은 조각은 그 장의 세계 색으로 칠한다. 지금 보는 사이클과 무관하다 */
+[data-chapter='1'] {
+  --chapter-win: #e9e7e2;
+  --chapter-a: #edebe6;
+  --chapter-b: #e7e5e0;
+}
+
+[data-chapter='2'] {
+  --chapter-win: #e2e6db;
+  --chapter-a: #eaebe0;
+  --chapter-b: #e2e5da;
+}
+
+@utility stage-grid {
+  --gap: 0.75rem;
+  --cols: 2;
+  --rows: 5;
+  /* 폰 세로는 폭으로만 정하고 넘치는 만큼 스크롤한다 */
+  --cap: 240px;
+
+  display: grid;
+  height: 100%;
+  justify-content: center;
+  /* 툴바 바로 밑에서부터 놓는다. 넘칠 때도 위가 잘리지 않는다 */
+  align-content: safe start;
+  gap: var(--gap);
+  grid-template-columns: repeat(var(--cols), minmax(0, var(--cap)));
 
   @media (width >= 40rem) {
-    gap: 1rem;
+    --gap: 1rem;
   }
-  /* 폰 가로는 높이가 낮아 칸을 늘려 두 줄에 담는다 */
-  @media (width >= 40rem) and (height < 500px) {
-    grid-template-columns: repeat(5, minmax(0, 240px));
+  /* 폰 가로는 높이가 낮아 다섯 칸으로 두 줄에 담는다 */
+  @media (height < 500px) {
+    --cols: 5;
+    --rows: 2;
   }
-  @media (width >= 47.5rem) and (height >= 500px) {
-    grid-template-columns: repeat(4, minmax(0, 240px));
+  /* 남은 자리가 세로로 길면 세 칸, 정사각에 가까우면 네 칸, 가로로 길면 다섯 칸이 가장 크다 */
+  @media (width >= 40rem) and (height >= 500px) {
+    --cols: 3;
+    --rows: 4;
   }
-  @media (width >= 62.5rem) {
-    grid-template-columns: repeat(5, minmax(0, 240px));
+  @media (width >= 40rem) and (height >= 500px) and (aspect-ratio >= 87/100) {
+    --cols: 4;
+    --rows: 3;
+  }
+  @media (width >= 40rem) and (height >= 500px) and (aspect-ratio >= 13/10) {
+    --cols: 5;
+    --rows: 2;
+  }
+  /* 카드가 240px 상한에 닿는 폭에서는 칸이 많을수록 자리를 채운다 */
+  @media (width >= 87.5rem) and (height >= 500px) {
+    --cols: 5;
+    --rows: 2;
+  }
+  /* 칸이 정사각이라 남은 높이를 줄 수로 나눈 값도 크기 상한이 된다 */
+  @media (width >= 40rem), (height < 500px) {
+    --cap: min(240px, (100cqh - (var(--rows) - 1) * var(--gap)) / var(--rows));
   }
   /* 왼쪽 기둥과 나란히 서는 넓은 화면. 남는 폭을 카드가 먹는다 */
   @media (width >= 106.25rem) {
-    gap: 1.25rem;
-    grid-template-columns: repeat(5, minmax(0, 280px));
+    --gap: 1.25rem;
+    --cap: 280px;
+  }
+}
+/* 카드 격자가 놓이는 자리. 남은 높이를 재서 카드 크기 상한으로 쓴다.
+   1700px 이상은 가로 배치라 높이가 내용으로 정해져서 재지 않는다 */
+@utility grid-box {
+  container-type: size;
+
+  @media (width >= 106.25rem) {
+    container-type: normal;
   }
 }
 

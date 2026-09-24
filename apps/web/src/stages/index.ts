@@ -30,8 +30,17 @@ export const stageIdsOf = (world: number) =>
 
 export const isBossStage = (id: string) => parseStageId(id).stage % STAGES_PER_WORLD === 0
 
-// 세계 색이 갈리는 단위. 월드 다섯이 한 사이클이다
+// 세계 색이 갈리는 단위. 월드 다섯이 한 사이클이고 화면에서는 CHAPTER라 부른다
 export const cycleOf = (world: number) => Math.ceil(world / WORLDS_PER_CYCLE)
+
+export const CHAPTERS = [...new Set(WORLDS.map(cycleOf))].sort((a, b) => a - b)
+
+export const worldsOf = (chapter: number) => WORLDS.filter((world) => cycleOf(world) === chapter)
+
+export const chapterStageIds = (chapter: number) => worldsOf(chapter).flatMap(stageIdsOf)
+
+// 장은 그 장의 첫 월드가 열리면 열린다
+export const chapterUnlockStageId = (chapter: number) => worldUnlockStageId(worldsOf(chapter)[0])
 
 // 월드에서 마지막으로 만든 스테이지 다음은 다음 월드의 첫 스테이지
 export const nextStageId = (id: string) => {
@@ -58,3 +67,11 @@ export const worldUnlockStageId = (world: number) => {
 // 열려 있는 월드 중 마지막 월드
 export const currentWorld = (progress: Progress) =>
   WORLDS.findLast((world) => isWorldUnlocked(progress, worldUnlockStageId(world))) ?? WORLDS[0]
+
+// 그 장에서 마지막으로 열린 월드. 장을 고르면 여기로 간다
+export const currentWorldOf = (progress: Progress, chapter: number) => {
+  const worlds = worldsOf(chapter)
+  return (
+    worlds.findLast((world) => isWorldUnlocked(progress, worldUnlockStageId(world))) ?? worlds[0]
+  )
+}
