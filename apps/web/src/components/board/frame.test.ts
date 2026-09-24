@@ -1125,6 +1125,22 @@ const sinkBox = () => {
   return { prev, ...move(prev, 'right') }
 }
 
+// 늪만 없는 같은 판. 상자 밀기가 늪 때문에 달라지지 않았는지 재는 잣대다
+const PUSH_STAGE: Stage = {
+  version: 1,
+  id: 'test-push',
+  name: '밀기',
+  heights: [[0, 0, 0, 0, 0]],
+  start: { x: 0, y: 0 },
+  goal: { x: 4, y: 0 },
+  entities: [{ type: 'box', x: 1, y: 0 }],
+}
+
+const pushBox = () => {
+  const prev = createState(PUSH_STAGE)
+  return { prev, ...move(prev, 'right') }
+}
+
 describe('durationOf 늪', () => {
   it('늪이 없는 판은 지금까지와 길이가 같다', () => {
     const prev = createState(STAGE)
@@ -1225,13 +1241,49 @@ describe('swampFrame', () => {
 })
 
 describe('boxSink', () => {
-  it('상자는 밀기가 끝난 뒤부터 잠기고 그 자리가 드러난다', () => {
+  it('상자는 밀리고 나서 다 잠기고 그 자리가 드러난다', () => {
     const { prev, state, events } = sinkBox()
     const swamp = swampTime(prev, state)
 
     expect(boxSink(events, swamp, 0)).toMatchObject({ at: { x: 2, y: 0 }, deep: 0, filled: 0 })
     expect(boxSink(events, swamp, 1)).toMatchObject({ deep: 1, filled: 1 })
     expect(state.swamps).toEqual([])
+  })
+
+  it('상자는 칸에 닿기 전부터 가라앉기 시작한다', () => {
+    const { prev, state, events } = sinkBox()
+    const swamp = swampTime(prev, state)
+    let seen = 0
+
+    for (let t = 0; t <= 1; t += 0.01) {
+      const sinking = boxSink(events, swamp, t)
+      const frame = movingBox(prev, state, events, t)
+      if (sinking && sinking.deep > 0 && frame && frame.x < 2) seen += 1
+    }
+
+    expect(seen).toBeGreaterThan(0)
+  })
+
+  it('밀리는 길과 걸리는 시간은 늪이 없는 판과 같다', () => {
+    const sunk = sinkBox()
+    const plain = pushBox()
+    const swamp = swampTime(sunk.prev, sunk.state)
+    const sinkSeconds = durationOf(sunk.events, swamp)
+    const pushSeconds = durationOf(plain.events)
+    let seen = 0
+
+    for (let seconds = 0; seconds < pushSeconds; seconds += pushSeconds / 20) {
+      const a = movingBox(sunk.prev, sunk.state, sunk.events, seconds / sinkSeconds)
+      const b = movingBox(plain.prev, plain.state, plain.events, seconds / pushSeconds)
+      if (!a || !b) continue
+      expect(a.x).toBeCloseTo(b.x)
+      seen += 1
+    }
+
+    expect(seen).toBe(20)
+    expect(movingBox(sunk.prev, sunk.state, sunk.events, pushSeconds / sinkSeconds)?.x).toBeCloseTo(
+      2,
+    )
   })
 
   it('상자는 다 잠길 때까지 그 칸에 남는다', () => {

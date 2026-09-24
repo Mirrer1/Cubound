@@ -77,7 +77,7 @@ const LUMP_SPOTS: [number, number][] = [
 // 빠진 큐브는 버둥거릴수록 얕게 잠기고 둘레의 진흙 테도 같이 작아진다. 버둥 횟수로 고른다
 const MUD_SINK = [13, 9.5, 6]
 const MUD_COLLAR = [0.72, 0.69, 0.66]
-// 잠긴 큐브의 밑면 앞 모서리가 진흙 면 아래로 내려가는 거리
+// 잠긴 큐브와 상자의 밑면 앞 모서리가 진흙 면 아래로 내려가는 거리. 둘은 폭이 같다
 const MUD_DIP = (TILE.width * CUBE) / 4
 // 가라앉는 상자가 진흙 아래로 다 들어가는 거리. 상자 윗면 꼭짓점이 진흙 면 밑까지 내려간다
 export const BOX_SINK = TILE.layer + MUD.drop + (TILE.width * CUBE) / 4
@@ -131,10 +131,10 @@ const mudWallPoints = (x: number, y: number, side: number) => {
   return `${x - hw},${y} ${x},${y - hh} ${x},${y - hh + MUD.drop} ${x - hw},${y + MUD.drop}`
 }
 
-// 잠긴 것의 진흙 면 아래를 가린다. dip이 있으면 자른 자리가 큐브 밑면 앞 모서리를 따라간다
-const mudClipPoints = (x: number, y: number, dip: number) => {
+// 잠긴 것의 진흙 면 아래를 가린다. 자른 자리가 밑면 앞 모서리를 따라가 아이소메트릭 면과 나란하다
+const mudClipPoints = (x: number, y: number) => {
   const hw = (TILE.width * CUBE) / 2
-  return `${x - 4000},${y} ${x - hw},${y} ${x},${y + dip} ${x + hw},${y} ${x + 4000},${y} ${x + 4000},${y - 4000} ${x - 4000},${y - 4000}`
+  return `${x - 4000},${y} ${x - hw},${y} ${x},${y + MUD_DIP} ${x + hw},${y} ${x + 4000},${y} ${x + 4000},${y - 4000} ${x - 4000},${y - 4000}`
 }
 
 interface BoardCellProps {
@@ -516,7 +516,7 @@ const BoardCell = ({
       {sunk ? (
         <>
           <clipPath id={`swamp-clip-${x}-${y}`}>
-            <polygon points={mudClipPoints(x, mudY, swampStage >= 0 ? MUD_DIP : 0)} />
+            <polygon points={mudClipPoints(x, mudY)} />
           </clipPath>
           <g clipPath={`url(#swamp-clip-${x}-${y})`}>
             <g transform={`translate(0 ${sink})`}>{children}</g>

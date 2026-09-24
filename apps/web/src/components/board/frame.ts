@@ -20,7 +20,17 @@ const WARP = { sink: 0.2, rise: 0.2, depth: 0.6 }
 // 늪에 가라앉고 버둥거리고 뽑혀 나오는 시간, 밀려 들어간 상자가 잠기는 시간
 // over는 버둥에 한 단계보다 더 솟는 깊이 단계로 한 단계가 3.5px이라 3px쯤 솟는다
 // peak는 솟는 데 쓰는 몫, fill은 잠긴 상자 위로 땅이 드러나는 지점
-const SWAMP = { sink: 0.28, struggle: 0.3, rise: 0.2, box: 0.3, over: 0.857, peak: 0.42, fill: 0.5 }
+// lead는 상자가 칸에 닿기 전에 미리 가라앉는 시간으로 닿는 순간 이미 진흙에 밀려 들어가 보인다
+const SWAMP = {
+  sink: 0.28,
+  struggle: 0.3,
+  rise: 0.2,
+  box: 0.36,
+  lead: 0.09,
+  over: 0.857,
+  peak: 0.42,
+  fill: 0.5,
+}
 
 const easeIn = (t: number) => t * t
 const easeOut = (t: number) => 1 - (1 - t) ** 2
@@ -270,9 +280,11 @@ export const swampTime = (prev: GameState | null, game: GameState): SwampTime =>
   }
 }
 
-// 늪에 밀려 들어간 상자가 다 잠기는 시각
+// 늪에 밀려 들어간 상자가 다 잠기는 시각. 밀기가 끝나기 전부터 가라앉아 진흙에 밀려 들어가 보인다
 const sinkEnd = (events: GameEvent[]) =>
-  events.some((e) => e.type === 'sank') ? totalSeconds(segmentsOf(boxPath(events))) + SWAMP.box : 0
+  events.some((e) => e.type === 'sank')
+    ? totalSeconds(segmentsOf(boxPath(events))) - SWAMP.lead + SWAMP.box
+    : 0
 
 export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
   swamp.lead +
@@ -427,8 +439,8 @@ export const boxSink = (events: GameEvent[], swamp: SwampTime, t: number): BoxSi
   const sank = events.find((e) => e.type === 'sank')
   if (sank?.type !== 'sank') return null
 
-  const pushed = totalSeconds(segmentsOf(boxPath(events)))
-  const p = clamp01((elapsedAt(events, swamp, t) - pushed) / SWAMP.box)
+  // 다 잠기는 때에서 거꾸로 세야 연출이 끝나는 프레임에서 꼭 1이 된다
+  const p = clamp01(1 - (sinkEnd(events) - elapsedAt(events, swamp, t)) / SWAMP.box)
 
   return { at: sank.at, deep: easeIn(p), filled: clamp01((p - SWAMP.fill) / (1 - SWAMP.fill)) }
 }
