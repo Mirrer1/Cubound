@@ -76,15 +76,15 @@
 
 /* 세계 색은 사이클마다 갈린다. 1사이클은 위 기본값을 그대로 쓴다 */
 html[data-cycle='2'] {
-  --color-page-bg: #e5e7de;
-  --color-base-bg: #eff1ea;
-  --color-surface: #f5f7f0;
-  --color-locked: #e9ebe2;
-  --color-hover: #e8eae1;
-  --color-floor-top: #ebece2;
-  --color-floor-top-alt: #e4e6dd;
-  --color-floor-left: #c3c4b8;
-  --color-floor-right: #d6d7cc;
+  --color-page-bg: #e2e6db;
+  --color-base-bg: #edf0e7;
+  --color-surface: #f4f6ee;
+  --color-locked: #e7eae0;
+  --color-hover: #e6e9df;
+  --color-floor-top: #eaebe0;
+  --color-floor-top-alt: #e2e5da;
+  --color-floor-left: #bfc1b4;
+  --color-floor-right: #d2d4c8;
 }
 
 html,
