@@ -81,6 +81,37 @@ export const BOX_SINK = TILE.layer + MUD.drop + (TILE.width * CUBE) / 4
 // 메운 늪은 상자 윗면만 남는다
 const FILLED_INNER = 0.52
 
+// 버섯은 짧은 대 위에 넓은 갓을 얹고 머리 판을 하나 더 올린 모양이다. 갓과 머리는 칸 폭에 대한 비율
+const MUSHROOM = {
+  idle: { stem: 14, cap: 0.48, thick: 6, crown: 3, dry: false },
+  occupied: { stem: 2, cap: 0.66, thick: 3, crown: 0, dry: false },
+  withered: { stem: 3, cap: 0.56, thick: 3, crown: 2, dry: true },
+}
+export type MushroomState = keyof typeof MUSHROOM
+const STEM_SCALE = 0.2
+const CROWN_SCALE = 0.6
+// 대 밑에 깔리는 바닥 자국
+const MUSHROOM_SHADOW = 0.4
+// 못 뛰어서 버섯에 올라선 큐브가 바닥에서 떠 있는 거리. 한 층과 헷갈리지 않아야 한다
+export const MUSHROOM_STAND = MUSHROOM.occupied.stem + MUSHROOM.occupied.thick
+
+const CAP = {
+  live: {
+    stem: 'var(--color-mushroom-stem-top)',
+    top: 'var(--color-mushroom-cap-top)',
+    left: 'var(--color-mushroom-cap-left)',
+    right: 'var(--color-mushroom-cap-right)',
+    crown: 'var(--color-mushroom-crown)',
+  },
+  dry: {
+    stem: 'var(--color-mushroom-withered-stem)',
+    top: 'var(--color-mushroom-withered-top)',
+    left: 'var(--color-mushroom-withered-left)',
+    right: 'var(--color-mushroom-withered-right)',
+    crown: 'var(--color-mushroom-withered-crown)',
+  },
+}
+
 // 발판 길 칸은 구덩이로 그린다. 바닥은 높이 0 칸의 윗면보다 이만큼 아래다
 export const PIT_FLOOR = 11
 const RAIL_HALF = 0.13
@@ -154,6 +185,7 @@ interface BoardCellProps {
   swampFilled: number // 상자가 가라앉아 메워진 정도 0~1
   swampRisen: number // 잠긴 큐브가 올라온 정도 0~1, -1이면 가라앉는 상자
   swampDeep: number // 잠긴 정도 0~1, 0이면 잠긴 것 없음
+  mushroom: MushroomState | null // 버섯 칸의 모습, 버섯이 없으면 null
   faded: boolean
   entity: 'switch' | 'door' | null
   lift: boolean
@@ -191,6 +223,7 @@ const BoardCell = ({
   swampFilled,
   swampRisen,
   swampDeep,
+  mushroom,
   faded,
   entity,
   lift,
@@ -276,6 +309,8 @@ const BoardCell = ({
   // 큐브는 단계마다 정해진 깊이까지 칸째로 내려가고 가라앉는 상자는 Board가 내려 그린다
   const sink = swampRisen >= 0 ? (MUD.drop + swampSink(swampRisen)) * swampDeep : 0
   const collar = swampRisen >= 0 ? swampCollar(swampRisen) * swampDeep : 0
+  const cap = mushroom ? MUSHROOM[mushroom] : null
+  const capColor = cap?.dry ? CAP.dry : CAP.live
 
   return (
     <g>
@@ -403,6 +438,43 @@ const BoardCell = ({
                   style={{ fill: darken('tool', 13) }}
                 />
               </g>
+            )}
+            {cap && (
+              <>
+                <polygon
+                  points={blockFaces(x, y, TILE.width * MUSHROOM_SHADOW, 0).top}
+                  style={{ fill: 'var(--color-mushroom-shadow)' }}
+                />
+                <BoardBlock
+                  x={x}
+                  y={y - cap.stem}
+                  width={TILE.width * STEM_SCALE}
+                  depth={cap.stem}
+                  top={capColor.stem}
+                  left="var(--color-mushroom-stem-left)"
+                  right="var(--color-mushroom-stem-right)"
+                />
+                <BoardBlock
+                  x={x}
+                  y={y - cap.stem - cap.thick}
+                  width={TILE.width * cap.cap}
+                  depth={cap.thick}
+                  top={capColor.top}
+                  left={capColor.left}
+                  right={capColor.right}
+                />
+                {cap.crown > 0 && (
+                  <BoardBlock
+                    x={x}
+                    y={y - cap.stem - cap.thick - cap.crown}
+                    width={TILE.width * cap.cap * CROWN_SCALE}
+                    depth={cap.crown}
+                    top={capColor.crown}
+                    left={capColor.left}
+                    right={capColor.right}
+                  />
+                )}
+              </>
             )}
             {(lift || warp) && (
               <>

@@ -72,6 +72,21 @@
   --color-swamp-lump: #b6b49f;
   --color-swamp-collar: #bfbda8;
   --color-swamp-filled: color-mix(in srgb, var(--color-tool), white 14%);
+  /* 버섯은 7월드 전용이라 사이클을 따라 바뀌지 않는다 */
+  --color-mushroom-cap-top: #d9b8a6;
+  --color-mushroom-cap-left: #ae8b79;
+  --color-mushroom-cap-right: #c6a28f;
+  --color-mushroom-crown: #dec1b1;
+  --color-mushroom-stem-top: #f1ede2;
+  --color-mushroom-stem-left: #cfc9b9;
+  --color-mushroom-stem-right: #e2dccd;
+  --color-mushroom-shadow: #e1e3dd;
+  /* 시든 버섯은 갓 색이 대의 그늘 색 쪽으로 빠져 분홍이 거의 남지 않는다 */
+  --color-mushroom-withered-top: #d0c7b7;
+  --color-mushroom-withered-left: #b5ad9f;
+  --color-mushroom-withered-right: #cec5b5;
+  --color-mushroom-withered-crown: #d6cec0;
+  --color-mushroom-withered-stem: #e0dbce;
 }
 
 /* 세계 색은 사이클마다 갈린다. 1사이클은 위 기본값을 그대로 쓴다 */

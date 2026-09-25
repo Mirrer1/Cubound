@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 
 import BoardBox from './BoardBox'
-import BoardCell, { BOX_SINK, PIT_FLOOR } from './BoardCell'
+import BoardCell, { BOX_SINK, MUSHROOM_STAND, type MushroomState, PIT_FLOOR } from './BoardCell'
 import BoardLadder from './BoardLadder'
 import BoardTram from './BoardTram'
 import ClearEffect from './ClearEffect'
@@ -228,6 +228,8 @@ const Board = ({
   }
 
   const cubeSink = standSink(cube.x, cube.y)
+  // 버섯에 올라선 큐브는 눌린 갓에 받쳐져 바닥에서 조금만 떠 있다
+  const cubeRise = has(game.mushrooms, player) ? MUSHROOM_STAND : 0
   // 밀리는 상자와 발판 위의 상자. 칸과 따로 움직여서 화면 좌표로 미리 구해 둔다
   const pushedScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
   const boxFrames = [
@@ -277,6 +279,15 @@ const Board = ({
         const warp = stage.entities.find(
           (e): e is Extract<Entity, { type: 'warp' }> => e.type === 'warp' && same(e, cell.p),
         )
+        const mushroomHere = (stage.mushroom?.[cell.p.y]?.[cell.p.x] ?? '.') !== '.'
+        // 밟혀 시든 버섯은 목록에서 빠지고, 못 뛰어서 올라선 큐브 밑에서는 갓이 눌린다
+        const mushroom: MushroomState | null = !mushroomHere
+          ? null
+          : !has(game.mushrooms, cell.p)
+            ? 'withered'
+            : same(player, cell.p)
+              ? 'occupied'
+              : 'idle'
         const swampHere = (stage.swamp?.[cell.p.y]?.[cell.p.x] ?? '.') !== '.'
         // 상자가 가라앉는 동안은 진흙이 남아 있고 그 위로 메운 자리가 드러난다
         const swamp = swampHere && (has(game.swamps, cell.p) || has(before.swamps, cell.p))
@@ -360,6 +371,7 @@ const Board = ({
             swampFilled={swampHere && !has(game.swamps, cell.p) ? (sinkingHere?.filled ?? 1) : 0}
             swampRisen={sunkHere ? sunkHere.risen : -1}
             swampDeep={sunkHere?.deep ?? sinkingHere?.deep ?? 0}
+            mushroom={mushroom}
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
             lift={lift !== undefined}
@@ -393,7 +405,7 @@ const Board = ({
                 {drawCube && (
                   <g
                     opacity={(cubeDrop ? cubeDrop.opacity : 1) * cube.fade}
-                    transform={`translate(0 ${cubeSink}) ${cubeSquash}`}
+                    transform={`translate(0 ${cubeSink - cubeRise}) ${cubeSquash}`}
                   >
                     {rollingCubeFaces(cube.x, cube.y, cubeLevel, cube.direction, cube.angle).map(
                       (f) => (
@@ -408,7 +420,10 @@ const Board = ({
                 )}
                 {drawCube && carriedOpacity > 0 && (
                   <g opacity={carriedOpacity * cube.fade}>
-                    <BoardLadder x={cubeScreen.x} y={cubeScreen.y - TILE.layer - 2 + cubeSink} />
+                    <BoardLadder
+                      x={cubeScreen.x}
+                      y={cubeScreen.y - TILE.layer - 2 + cubeSink - cubeRise}
+                    />
                   </g>
                 )}
                 {goalEffect && <ClearEffect x={cell.x} y={cell.y} />}
