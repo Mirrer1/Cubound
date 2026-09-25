@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { LANGUAGES, type Language } from '@/i18n'
 import { useSettingsStore } from '@/store/settingsStore'
@@ -8,7 +8,6 @@ const LanguageMenu = () => {
   const language = useSettingsStore((s) => s.language)
   const setLanguage = useSettingsStore((s) => s.setLanguage)
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
   const current = LANGUAGES.find((item) => item.code === language)
 
   const handleToggle = () => setOpen((prev) => !prev)
@@ -20,23 +19,17 @@ const LanguageMenu = () => {
   useEffect(() => {
     if (!open) return
 
-    const onPointerDown = (e: PointerEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false)
-    }
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false)
     }
 
-    window.addEventListener('pointerdown', onPointerDown)
     window.addEventListener('keydown', onKeyDown)
-    return () => {
-      window.removeEventListener('pointerdown', onPointerDown)
-      window.removeEventListener('keydown', onKeyDown)
-    }
+    return () => window.removeEventListener('keydown', onKeyDown)
   }, [open])
 
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
+      {open && <div className="fixed inset-0" onClick={() => setOpen(false)} />}
       <button
         type="button"
         className="relative cursor-pointer rounded-[13px] border border-line-strong px-3 py-1.5 text-sm text-mute transition-soft after:absolute after:-inset-x-1 after:-inset-y-2 hover:bg-hover"
