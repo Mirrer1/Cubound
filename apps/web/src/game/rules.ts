@@ -163,9 +163,8 @@ export const ridesLeft = (state: GameState) => {
   return limit === undefined ? null : Math.max(limit - state.rides, 0)
 }
 
-// 깊어지는 늪이 아니면 null. 다음에 빠질 늪 칸에 드는 총 수다
-export const nextSwampCost = (state: GameState) =>
-  state.stage.rules?.swampDeepen ? STRUGGLES + state.sinks + 2 : null
+// 깊어지는 늪이 아니면 null. 늪에 빠진 횟수다
+export const sinkCount = (state: GameState) => (state.stage.rules?.swampDeepen ? state.sinks : null)
 
 // 밟힌 버섯이 시드는 판이 아니면 null. 아직 밟지 않은 버섯 수다
 export const capsLeft = (state: GameState) =>

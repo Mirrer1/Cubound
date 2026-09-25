@@ -9,9 +9,9 @@ import {
   isLiftRaised,
   move,
   movesLeft,
-  nextSwampCost,
   pushesLeft,
   ridesLeft,
+  sinkCount,
   standHeight,
 } from './rules'
 import type { Direction, Entity, GameState, MoveResult, Point, Stage } from './types'
@@ -2529,12 +2529,14 @@ describe('move 깊어지는 늪', () => {
     expect(out.state.moves).toBe(8)
   })
 
-  it('다음에 빠질 늪 칸에 드는 총 수를 알려준다', () => {
+  it('늪에 빠진 횟수를 0부터 알려준다', () => {
     const start = createState(DEEP_SWAMP_STAGE)
+    const second = play(DEEP_SWAMP_STAGE, ['right', 'right', 'right', 'right', 'right'])
 
-    expect(nextSwampCost(start)).toBe(4)
-    expect(nextSwampCost(move(start, 'right').state)).toBe(5)
-    expect(nextSwampCost(createState({ ...DEEP_SWAMP_STAGE, rules: undefined }))).toBeNull()
+    expect(sinkCount(start)).toBe(0)
+    expect(sinkCount(move(start, 'right').state)).toBe(1)
+    expect(sinkCount(second.state)).toBe(2)
+    expect(sinkCount(createState({ ...DEEP_SWAMP_STAGE, rules: undefined }))).toBeNull()
   })
 })
 
