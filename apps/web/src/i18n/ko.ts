@@ -3,8 +3,7 @@ import type { Texts } from './en'
 export const ko: Partial<Texts> = {
   'title.start': '시작',
   'title.stages': '스테이지 선택',
-
-  'tab.stages': '스테이지 선택',
+  'tab.home': '작은 큐브의 집 찾기 여행',
 
   'error.message': '문제가 생겼어요',
   'error.reload': '다시 불러오기',

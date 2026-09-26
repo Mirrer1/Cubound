@@ -3,8 +3,7 @@ import type { Texts } from './en'
 export const ja: Partial<Texts> = {
   'title.start': 'はじめる',
   'title.stages': 'ステージを選ぶ',
-
-  'tab.stages': 'ステージを選ぶ',
+  'tab.home': '小さなキューブの家さがし',
 
   'error.message': '問題が起きました',
   'error.reload': '読み込み直す',

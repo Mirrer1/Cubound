@@ -3,8 +3,7 @@ import type { Texts } from './en'
 export const zhHant: Partial<Texts> = {
   'title.start': '開始',
   'title.stages': '選擇關卡',
-
-  'tab.stages': '選擇關卡',
+  'tab.home': '小方塊的回家之旅',
 
   'error.message': '發生了問題',
   'error.reload': '重新載入',

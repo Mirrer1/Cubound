@@ -3,8 +3,7 @@ import type { Texts } from './en'
 export const es: Partial<Texts> = {
   'title.start': 'Empezar',
   'title.stages': 'Elegir nivel',
-
-  'tab.stages': 'Niveles',
+  'tab.home': 'El viaje a casa de un pequeño cubo',
 
   'error.message': 'Algo ha salido mal',
   'error.reload': 'Recargar',

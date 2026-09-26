@@ -1,8 +1,7 @@
 export const en = {
   'title.start': 'Start',
   'title.stages': 'Select stage',
-
-  'tab.stages': 'Stages',
+  'tab.home': "A small cube's journey home",
 
   'error.message': 'Something went wrong',
   'error.reload': 'Reload',

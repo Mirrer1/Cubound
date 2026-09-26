@@ -3,8 +3,7 @@ import type { Texts } from './en'
 export const zhHans: Partial<Texts> = {
   'title.start': '开始',
   'title.stages': '选择关卡',
-
-  'tab.stages': '选择关卡',
+  'tab.home': '小方块的回家之旅',
 
   'error.message': '出了点问题',
   'error.reload': '重新加载',
