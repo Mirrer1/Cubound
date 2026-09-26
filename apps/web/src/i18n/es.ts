@@ -56,6 +56,9 @@ export const es: Partial<Texts> = {
   'guide.swamp': 'En el lodazal sigues pulsando hasta salir',
   'guide.swamp.touch': 'En el lodazal sigues deslizando hasta salir',
   'guide.swampDeepen': 'Cada lodazal se hunde más, así que salir cuesta un movimiento más cada vez',
+  'guide.mushroom': 'Pisa una seta y saltas dos casillas en esa dirección',
+  'guide.mushroom.touch': 'Desliza hacia una seta y saltas dos casillas en esa dirección',
+  'guide.mushroomWither': 'La seta pisada se marchita, así que solo sales cuando no queda ninguna',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',
@@ -138,4 +141,18 @@ export const es: Partial<Texts> = {
   'stage.6-8': 'El Tren Lento',
   'stage.6-9': 'El Travesaño',
   'stage.6-10': 'La Hondura',
+
+  'world.7': 'Tierra del Gran Salto',
+  'world.7.note':
+    'Una seta te lanza dos casillas de golpe. Desde qué lado la pisas es la respuesta.',
+  'stage.7-1': 'Primer Salto',
+  'stage.7-2': 'La Tapia',
+  'stage.7-3': 'La Brecha',
+  'stage.7-4': 'El Impulso',
+  'stage.7-5': 'La Hilera',
+  'stage.7-6': 'El Lanzamiento',
+  'stage.7-7': 'Sentido Único',
+  'stage.7-8': 'Sobre el Lodazal',
+  'stage.7-9': 'El Cruce',
+  'stage.7-10': 'El Claro Seco',
 }

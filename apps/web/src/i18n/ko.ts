@@ -54,6 +54,9 @@ export const ko: Partial<Texts> = {
   'guide.swamp': '늪에서는 빠져나올 때까지 방향키를 눌러요',
   'guide.swamp.touch': '늪에서는 빠져나올 때까지 밀어요',
   'guide.swampDeepen': '늪에 빠질 때마다 깊어져서 나오는 데 한 수가 더 들어요',
+  'guide.mushroom': '버섯을 밟으면 그 방향으로 두 칸 건너뛰어요',
+  'guide.mushroom.touch': '버섯 쪽으로 밀면 그 방향으로 두 칸 건너뛰어요',
+  'guide.mushroomWither': '밟은 버섯은 시들어서, 하나도 남기지 말고 다 밟아야 나갈 수 있어요',
 
   'chapter.1': '돌 위의 첫걸음',
   'chapter.2': '풀이 우거진 길',
@@ -135,4 +138,17 @@ export const ko: Partial<Texts> = {
   'stage.6-8': '늦은 차',
   'stage.6-9': '걸침',
   'stage.6-10': '깊어짐',
+
+  'world.7': '뛰어넘는 땅',
+  'world.7.note': '버섯은 한 번에 두 칸을 보냅니다. 어느 쪽에서 밟을지가 답입니다.',
+  'stage.7-1': '첫 뜀',
+  'stage.7-2': '담장',
+  'stage.7-3': '틈새',
+  'stage.7-4': '돋움',
+  'stage.7-5': '줄버섯',
+  'stage.7-6': '날림',
+  'stage.7-7': '뒷걸음',
+  'stage.7-8': '늪 건너',
+  'stage.7-9': '엇갈림',
+  'stage.7-10': '마른 자리',
 }

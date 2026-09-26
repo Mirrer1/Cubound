@@ -54,6 +54,9 @@ export const zhHant: Partial<Texts> = {
   'guide.swamp': '在泥沼裡要一直按方向鍵，直到脫身',
   'guide.swamp.touch': '在泥沼裡要一直滑動，直到脫身',
   'guide.swampDeepen': '每陷入一次泥沼就更深一層，脫身要多花一步',
+  'guide.mushroom': '踩上蘑菇就會朝那個方向跳過兩格',
+  'guide.mushroom.touch': '朝蘑菇滑動就會朝那個方向跳過兩格',
+  'guide.mushroomWither': '踩過的蘑菇會枯萎，要一朵不剩地踩完才能離開',
 
   'chapter.1': '踏石之路',
   'chapter.2': '草木叢生之路',
@@ -135,4 +138,17 @@ export const zhHant: Partial<Texts> = {
   'stage.6-8': '慢車',
   'stage.6-9': '搭架',
   'stage.6-10': '漸深',
+
+  'world.7': '躍過之地',
+  'world.7.note': '蘑菇一次送你兩格。從哪一邊踩上去才是答案。',
+  'stage.7-1': '初躍',
+  'stage.7-2': '矮牆',
+  'stage.7-3': '缺口',
+  'stage.7-4': '墊腳',
+  'stage.7-5': '連菇',
+  'stage.7-6': '拋擲',
+  'stage.7-7': '單行道',
+  'stage.7-8': '越沼',
+  'stage.7-9': '交錯',
+  'stage.7-10': '枯跡',
 }

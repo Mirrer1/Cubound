@@ -54,6 +54,9 @@ export const ja: Partial<Texts> = {
   'guide.swamp': '沼では抜け出すまで方向キーを押します',
   'guide.swamp.touch': '沼では抜け出すまでスワイプします',
   'guide.swampDeepen': '沼は入るたびに深まり、抜け出すのに一手ずつ多くかかります',
+  'guide.mushroom': 'キノコを踏むとその向きに二マス跳び越えます',
+  'guide.mushroom.touch': 'キノコの方へスワイプするとその向きに二マス跳び越えます',
+  'guide.mushroomWither': '踏んだキノコは枯れるので、ひとつ残らず踏まないと出られません',
 
   'chapter.1': '石を踏む道',
   'chapter.2': '草が茂る道',
@@ -135,4 +138,17 @@ export const ja: Partial<Texts> = {
   'stage.6-8': '鈍行',
   'stage.6-9': '架け',
   'stage.6-10': '深まり',
+
+  'world.7': '跳び越える地',
+  'world.7.note': 'キノコは一度に二マス送ります。どちら側から踏むかが答えです。',
+  'stage.7-1': 'はじめの跳躍',
+  'stage.7-2': '塀',
+  'stage.7-3': '隙間',
+  'stage.7-4': '踏み台',
+  'stage.7-5': '並びキノコ',
+  'stage.7-6': '投げ飛ばし',
+  'stage.7-7': '一方通行',
+  'stage.7-8': '沼越え',
+  'stage.7-9': '行き違い',
+  'stage.7-10': '枯れた跡',
 }

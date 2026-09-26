@@ -53,6 +53,9 @@ export const en = {
   'guide.swamp': 'In the mire you keep pressing until you pull free',
   'guide.swamp.touch': 'In the mire you keep swiping until you pull free',
   'guide.swampDeepen': 'Every mire sinks deeper, so pulling free takes one more move each time',
+  'guide.mushroom': 'Step on a mushroom and you spring two tiles that way',
+  'guide.mushroom.touch': 'Swipe toward a mushroom and you spring two tiles that way',
+  'guide.mushroomWither': 'A sprung mushroom withers, so you leave only once every one is gone',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',
@@ -135,6 +138,19 @@ export const en = {
   'stage.6-8': 'The Late Ride',
   'stage.6-9': 'The Span',
   'stage.6-10': 'The Deepening',
+
+  'world.7': 'Land of the Long Leap',
+  'world.7.note': 'A mushroom sends you two tiles at once. Which side you step from is the answer.',
+  'stage.7-1': 'First Spring',
+  'stage.7-2': 'The Wall',
+  'stage.7-3': 'The Gap',
+  'stage.7-4': 'The Boost',
+  'stage.7-5': 'The Row',
+  'stage.7-6': 'The Throw',
+  'stage.7-7': 'One Way',
+  'stage.7-8': 'Over the Mire',
+  'stage.7-9': 'The Crossing',
+  'stage.7-10': 'The Dry Patch',
 }
 
 export type Texts = typeof en
