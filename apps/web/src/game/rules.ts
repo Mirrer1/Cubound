@@ -378,6 +378,7 @@ const boxLanding = (state: GameState, p: Point, level: number): number | null =>
   if (
     hasBox(state, p) ||
     state.ladders.some((l) => same(l, p)) ||
+    state.leaningLadders.some((l) => same(l, p)) ||
     same(p, state.stage.goal) ||
     isClosedDoor(state, p)
   )
