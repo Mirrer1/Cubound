@@ -9,6 +9,7 @@ import {
   crackThickness,
   durationOf,
   frostAt,
+  hopProgress,
   moveEase,
   movingBox,
   mushroomFrames,
@@ -1439,14 +1440,21 @@ const hop = (stage: Stage) => {
 }
 
 describe('durationOf 버섯', () => {
-  it('튕겨 간 칸 수만큼 길어지고 연쇄여도 칸당 시간이 같다', () => {
+  it('간 칸 수와 갓에 머문 횟수만큼 길어진다', () => {
     const one = hop(HOP_STAGE)
     const two = hop(CHAIN_STAGE)
 
     expect(one.state.player).toEqual({ x: 3, y: 0 })
     expect(two.state.player).toEqual({ x: 5, y: 0 })
-    expect(durationOf(one.events) / 3).toBeCloseTo(durationOf(two.events) / 5)
+    // 세 칸 + 머무름 한 번이 4, 다섯 칸 + 머무름 두 번이 7이다
+    expect(durationOf(two.events) / durationOf(one.events)).toBeCloseTo(7 / 4)
     expect(durationOf(two.events)).toBeGreaterThan(durationOf(one.events))
+  })
+
+  it('머무름이 없는 이동은 길이가 그대로다', () => {
+    const prev = createState(STAGE)
+
+    expect(durationOf(move(prev, 'right').events)).toBeCloseTo(0.24)
   })
 
   it('버섯이 없는 이동은 길이가 그대로다', () => {
@@ -1478,15 +1486,15 @@ describe('playerFrame 버섯', () => {
     expect(Math.max(...lifts)).toBeGreaterThan(TILE.layer)
   })
 
-  it('연쇄 중간에 멈추지 않고 이어서 간다', () => {
+  it('연쇄는 갓을 딛는 자리에서만 멈추고 뒤로 가지 않는다', () => {
     const { prev, state, events } = hop(CHAIN_STAGE)
-    let last = playerFrame(prev, state, events, 0).x
+    const xs = Array.from({ length: 201 }, (_, i) => playerFrame(prev, state, events, i / 200).x)
 
-    for (let t = 0.02; t <= 1; t += 0.02) {
-      const { x } = playerFrame(prev, state, events, t)
-      expect(x).toBeGreaterThan(last)
-      last = x
-    }
+    for (let i = 1; i < xs.length; i += 1) expect(xs[i]).toBeGreaterThanOrEqual(xs[i - 1])
+    // 멈춰 있는 프레임은 두 갓 자리에만 있다
+    const held = [...new Set(xs.filter((x, i) => i > 0 && x === xs[i - 1]))]
+    // 두 갓 자리(1, 3)뿐이고 사이 칸에서는 멈추지 않는다
+    expect(held.sort((m, n) => m - n)).toEqual([1, 3])
     expect(playerFrame(prev, state, events, 1).x).toBe(5)
   })
 
@@ -1673,5 +1681,90 @@ describe('버섯과 다른 요소', () => {
 
     expect(crackProgress(events, 0.3)).toBe(0)
     expect(crackProgress(events, 1)).toBe(1)
+  })
+})
+
+describe('버섯 갓에 머무는 차례', () => {
+  const IDLE = mushroomPose(0, 0)
+  const PRESSED = mushroomPose(1, 0)
+  const SPRUNG = mushroomPose(-1, 0)
+  const topOf = (pose: { stem: number; thick: number; crown: number }) =>
+    pose.stem + pose.thick + pose.crown
+
+  const trace = () => {
+    const { prev, state, events } = hop(HOP_STAGE)
+    return Array.from({ length: 401 }, (_, i) => i / 400).map((t) => ({
+      t,
+      x: playerFrame(prev, state, events, t).x,
+      lift: playerFrame(prev, state, events, t).lift,
+      press: mushroomFrames(prev, state, events, t).find((f) => f.cell.x === 1)!.press,
+    }))
+  }
+
+  it('갓을 딛는 동안 큐브가 가로로 멈춰 있다', () => {
+    const onCap = trace().filter((f) => f.x === 1)
+
+    expect(onCap.length).toBeGreaterThan(20)
+    // 올라선 첫 프레임은 갓이 아직 평소 높이다
+    expect(onCap[0].press).toBeLessThan(0.05)
+    expect(onCap[0].lift).toBeCloseTo(topOf(IDLE), 0)
+    // 머무는 동안 다 눌렸다가 다 펴진다
+    expect(Math.max(...onCap.map((f) => f.press))).toBeGreaterThan(0.99)
+    expect(Math.min(...onCap.map((f) => f.press))).toBeLessThan(-0.99)
+    // 날아가기 직전에는 다 펴져 있다
+    expect(onCap[onCap.length - 1].press).toBeLessThan(-0.9)
+  })
+
+  it('올라섬 → 눌림 → 펴짐 → 날아감 차례로 일어난다', () => {
+    const frames = trace()
+    const firstAt = (hit: (f: (typeof frames)[number]) => boolean) =>
+      frames.findIndex((f) => hit(f))
+    const arrive = firstAt((f) => f.x === 1)
+    const pressed = firstAt((f) => f.press >= 0.99)
+    const sprung = firstAt((f) => f.press <= -0.99)
+    const flying = firstAt((f) => f.x > 1)
+
+    expect(arrive).toBeGreaterThan(0)
+    expect(pressed).toBeGreaterThan(arrive)
+    expect(sprung).toBeGreaterThan(pressed)
+    expect(flying).toBeGreaterThan(sprung)
+  })
+
+  it('큐브가 갓을 따라 내려갔다 올라온 뒤에 날아오른다', () => {
+    const onCap = trace().filter((f) => f.x === 1)
+    const lifts = onCap.map((f) => f.lift)
+
+    // 평소 갓에서 눌린 갓까지 내려갔다가 펴진 갓까지 올라온다
+    expect(Math.min(...lifts)).toBeCloseTo(topOf(PRESSED), 0)
+    expect(Math.max(...lifts)).toBeCloseTo(topOf(SPRUNG), 0)
+    expect(lifts[0]).toBeGreaterThan(Math.min(...lifts))
+    expect(lifts[lifts.length - 1]).toBeCloseTo(topOf(SPRUNG), 0)
+  })
+})
+
+describe('hopProgress', () => {
+  it('갓을 딛는 동안 간 칸 수가 멈춘다', () => {
+    // 세 칸 뜀은 머무름까지 4칸이고 갓은 1칸째다
+    expect(hopProgress(3, 0)).toBe(0)
+    expect(hopProgress(3, 1 / 4) * 3).toBeCloseTo(1)
+    expect(hopProgress(3, 1.5 / 4) * 3).toBeCloseTo(1)
+    expect(hopProgress(3, 2 / 4) * 3).toBeCloseTo(1)
+    expect(hopProgress(3, 3 / 4) * 3).toBeCloseTo(2)
+    expect(hopProgress(3, 1)).toBe(1)
+  })
+
+  it('연쇄는 갓마다 한 번씩 멈춘다', () => {
+    // 다섯 칸 연쇄는 머무름까지 7칸이고 갓은 1칸째와 3칸째다
+    const held = Array.from({ length: 701 }, (_, i) => hopProgress(5, i / 700) * 5)
+    const stops = new Set(held.filter((u, i) => i > 0 && u === held[i - 1]))
+
+    expect([...stops].sort((a, b) => a - b)).toEqual([1, 3])
+  })
+
+  it('버섯 위에서 출발하면 눌리는 몫 없이 펴지기만 한다', () => {
+    // 두 칸 뜀은 이미 눌린 갓에서 시작해 펴지는 0.45칸만 머문다
+    expect(hopProgress(2, 0)).toBe(0)
+    expect(hopProgress(2, 0.45 / 2.45) * 2).toBeCloseTo(0)
+    expect(hopProgress(2, 1)).toBe(1)
   })
 })

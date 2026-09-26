@@ -13,12 +13,17 @@ const SECONDS = {
 // 미끄러짐은 칸 수에 상관없이 속도가 같아야 상자와 큐브가 나란히 간다. max는 아주 긴 미끄러짐만 잡는다
 const SLIDE = { perCell: 0.1, max: 0.9 }
 // 버섯은 두 칸씩 건너뛰고 연쇄면 네 칸, 여섯 칸을 한 수에 간다.
-// 얼음처럼 칸 수로 시간을 늘려 연쇄가 길어져도 속도가 같다. peak는 튕김 한 번의 꼭대기 높이 px
-const HOP = { perCell: 0.13, max: 1.1, peak: 32 }
-// 갓이 눌리고 펴지고 돌아오는 구간. 지나간 칸 수로 재서 이동 속도가 달라져도 큐브와 어긋나지 않는다
-const CAP_PRESS = { press: 1, spring: 0.45, recover: 1.1 }
-// 밟힌 버섯이 시드는 구간. 큐브가 그 칸을 떠나고부터 칸 수로 잰다
-const CAP_WITHER = { from: 0.45, span: 1.4 }
+// 얼음처럼 칸 수로 시간을 늘려 연쇄가 길어져도 속도가 같다. peak는 튕김 한 번의 꼭대기 높이 px.
+// max는 갓마다 머무는 몫까지 담아야 해서 버섯 셋을 잇는 일곱 칸(1.9초)까지는 안 걸린다
+const HOP = { perCell: 0.19, max: 2, peak: 32 }
+// 큐브가 갓에 올라선 뒤 눌리고 펴지고 돌아오는 구간. 올라선 때부터 칸 수로 잰다.
+// press와 spring을 더한 만큼 큐브가 갓 위에 머물러 눌림과 튕김이 가로 이동과 안 겹친다.
+// 둘을 합쳐 1칸이라 한 칸을 가는 시간만큼 머문다. recover는 큐브가 날아간 뒤에 이어진다
+const CAP_PRESS = { press: 0.55, spring: 0.45, recover: 1.1 }
+// 큐브가 올라서서 눌린 채 남는 갓은 다가오는 한 칸 동안 눌린다. 튕기지 않아 머무름이 없다
+const CAP_REST = 1
+// 밟힌 버섯이 시드는 구간. 갓에 올라선 때부터 재서 머무름 1칸이 끝난 뒤에 시작한다
+const CAP_WITHER = { from: 1.2, span: 1.4 }
 // 큐브가 올라선 갓의 press 값
 const CAP_ON = 2
 const TILT = 0.24
@@ -78,7 +83,7 @@ const secondsOf = (event: PathEvent) =>
   event.type === 'slid'
     ? Math.min(SLIDE.max, SLIDE.perCell * cellsOf(event))
     : hopCells(event) > 0
-      ? Math.min(HOP.max, HOP.perCell * hopCells(event))
+      ? Math.min(HOP.max, HOP.perCell * hopSpan(hopCells(event)))
       : SECONDS[event.type]
 
 // 기다리는 구간이 섞일 수 있어 길이를 이벤트와 따로 둔다
@@ -662,10 +667,13 @@ const pathFrame = (
     const cells = cellsOf(event)
     const rise = capHeight(prev, event.from)
     const land = capHeight(game, event.to)
+    // 튕겨 가는 이동은 갓을 딛는 동안 가로로 거의 안 움직인다
+    const hopped = hopCells(event) > 0
+    const gone = hopped ? hopProgress(cells, p) : p
 
     return {
-      x: lerp(event.from.x, event.to.x, p),
-      y: lerp(event.from.y, event.to.y, p),
+      x: lerp(event.from.x, event.to.x, gone),
+      y: lerp(event.from.y, event.to.y, gone),
       level: level + riding,
       direction: directionBetween(event.from, event.to),
       // 얼음 위와 튕겨 나는 동안에는 구르지 않는다
@@ -673,7 +681,7 @@ const pathFrame = (
       cell: frontOf(event.from, event.to),
       squash: span ? squashAt((elapsed - span.from) / (span.to - span.from)) : 0,
       fade: 1,
-      lift: hopCells(event) > 0 ? hopLift(cells, cells * p, rise, land) : lerp(rise, land, p),
+      lift: hopped ? hopLift(cells, hopSpan(cells) * p, land) : lerp(rise, land, p),
     }
   }
 
@@ -769,12 +777,14 @@ export const movingBox = (
   const shift = carry ? carriedBy(carry, ride) : { x: 0, y: 0 }
 
   const cells = cellsOf(event)
+  const hopped = hopCells(event) > 0
+  const gone = hopped ? hopProgress(cells, p) : p
 
   return {
-    x: lerp(event.from.x, event.to.x, p) + shift.x,
-    y: lerp(event.from.y, event.to.y, p) + shift.y,
+    x: lerp(event.from.x, event.to.x, gone) + shift.x,
+    y: lerp(event.from.y, event.to.y, gone) + shift.y,
     level: level + riding,
-    lift: hopCells(event) > 0 ? hopLift(cells, cells * p, 0, 0) : 0,
+    lift: hopped ? hopLift(cells, hopSpan(cells) * p, 0) : 0,
     to,
     // 잠기는 상자는 멈춘 자리에 있어 그 칸에 그려야 진흙에 가려진다
     cell:
@@ -869,8 +879,9 @@ const capTop = (i: number) => CAP_STEM[i] + CAP_THICK[i] + CAP_CROWN[i]
 
 // 못 뛰어서 올라선 큐브가 눌린 갓 위에 서는 높이
 export const MUSHROOM_STAND = capTop(3)
-// 연쇄로 튕기는 사이 눌린 갓을 딛고 지나는 높이
-const HOP_TOUCH = capTop(2)
+// 큐브가 막 올라선 평소 갓과 다 펴진 갓의 꼭대기. 머무름이 끝나고 여기서 날아오른다
+const CAP_TOP_IDLE = capTop(1)
+const CAP_TOP_SPRING = capTop(0)
 
 export interface MushroomPose {
   stem: number
@@ -895,32 +906,91 @@ export const mushroomPose = (press: number, wither: number): MushroomPose => {
   }
 }
 
-// 큐브나 상자가 u칸째일 때 떠오른 화면 거리. rise와 land는 출발 칸과 도착 칸에서 앉는 높이다
-export const hopLift = (cells: number, u: number, rise: number, land: number) => {
+// 갓이 눌린 정도에 따른 갓 꼭대기 높이. 큐브는 언제나 그 위에 얹힌다
+const capTopAt = (press: number) => {
+  const pose = mushroomPose(press, 0)
+  return pose.stem + pose.thick + pose.crown
+}
+
+// 이미 올라서 있던 갓은 눌린 채로 시작해 펴지는 몫만 남는다
+const capFrom = (index: number, lead: number) => (index === 0 && lead === 0 ? CAP_PRESS.press : 0)
+
+// 그 갓이 다 눌렸을 때 값. 올라서 있던 갓은 큐브가 얹혀 더 눌려 있다
+const capDeep = (index: number, lead: number) => (index === 0 && lead === 0 ? CAP_ON : 1)
+
+// 머무름까지 더한 이동 길이. 칸 수와 같은 단위라 HOP.perCell을 그대로 곱한다
+const hopSpan = (cells: number) => {
   const lead = cells % 2
   const bounces = (cells - lead) / 2
-  const touch = (i: number) => (i === 0 && lead === 0 ? rise : i === bounces ? land : HOP_TOUCH)
-  // 걸어 들어가는 한 칸은 눌리는 갓을 밟고 올라서는 몫만 오른다
-  if (u <= lead) return lead === 0 ? touch(0) : lerp(rise, touch(0), clamp01(u))
+  return cells + bounces * (CAP_PRESS.press + CAP_PRESS.spring) - capFrom(0, lead)
+}
+
+interface HopStep {
+  u: number // 실제로 간 칸 수
+  index: number // 지금 딛고 있는 갓 번호, 딛고 있지 않으면 -1
+  phase: number // 그 갓에 올라선 뒤 흐른 칸 수
+}
+
+// 머무름까지 더한 자리 q가 실제로는 어디인지. 갓을 딛는 동안 u가 멈춘다
+const hopStepAt = (cells: number, q: number): HopStep => {
+  const lead = cells % 2
+  const bounces = (cells - lead) / 2
+  let at = 0
+  let u = 0
+
+  for (let i = 0; i < bounces; i += 1) {
+    const walk = i === 0 ? lead : 2
+    if (q < at + walk) return { u: u + Math.max(0, q - at), index: -1, phase: 0 }
+    at += walk
+    u += walk
+
+    const dwell = CAP_PRESS.press + CAP_PRESS.spring - capFrom(i, lead)
+    if (q < at + dwell) return { u, index: i, phase: capFrom(i, lead) + (q - at) }
+    at += dwell
+  }
+
+  return { u: Math.min(cells, u + Math.max(0, q - at)), index: -1, phase: 0 }
+}
+
+// 진행도 p일 때 실제로 간 칸 비율. 갓을 딛는 동안은 제자리다
+export const hopProgress = (cells: number, p: number) =>
+  hopStepAt(cells, hopSpan(cells) * p).u / cells
+
+// 큐브나 상자가 머무름까지 더한 자리 q에 있을 때 떠오른 화면 거리. land는 도착 칸에서 앉는 높이다
+export const hopLift = (cells: number, q: number, land: number) => {
+  const lead = cells % 2
+  const bounces = (cells - lead) / 2
+  const { u, index, phase } = hopStepAt(cells, q)
+
+  // 머무는 동안은 눌렸다 펴지는 갓을 그대로 딛고 있어 큐브가 같이 오르내린다
+  if (index >= 0) return capTopAt(capSpringAt(phase, capDeep(index, lead)))
+  // 걸어 들어가는 한 칸은 평소 높이 갓 위로 올라서는 몫만 오른다
+  if (u < lead) return lerp(0, CAP_TOP_IDLE, clamp01(u / lead))
 
   const b = Math.min(bounces - 1, Math.floor((u - lead) / 2))
   const s = clamp01((u - lead) / 2 - b)
-  return lerp(touch(b), touch(b + 1), s) + HOP.peak * Math.sin(Math.PI * s)
+  // 이어지는 갓에는 평소 높이로 내려서고 마지막에는 땅으로 내린다
+  const to = b + 1 < bounces ? CAP_TOP_IDLE : land
+  return lerp(CAP_TOP_SPRING, to, s) + HOP.peak * Math.sin(Math.PI * s)
 }
 
 // 큐브가 버섯 갓 위에 서 있는 높이. 그 칸에 서 있지 않으면 0
 const capHeight = (state: GameState | null, p: Point) =>
   state && has(state.mushrooms, p) ? MUSHROOM_STAND : 0
 
-// 갓이 눌린 정도. d는 밟는 자리에서 큐브가 지나간 칸 수, deep은 다 눌렸을 때 값이다
-const capPressAt = (d: number, deep: number) =>
-  d <= -CAP_PRESS.press || d >= CAP_PRESS.spring + CAP_PRESS.recover
+// 튕겨 보내는 갓. 큐브가 올라선 뒤에 눌리고 펴진다. c는 올라선 뒤 흐른 칸 수다
+const capSpringAt = (c: number, deep: number) =>
+  c <= 0
     ? 0
-    : d <= 0
-      ? lerp(0, deep, easeIn(1 + d / CAP_PRESS.press))
-      : d <= CAP_PRESS.spring
-        ? lerp(deep, -1, easeOut(d / CAP_PRESS.spring))
-        : lerp(-1, 0, (d - CAP_PRESS.spring) / CAP_PRESS.recover)
+    : c <= CAP_PRESS.press
+      ? lerp(0, deep, easeOut(c / CAP_PRESS.press))
+      : c <= CAP_PRESS.press + CAP_PRESS.spring
+        ? lerp(deep, -1, easeIn((c - CAP_PRESS.press) / CAP_PRESS.spring))
+        : lerp(-1, 0, clamp01((c - CAP_PRESS.press - CAP_PRESS.spring) / CAP_PRESS.recover))
+
+// 큐브가 올라서서 눌린 채 남는 갓. 다가오는 한 칸 동안 눌린다
+const capRestAt = (d: number) =>
+  d <= -CAP_REST ? 0 : lerp(0, CAP_ON, easeIn(clamp01(1 + d / CAP_REST)))
 
 // 구간 위에 있는 칸이면 from에서 몇 칸째인지. 구간을 벗어나면 null
 const stepsTo = (event: PathEvent, p: Point) => {
@@ -931,21 +1001,67 @@ const stepsTo = (event: PathEvent, p: Point) => {
   return onLine && along >= 0 && along <= cellsOf(event) ? along : null
 }
 
-// 큐브나 상자가 그 칸을 몇 칸이나 지났는지. 이 길 위에 없으면 null
-const capPassed = (segments: Segment[], cell: Point, elapsed: number, chain: Chain) => {
+interface CapTouch {
+  phase: number // 갓에 올라선 뒤 흐른 칸 수
+  rest: boolean // 큐브가 그 갓에 올라선 채로 끝나는지
+  deep: number
+}
+
+// 튕겨 가는 이동에서 at칸째 갓에 올라서는 자리. 건너뛰기만 하는 칸이면 null
+const hopTouch = (cells: number, at: number) => {
+  const lead = cells % 2
+  const bounces = (cells - lead) / 2
+  if (at === cells) return { start: hopSpan(cells), index: -1, rest: true }
+  if (at < lead || (at - lead) % 2 !== 0) return null
+
+  const index = (at - lead) / 2
+  if (index >= bounces) return null
+  // 앞선 갓들에서 머문 몫이 밀린다
+  const waited = index * (CAP_PRESS.press + CAP_PRESS.spring) - (index > 0 ? capFrom(0, lead) : 0)
+  return { start: at + waited, index, rest: false }
+}
+
+// 큐브나 상자가 그 갓을 딛고 얼마나 지났는지. 이 길에서 딛지 않는 칸이면 null
+const capTouch = (
+  segments: Segment[],
+  cell: Point,
+  elapsed: number,
+  chain: Chain,
+): CapTouch | null => {
   const step = stepAt(segments, Math.max(0, elapsed), chain)
   if (!step) return null
 
   let before = 0
-  let at: number | null = null
+  let found: { arrive: number; rest: boolean; deep: number; from: number } | null = null
   let now = 0
   for (const [i, { event }] of segments.entries()) {
-    const found = stepsTo(event, cell)
-    if (found !== null && at === null) at = before + found
-    if (i === step.index) now = before + cellsOf(event) * step.p
-    before += cellsOf(event)
+    const cells = cellsOf(event)
+    const hopped = hopCells(event) > 0
+    const at = stepsTo(event, cell)
+    const touch =
+      at === null
+        ? null
+        : hopped
+          ? hopTouch(cells, at)
+          : at === cells
+            ? { start: at, index: -1, rest: true }
+            : null
+
+    if (touch && found === null) {
+      const lead = cells % 2
+      found = {
+        arrive: before + touch.start,
+        rest: touch.rest,
+        deep: touch.rest ? CAP_ON : capDeep(touch.index, lead),
+        from: touch.rest ? 0 : capFrom(touch.index, lead),
+      }
+    }
+    if (i === step.index) now = before + (hopped ? hopSpan(cells) : cells) * step.p
+    before += hopped ? hopSpan(cells) : cells
   }
-  return at === null ? null : now - at
+
+  if (!found) return null
+  return { phase: now - found.arrive + found.from, rest: found.rest, deep: found.deep }
 }
 
 export interface MushroomFrame {
@@ -977,21 +1093,19 @@ export const mushroomFrames = (
   const walks = [playerSegments(events), segmentsOf(boxPath(events))]
 
   return cells.map((cell) => {
-    const passed = walks
-      .map((segments) => capPassed(segments, cell, elapsed, walked))
-      .filter((d): d is number => d !== null)
-    if (passed.length === 0) return still(cell)
+    const touched = walks
+      .map((segments) => capTouch(segments, cell, elapsed, walked))
+      .filter((touch): touch is CapTouch => touch !== null)
+    if (touched.length === 0) return still(cell)
 
-    const d = Math.max(...passed)
-    // 큐브가 딛고 섰거나 설 갓은 끝까지 눌린다
-    const deep = same(prev.player, cell) || same(game.player, cell) ? CAP_ON : 1
+    const touch = touched.reduce((a, b) => (a.phase > b.phase ? a : b))
     const dried = has(prev.mushrooms, cell) && !has(game.mushrooms, cell)
 
     return {
       cell,
-      press: capPressAt(d, deep),
+      press: touch.rest ? capRestAt(touch.phase) : capSpringAt(touch.phase, touch.deep),
       wither: dried
-        ? clamp01((d - CAP_WITHER.from) / CAP_WITHER.span)
+        ? clamp01((touch.phase - CAP_WITHER.from) / CAP_WITHER.span)
         : has(game.mushrooms, cell)
           ? 0
           : 1,
