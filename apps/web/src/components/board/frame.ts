@@ -589,6 +589,37 @@ const ridePhase = (game: GameState, events: GameEvent[], p: Point, t: number, sw
 }
 
 // 큐브가 제 힘으로 간 몫만 그린 프레임. 발판에 실린 몫은 playerFrame이 더한다
+// 튕겨 가는 큐브가 u칸째에 있을 때 딛는 칸의 높이. 갓이 있는 칸과 양 끝만 밟고 사이 칸은 건너뛴다
+const hopLevel = (
+  game: GameState,
+  event: PathEvent,
+  cells: number,
+  fromLevel: number,
+  toLevel: number,
+  u: number,
+) => {
+  const dx = Math.sign(event.to.x - event.from.x)
+  const dy = Math.sign(event.to.y - event.from.y)
+  const stops = [0]
+  for (let n = cells % 2 === 0 ? 2 : 1; n < cells; n += 2) stops.push(n)
+  stops.push(cells)
+
+  const floorOf = (n: number) =>
+    n === 0
+      ? fromLevel
+      : n === cells
+        ? toLevel
+        : (game.heights[event.from.y + dy * n]?.[event.from.x + dx * n] ?? fromLevel)
+
+  const next = Math.max(
+    1,
+    stops.findIndex((s) => s >= u),
+  )
+  const a = stops[next - 1]
+  const b = stops[next] ?? cells
+  return b === a ? floorOf(a) : lerp(floorOf(a), floorOf(b), clamp01((u - a) / (b - a)))
+}
+
 const pathFrame = (
   prev: GameState | null,
   game: GameState,
@@ -656,14 +687,6 @@ const pathFrame = (
       .slice(0, index)
       .reduce((level, s) => levelAfter(level, s.event), startLevel)
     const toLevel = levelAfter(fromLevel, event)
-    const level =
-      event.type === 'fell'
-        ? p < 0.55
-          ? fromLevel
-          : lerp(fromLevel, toLevel, easeIn((p - 0.55) / 0.45))
-        : event.type === 'climbed'
-          ? lerp(fromLevel, toLevel, easeOut(Math.min(1, p / 0.6)))
-          : fromLevel
 
     const cells = cellsOf(event)
     const rise = capHeight(prev, event.from)
@@ -671,6 +694,18 @@ const pathFrame = (
     // 튕겨 가는 이동은 갓을 딛는 동안 가로로 거의 안 움직인다
     const hopped = hopCells(event) > 0
     const gone = hopped ? hopProgress(cells, p) : p
+
+    // 갓을 딛는 이동은 갓에 닿기 전에 내려앉아야 큐브와 갓이 붙는다
+    // 이 낙하만 고르게 내린다. 가속하면 갓에 닿기 직전까지 떠 있다가 뚝 떨어진다
+    const dropped =
+      land > 0 ? clamp01((cells * p) / restWalk(cells)) : easeIn(clamp01((p - 0.55) / 0.45))
+    const level = hopped
+      ? hopLevel(game, event, cells, fromLevel, toLevel, gone * cells)
+      : event.type === 'fell'
+        ? lerp(fromLevel, toLevel, dropped)
+        : event.type === 'climbed'
+          ? lerp(fromLevel, toLevel, easeOut(Math.min(1, p / 0.6)))
+          : fromLevel
 
     return {
       x: lerp(event.from.x, event.to.x, gone),

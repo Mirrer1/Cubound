@@ -30,7 +30,7 @@ import {
 } from './frame'
 import { TILE } from '@/game/iso'
 import { createState, move } from '@/game/rules'
-import type { Point, Stage } from '@/game/types'
+import type { GameState, Point, Stage } from '@/game/types'
 
 const STAGE: Stage = {
   version: 1,
@@ -1412,6 +1412,18 @@ const CHAIN_STAGE: Stage = {
   mushroom: ['.#.#...'],
 }
 
+// 한 층 위에서 떨어지며 버섯을 밟는다
+const FALL_HOP_STAGE: Stage = {
+  ...HOP_STAGE,
+  heights: [[1, 0, 0, 0, 0, 0, 0]],
+}
+
+// 한 층 위에서 떨어지며 버섯에 올라선다. 착지 칸이 없어 뛰지 못한다
+const FALL_STAND_STAGE: Stage = {
+  ...HOP_STAGE,
+  heights: [[1, 0, 0, -1, 0, 0, 0]],
+}
+
 // 착지 칸이 두 층 높아 뛰지 못하고 버섯에 올라선다
 const STAND_STAGE: Stage = {
   ...HOP_STAGE,
@@ -1485,6 +1497,91 @@ describe('playerFrame 버섯', () => {
     expect(playerFrame(prev, state, events, 1).lift).toBe(0)
     // 한 층(30)보다 높이 떠야 벽을 넘는 것이 보인다
     expect(Math.max(...lifts)).toBeGreaterThan(TILE.layer)
+  })
+
+  it('한 층 위에서 떨어져 밟아도 갓에 닿을 때는 평지와 같은 자리다', () => {
+    const flat = hop(HOP_STAGE)
+    const fell = hop(FALL_HOP_STAGE)
+    // 갓을 딛기 전에 내려앉는다. 그러지 않으면 큐브가 한 층 떠서 갓과 벌어진다
+    const above = (r: ReturnType<typeof hop>, t: number) =>
+      playerFrame(r.prev, r.state, r.events, t).level * TILE.layer +
+      playerFrame(r.prev, r.state, r.events, t).lift
+
+    expect(above(fell, 0)).toBeCloseTo(TILE.layer)
+    for (let t = 0.3; t <= 1; t += 0.05) expect(above(fell, t)).toBeCloseTo(above(flat, t))
+  })
+
+  it('착지 칸이 출발과 같은 높이여도 갓에 닿을 때는 붙는다', () => {
+    // 상자 위에서 낮은 갓을 딛고 같은 높이 칸에 내린다. 떨어지는 것이 아니라 건너가는 수다
+    const same: Stage = {
+      ...HOP_STAGE,
+      heights: [[1, 0, 0, 0, 1, 0, 0]],
+      mushroom: ['..#....'],
+      entities: [{ type: 'box', x: 1, y: 0 }],
+    }
+    const prev = move(createState(same), 'right').state
+    const r = move(prev, 'right')
+
+    expect(prev.player).toEqual({ x: 1, y: 0 })
+    expect(r.events.some((e) => e.type === 'fell')).toBe(false)
+    // 갓을 딛는 동안 큐브는 갓이 있는 칸의 높이에 내려서 있다
+    for (let t = 0.3; t <= 0.5; t += 0.05) {
+      const f = playerFrame(prev, r.state, r.events, t)
+      expect(f.level).toBeCloseTo(0)
+    }
+  })
+
+  it('갓으로 내려앉는 동안 도로 떠오르지 않는다', () => {
+    const above = (r: ReturnType<typeof hop>, t: number) =>
+      playerFrame(r.prev, r.state, r.events, t).level * TILE.layer +
+      playerFrame(r.prev, r.state, r.events, t).lift
+
+    // 가속하며 내리면 갓에 닿기 직전까지 떠 있다가 뚝 떨어진다
+    for (const stage of [FALL_HOP_STAGE, FALL_STAND_STAGE]) {
+      const r = hop(stage)
+      const path = Array.from({ length: 31 }, (_, i) => above(r, i / 100))
+
+      for (let i = 1; i < path.length; i += 1) expect(path[i]).toBeLessThanOrEqual(path[i - 1])
+    }
+  })
+
+  it('상자 위에서 버섯으로 가도 갓에 닿을 때는 평지와 같은 자리다', () => {
+    const onBox: Stage = {
+      ...HOP_STAGE,
+      heights: [[1, 0, 0, 0, 0, 0, 0]],
+      mushroom: ['..#....'],
+      entities: [{ type: 'box', x: 1, y: 0 }],
+    }
+    const flat = hop({
+      ...onBox,
+      heights: [[0, 0, 0, 0, 0, 0, 0]],
+      entities: [],
+      start: { x: 1, y: 0 },
+    })
+    const start = move(createState(onBox), 'right').state
+    const stepped = move(start, 'right')
+    const above = (prev: GameState, r: typeof stepped, t: number) =>
+      playerFrame(prev, r.state, r.events, t).level * TILE.layer +
+      playerFrame(prev, r.state, r.events, t).lift
+
+    expect(start.player).toEqual({ x: 1, y: 0 })
+    for (let t = 0.3; t <= 1; t += 0.05)
+      expect(above(start, stepped, t)).toBeCloseTo(
+        playerFrame(flat.prev, flat.state, flat.events, t).level * TILE.layer +
+          playerFrame(flat.prev, flat.state, flat.events, t).lift,
+      )
+  })
+
+  it('한 층 위에서 떨어져 올라서도 갓에 닿을 때는 평지와 같은 자리다', () => {
+    const flat = hop({ ...FALL_STAND_STAGE, heights: [[0, 0, 0, -1, 0, 0, 0]] })
+    const fell = hop(FALL_STAND_STAGE)
+    const above = (r: ReturnType<typeof hop>, t: number) =>
+      playerFrame(r.prev, r.state, r.events, t).level * TILE.layer +
+      playerFrame(r.prev, r.state, r.events, t).lift
+
+    expect(flat.state.player).toEqual({ x: 1, y: 0 })
+    expect(fell.state.player).toEqual({ x: 1, y: 0 })
+    for (let t = 0.6; t <= 1; t += 0.05) expect(above(fell, t)).toBeCloseTo(above(flat, t))
   })
 
   it('연쇄는 갓을 딛는 자리에서만 멈추고 뒤로 가지 않는다', () => {
