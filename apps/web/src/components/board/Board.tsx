@@ -122,9 +122,28 @@ const Board = ({
   const pickedUp = moving ? events.find((e) => e.type === 'pickedUp') : undefined
   const placed = moving ? events.find((e) => e.type === 'placed') : undefined
 
+  // 상자가 구덩이를 메워 생긴 바닥. 길을 다시 짜는 데 쓰는 자리라 가려지면 안 된다
+  const filled = useMemo(
+    () =>
+      heights.flatMap((row, y) =>
+        row.flatMap((h, x) => (h >= 0 && stage.heights[y][x] < 0 ? [{ x, y }] : [])),
+      ),
+    [heights, stage.heights],
+  )
+
   // 가림 처리도 최종 자리가 아니라 지금 그려지는 자리를 본다. 순간이동으로 가라앉는 큐브가 벽에 묻힌다
   const faded = [
     ...occludingCells(heights, cubeCell, Math.round(cube.level), boxes),
+    // 버섯에 날려 보낸 상자와 그것이 메운 바닥은 큐브에서 멀어 저 혼자 벽에 묻힌다
+    ...boxes.flatMap((b, i) =>
+      occludingCells(
+        heights,
+        b,
+        heights[b.y][b.x] + 1,
+        boxes.filter((_, j) => j !== i),
+      ),
+    ),
+    ...filled.flatMap((p) => occludingCells(heights, p, heights[p.y][p.x], boxes)),
     ...leaningLadders
       .filter((l) => (l.direction === 'right' || l.direction === 'down') && same(l, player))
       .flatMap((l) => occludingCells(heights, l, heights[l.y][l.x], boxes)),
