@@ -588,7 +588,6 @@ const ridePhase = (game: GameState, events: GameEvent[], p: Point, t: number, sw
       )
 }
 
-// 큐브가 제 힘으로 간 몫만 그린 프레임. 발판에 실린 몫은 playerFrame이 더한다
 // 튕겨 가는 큐브가 u칸째에 있을 때 딛는 칸의 높이. 갓이 있는 칸과 양 끝만 밟고 사이 칸은 건너뛴다
 const hopLevel = (
   game: GameState,
@@ -620,6 +619,7 @@ const hopLevel = (
   return b === a ? floorOf(a) : lerp(floorOf(a), floorOf(b), clamp01((u - a) / (b - a)))
 }
 
+// 큐브가 제 힘으로 간 몫만 그린 프레임. 발판에 실린 몫은 playerFrame이 더한다
 const pathFrame = (
   prev: GameState | null,
   game: GameState,
