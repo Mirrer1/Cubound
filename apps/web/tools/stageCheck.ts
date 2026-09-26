@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { zoneIndexAt } from '@/game/camera'
+import { type Hidden, type HiddenKind, hiddenObjects } from '@/game/occlusion'
 import { createState, move } from '@/game/rules'
 import { deadEnds, minPushes, moveLimit, solutionCount, solve, statesWithin } from '@/game/solver'
 import type { Direction, Stage } from '@/game/types'
@@ -21,6 +22,26 @@ const row = (label: string, value: string) => console.log(`  ${label}  ${value}`
 
 const deadText = (count: number, earliest: number | null) =>
   count === 0 ? '0개' : `${count}개 (가장 빨리 ${earliest}수)`
+
+const KINDS: Record<HiddenKind, string> = {
+  mushroom: '버섯',
+  swamp: '늪',
+  goal: '구멍',
+  box: '상자',
+  ladder: '사다리',
+}
+
+const hiddenText = (hidden: Hidden[]) => {
+  if (hidden.length === 0) return '없음'
+  const listed = hidden
+    .slice(0, 3)
+    .map(
+      ({ kind, target: o, cover: c, px }) =>
+        `${KINDS[kind]}(${o.x},${o.y}) h${o.h} ← (${c.x},${c.y}) h${c.h} ${px}px`,
+    )
+  const rest = hidden.length > 3 ? ` 외 ${hidden.length - 3}건` : ''
+  return `${hidden.length}건 (${listed.join(', ')}${rest})`
+}
 
 const jsonIn = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true })
@@ -64,6 +85,7 @@ interface Summary {
   dead: string
   alternatives: string
   states: string
+  hidden: string
   ms: string
 }
 
@@ -78,6 +100,9 @@ const check = (file: string): Summary | null => {
 
   const stage = result.stage
   row('형식', '통과')
+
+  const hidden = hiddenObjects(stage)
+  row('가림', hiddenText(hidden))
 
   const started = Date.now()
   const solved = solve(stage)
@@ -152,6 +177,7 @@ const check = (file: string): Summary | null => {
       stuck.status === 'ok' ? (stuck.dead === 0 ? '0' : `${stuck.dead}@${stuck.earliest}`) : '?',
     alternatives: `${ways}${inside === null ? '' : `가지, ${room}개`}`,
     states: stuck.status === 'ok' ? `${stuck.states}` : '?',
+    hidden: hidden.length === 0 ? '0' : `${hidden.length}@${hidden[0].px}px`,
     ms: `${ms}`,
   }
 }
@@ -163,6 +189,7 @@ const COLUMNS: [keyof Summary, string, number][] = [
   ['states', '상태', 8],
   ['dead', '막힘@수', 10],
   ['alternatives', '풀이/여유', 14],
+  ['hidden', '가림@최대', 11],
   ['ms', '탐색ms', 8],
 ]
 
