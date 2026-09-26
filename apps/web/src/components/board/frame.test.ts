@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  MUSHROOM_STAND,
   boxSink,
   crackFrame,
+  crackProgress,
   crackSink,
   crackThickness,
   durationOf,
   frostAt,
   moveEase,
   movingBox,
+  mushroomFrames,
+  mushroomPose,
   pickUpProgress,
   playerFrame,
   pressProgress,
@@ -1384,5 +1388,290 @@ describe('playerFrame 늪', () => {
     const { prev, state, events } = leaveSwamp()
 
     expect(playerFrame(prev, state, events, 0).cell).toEqual({ x: 2, y: 0 })
+  })
+})
+
+// (1,0) 버섯을 밟으면 한 층 벽인 (2,0)을 넘어 (3,0)에 내린다
+const HOP_STAGE: Stage = {
+  version: 1,
+  id: 'test-frame-mushroom',
+  name: '버섯',
+  heights: [[0, 0, 1, 0, 0, 0, 0]],
+  start: { x: 0, y: 0 },
+  goal: { x: 6, y: 0 },
+  entities: [],
+  mushroom: ['.#.....'],
+}
+
+// (1,0)과 (3,0)이 이어져 한 수에 다섯 칸을 간다
+const CHAIN_STAGE: Stage = {
+  ...HOP_STAGE,
+  heights: [[0, 0, 0, 0, 0, 0, 0]],
+  mushroom: ['.#.#...'],
+}
+
+// 착지 칸이 두 층 높아 뛰지 못하고 버섯에 올라선다
+const STAND_STAGE: Stage = {
+  ...HOP_STAGE,
+  heights: [
+    [0, 0, 0, 2, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+  ],
+  mushroom: ['.#.....', '.......', '.......'],
+}
+
+// 밟힌 버섯이 시드는 보스 판
+const DRY_STAGE: Stage = { ...CHAIN_STAGE, rules: { mushroomWither: true } }
+
+// 상자를 (2,0) 버섯 쪽으로 밀면 상자가 (4,0)까지 날아간다
+const BOX_HOP_STAGE: Stage = {
+  ...HOP_STAGE,
+  heights: [[0, 0, 0, 0, 0, 0, 0]],
+  mushroom: ['..#....'],
+  entities: [{ type: 'box', x: 1, y: 0 }],
+}
+
+const hop = (stage: Stage) => {
+  const prev = createState(stage)
+  const { state, events } = move(prev, 'right')
+  return { prev, state, events }
+}
+
+describe('durationOf 버섯', () => {
+  it('튕겨 간 칸 수만큼 길어지고 연쇄여도 칸당 시간이 같다', () => {
+    const one = hop(HOP_STAGE)
+    const two = hop(CHAIN_STAGE)
+
+    expect(one.state.player).toEqual({ x: 3, y: 0 })
+    expect(two.state.player).toEqual({ x: 5, y: 0 })
+    expect(durationOf(one.events) / 3).toBeCloseTo(durationOf(two.events) / 5)
+    expect(durationOf(two.events)).toBeGreaterThan(durationOf(one.events))
+  })
+
+  it('버섯이 없는 이동은 길이가 그대로다', () => {
+    const prev = createState(STAGE)
+    const { events } = move(prev, 'right')
+
+    expect(durationOf(events)).toBeCloseTo(0.24)
+  })
+
+  it('시드는 것은 이동을 길게 만들지 않는다', () => {
+    expect(durationOf(hop(DRY_STAGE).events)).toBeCloseTo(durationOf(hop(CHAIN_STAGE).events))
+  })
+})
+
+describe('playerFrame 버섯', () => {
+  it('포물선으로 떠올랐다 내려앉고 구르지 않는다', () => {
+    const { prev, state, events } = hop(HOP_STAGE)
+    const lifts = []
+
+    for (let t = 0; t <= 1; t += 0.05) {
+      const frame = playerFrame(prev, state, events, t)
+      expect(frame.angle).toBe(0)
+      lifts.push(frame.lift)
+    }
+
+    expect(playerFrame(prev, state, events, 0).lift).toBe(0)
+    expect(playerFrame(prev, state, events, 1).lift).toBe(0)
+    // 한 층(30)보다 높이 떠야 벽을 넘는 것이 보인다
+    expect(Math.max(...lifts)).toBeGreaterThan(TILE.layer)
+  })
+
+  it('연쇄 중간에 멈추지 않고 이어서 간다', () => {
+    const { prev, state, events } = hop(CHAIN_STAGE)
+    let last = playerFrame(prev, state, events, 0).x
+
+    for (let t = 0.02; t <= 1; t += 0.02) {
+      const { x } = playerFrame(prev, state, events, t)
+      expect(x).toBeGreaterThan(last)
+      last = x
+    }
+    expect(playerFrame(prev, state, events, 1).x).toBe(5)
+  })
+
+  it('연쇄 중간 버섯에서는 눌린 갓을 딛고 지나간다', () => {
+    const { prev, state, events } = hop(CHAIN_STAGE)
+    const middle = Array.from({ length: 201 }, (_, i) => i / 200)
+      .map((t) => playerFrame(prev, state, events, t))
+      .reduce((best, frame) => (Math.abs(frame.x - 3) < Math.abs(best.x - 3) ? frame : best))
+
+    // 바닥에 닿지 않고 갓 높이를 스쳐 지나간다
+    expect(middle.lift).toBeGreaterThan(10)
+    expect(middle.lift).toBeLessThan(TILE.layer)
+  })
+
+  it('못 뛰면 눌린 갓 위에 올라선다', () => {
+    const { prev, state, events } = hop(STAND_STAGE)
+
+    expect(state.player).toEqual({ x: 1, y: 0 })
+    expect(playerFrame(prev, state, events, 0).lift).toBe(0)
+    expect(playerFrame(prev, state, events, 1).lift).toBe(MUSHROOM_STAND)
+    // 튕겨 나갈 때처럼 떠오르는 몫이 없다
+    for (let t = 0; t <= 1; t += 0.05) {
+      expect(playerFrame(prev, state, events, t).lift).toBeLessThanOrEqual(MUSHROOM_STAND)
+    }
+  })
+
+  it('올라선 버섯에서 튕겨 나가면 눌린 갓 위에서 출발한다', () => {
+    const stood = hop(STAND_STAGE).state
+    const { state, events } = move(stood, 'down')
+
+    expect(state.player).toEqual({ x: 1, y: 2 })
+    expect(playerFrame(stood, state, events, 0).lift).toBe(MUSHROOM_STAND)
+    expect(playerFrame(stood, state, events, 1).lift).toBe(0)
+  })
+})
+
+describe('mushroomFrames', () => {
+  it('버섯이 없는 판은 빈 목록이다', () => {
+    const prev = createState(STAGE)
+    const { state, events } = move(prev, 'right')
+
+    expect(mushroomFrames(prev, state, events, 0.5)).toEqual([])
+  })
+
+  it('밟는 동안 갓이 눌렸다가 펴지고 돌아온다', () => {
+    const { prev, state, events } = hop(HOP_STAGE)
+    const presses = Array.from({ length: 101 }, (_, i) =>
+      mushroomFrames(prev, state, events, i / 100).find((f) => f.cell.x === 1),
+    ).map((f) => f?.press ?? 0)
+
+    expect(presses[0]).toBe(0)
+    expect(Math.max(...presses)).toBeGreaterThan(0.8)
+    expect(Math.min(...presses)).toBeLessThan(-0.8)
+    expect(presses[presses.length - 1]).toBe(0)
+  })
+
+  it('못 뛰어서 올라선 갓은 끝까지 눌린 채로 남는다', () => {
+    const { prev, state, events } = hop(STAND_STAGE)
+    const at = (t: number) => mushroomFrames(prev, state, events, t)[0]
+
+    expect(at(0).press).toBe(0)
+    expect(at(1).press).toBe(2)
+    expect(at(0.5).press).toBeGreaterThan(0)
+    expect(at(0.5).press).toBeLessThan(2)
+  })
+
+  it('밟힌 버섯은 큐브가 떠난 뒤에 시들고 지나간 순서대로 어긋난다', () => {
+    const { prev, state, events } = hop(DRY_STAGE)
+    const at = (t: number) => mushroomFrames(prev, state, events, t)
+    const first = (t: number) => at(t).find((f) => f.cell.x === 1)!
+    const second = (t: number) => at(t).find((f) => f.cell.x === 3)!
+
+    expect(state.mushrooms).toEqual([])
+    expect(first(0).wither).toBe(0)
+    expect(second(0).wither).toBe(0)
+    // 앞선 버섯이 먼저 시든다
+    expect(first(0.6).wither).toBeGreaterThan(second(0.6).wither)
+    expect(first(1).wither).toBe(1)
+    expect(second(1).wither).toBe(1)
+  })
+
+  it('시드는 동안에도 갓이 먼저 눌렸다 펴진다', () => {
+    const { prev, state, events } = hop(DRY_STAGE)
+    const first = (t: number) => mushroomFrames(prev, state, events, t).find((f) => f.cell.x === 1)!
+    const sprung = Array.from({ length: 101 }, (_, i) => first(i / 100)).find((f) => f.press < -0.5)
+
+    expect(sprung).toBeDefined()
+    expect(sprung!.wither).toBeLessThan(0.5)
+  })
+})
+
+describe('movingBox 버섯', () => {
+  it('상자도 같은 포물선으로 두 칸을 날아간다', () => {
+    const prev = createState(BOX_HOP_STAGE)
+    const { state, events } = move(prev, 'right')
+    const lifts = Array.from({ length: 101 }, (_, i) => movingBox(prev, state, events, i / 100))
+      .filter((f) => f !== null)
+      .map((f) => f.lift)
+
+    expect(state.boxes).toEqual([{ x: 4, y: 0 }])
+    expect(state.pushes).toBe(1)
+    expect(lifts[0]).toBe(0)
+    expect(Math.max(...lifts)).toBeGreaterThan(TILE.layer)
+  })
+
+  it('상자가 지나간 버섯도 눌린다', () => {
+    const prev = createState(BOX_HOP_STAGE)
+    const { state, events } = move(prev, 'right')
+    const presses = Array.from({ length: 101 }, (_, i) =>
+      mushroomFrames(prev, state, events, i / 100).find((f) => f.cell.x === 2),
+    ).map((f) => f?.press ?? 0)
+
+    expect(Math.max(...presses)).toBeGreaterThan(0.8)
+    expect(Math.min(...presses)).toBeLessThan(-0.8)
+  })
+})
+
+describe('mushroomPose', () => {
+  it('눌리는 차례를 시안 값 그대로 돌려준다', () => {
+    expect(mushroomPose(-1, 0)).toEqual({ stem: 18, cap: 0.44, thick: 6, crown: 3 })
+    expect(mushroomPose(0, 0)).toEqual({ stem: 14, cap: 0.48, thick: 6, crown: 3 })
+    expect(mushroomPose(1, 0)).toEqual({ stem: 9, cap: 0.54, thick: 5, crown: 2 })
+    expect(mushroomPose(2, 0)).toEqual({ stem: 2, cap: 0.66, thick: 3, crown: 0 })
+  })
+
+  it('시드는 차례도 시안 값 그대로다', () => {
+    expect(mushroomPose(0, 0.5)).toEqual({ stem: 8, cap: 0.5, thick: 4, crown: 2 })
+    expect(mushroomPose(0, 1)).toEqual({ stem: 3, cap: 0.56, thick: 3, crown: 2 })
+  })
+
+  it('큐브가 올라선 높이는 눌린 갓 꼭대기다', () => {
+    const pose = mushroomPose(2, 0)
+
+    expect(pose.stem + pose.thick + pose.crown).toBe(MUSHROOM_STAND)
+  })
+})
+
+describe('crackProgress', () => {
+  it('버섯이 없는 이동은 진행도를 그대로 쓴다', () => {
+    const prev = createState(STAGE)
+    const { events } = move(prev, 'right')
+
+    for (let t = 0; t <= 1; t += 0.1) expect(crackProgress(events, t)).toBeCloseTo(t)
+  })
+
+  it('튕겨 가는 이동은 내려앉기 시작한 뒤에 닳는다', () => {
+    const { events } = hop(HOP_STAGE)
+
+    expect(crackProgress(events, 0.4)).toBe(0)
+    expect(crackProgress(events, 1)).toBe(1)
+    expect(crackProgress(events, 0.75)).toBeCloseTo(0.5)
+  })
+})
+
+describe('버섯과 다른 요소', () => {
+  // 튕겨 날아가 늪에 내린다. 버섯 칸과 늪 칸은 겹치지 않는다
+  const SWAMP_LANDING: Stage = {
+    ...HOP_STAGE,
+    heights: [[0, 0, 0, 0, 0, 0, 0]],
+    swamp: ['...#...'],
+  }
+
+  it('늪에 착지하면 날아온 뒤에 가라앉는다', () => {
+    const prev = createState(SWAMP_LANDING)
+    const { state, events } = move(prev, 'right')
+    const swamp = swampTime(prev, state)
+    const dry = hop({ ...SWAMP_LANDING, swamp: undefined })
+
+    expect(state.player).toEqual({ x: 3, y: 0 })
+    expect(swamp.tail).toBeGreaterThan(0)
+    // 가라앉는 시간이 뒤에 붙을 뿐 나는 시간은 그대로다
+    expect(durationOf(events, swamp)).toBeCloseTo(durationOf(dry.events) + swamp.tail)
+    expect(playerFrame(prev, state, events, 1)).toMatchObject({ x: 3, lift: 0 })
+    expect(swampFrame(prev, state, events, 1)?.deep).toBe(1)
+  })
+
+  it('무너지는 칸에 착지하면 내려앉기 시작한 뒤에 닳는다', () => {
+    const stage: Stage = {
+      ...HOP_STAGE,
+      heights: [[0, 0, 0, 0, 0, 0, 0]],
+      cracks: ['...2...'],
+    }
+    const { events } = hop(stage)
+
+    expect(crackProgress(events, 0.3)).toBe(0)
+    expect(crackProgress(events, 1)).toBe(1)
   })
 })
