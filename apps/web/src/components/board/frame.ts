@@ -20,8 +20,9 @@ const HOP = { perCell: 0.19, max: 2, peak: 32 }
 // press와 spring을 더한 만큼 큐브가 갓 위에 머물러 눌림과 튕김이 가로 이동과 안 겹친다.
 // 둘을 합쳐 1칸이라 한 칸을 가는 시간만큼 머문다. recover는 큐브가 날아간 뒤에 이어진다
 const CAP_PRESS = { press: 0.55, spring: 0.45, recover: 1.1 }
-// 큐브가 올라서서 눌린 채 남는 갓은 다가오는 한 칸 동안 눌린다. 튕기지 않아 머무름이 없다
-const CAP_REST = 1
+// 큐브가 올라서서 눌린 채 남는 갓. 튕기지 않아 머무름을 따로 못 두고 이동의 끝자락을 쓴다.
+// 이 몫만큼 남았을 때 눌리기 시작해서, 그 전까지는 큐브가 평소 높이 갓 위로 올라선다
+const CAP_REST = 0.4
 // 밟힌 버섯이 시드는 구간. 갓에 올라선 때부터 재서 머무름 1칸이 끝난 뒤에 시작한다
 const CAP_WITHER = { from: 1.2, span: 1.4 }
 // 큐브가 올라선 갓의 press 값
@@ -681,7 +682,14 @@ const pathFrame = (
       cell: frontOf(event.from, event.to),
       squash: span ? squashAt((elapsed - span.from) / (span.to - span.from)) : 0,
       fade: 1,
-      lift: hopped ? hopLift(cells, hopSpan(cells) * p, land) : lerp(rise, land, p),
+      lift: hopped
+        ? hopLift(cells, hopSpan(cells) * p, land)
+        : land > 0
+          ? restLift(
+              cells * (p - 1),
+              lerp(rise, CAP_TOP_IDLE, clamp01((cells * p) / restWalk(cells))),
+            )
+          : lerp(rise, land, p),
     }
   }
 
@@ -880,7 +888,7 @@ const capTop = (i: number) => CAP_STEM[i] + CAP_THICK[i] + CAP_CROWN[i]
 // 못 뛰어서 올라선 큐브가 눌린 갓 위에 서는 높이
 export const MUSHROOM_STAND = capTop(3)
 // 큐브가 막 올라선 평소 갓과 다 펴진 갓의 꼭대기. 머무름이 끝나고 여기서 날아오른다
-const CAP_TOP_IDLE = capTop(1)
+export const CAP_TOP_IDLE = capTop(1)
 const CAP_TOP_SPRING = capTop(0)
 
 export interface MushroomPose {
@@ -970,8 +978,10 @@ export const hopLift = (cells: number, q: number, land: number) => {
   const b = Math.min(bounces - 1, Math.floor((u - lead) / 2))
   const s = clamp01((u - lead) / 2 - b)
   // 이어지는 갓에는 평소 높이로 내려서고 마지막에는 땅으로 내린다
-  const to = b + 1 < bounces ? CAP_TOP_IDLE : land
-  return lerp(CAP_TOP_SPRING, to, s) + HOP.peak * Math.sin(Math.PI * s)
+  // 마지막에 갓 위에 내려서면 평소 높이로 내린 뒤에 눌린다
+  const to = b + 1 < bounces || land > 0 ? CAP_TOP_IDLE : land
+  const flying = lerp(CAP_TOP_SPRING, to, s) + HOP.peak * Math.sin(Math.PI * s)
+  return land > 0 ? restLift(q - hopSpan(cells), flying) : flying
 }
 
 // 큐브가 버섯 갓 위에 서 있는 높이. 그 칸에 서 있지 않으면 0
@@ -989,6 +999,13 @@ const capSpringAt = (c: number, deep: number) =>
         : lerp(-1, 0, clamp01((c - CAP_PRESS.press - CAP_PRESS.spring) / CAP_PRESS.recover))
 
 // 큐브가 올라서서 눌린 채 남는 갓. 다가오는 한 칸 동안 눌린다
+// 갓에 올라서기까지 걷는 몫. 남은 CAP_REST는 눌리는 데 쓴다
+const restWalk = (cells: number) => Math.max(0.01, cells - CAP_REST)
+
+// 갓 위에 내려서는 끝자락. 다 내려서기 전에는 walking을 그대로 쓰고 그 뒤로는 눌리는 갓을 딛는다
+const restLift = (phase: number, walking: number) =>
+  phase <= -CAP_REST ? walking : capTopAt(capRestAt(phase))
+
 const capRestAt = (d: number) =>
   d <= -CAP_REST ? 0 : lerp(0, CAP_ON, easeIn(clamp01(1 + d / CAP_REST)))
 

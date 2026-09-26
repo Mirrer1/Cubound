@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  CAP_TOP_IDLE,
   MUSHROOM_STAND,
   boxSink,
   crackFrame,
@@ -1509,15 +1510,18 @@ describe('playerFrame 버섯', () => {
     expect(middle.lift).toBeLessThan(TILE.layer)
   })
 
-  it('못 뛰면 눌린 갓 위에 올라선다', () => {
+  it('못 뛰면 평소 높이 갓에 올라선 뒤 눌려 내려앉는다', () => {
     const { prev, state, events } = hop(STAND_STAGE)
+    const lift = (t: number) => playerFrame(prev, state, events, t).lift
 
     expect(state.player).toEqual({ x: 1, y: 0 })
-    expect(playerFrame(prev, state, events, 0).lift).toBe(0)
-    expect(playerFrame(prev, state, events, 1).lift).toBe(MUSHROOM_STAND)
-    // 튕겨 나갈 때처럼 떠오르는 몫이 없다
+    expect(lift(0)).toBe(0)
+    expect(lift(1)).toBe(MUSHROOM_STAND)
+    // 다 올라서기 전에는 평소 높이 갓을 딛는다
+    expect(lift(0.5)).toBeGreaterThan(MUSHROOM_STAND)
+    // 튕겨 나갈 때처럼 갓보다 높이 떠오르지는 않는다
     for (let t = 0; t <= 1; t += 0.05) {
-      expect(playerFrame(prev, state, events, t).lift).toBeLessThanOrEqual(MUSHROOM_STAND)
+      expect(lift(t)).toBeLessThanOrEqual(CAP_TOP_IDLE)
     }
   })
 
@@ -1551,14 +1555,17 @@ describe('mushroomFrames', () => {
     expect(presses[presses.length - 1]).toBe(0)
   })
 
-  it('못 뛰어서 올라선 갓은 끝까지 눌린 채로 남는다', () => {
+  it('못 뛰어서 올라선 갓은 큐브가 다 올라선 뒤에 눌린다', () => {
     const { prev, state, events } = hop(STAND_STAGE)
     const at = (t: number) => mushroomFrames(prev, state, events, t)[0]
 
     expect(at(0).press).toBe(0)
+    // 큐브가 걸어 들어오는 동안에는 평소 높이 그대로다
+    expect(at(0.5).press).toBe(0)
+    // 끝자락에서 눌리기 시작해 올라선 채로 끝난다
+    expect(at(0.8).press).toBeGreaterThan(0)
+    expect(at(0.8).press).toBeLessThan(2)
     expect(at(1).press).toBe(2)
-    expect(at(0.5).press).toBeGreaterThan(0)
-    expect(at(0.5).press).toBeLessThan(2)
   })
 
   it('밟힌 버섯은 큐브가 떠난 뒤에 시들고 지나간 순서대로 어긋난다', () => {
