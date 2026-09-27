@@ -25,6 +25,7 @@ import {
   switchCells,
   switchProgress,
   tramProgress,
+  vineLooks,
 } from './frame'
 import { shade } from './shade'
 import { useBoardAnimation } from './useBoardAnimation'
@@ -165,20 +166,26 @@ const Board = ({
     return map
   }, [trams])
 
+  // 덩굴 뿌리와 길 칸마다 그릴 모습. 자라는 연출이 없어 한 수 뒤 모습을 바로 그린다
+  const vines = useMemo(() => vineLooks(game), [game])
+
   // x, y는 화면 좌표, p는 칸 좌표. 메운 칸이 다시 구멍이 될 때는 사라지기 전 높이로 그린다
+  // 발판 길과 아직 바닥 없는 덩굴 길은 구덩이로 그린다
   const cells = useMemo(
     () =>
       heights
         .flatMap((row, y) =>
           row.map((_, x) => {
-            const rail = railDirs.get(`${x}-${y}`) ?? ''
-            const h = rail === '' ? Math.max(heights[y][x], before.heights[y][x]) : 0
-            return { ...toScreen({ x, y }, h), h, rail, p: { x, y }, key: `${x}-${y}` }
+            const key = `${x}-${y}`
+            const rail = railDirs.get(key) ?? ''
+            const pit = rail !== '' || (vines.has(key) && heights[y][x] < 0)
+            const h = pit ? 0 : Math.max(heights[y][x], before.heights[y][x])
+            return { ...toScreen({ x, y }, h), h, rail, pit, p: { x, y }, key }
           }),
         )
         .filter((cell) => cell.h >= 0)
         .sort((a, b) => a.p.x + a.p.y - (b.p.x + b.p.y)),
-    [heights, before.heights, railDirs],
+    [heights, before.heights, railDirs, vines],
   )
 
   // 구덩이 벽은 옆 칸 윗면에서 시작한다. 옆 칸도 길이면 구덩이가 이어져 벽이 없다
@@ -349,6 +356,13 @@ const Board = ({
             : []),
         ].join('|')
 
+        // 상자가 먼저 메운 길 칸은 덩굴이 못 자라 싹을 그리지 않는다
+        const vineLook = vines.get(cell.key)
+        const vine =
+          vineLook && (cell.pit || vineLook.kind === 'grown' || vineLook.kind === 'root')
+            ? vineLook
+            : null
+
         const tram = tramFrames.find((frame) => same(frame.cell, cell.p)) ?? null
         const drawCube = same(cube.cell, cell.p) && !(game.cleared && !moving)
         const drawBoxes = boxFrames.filter((frame) => same(frame.cell, cell.p))
@@ -371,7 +385,7 @@ const Board = ({
             h={cell.h + raised}
             parity={(cell.p.x + cell.p.y) % 2 === 1}
             goal={same(cell.p, stage.goal)}
-            filled={isFilled}
+            filled={isFilled && vine?.kind !== 'grown'}
             ice={isIce(game, cell.p)}
             frost={frostAt(events, cell.p, t, swampSeconds)}
             crack={Math.max(left, was) >= 0}
@@ -397,13 +411,18 @@ const Board = ({
             box={has(boxes, cell.p) && !movedBoxHere && boxDrop === null}
             rail={cell.rail}
             railNext={nextRails.has(cell.key)}
-            pitWallLeft={cell.rail === '' ? -1 : wallHeight(cell.p.x, cell.p.y - 1)}
-            pitWallRight={cell.rail === '' ? -1 : wallHeight(cell.p.x - 1, cell.p.y)}
+            pitWallLeft={cell.pit ? wallHeight(cell.p.x, cell.p.y - 1) : -1}
+            pitWallRight={cell.pit ? wallHeight(cell.p.x - 1, cell.p.y) : -1}
             blockOpacity={
               restored > 0 ? 1 - t : restored < 0 ? (cubeDrop?.opacity ?? 1) : crumble.opacity
             }
             flatLadder={flatLadder}
             leaning={leaning}
+            vine={vine?.kind ?? null}
+            vineEnter={vine?.enter ?? null}
+            vineLeave={vine?.leave ?? null}
+            vineHard={vine?.hard ?? false}
+            vineKnot={vine?.knot ?? false}
           >
             {overlay ? (
               <>

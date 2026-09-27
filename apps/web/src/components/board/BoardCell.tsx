@@ -3,8 +3,9 @@ import { type ReactNode, memo } from 'react'
 import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
 import BoardLadder from './BoardLadder'
+import BoardVine from './BoardVine'
 import { CUBE } from './cube'
-import { crackThickness, mushroomPose, swampCollar, swampSink } from './frame'
+import { type VineKind, crackThickness, mushroomPose, swampCollar, swampSink } from './frame'
 import { blend, checker, darken, dim, shade } from './shade'
 import { TILE, blockFaces, isoDelta } from '@/game/iso'
 import type { Direction } from '@/game/types'
@@ -51,6 +52,16 @@ const SURFACES = {
     top: 'var(--color-machine-frame-top)',
     left: 'var(--color-machine-frame-left)',
     right: 'var(--color-machine-frame-right)',
+  },
+  vine: {
+    top: 'var(--color-vine-top)',
+    left: 'var(--color-vine-left)',
+    right: 'var(--color-vine-right)',
+  },
+  hardVine: {
+    top: 'var(--color-vine-hard-top)',
+    left: 'var(--color-vine-hard-left)',
+    right: 'var(--color-vine-hard-right)',
   },
 }
 
@@ -194,6 +205,11 @@ interface BoardCellProps {
   blockOpacity: number // 칸 블록 투명도
   flatLadder: number // 투명도, 0이면 없음
   leaning: string // "방향:투명도"를 |로 이은 값
+  vine: VineKind | null // 덩굴 뿌리나 길 칸
+  vineEnter: Direction | null
+  vineLeave: Direction | null
+  vineHard: boolean
+  vineKnot: boolean
   children?: ReactNode
 }
 
@@ -234,11 +250,31 @@ const BoardCell = ({
   blockOpacity,
   flatLadder,
   leaning,
+  vine,
+  vineEnter,
+  vineLeave,
+  vineHard,
+  vineKnot,
   children,
 }: BoardCellProps) => {
   const icy = ice && !goal && !filled
-  // 상자가 메운 칸, 얼음, 발판, 짝 칸, 구멍은 바닥 대신 제 색으로 칠한다
-  const surface = goal ? 'hole' : filled ? 'tool' : icy ? 'ice' : lift || warp ? 'machine' : null
+  // 발판 길과 아직 안 자란 덩굴 길은 구덩이로 그린다
+  const pit = rail !== '' || vine === 'next' || vine === 'future' || vine === 'spent'
+  const grownVine = vine === 'grown'
+  // 상자가 메운 칸, 덩굴이 자란 칸, 얼음, 발판, 짝 칸, 구멍은 바닥 대신 제 색으로 칠한다
+  const surface = goal
+    ? 'hole'
+    : filled
+      ? 'tool'
+      : grownVine
+        ? vineHard
+          ? 'hardVine'
+          : 'vine'
+        : icy
+          ? 'ice'
+          : lift || warp
+            ? 'machine'
+            : null
   // 닳은 단계 사이에서는 앞뒤 단계 색을 섞는다
   const worn = Math.min(1, Math.floor(crackStage))
   const crackFace = (face: string) =>
@@ -256,8 +292,8 @@ const BoardCell = ({
           left: 'var(--color-floor-left)',
           right: 'var(--color-floor-right)',
         }
-  // 바닥은 제 색 토큰이 둘이라 이미 번갈아 있고 구멍은 한 칸뿐이다
-  const evenOdd = crack || (surface !== null && surface !== 'hole')
+  // 바닥은 제 색 토큰이 둘이라 이미 번갈아 있고 구멍은 한 칸뿐이다. 덩굴은 마디로 칸이 세인다
+  const evenOdd = crack || (surface !== null && surface !== 'hole' && !grownVine)
   const faces = evenOdd ? { ...plain, top: checker(plain.top, parity) } : plain
   const depth = crack ? crackThickness(crackStage) + h * TILE.layer : h * TILE.layer + TILE.lip
   // 갈라짐은 한 번 밟은 뒤부터다. 무너지는 중에는 조각이 따로 날아간다
@@ -320,7 +356,7 @@ const BoardCell = ({
 
   return (
     <g>
-      {rail !== '' && (
+      {pit && (
         <g>
           <polygon
             points={blockFaces(x, y + PIT_FLOOR, TILE.width, 0).top}
@@ -359,9 +395,21 @@ const BoardCell = ({
               right="var(--color-tram-stop-right)"
             />
           )}
+          {vine && (
+            <BoardVine
+              x={x}
+              y={y}
+              floor={PIT_FLOOR}
+              kind={vine}
+              enter={vineEnter}
+              leave={vineLeave}
+              hard={vineHard}
+              knot={vineKnot}
+            />
+          )}
         </g>
       )}
-      {rail === '' && !hidden && (
+      {!pit && !hidden && (
         <g style={fade}>
           {crackShadow > 0 && (
             <polygon
@@ -392,6 +440,18 @@ const BoardCell = ({
                 top={split > 0 ? dim(faces.top, 9) : faces.top}
                 left={faces.left}
                 right={faces.right}
+              />
+            )}
+            {(grownVine || vine === 'root') && (
+              <BoardVine
+                x={x}
+                y={y}
+                floor={PIT_FLOOR}
+                kind={vine}
+                enter={vineEnter}
+                leave={vineLeave}
+                hard={vineHard}
+                knot={vineKnot}
               />
             )}
             {swamp && (

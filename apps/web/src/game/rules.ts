@@ -173,6 +173,10 @@ export const sinkCount = (state: GameState) => (state.stage.rules?.swampDeepen ?
 export const capsLeft = (state: GameState) =>
   state.stage.rules?.mushroomWither ? state.mushrooms.length : null
 
+// 덩굴이 굳는 판이 아니면 null. 아직 안 굳은 덩굴 수다
+export const vinesLeft = (state: GameState) =>
+  state.stage.rules?.vineStop ? state.vines.filter((vine) => !vine.stopped).length : null
+
 // 보스 방향 제한이 없으면 null
 export const dirLeft = (state: GameState) => {
   const limit = state.stage.rules?.dirLimit

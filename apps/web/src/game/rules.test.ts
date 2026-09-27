@@ -13,6 +13,7 @@ import {
   ridesLeft,
   sinkCount,
   standHeight,
+  vinesLeft,
 } from './rules'
 import type { Direction, Entity, GameState, MoveResult, Point, Stage } from './types'
 
@@ -3108,6 +3109,12 @@ describe('move 굳는 자리', () => {
 
     expect(state.boxes).toEqual([{ x: 2, y: 1 }])
     expect(state.vines[0]).toEqual({ id: 'a', grown: 3, stopped: false })
+  })
+
+  it('아직 안 굳은 덩굴 수를 알려주고 굳는 자리가 아니면 null이다', () => {
+    expect(vinesLeft(createState(VINE_STOP_STAGE))).toBe(2)
+    expect(vinesLeft(play(VINE_STOP_STAGE, ['down', 'right']).state)).toBe(1)
+    expect(vinesLeft(createState({ ...VINE_STOP_STAGE, rules: undefined }))).toBeNull()
   })
 
   it('굳는 자리가 아니면 밟아도 굳지 않는다', () => {

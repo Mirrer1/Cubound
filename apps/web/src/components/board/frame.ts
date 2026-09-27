@@ -1180,3 +1180,47 @@ export const crackProgress = (events: GameEvent[], t: number) => {
   const hop = playerSegments(events).some(({ event }) => hopCells(event) > 0)
   return hop ? clamp01((t - CRACK_HOP_FROM) / (1 - CRACK_HOP_FROM)) : t
 }
+
+export type VineKind = 'root' | 'grown' | 'next' | 'future' | 'spent'
+
+export interface VineLook {
+  kind: VineKind
+  enter: Direction | null // 줄기가 들어오는 방향. 뿌리는 null
+  leave: Direction | null // 줄기가 나가는 방향
+  hard: boolean // 굳은 덩굴의 자란 칸
+  knot: boolean // 굳은 덩굴의 끝 칸이라 봉오리로 닫힘
+}
+
+// 덩굴 뿌리와 길 칸마다 무엇을 그릴지. 키는 "x-y"다
+export const vineLooks = (state: GameState): Map<string, VineLook> => {
+  const looks = new Map<string, VineLook>()
+  const vines = state.stage.entities.filter((e) => e.type === 'vine')
+
+  vines.forEach((vine, i) => {
+    const { grown, stopped } = state.vines[i]
+    const line = [{ x: vine.x, y: vine.y }, ...vine.cells]
+    const look = (kind: VineKind, enter: Direction | null, leave: Direction | null) => ({
+      kind,
+      enter,
+      leave,
+      hard: false,
+      knot: false,
+    })
+
+    looks.set(`${vine.x}-${vine.y}`, look('root', null, directionBetween(line[0], line[1])))
+    vine.cells.forEach((cell, k) => {
+      const enter = directionBetween(line[k], cell)
+      // 끝 칸은 들어온 쪽으로 곧게 나간다
+      const leave = line[k + 2] ? directionBetween(cell, line[k + 2]) : enter
+      const kind = k < grown ? 'grown' : stopped ? 'spent' : k === grown ? 'next' : 'future'
+      const hard = stopped && k < grown
+      looks.set(`${cell.x}-${cell.y}`, {
+        ...look(kind, enter, leave),
+        hard,
+        knot: hard && k === grown - 1,
+      })
+    })
+  })
+
+  return looks
+}

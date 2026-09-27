@@ -22,6 +22,7 @@ import {
   pushesLeft,
   ridesLeft,
   sinkCount,
+  vinesLeft,
 } from '@/game/rules'
 import { stageTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
@@ -90,6 +91,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const dirOver = game ? dirLeft(game) : null
   const mudSinks = game ? sinkCount(game) : null
   const caps = game ? capsLeft(game) : null
+  const vines = game ? vinesLeft(game) : null
   const limitedDir = game?.stage.rules?.dirLimit?.dir
   const limited = events.flatMap((e) => (e.type === 'limit' ? [e.limit] : []))[0]
   const outOfMoves = left === 0 && !game?.cleared
@@ -253,6 +255,12 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                   <div className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2">
                     <span className="font-mono text-[10px] tracking-[0.22em] text-mute">CAPS</span>
                     <LimitCount hit={null}>{caps}</LimitCount>
+                  </div>
+                )}
+                {vines !== null && (
+                  <div className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2">
+                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">VINE</span>
+                    <LimitCount hit={null}>{vines}</LimitCount>
                   </div>
                 )}
                 <div

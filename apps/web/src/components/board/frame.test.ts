@@ -27,6 +27,7 @@ import {
   switchCells,
   switchProgress,
   tramProgress,
+  vineLooks,
 } from './frame'
 import { TILE } from '@/game/iso'
 import { createState, move } from '@/game/rules'
@@ -1889,5 +1890,134 @@ describe('hopProgress', () => {
     expect(hopProgress(2, 0)).toBe(0)
     expect(hopProgress(2, 0.45 / 2.45) * 2).toBeCloseTo(0)
     expect(hopProgress(2, 1)).toBe(1)
+  })
+})
+
+// 뿌리 (0,1)에서 오른쪽으로 세 칸 자라는 덩굴
+const VINE_STAGE: Stage = {
+  version: 1,
+  id: 'test-frame-vine',
+  heights: [
+    [0, 0, 0, 0, 0],
+    [0, -1, -1, -1, 0],
+    [0, 0, 0, 0, 0],
+  ],
+  start: { x: 0, y: 0 },
+  goal: { x: 4, y: 0 },
+  entities: [
+    {
+      type: 'vine',
+      id: 'a',
+      x: 0,
+      y: 1,
+      cells: [
+        { x: 1, y: 1 },
+        { x: 2, y: 1 },
+        { x: 3, y: 1 },
+      ],
+    },
+  ],
+}
+
+const grownTo = (stage: Stage, grown: number, stopped = false): GameState => ({
+  ...createState(stage),
+  vines: [{ id: 'a', grown, stopped }],
+})
+
+const look = (kind: string, enter: string | null, leave: string | null, hard = false) => ({
+  kind,
+  enter,
+  leave,
+  hard,
+  knot: false,
+})
+
+describe('vineLooks', () => {
+  it('처음에는 뿌리가 자랄 쪽을 가리키고 첫 칸이 다음 자랄 칸이다', () => {
+    const looks = vineLooks(createState(VINE_STAGE))
+
+    expect(looks.get('0-1')).toEqual(look('root', null, 'right'))
+    expect(looks.get('1-1')).toEqual(look('next', 'right', 'right'))
+    expect(looks.get('2-1')).toEqual(look('future', 'right', 'right'))
+    expect(looks.get('3-1')).toEqual(look('future', 'right', 'right'))
+    expect(looks.size).toBe(4)
+  })
+
+  it('자란 칸 다음 한 칸만 다음 자랄 칸이다', () => {
+    const looks = vineLooks(grownTo(VINE_STAGE, 2))
+
+    expect(looks.get('1-1')?.kind).toBe('grown')
+    expect(looks.get('2-1')?.kind).toBe('grown')
+    expect(looks.get('3-1')?.kind).toBe('next')
+  })
+
+  it('다 자란 끝 칸의 줄기는 들어온 쪽으로 곧게 나간다', () => {
+    expect(vineLooks(grownTo(VINE_STAGE, 3)).get('3-1')).toEqual(look('grown', 'right', 'right'))
+  })
+
+  it('꺾이는 칸은 들어오는 방향과 나가는 방향이 다르다', () => {
+    const stage: Stage = {
+      ...VINE_STAGE,
+      heights: [
+        [0, 0, 0, 0, 0],
+        [0, -1, -1, 0, 0],
+        [0, 0, -1, -1, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      entities: [
+        {
+          type: 'vine',
+          id: 'a',
+          x: 0,
+          y: 1,
+          cells: [
+            { x: 1, y: 1 },
+            { x: 2, y: 1 },
+            { x: 2, y: 2 },
+            { x: 3, y: 2 },
+          ],
+        },
+      ],
+    }
+    const looks = vineLooks(grownTo(stage, 4))
+
+    expect(looks.get('1-1')).toEqual(look('grown', 'right', 'right'))
+    expect(looks.get('2-1')).toEqual(look('grown', 'right', 'down'))
+    expect(looks.get('2-2')).toEqual(look('grown', 'down', 'right'))
+    expect(looks.get('3-2')).toEqual(look('grown', 'right', 'right'))
+  })
+
+  it('왼쪽이나 위로 자라는 덩굴도 방향을 그대로 돌려준다', () => {
+    const stage: Stage = {
+      ...VINE_STAGE,
+      entities: [
+        {
+          type: 'vine',
+          id: 'a',
+          x: 4,
+          y: 1,
+          cells: [
+            { x: 3, y: 1 },
+            { x: 2, y: 1 },
+          ],
+        },
+      ],
+    }
+    const looks = vineLooks(createState(stage))
+
+    expect(looks.get('4-1')).toEqual(look('root', null, 'left'))
+    expect(looks.get('3-1')).toEqual(look('next', 'left', 'left'))
+  })
+
+  it('굳은 덩굴은 자란 칸이 짙어지고 끝 칸이 봉오리로 닫히며 남은 자리는 빈 구덩이다', () => {
+    const looks = vineLooks(grownTo({ ...VINE_STAGE, rules: { vineStop: true } }, 2, true))
+
+    expect(looks.get('1-1')).toEqual(look('grown', 'right', 'right', true))
+    expect(looks.get('2-1')).toEqual({ ...look('grown', 'right', 'right', true), knot: true })
+    expect(looks.get('3-1')).toEqual(look('spent', 'right', 'right'))
+  })
+
+  it('덩굴이 없는 판은 비어 있다', () => {
+    expect(vineLooks(createState(STAGE)).size).toBe(0)
   })
 })

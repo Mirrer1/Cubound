@@ -87,6 +87,23 @@
   --color-mushroom-withered-right: #cec5b5;
   --color-mushroom-withered-crown: #d6cec0;
   --color-mushroom-withered-stem: #e0dbce;
+  /* 덩굴은 8월드 전용이라 사이클을 따라 바뀌지 않는다. 풀빛 세계 색에 묻히지 않게 줄기를 갈색으로 뺐다 */
+  --color-vine-top: #d3cdb4;
+  --color-vine-left: #a8a18a;
+  --color-vine-right: #bfb9a1;
+  --color-vine-stem-top: #8e7a5c;
+  --color-vine-stem-left: #6f5f47;
+  --color-vine-stem-right: #7f6d52;
+  --color-vine-node: #74644b;
+  --color-vine-leaf: #98aa78;
+  --color-vine-sprout: #bfcb9f;
+  --color-vine-hard-top: #c9c1a4;
+  --color-vine-hard-left: #9e9680;
+  --color-vine-hard-right: #b5ad96;
+  --color-vine-hard-leaf: #879a68;
+  --color-vine-bud: #b59e7a;
+  --color-vine-bud-left: #8e7a5c;
+  --color-vine-bud-right: #a08a69;
 }
 
 /* 세계 색은 사이클마다 갈린다. 1사이클은 위 기본값을 그대로 쓴다 */
