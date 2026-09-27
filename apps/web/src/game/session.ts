@@ -1,5 +1,14 @@
 import { STRUGGLES, readCracks, readMushrooms, readSwamps } from './rules'
-import type { Crack, Direction, GameState, LeaningLadder, Point, Stage, TramSpot } from './types'
+import type {
+  Crack,
+  Direction,
+  GameState,
+  LeaningLadder,
+  Point,
+  Stage,
+  TramSpot,
+  VineSpot,
+} from './types'
 
 export const SESSION_VERSION = 7
 
@@ -12,6 +21,7 @@ export interface Session {
   trams: TramSpot[]
   swamps?: Point[] // 전에 저장된 것에는 없다
   mushrooms?: Point[] // 전에 저장된 것에는 없다
+  vines?: VineSpot[] // 전에 저장된 것에는 없다
   struggles?: number // 전에 저장된 것에는 없다
   sinks?: number // 전에 저장된 것에는 없다
   ladders: Point[]
@@ -44,6 +54,7 @@ export const toSession = (game: GameState): Session => ({
   trams: game.trams,
   swamps: game.swamps,
   mushrooms: game.mushrooms,
+  vines: game.vines,
   struggles: game.struggles,
   sinks: game.sinks,
   ladders: game.ladders,
@@ -120,6 +131,25 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
       savedMushrooms.length <= mushrooms.length &&
       savedMushrooms.every((value) => isObject(value) && mushroomKeys.has(`${value.x},${value.y}`)))
   if (!sameMushrooms) return null
+
+  const stageVines = stage.entities.filter((e) => e.type === 'vine')
+  const savedVines = saved.vines
+  const sameVines =
+    savedVines === undefined ||
+    (Array.isArray(savedVines) &&
+      savedVines.length === stageVines.length &&
+      stageVines.every((vine, i) => {
+        const value = savedVines[i]
+        return (
+          isObject(value) &&
+          value.id === vine.id &&
+          isCount(value.grown) &&
+          (value.grown as number) <= vine.cells.length &&
+          typeof value.stopped === 'boolean'
+        )
+      }))
+  if (!sameVines) return null
+
   const sinks = saved.sinks === undefined ? 0 : saved.sinks
   if (!isCount(sinks)) return null
   // 깊어지는 늪에서는 빠진 횟수만큼 버둥이 는다
@@ -193,6 +223,10 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
       savedMushrooms === undefined
         ? mushrooms
         : (savedMushrooms as Point[]).map(({ x, y }) => ({ x, y })),
+    vines:
+      savedVines === undefined
+        ? stageVines.map(({ id }) => ({ id, grown: 0, stopped: false }))
+        : (savedVines as VineSpot[]).map(({ id, grown, stopped }) => ({ id, grown, stopped })),
     struggles: (struggles as number) ?? 0,
     sinks: sinks as number,
     ladders: ladders.map(({ x, y }) => ({ x, y })),

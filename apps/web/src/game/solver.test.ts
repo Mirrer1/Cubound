@@ -432,3 +432,50 @@ describe('solve 버섯', () => {
     expect(end.mushrooms).toEqual([])
   })
 })
+
+// 뿌리에 선 채 시작해 덩굴이 세 칸 다 자라야 건넌다
+const VINE_STAGE: Stage = {
+  version: 1,
+  id: 'test-solver-vine',
+  heights: [[0, 0, -1, -1, -1, 0]],
+  start: { x: 1, y: 0 },
+  goal: { x: 5, y: 0 },
+  entities: [
+    {
+      type: 'vine',
+      id: 'a',
+      x: 1,
+      y: 0,
+      cells: [
+        { x: 2, y: 0 },
+        { x: 3, y: 0 },
+        { x: 4, y: 0 },
+      ],
+    },
+  ],
+}
+
+describe('solve 덩굴', () => {
+  it('제자리로 돌아와도 덩굴이 더 자랐으면 다른 상태로 보고 기다려서 건넌다', () => {
+    const result = solve(VINE_STAGE)
+
+    expect(result.status).toBe('solved')
+    if (result.status !== 'solved') return
+    expect(result.moves).toBe(6)
+
+    const end = result.path.reduce((state, d) => move(state, d).state, createState(VINE_STAGE))
+    expect(end.cleared).toBe(true)
+  })
+
+  it('굳는 자리는 남기고 찾아 다 자랄 때까지 밟지 않는다', () => {
+    const stage: Stage = { ...VINE_STAGE, rules: { vineStop: true } }
+    const result = solve(stage)
+
+    expect(result.status).toBe('solved')
+    if (result.status !== 'solved') return
+    expect(result.moves).toBe(8)
+
+    const end = result.path.reduce((state, d) => move(state, d).state, createState(stage))
+    expect(end.cleared).toBe(true)
+  })
+})

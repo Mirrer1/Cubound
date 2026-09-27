@@ -14,6 +14,7 @@ import type {
 
 type Lift = Extract<Entity, { type: 'lift' }>
 type Tram = Extract<Entity, { type: 'tram' }>
+type Vine = Extract<Entity, { type: 'vine' }>
 
 // 늪에서 나가기 전에 제자리에서 버둥거리는 수
 export const STRUGGLES = 2
@@ -50,6 +51,8 @@ const lifts = (stage: Stage) => stage.entities.filter((e) => e.type === 'lift')
 const warps = (stage: Stage) => stage.entities.filter((e) => e.type === 'warp')
 
 const trams = (stage: Stage) => stage.entities.filter((e): e is Tram => e.type === 'tram')
+
+const vines = (stage: Stage) => stage.entities.filter((e): e is Vine => e.type === 'vine')
 
 // 발판이 지금 서 있는 칸이면 그 발판
 const tramAt = (state: GameState, p: Point): Tram | null => {
@@ -201,6 +204,7 @@ export const createState = (stage: Stage): GameState => ({
   })),
   swamps: readSwamps(stage),
   mushrooms: readMushrooms(stage),
+  vines: vines(stage).map(({ id }) => ({ id, grown: 0, stopped: false })),
   struggles: 0,
   sinks: 0,
   ladders: stage.entities.filter((e) => e.type === 'ladder').map(({ x, y }) => ({ x, y })),
@@ -598,10 +602,41 @@ const boardsTram = (before: GameState, after: GameState) => {
   return to !== null && to !== tramAt(before, before.player)
 }
 
-// 이동으로 센 수마다 무너지는 칸이 닳고 발판이 한 칸 가고 문과 엘리베이터 발판이 따라 바뀐다
+// 굳는 자리에서는 큐브가 딛고 선 덩굴이 굳고 나머지 덩굴은 앞 칸이 바닥 없는 칸일 때만 한 칸 뻗는다
+const growVines = (state: GameState): MoveResult => {
+  if (state.vines.length === 0) return { state, events: [] }
+
+  const list = vines(state.stage)
+  const stopping = state.stage.rules?.vineStop && !hasBox(state, state.player)
+  const events: GameEvent[] = []
+  let heights = state.heights
+
+  const grown = state.vines.map((spot, i) => {
+    if (spot.stopped) return spot
+
+    const { cells } = list[i]
+    if (stopping && cells.slice(0, spot.grown).some((cell) => same(cell, state.player))) {
+      return { ...spot, stopped: true }
+    }
+
+    const ahead = cells[spot.grown]
+    if (!ahead || heights[ahead.y][ahead.x] >= 0) return spot
+
+    heights = heights.map((row, y) =>
+      y === ahead.y ? row.map((h, x) => (x === ahead.x ? 0 : h)) : row,
+    )
+    events.push({ type: 'grew', id: spot.id, at: { x: ahead.x, y: ahead.y } })
+    return { ...spot, grown: spot.grown + 1 }
+  })
+
+  return { state: { ...state, heights, vines: grown }, events }
+}
+
+// 이동으로 센 수마다 무너지는 칸이 닳고 발판이 한 칸 가고 덩굴이 뻗고 문과 엘리베이터 발판이 따라 바뀐다
 const tick = (before: GameState, after: GameState, events: GameEvent[]): MoveResult => {
   const { state: crumbled, events: crackEvents } = crumble(before, after)
-  const { state: moved, events: tramEvents } = rideTrams(crumbled)
+  const { state: rode, events: tramEvents } = rideTrams(crumbled)
+  const { state: moved, events: vineEvents } = growVines(rode)
 
   const doorEvents: GameEvent[] = doors(before.stage)
     .map((door) => ({
@@ -622,6 +657,7 @@ const tick = (before: GameState, after: GameState, events: GameEvent[]): MoveRes
       ...events,
       ...crackEvents,
       ...tramEvents,
+      ...vineEvents,
       ...doorEvents,
       ...liftEvents,
       ...(moved.cleared ? [{ type: 'cleared' } as const] : []),

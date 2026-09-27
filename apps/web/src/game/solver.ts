@@ -15,13 +15,16 @@ const points = (list: Point[]) =>
     .sort()
     .join(' ')
 
-// 보스 제한은 빼고 늪이 깊어지는 것과 버섯이 시드는 것은 남긴다.
+// 보스 제한은 빼고 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것은 남긴다.
 // 제한이 너무 작을 때도 진짜 최소 이동 수가 나오고 늪에 드는 수와 클리어 조건은 그대로다
 const forSearch = (stage: Stage): Stage => {
-  const { swampDeepen, mushroomWither } = stage.rules ?? {}
+  const { swampDeepen, mushroomWither, vineStop } = stage.rules ?? {}
   return {
     ...stage,
-    rules: swampDeepen || mushroomWither ? { swampDeepen, mushroomWither } : undefined,
+    rules:
+      swampDeepen || mushroomWither || vineStop
+        ? { swampDeepen, mushroomWither, vineStop }
+        : undefined,
   }
 }
 
@@ -48,6 +51,8 @@ const stateKey = (state: GameState, deep = true) => {
     ...(state.stage.swamp ? [`${state.struggles}`, points(state.swamps)] : []),
     // 시드는 판에서만 버섯이 줄어 상태가 달라진다
     ...(state.stage.rules?.mushroomWither ? [points(state.mushrooms)] : []),
+    // 자란 길이는 메운 칸에 들어 있어 굳는 자리에서만 굳었는지를 더한다
+    ...(state.stage.rules?.vineStop ? [state.vines.map((v) => (v.stopped ? 1 : 0)).join('')] : []),
     // 깊어지는 늪은 빠진 횟수에 따라 앞으로 드는 수가 다르다
     ...(deep && state.stage.rules?.swampDeepen ? [`${state.sinks}`] : []),
     ...(state.trams.length > 0

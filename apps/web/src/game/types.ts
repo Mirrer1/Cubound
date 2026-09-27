@@ -13,6 +13,7 @@ export type Entity = (
   | { type: 'warp'; id: string }
   | { type: 'ladder' }
   | { type: 'tram'; id: string; level: number; cells: Point[]; dir: 1 | -1 } // x, y는 cells 안의 시작 자리
+  | { type: 'vine'; id: string; cells: Point[] } // x, y는 뿌리 칸이고 cells는 자랄 순서
 ) &
   Point
 
@@ -26,6 +27,7 @@ export interface StageRules {
   dirLimit?: { dir: Direction; count: number } // 보스 방향 제한, 없으면 제한 없음
   swampDeepen?: boolean // 늪에 빠질수록 버둥이 한 수씩 는다
   mushroomWither?: boolean // 밟힌 버섯이 시들고 맵의 버섯을 다 밟아야 클리어된다
+  vineStop?: boolean // 큐브가 밟은 덩굴이 그 길이로 굳는다
 }
 
 export interface Stage {
@@ -73,14 +75,21 @@ export interface TramSpot {
   dir: 1 | -1
 }
 
+export interface VineSpot {
+  id: string
+  grown: number // 자라서 메운 칸 수
+  stopped: boolean
+}
+
 export interface GameState {
   stage: Stage
-  heights: number[][] // 상자로 메운 칸이 반영된 높이
+  heights: number[][] // 상자와 덩굴로 메운 칸이 반영된 높이
   boxes: Point[]
   cracks: Crack[]
   trams: TramSpot[]
   swamps: Point[] // 남아 있는 늪 칸. 상자가 가라앉은 칸은 빠진다
   mushrooms: Point[] // 남아 있는 버섯 칸. 시드는 판에서 밟힌 칸은 빠진다
+  vines: VineSpot[]
   struggles: number // 지금 선 늪 칸에서 버둥거린 수
   sinks: number // 늪에 빠진 횟수
   ladders: Point[] // 바닥에 놓인 사다리
@@ -110,6 +119,7 @@ export type GameEvent =
   | { type: 'lift'; id: string; up: boolean }
   | { type: 'warped'; from: Point; to: Point }
   | { type: 'tram'; id: string; from: Point; to: Point }
+  | { type: 'grew'; id: string; at: Point } // 덩굴이 한 칸 뻗어 메움
   | { type: 'blocked'; direction: Direction }
   | { type: 'limit'; limit: Limit } // 보스 제약에 막힘
   | { type: 'cleared' }

@@ -23,6 +23,7 @@ const MID = {
   trams: [],
   swamps: [],
   mushrooms: [],
+  vines: [],
   struggles: 0,
   ladders: [],
   leaningLadders: [],
@@ -390,5 +391,54 @@ describe('restoreSession 깊어지는 늪', () => {
     expect(restoreSession({ ...session, sinks: -1 }, DEEP_SWAMP_STAGE)).toBeNull()
     expect(restoreSession({ ...session, sinks: 2, struggles: 5 }, DEEP_SWAMP_STAGE)).toBeNull()
     expect(restoreSession({ ...session, sinks: 2, struggles: 3 }, DEEP_SWAMP_STAGE)).not.toBeNull()
+  })
+})
+
+const VINE_STAGE: Stage = {
+  version: 1,
+  id: '8-1',
+  heights: [[0, 0, -1, -1, 0]],
+  start: { x: 0, y: 0 },
+  goal: { x: 4, y: 0 },
+  entities: [
+    {
+      type: 'vine',
+      id: 'vine-a',
+      x: 1,
+      y: 0,
+      cells: [
+        { x: 2, y: 0 },
+        { x: 3, y: 0 },
+      ],
+    },
+  ],
+}
+
+describe('restoreSession 덩굴', () => {
+  it('자란 길이와 굳은 것을 그대로 이어간다', () => {
+    const stage: Stage = { ...VINE_STAGE, rules: { vineStop: true } }
+    const state = move(move(createState(stage), 'right').state, 'right').state
+
+    expect(state.vines).toEqual([{ id: 'vine-a', grown: 1, stopped: true }])
+    expect(restoreSession(toSession(state), stage)).toEqual(state)
+  })
+
+  it('덩굴이 없던 때 저장한 것은 하나도 안 자란 것으로 읽는다', () => {
+    const { vines: _, ...session } = toSession(createState(VINE_STAGE))
+
+    expect(restoreSession(session, VINE_STAGE)?.vines).toEqual([
+      { id: 'vine-a', grown: 0, stopped: false },
+    ])
+  })
+
+  it('스테이지의 덩굴과 어긋나면 버린다', () => {
+    const session = toSession(createState(VINE_STAGE))
+    const vines = (value: unknown) => restoreSession({ ...session, vines: value }, VINE_STAGE)
+
+    expect(vines([])).toBeNull()
+    expect(vines([{ id: 'vine-b', grown: 0, stopped: false }])).toBeNull()
+    expect(vines([{ id: 'vine-a', grown: 3, stopped: false }])).toBeNull()
+    expect(vines([{ id: 'vine-a', grown: -1, stopped: false }])).toBeNull()
+    expect(vines([{ id: 'vine-a', grown: 0, stopped: 1 }])).toBeNull()
   })
 })
