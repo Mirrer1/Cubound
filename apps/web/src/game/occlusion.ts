@@ -19,8 +19,9 @@ export const occludingCells = (
       const floor = heights[y]?.[x]
       if (floor === undefined) continue
 
-      // 상자는 얹힌 칸을 한 층 높인 만큼 화면을 가린다
-      const h = boxes.some((b) => b.x === x && b.y === y) ? floor + 1 : floor
+      // 높은 칸에 얹힌 상자는 한 층 높인 만큼 가리고 같은 높이 상자는 옆면만 가려 세지 않는다
+      const raised = floor > standHeight && boxes.some((b) => b.x === x && b.y === y)
+      const h = raised ? floor + 1 : floor
       if (h >= standHeight + dx + dy) cells.push({ x, y })
     }
   }

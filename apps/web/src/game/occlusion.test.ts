@@ -48,13 +48,14 @@ describe('occludingCells', () => {
     expect(occludingCells(heights, { x: 1, y: 1 }, 0)).toEqual([])
   })
 
-  it('같은 높이 칸이어도 위에 상자가 있으면 가린다', () => {
+  it('큐브와 같은 높이에 놓인 상자는 옆면만 가려 흐리지 않는다', () => {
     const heights = [
       [1, 1],
       [1, 1],
     ]
 
-    expect(occludingCells(heights, { x: 0, y: 0 }, 1, [{ x: 1, y: 0 }])).toEqual([{ x: 1, y: 0 }])
+    expect(occludingCells(heights, { x: 0, y: 0 }, 1, [{ x: 1, y: 0 }])).toEqual([])
+    expect(occludingCells(heights, { x: 0, y: 0 }, 1, [{ x: 0, y: 1 }])).toEqual([])
   })
 
   it('앞쪽 칸에 상자가 없으면 상자 목록이 있어도 결과가 같다', () => {
