@@ -2067,8 +2067,8 @@ describe('vineFrames', () => {
     expect(at(0.5)?.growth).toBeCloseTo(0.5 / 0.8)
     expect(at(0.5)?.rise).toBeGreaterThan(0)
     expect(at(0.5)?.rise).toBeLessThan(1)
-    expect(at(0.99)?.rise).toBe(1)
-    expect(at(0.99)?.sproutOpacity).toBe(0)
+    expect(at(0.99)?.rise).toBeCloseTo(1, 2)
+    expect(at(0.99)?.sproutOpacity).toBeCloseTo(0, 2)
   })
 
   it('새로 다음 자랄 칸이 된 칸은 싹이 14에서 24로 크고 줄기가 칸을 다 건넌 뒤 혀가 넘어온다', () => {

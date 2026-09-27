@@ -1232,8 +1232,8 @@ export const VINE_TONGUE = 0.2
 // 줄기 끝은 한 수에 한 칸을 같은 빠르기로 간다. 혀 끝에서 출발해 이 몫에 칸 끝에 닿고 남은 몫에 다음 칸 혀가 된다
 const VINE_TIP = 1 - VINE_TONGUE
 // 이 수의 진행도에서 시작하는 자리와 걸리는 몫
-const VINE_RISE = { from: 0.15, span: 0.6 } // 판이 구덩이에서 차오름
-const VINE_NEXT = { from: 0.3, span: 0.7 } // 새 다음 칸의 싹이 큼
+const VINE_RISE = { from: 0, span: 1 } // 판이 구덩이에서 차오름
+const VINE_NEXT = { from: 0, span: 1 } // 새 다음 칸의 싹이 큼
 const VINE_HARD = { from: 0.4, span: 0.6 } // 굳음
 
 export interface VineFrame {

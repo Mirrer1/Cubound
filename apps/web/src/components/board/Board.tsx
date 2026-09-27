@@ -190,9 +190,18 @@ const Board = ({
     [heights, before.heights, railDirs, vines],
   )
 
-  // 구덩이 벽은 옆 칸 윗면에서 시작한다. 옆 칸도 길이면 구덩이가 이어져 벽이 없다
-  const wallHeight = (x: number, y: number) =>
-    railDirs.has(`${x}-${y}`) ? -1 : Math.max(heights[y]?.[x] ?? -1, before.heights[y]?.[x] ?? -1)
+  // 구덩이 벽은 옆 칸 윗면에서 시작한다. 옆 칸이 발판 길이나 판이 덜 차오른 덩굴 길이면 구덩이가 이어져 벽이 없다
+  const wallHeight = (x: number, y: number) => {
+    const key = `${x}-${y}`
+    const vine = vineFrame.get(key)
+    const vinePit =
+      vine !== undefined &&
+      vine.kind !== 'root' &&
+      ((heights[y]?.[x] ?? -1) < 0 || (vine.kind === 'grown' && vine.rise < 1))
+    return railDirs.has(key) || vinePit
+      ? -1
+      : Math.max(heights[y]?.[x] ?? -1, before.heights[y]?.[x] ?? -1)
+  }
   // 발판은 이전 자리에서 다음 자리로 미끄러진다. 코와 밝은 레일은 도착하는 순간에 다음 쪽으로 넘어간다
   const tramPhase = moving ? tramProgress(events, t, swampSeconds) : 1
   const tramFrames = trams.map((tram, i) => {

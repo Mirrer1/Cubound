@@ -116,7 +116,7 @@ const CAP = {
 }
 
 // 덩굴 판은 처음 이만큼 차오르는 동안 나타난다
-const VINE_PLATE_FADE = 0.25
+const VINE_PLATE_FADE = 0.6
 
 const vineFaces = (hard: number) =>
   hard <= 0
