@@ -588,6 +588,12 @@ const ridePhase = (game: GameState, events: GameEvent[], p: Point, t: number, sw
       )
 }
 
+// 갓으로 걸어 들어가는 첫 한 칸만 구르는 각도. 갓을 딛고 날아가는 동안은 구르지 않는다
+const hopAngle = (cells: number, u: number) => {
+  const lead = cells % 2
+  return lead === 0 || u >= lead ? 0 : (Math.PI / 2) * (u / lead)
+}
+
 // 튕겨 가는 큐브가 u칸째에 있을 때 딛는 칸의 높이. 갓이 있는 칸과 양 끝만 밟고 사이 칸은 건너뛴다
 const hopLevel = (
   game: GameState,
@@ -699,8 +705,11 @@ const pathFrame = (
     // 이 낙하만 고르게 내린다. 가속하면 갓에 닿기 직전까지 떠 있다가 뚝 떨어진다
     const dropped =
       land > 0 ? clamp01((cells * p) / restWalk(cells)) : easeIn(clamp01((p - 0.55) / 0.45))
+    // 튕겨서 상자 위에 내려서는 수는 오르는 이벤트가 아니라 걷기로 남아 levelAfter가 높이를 못 올린다.
+    // 그 몫을 riding에 맡기면 이동 내내 골고루 퍼져 갓을 딛는 동안에도 큐브가 떠 있다
+    const landLevel = index === segments.length - 1 ? endLevel : toLevel
     const level = hopped
-      ? hopLevel(game, event, cells, fromLevel, toLevel, gone * cells)
+      ? hopLevel(game, event, cells, fromLevel, landLevel, gone * cells)
       : event.type === 'fell'
         ? lerp(fromLevel, toLevel, dropped)
         : event.type === 'climbed'
@@ -710,10 +719,11 @@ const pathFrame = (
     return {
       x: lerp(event.from.x, event.to.x, gone),
       y: lerp(event.from.y, event.to.y, gone),
-      level: level + riding,
+      // 튕겨 가는 이동은 hopLevel이 끝 칸 높이까지 맡는다
+      level: level + (hopped ? 0 : riding),
       direction: directionBetween(event.from, event.to),
-      // 얼음 위와 튕겨 나는 동안에는 구르지 않는다
-      angle: event.type === 'slid' || hopCells(event) > 0 ? 0 : (Math.PI / 2) * p,
+      // 얼음 위와 갓을 딛고 날아가는 동안에는 구르지 않는다. 갓으로 걸어 들어가는 한 칸은 구른다
+      angle: event.type === 'slid' ? 0 : hopped ? hopAngle(cells, gone * cells) : (Math.PI / 2) * p,
       cell: frontOf(event.from, event.to),
       squash: span ? squashAt((elapsed - span.from) / (span.to - span.from)) : 0,
       fade: 1,

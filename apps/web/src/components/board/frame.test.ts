@@ -1483,20 +1483,39 @@ describe('durationOf 버섯', () => {
 })
 
 describe('playerFrame 버섯', () => {
-  it('포물선으로 떠올랐다 내려앉고 구르지 않는다', () => {
+  it('포물선으로 떠올랐다 내려앉는다', () => {
     const { prev, state, events } = hop(HOP_STAGE)
     const lifts = []
 
-    for (let t = 0; t <= 1; t += 0.05) {
-      const frame = playerFrame(prev, state, events, t)
-      expect(frame.angle).toBe(0)
-      lifts.push(frame.lift)
-    }
+    for (let t = 0; t <= 1; t += 0.05) lifts.push(playerFrame(prev, state, events, t).lift)
 
     expect(playerFrame(prev, state, events, 0).lift).toBe(0)
     expect(playerFrame(prev, state, events, 1).lift).toBe(0)
     // 한 층(30)보다 높이 떠야 벽을 넘는 것이 보인다
     expect(Math.max(...lifts)).toBeGreaterThan(TILE.layer)
+  })
+
+  it('갓으로 걸어 들어가는 한 칸은 구르고 날아가는 동안은 안 구른다', () => {
+    const { prev, state, events } = hop(HOP_STAGE)
+    const angleAt = (t: number) => playerFrame(prev, state, events, t).angle
+    const angles = Array.from({ length: 101 }, (_, i) => angleAt(i / 100))
+    const last = angles.length - 1 - [...angles].reverse().findIndex((a) => a > 0)
+
+    expect(angleAt(0)).toBe(0)
+    // 구르는 것은 처음 한 번뿐이고 갓에 올라선 뒤로는 멈춘다
+    for (let i = 1; i <= last; i += 1) expect(angles[i]).toBeGreaterThan(angles[i - 1])
+    expect(angles.slice(last + 1).every((a) => a === 0)).toBe(true)
+    // 갓에 닿기 직전에는 거의 다 돌아 있고, 그 지점은 이동의 앞부분이다
+    expect(angles[last]).toBeGreaterThan((Math.PI / 2) * 0.8)
+    expect(last).toBeLessThan(40)
+  })
+
+  it('갓 위에서 출발하면 걸어 들어가는 칸이 없어 구르지 않는다', () => {
+    // 두 칸 뜀은 이미 갓에 올라선 채로 시작한다
+    const { prev, state, events } = hop({ ...HOP_STAGE, mushroom: ['#......'] })
+
+    expect(state.player).toEqual({ x: 2, y: 0 })
+    for (let t = 0; t <= 1; t += 0.05) expect(playerFrame(prev, state, events, t).angle).toBe(0)
   })
 
   it('한 층 위에서 떨어져 밟아도 갓에 닿을 때는 평지와 같은 자리다', () => {
