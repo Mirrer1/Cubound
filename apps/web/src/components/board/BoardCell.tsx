@@ -115,6 +115,20 @@ const CAP = {
   },
 }
 
+// 덩굴 판은 처음 이만큼 차오르는 동안 나타난다
+const VINE_PLATE_FADE = 0.25
+
+const vineFaces = (hard: number) =>
+  hard <= 0
+    ? SURFACES.vine
+    : hard >= 1
+      ? SURFACES.hardVine
+      : {
+          top: blend(SURFACES.vine.top, SURFACES.hardVine.top, hard),
+          left: blend(SURFACES.vine.left, SURFACES.hardVine.left, hard),
+          right: blend(SURFACES.vine.right, SURFACES.hardVine.right, hard),
+        }
+
 // 발판 길 칸은 구덩이로 그린다. 바닥은 높이 0 칸의 윗면보다 이만큼 아래다
 export const PIT_FLOOR = 11
 const RAIL_HALF = 0.13
@@ -208,8 +222,14 @@ interface BoardCellProps {
   vine: VineKind | null // 덩굴 뿌리나 길 칸
   vineEnter: Direction | null
   vineLeave: Direction | null
-  vineHard: boolean
-  vineKnot: boolean
+  vineGrowth: number // 줄기가 칸을 건너는 진행도
+  vineRise: number // 판이 구덩이에서 차오른 정도
+  vineTongue: number
+  vineSprout: number // 싹 키 px
+  vineSproutOpacity: number
+  vineHard: number // 굳은 정도
+  vineKnot: number // 봉오리가 돋은 정도
+  vineOpacity: number
   children?: ReactNode
 }
 
@@ -253,28 +273,27 @@ const BoardCell = ({
   vine,
   vineEnter,
   vineLeave,
+  vineGrowth,
+  vineRise,
+  vineTongue,
+  vineSprout,
+  vineSproutOpacity,
   vineHard,
   vineKnot,
+  vineOpacity,
   children,
 }: BoardCellProps) => {
   const icy = ice && !goal && !filled
-  // 발판 길과 아직 안 자란 덩굴 길은 구덩이로 그린다
-  const pit = rail !== '' || vine === 'next' || vine === 'future' || vine === 'spent'
   const grownVine = vine === 'grown'
+  // 발판 길과 아직 안 자란 덩굴 길은 구덩이로 그린다. 자라는 중인 칸은 구덩이에서 판이 차오른다
+  const pit =
+    rail !== '' ||
+    vine === 'next' ||
+    vine === 'future' ||
+    vine === 'spent' ||
+    (grownVine && vineRise < 1)
   // 상자가 메운 칸, 덩굴이 자란 칸, 얼음, 발판, 짝 칸, 구멍은 바닥 대신 제 색으로 칠한다
-  const surface = goal
-    ? 'hole'
-    : filled
-      ? 'tool'
-      : grownVine
-        ? vineHard
-          ? 'hardVine'
-          : 'vine'
-        : icy
-          ? 'ice'
-          : lift || warp
-            ? 'machine'
-            : null
+  const surface = goal ? 'hole' : filled ? 'tool' : icy ? 'ice' : lift || warp ? 'machine' : null
   // 닳은 단계 사이에서는 앞뒤 단계 색을 섞는다
   const worn = Math.min(1, Math.floor(crackStage))
   const crackFace = (face: string) =>
@@ -283,17 +302,34 @@ const BoardCell = ({
       `var(--color-crack-${face}-${worn + 1})`,
       crackStage - worn,
     )
-  const plain = surface
-    ? SURFACES[surface]
-    : crack
-      ? { top: crackFace('top'), left: crackFace('left'), right: crackFace('right') }
-      : {
-          top: parity ? 'var(--color-floor-top-alt)' : 'var(--color-floor-top)',
-          left: 'var(--color-floor-left)',
-          right: 'var(--color-floor-right)',
-        }
+  const plain = grownVine
+    ? vineFaces(vineHard)
+    : surface
+      ? SURFACES[surface]
+      : crack
+        ? { top: crackFace('top'), left: crackFace('left'), right: crackFace('right') }
+        : {
+            top: parity ? 'var(--color-floor-top-alt)' : 'var(--color-floor-top)',
+            left: 'var(--color-floor-left)',
+            right: 'var(--color-floor-right)',
+          }
   // 바닥은 제 색 토큰이 둘이라 이미 번갈아 있고 구멍은 한 칸뿐이다. 덩굴은 마디로 칸이 세인다
-  const evenOdd = crack || (surface !== null && surface !== 'hole' && !grownVine)
+  const evenOdd = crack || (surface !== null && surface !== 'hole')
+  const vineProps = {
+    x,
+    y,
+    floor: PIT_FLOOR,
+    enter: vineEnter,
+    leave: vineLeave,
+    growth: vineGrowth,
+    tongue: vineTongue,
+    sprout: vineSprout,
+    sproutOpacity: vineSproutOpacity,
+    hard: vineHard,
+    knot: vineKnot,
+    opacity: vineOpacity,
+  }
+  const plateSink = (1 - vineRise) * PIT_FLOOR
   const faces = evenOdd ? { ...plain, top: checker(plain.top, parity) } : plain
   const depth = crack ? crackThickness(crackStage) + h * TILE.layer : h * TILE.layer + TILE.lip
   // 갈라짐은 한 번 밟은 뒤부터다. 무너지는 중에는 조각이 따로 날아간다
@@ -396,16 +432,23 @@ const BoardCell = ({
             />
           )}
           {vine && (
-            <BoardVine
-              x={x}
-              y={y}
-              floor={PIT_FLOOR}
-              kind={vine}
-              enter={vineEnter}
-              leave={vineLeave}
-              hard={vineHard}
-              knot={vineKnot}
-            />
+            <>
+              <BoardVine layer="pit" kind={vine} {...vineProps} />
+              {grownVine && (
+                <g opacity={clamp01(vineRise / VINE_PLATE_FADE)}>
+                  <BoardBlock
+                    x={x}
+                    y={y + plateSink}
+                    width={TILE.width}
+                    depth={TILE.lip - plateSink}
+                    top={faces.top}
+                    left={faces.left}
+                    right={faces.right}
+                  />
+                </g>
+              )}
+              <BoardVine layer="top" kind={vine} {...vineProps} />
+            </>
           )}
         </g>
       )}
@@ -442,18 +485,7 @@ const BoardCell = ({
                 right={faces.right}
               />
             )}
-            {(grownVine || vine === 'root') && (
-              <BoardVine
-                x={x}
-                y={y}
-                floor={PIT_FLOOR}
-                kind={vine}
-                enter={vineEnter}
-                leave={vineLeave}
-                hard={vineHard}
-                knot={vineKnot}
-              />
-            )}
+            {(grownVine || vine === 'root') && <BoardVine layer="top" kind={vine} {...vineProps} />}
             {swamp && (
               <g opacity={1 - swampFilled}>
                 <polygon

@@ -25,6 +25,7 @@ import {
   switchCells,
   switchProgress,
   tramProgress,
+  vineFrames,
   vineLooks,
 } from './frame'
 import { shade } from './shade'
@@ -166,8 +167,9 @@ const Board = ({
     return map
   }, [trams])
 
-  // 덩굴 뿌리와 길 칸마다 그릴 모습. 자라는 연출이 없어 한 수 뒤 모습을 바로 그린다
+  // 덩굴 뿌리와 길 칸. 구덩이로 그릴 칸을 가리는 데만 쓰고 그 순간의 모습은 vineFrame이 정한다
   const vines = useMemo(() => vineLooks(game), [game])
+  const vineFrame = vineFrames(moving ? before : null, game, events, t, swampSeconds, dropping)
 
   // x, y는 화면 좌표, p는 칸 좌표. 메운 칸이 다시 구멍이 될 때는 사라지기 전 높이로 그린다
   // 발판 길과 아직 바닥 없는 덩굴 길은 구덩이로 그린다
@@ -357,11 +359,13 @@ const Board = ({
         ].join('|')
 
         // 상자가 먼저 메운 길 칸은 덩굴이 못 자라 싹을 그리지 않는다
-        const vineLook = vines.get(cell.key)
+        const vineHere = vineFrame.get(cell.key)
         const vine =
-          vineLook && (cell.pit || vineLook.kind === 'grown' || vineLook.kind === 'root')
-            ? vineLook
+          vineHere && (cell.pit || vineHere.kind === 'grown' || vineHere.kind === 'root')
+            ? vineHere
             : null
+        // 판이 차오르거나 내려가는 칸은 구덩이 벽이 드러난다
+        const pitShown = cell.pit || (vine?.kind === 'grown' && vine.rise < 1)
 
         const tram = tramFrames.find((frame) => same(frame.cell, cell.p)) ?? null
         const drawCube = same(cube.cell, cell.p) && !(game.cleared && !moving)
@@ -411,8 +415,8 @@ const Board = ({
             box={has(boxes, cell.p) && !movedBoxHere && boxDrop === null}
             rail={cell.rail}
             railNext={nextRails.has(cell.key)}
-            pitWallLeft={cell.pit ? wallHeight(cell.p.x, cell.p.y - 1) : -1}
-            pitWallRight={cell.pit ? wallHeight(cell.p.x - 1, cell.p.y) : -1}
+            pitWallLeft={pitShown ? wallHeight(cell.p.x, cell.p.y - 1) : -1}
+            pitWallRight={pitShown ? wallHeight(cell.p.x - 1, cell.p.y) : -1}
             blockOpacity={
               restored > 0 ? 1 - t : restored < 0 ? (cubeDrop?.opacity ?? 1) : crumble.opacity
             }
@@ -421,8 +425,14 @@ const Board = ({
             vine={vine?.kind ?? null}
             vineEnter={vine?.enter ?? null}
             vineLeave={vine?.leave ?? null}
-            vineHard={vine?.hard ?? false}
-            vineKnot={vine?.knot ?? false}
+            vineGrowth={vine?.growth ?? 1}
+            vineRise={vine?.rise ?? 1}
+            vineTongue={vine?.tongue ?? 0}
+            vineSprout={vine?.sprout ?? 0}
+            vineSproutOpacity={vine?.sproutOpacity ?? 1}
+            vineHard={vine?.hard ?? 0}
+            vineKnot={vine?.knot ?? 0}
+            vineOpacity={vine?.opacity ?? 1}
           >
             {overlay ? (
               <>

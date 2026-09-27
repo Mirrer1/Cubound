@@ -1,12 +1,17 @@
-import type { VineKind } from './frame'
-import { darken } from './shade'
+import { VINE_SPROUT, VINE_TONGUE, type VineKind } from './frame'
+import { blend, darken } from './shade'
 import { isoDelta } from '@/game/iso'
 import type { Direction } from '@/game/types'
 
 interface Shape {
   points: string
   fill: string
+  key?: string
 }
+
+// 자라는 동안 돋고 사라지는 도형에 붙이는 이름. 순번 key가 밀려 다른 도형의 색을 다시 쓰지 않게 한다
+const named = (name: string, shapes: Shape[]) =>
+  shapes.map((shape, i) => ({ ...shape, key: `${name}${i}` }))
 
 interface Faces {
   top: string
@@ -19,7 +24,7 @@ const STEM_HALF = 0.045
 const STEM_RISE = 2
 const LEAF_RISE = 0.5
 // 칸 반쪽마다 잎 둘이 줄기 양옆으로 번갈아 붙는다. 앞 값은 줄기를 따라 잰 자리다
-const LEAVES = {
+const LEAVES: Record<'enter' | 'leave', number[][]> = {
   enter: [
     [-0.38, 1],
     [-0.14, -1],
@@ -29,9 +34,14 @@ const LEAVES = {
     [0.34, -1],
   ],
 }
-// 싹은 구덩이 바닥의 뒤쪽 모서리에 선다. 다음 자랄 칸의 싹이 더 크다
+const NODES = { enter: -0.26, leave: 0.22 }
+// 굳은 끝 칸의 봉오리. 줄기는 BUD_STEM에서 끝난다
+const BUD = { along: 0.27, half: 0.15, across: 0.13, height: 8 }
+const BUD_STEM = 0.14
+// 자랄 때 잎과 마디는 줄기 끝이 이만큼 더 간 뒤에 다 돋는다. 칸 단위다
+const VINE_LAG = { leaf: 0.16, node: 0.08 }
+// 싹은 구덩이 바닥의 뒤쪽 모서리에 선다
 const SPROUT_SPOT = -0.25
-const SPROUT = { next: 24, future: 14 }
 
 const STEM: Faces = {
   top: 'var(--color-vine-stem-top)',
@@ -39,7 +49,7 @@ const STEM: Faces = {
   right: 'var(--color-vine-stem-right)',
 }
 const NODE: Faces = { ...STEM, top: 'var(--color-vine-node)' }
-const BUD: Faces = {
+const BUD_FACES: Faces = {
   top: 'var(--color-vine-bud)',
   left: 'var(--color-vine-bud-left)',
   right: 'var(--color-vine-bud-right)',
@@ -134,53 +144,107 @@ const leaf = (
   return { points: points.map(([pu, pv]) => at(x, y, pu, pv, z)).join(' '), fill }
 }
 
-const stem = (x: number, y: number, d: Direction, span: [number, number]) =>
-  box(x, y, d, span, [-STEM_HALF, STEM_HALF], STEM_RISE, STEM_RISE, STEM)
+const stem = (x: number, y: number, d: Direction, [a0, a1]: [number, number]) =>
+  a1 > a0 ? box(x, y, d, [a0, a1], [-STEM_HALF, STEM_HALF], STEM_RISE, STEM_RISE, STEM) : []
 
-const node = (x: number, y: number, d: Direction, along: number) => {
-  const half = STEM_HALF + 0.025
+// 마디는 줄기 끝이 지나간 뒤 scale만큼 돋는다
+const node = (x: number, y: number, d: Direction, along: number, scale: number) => {
+  if (scale <= 0) return []
+  const half = (STEM_HALF + 0.025) * scale
+  const long = 0.035 * scale
   const rise = STEM_RISE + 1
-  return box(x, y, d, [along - 0.035, along + 0.035], [-half, half], rise, rise, NODE)
+  return box(x, y, d, [along - long, along + long], [-half, half], rise, rise, NODE)
 }
 
-const leaves = (x: number, y: number, d: Direction, half: 'enter' | 'leave', fill: string) =>
-  LEAVES[half].map(([along, side]) =>
-    leaf(x, y, d, [along, side * STEM_HALF], [0.08, side * 0.17], LEAF_RISE, 0.075, fill),
-  )
+// 잎은 붙는 자리를 두고 scale만큼 뻗는다
+const leafAt = (
+  x: number,
+  y: number,
+  d: Direction,
+  [along, side]: number[],
+  scale: number,
+  fill: string,
+) =>
+  scale <= 0
+    ? []
+    : [
+        leaf(
+          x,
+          y,
+          d,
+          [along, side * STEM_HALF],
+          [0.08 * scale, side * 0.17 * scale],
+          LEAF_RISE,
+          0.075 * scale,
+          fill,
+        ),
+      ]
 
-// 구덩이 바닥에 선 싹. 밑동 위에 대를 세우고 끝에 잎 둘을 단다
-const sprout = (x: number, y: number, height: number): Shape[] => {
-  const reach = height === SPROUT.next ? 0.24 : 0.22
-  return [
-    ...box(x, y, 'right', [-0.09, 0.09], [-0.09, 0.09], 2, 2, SPROUT_BASE),
-    ...box(x, y, 'right', [-0.04, 0.04], [-0.04, 0.04], height, height - 2, STEM),
-    leaf(x, y, 'right', [0, 0], [reach, -reach * 0.35], height, 0.11, 'var(--color-vine-sprout)'),
-    leaf(x, y, 'right', [0, 0], [-reach * 0.35, reach], height, 0.11, 'var(--color-vine-sprout)'),
-  ]
-}
+// 줄기 끝이 칸 입구에서 잰 거리를 지나간 뒤 돋는 정도. 자랄 때만 1보다 작다
+const sprung = (tip: number, distance: number, span: number) => clamp01((tip - distance) / span)
+
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
+
+// 칸 입구에서 가운데를 지나 출구까지 잰 거리. 줄기를 따라 잰 자리 along을 이 거리로 바꾼다
+const enterDistance = (along: number) => 0.5 + along
+const leaveDistance = (along: number) => 0.5 + along
 
 const grownShapes = (
   x: number,
   y: number,
   enter: Direction,
   leave: Direction,
-  hard: boolean,
-  knot: boolean,
+  growth: number,
+  hard: number,
+  knot: number,
 ) => {
-  const fill = hard ? 'var(--color-vine-hard-leaf)' : 'var(--color-vine-leaf)'
-  const out = leaves(x, y, leave, 'leave', fill)
+  const fill =
+    hard <= 0
+      ? 'var(--color-vine-leaf)'
+      : hard >= 1
+        ? 'var(--color-vine-hard-leaf)'
+        : blend('var(--color-vine-leaf)', 'var(--color-vine-hard-leaf)', hard)
+  // 줄기 끝은 혀 끝에서 출발해 칸 출구까지 간다
+  const tip = VINE_TONGUE + (1 - VINE_TONGUE) * growth
+  const grownAt = (distance: number) => (growth >= 1 ? 1 : sprung(tip, distance, VINE_LAG.leaf))
+  const nodeAt = (distance: number) => (growth >= 1 ? 1 : sprung(tip, distance, VINE_LAG.node))
+  const end = lerp(0.5, BUD_STEM, knot)
   return [
-    ...leaves(x, y, enter, 'enter', fill),
-    ...(knot ? out.slice(0, 1) : out),
-    ...stem(x, y, enter, [-0.5, STEM_HALF]),
-    ...node(x, y, enter, -0.26),
-    // 굳은 끝 칸은 줄기가 짧게 끝나고 봉오리로 닫힌다
-    ...(knot
-      ? [
-          ...stem(x, y, leave, [-STEM_HALF, 0.14]),
-          ...box(x, y, leave, [0.12, 0.42], [-0.13, 0.13], 8, 8, BUD),
-        ]
-      : [...stem(x, y, leave, [-STEM_HALF, 0.5]), ...node(x, y, leave, 0.22)]),
+    ...LEAVES.enter.flatMap((spot, i) =>
+      named(`in-leaf${i}-`, leafAt(x, y, enter, spot, grownAt(enterDistance(spot[0])), fill)),
+    ),
+    ...LEAVES.leave.flatMap((spot, i) =>
+      named(
+        `out-leaf${i}-`,
+        leafAt(x, y, leave, spot, grownAt(leaveDistance(spot[0])) * (i === 0 ? 1 : 1 - knot), fill),
+      ),
+    ),
+    ...named('in-stem', stem(x, y, enter, [-0.5, Math.min(tip, 0.5 + STEM_HALF) - 0.5])),
+    ...named('in-node', node(x, y, enter, NODES.enter, nodeAt(enterDistance(NODES.enter)))),
+    ...named(
+      'out-stem',
+      tip > 0.5 - STEM_HALF ? stem(x, y, leave, [-STEM_HALF, Math.min(tip - 0.5, end)]) : [],
+    ),
+    ...named(
+      'out-node',
+      node(x, y, leave, NODES.leave, nodeAt(leaveDistance(NODES.leave)) * (1 - knot)),
+    ),
+    // 굳은 끝 칸은 줄기가 짧아지고 봉오리로 닫힌다
+    ...named(
+      'bud',
+      knot > 0
+        ? box(
+            x,
+            y,
+            leave,
+            [BUD.along - BUD.half * knot, BUD.along + BUD.half * knot],
+            [-BUD.across * knot, BUD.across * knot],
+            BUD.height * knot,
+            BUD.height * knot,
+            BUD_FACES,
+          )
+        : [],
+    ),
   ]
 }
 
@@ -191,44 +255,94 @@ const rootShapes = (x: number, y: number, leave: Direction) => [
   ...box(x, y, leave, [0.12, 0.3], [-0.12, 0.12], 6, 6, STEM),
 ]
 
-// 다음 자랄 칸은 큰 싹이 서고 앞 칸 줄기 끝이 혀처럼 이 칸 가장자리로 넘어온다
-const nextShapes = (x: number, y: number, floor: number, enter: Direction) => {
-  const spot = isoDelta(SPROUT_SPOT, SPROUT_SPOT)
+// 앞 칸 줄기 끝이 혀처럼 이 칸 가장자리로 넘어와 다음 자랄 칸을 가리킨다
+const tongueShapes = (x: number, y: number, enter: Direction, tongue: number) =>
+  tongue <= 0
+    ? []
+    : named('tongue', [
+        ...stem(x, y, enter, [-0.5, -0.5 + VINE_TONGUE * tongue]),
+        leaf(
+          x,
+          y,
+          enter,
+          [-0.42, STEM_HALF],
+          [0.08 * tongue, 0.16 * tongue],
+          LEAF_RISE,
+          0.1 * tongue,
+          'var(--color-vine-sprout)',
+        ),
+      ])
+
+// 구덩이 바닥에 선 싹. 밑동 위에 대를 세우고 끝에 잎 둘을 단다
+const sproutShapes = (x: number, y: number, height: number): Shape[] => {
+  const reach = lerp(
+    0.22,
+    0.24,
+    clamp01((height - VINE_SPROUT.future) / (VINE_SPROUT.next - VINE_SPROUT.future)),
+  )
   return [
-    ...sprout(x + spot.x, y + floor + spot.y, SPROUT.next),
-    ...stem(x, y, enter, [-0.5, -0.3]),
-    leaf(x, y, enter, [-0.42, STEM_HALF], [0.08, 0.16], LEAF_RISE, 0.1, 'var(--color-vine-sprout)'),
+    ...box(x, y, 'right', [-0.09, 0.09], [-0.09, 0.09], 2, 2, SPROUT_BASE),
+    ...box(x, y, 'right', [-0.04, 0.04], [-0.04, 0.04], height, height - 2, STEM),
+    leaf(x, y, 'right', [0, 0], [reach, -reach * 0.35], height, 0.11, 'var(--color-vine-sprout)'),
+    leaf(x, y, 'right', [0, 0], [-reach * 0.35, reach], height, 0.11, 'var(--color-vine-sprout)'),
   ]
 }
+
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
 interface BoardVineProps {
   x: number
   y: number
   floor: number // 구덩이 바닥이 칸 윗면보다 아래인 거리
+  layer: 'pit' | 'top' // 구덩이 바닥의 싹과 윗면의 줄기. 둘 사이에 판이 차오른다
   kind: VineKind
   enter: Direction | null
   leave: Direction | null
-  hard: boolean
-  knot: boolean
+  growth: number
+  tongue: number
+  sprout: number
+  sproutOpacity: number
+  hard: number
+  knot: number
+  opacity: number
 }
 
-const BoardVine = ({ x, y, floor, kind, enter, leave, hard, knot }: BoardVineProps) => {
+const BoardVine = ({
+  x,
+  y,
+  floor,
+  layer,
+  kind,
+  enter,
+  leave,
+  growth,
+  tongue,
+  sprout,
+  sproutOpacity,
+  hard,
+  knot,
+  opacity,
+}: BoardVineProps) => {
   const spot = isoDelta(SPROUT_SPOT, SPROUT_SPOT)
-  const shapes =
+  const top =
     kind === 'grown' && enter && leave
-      ? grownShapes(x, y, enter, leave, hard, knot)
+      ? grownShapes(x, y, enter, leave, growth, hard, knot)
       : kind === 'root' && leave
         ? rootShapes(x, y, leave)
-        : kind === 'next' && enter
-          ? nextShapes(x, y, floor, enter)
-          : kind === 'future'
-            ? sprout(x + spot.x, y + floor + spot.y, SPROUT.future)
-            : []
+        : enter
+          ? tongueShapes(x, y, enter, tongue)
+          : []
+  const shapes =
+    layer === 'pit'
+      ? sprout > 0 && sproutOpacity > 0
+        ? sproutShapes(x + spot.x, y + floor + spot.y, sprout)
+        : []
+      : top
 
   return (
-    <g>
+    <g opacity={layer === 'pit' ? sproutOpacity : opacity}>
       {shapes.map((shape, i) => (
-        <polygon key={i} points={shape.points} style={{ fill: shape.fill }} />
+        <polygon key={shape.key ?? i} points={shape.points} style={{ fill: shape.fill }} />
       ))}
     </g>
   )

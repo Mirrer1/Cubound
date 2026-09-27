@@ -1224,3 +1224,132 @@ export const vineLooks = (state: GameState): Map<string, VineLook> => {
 
   return looks
 }
+
+// 싹 키 px. 다음 자랄 칸이 더 크다
+export const VINE_SPROUT = { next: 24, future: 14 }
+// 다음 자랄 칸으로 넘어온 혀의 길이. 칸 단위다
+export const VINE_TONGUE = 0.2
+// 줄기 끝은 한 수에 한 칸을 같은 빠르기로 간다. 혀 끝에서 출발해 이 몫에 칸 끝에 닿고 남은 몫에 다음 칸 혀가 된다
+const VINE_TIP = 1 - VINE_TONGUE
+// 이 수의 진행도에서 시작하는 자리와 걸리는 몫
+const VINE_RISE = { from: 0.15, span: 0.6 } // 판이 구덩이에서 차오름
+const VINE_NEXT = { from: 0.3, span: 0.7 } // 새 다음 칸의 싹이 큼
+const VINE_HARD = { from: 0.4, span: 0.6 } // 굳음
+
+export interface VineFrame {
+  kind: VineKind
+  enter: Direction | null
+  leave: Direction | null
+  growth: number // 줄기가 칸을 건너는 진행도 0~1. 이 수에 자라는 칸만 1보다 작다
+  rise: number // 판이 구덩이에서 차오른 정도 0~1
+  tongue: number // 다음 칸으로 넘어온 혀 길이 0~1
+  sprout: number // 싹 키 px. 0이면 없음
+  sproutOpacity: number
+  hard: number // 굳은 정도 0~1
+  knot: number // 봉오리가 돋은 정도 0~1
+  opacity: number // 줄기와 잎의 투명도. 재시작하면 사라진다
+}
+
+// 이 수에서 덩굴이 움직이는 진행도 0~1. 늪에서 뽑혀 나오는 동안은 0이다
+export const vineProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
+  const moving = durationOf(events, swamp) - swamp.lead
+  return moving <= 0 ? 1 : clamp01(elapsedAt(events, swamp, t) / moving)
+}
+
+const stillVine = (look: VineLook): VineFrame => ({
+  kind: look.kind,
+  enter: look.enter,
+  leave: look.leave,
+  growth: 1,
+  rise: 1,
+  tongue: look.kind === 'next' ? 1 : 0,
+  sprout: look.kind === 'next' ? VINE_SPROUT.next : look.kind === 'future' ? VINE_SPROUT.future : 0,
+  sproutOpacity: 1,
+  hard: look.hard ? 1 : 0,
+  knot: look.knot ? 1 : 0,
+  opacity: 1,
+})
+
+const phase = (p: number, { from, span }: { from: number; span: number }) =>
+  easeOut(clamp01((p - from) / span))
+
+// 덩굴 칸마다 이 순간의 모습. 자라기, 굳기, 재시작 되돌림을 앞뒤 모습 차이로 가른다
+export const vineFrames = (
+  prev: GameState | null,
+  game: GameState,
+  events: GameEvent[],
+  t: number,
+  swamp: SwampTime = NO_SWAMP,
+  restarting = false,
+): Map<string, VineFrame> => {
+  const after = vineLooks(game)
+  if (!prev || t >= 1) return new Map([...after].map(([key, look]) => [key, stillVine(look)]))
+
+  const before = vineLooks(prev)
+  const p = restarting ? 0 : vineProgress(events, t, swamp)
+  const back = easeOut(t)
+  const hard = phase(p, VINE_HARD)
+
+  return new Map(
+    [...after].map(([key, look]): [string, VineFrame] => {
+      const was = before.get(key) ?? look
+      const still = stillVine(look)
+
+      // 재시작하면 자란 칸의 판이 구덩이로 내려가고 그 자리에 싹이 다시 돋는다
+      if (restarting) {
+        if (was.kind === 'grown' && look.kind !== 'grown') {
+          return [
+            key,
+            {
+              ...stillVine(was),
+              rise: 1 - back,
+              opacity: 1 - back,
+              sprout: still.sprout,
+              sproutOpacity: back,
+            },
+          ]
+        }
+        return [key, was.kind === 'spent' ? { ...still, sproutOpacity: back } : still]
+      }
+
+      if (was.kind === 'next' && look.kind === 'grown') {
+        const rise = phase(p, VINE_RISE)
+        return [
+          key,
+          {
+            ...still,
+            growth: clamp01(p / VINE_TIP),
+            rise,
+            sprout: VINE_SPROUT.next,
+            sproutOpacity: 1 - rise,
+          },
+        ]
+      }
+      if (was.kind === 'future' && look.kind === 'next') {
+        return [
+          key,
+          {
+            ...still,
+            tongue: clamp01((p - VINE_TIP) / (1 - VINE_TIP)),
+            sprout: lerp(VINE_SPROUT.future, VINE_SPROUT.next, phase(p, VINE_NEXT)),
+          },
+        ]
+      }
+      if (was.kind === 'grown' && look.hard && !was.hard) {
+        return [key, { ...still, hard, knot: look.knot ? hard : 0 }]
+      }
+      // 굳은 덩굴의 남은 자리는 혀가 물러나고 싹이 사라진다
+      if (look.kind === 'spent' && was.kind !== 'spent') {
+        return [
+          key,
+          {
+            ...stillVine(was),
+            tongue: was.kind === 'next' ? 1 - hard : 0,
+            sproutOpacity: 1 - hard,
+          },
+        ]
+      }
+      return [key, still]
+    }),
+  )
+}
