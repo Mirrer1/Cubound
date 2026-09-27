@@ -8,8 +8,11 @@
     mud: '#A8A690', mudWall: '#8C8A76', mudLump: '#B6B49F', mudCollar: '#BFBDA8',
     capT: '#D9B8A6', capL: '#AE8B79', capR: '#C6A28F',
     stemT: '#F1EDE2', stemL: '#CFC9B9', stemR: '#E2DCCD',
-    vineT: '#CDD3BA', vineL: '#9FA68C', vineR: '#B7BEA3',
-    socket: '#878B77', socketNext: '#C9CFB5', sprout: '#AEB598',
+    vineT: '#D3CDB4', vineL: '#A8A18A', vineR: '#BFB9A1',
+    vineHT: '#C9C1A4', vineHL: '#9E9680', vineHR: '#B5AD96',
+    stemT: '#8E7A5C', stemSL: '#6F5F47', stemSR: '#7F6D52',
+    leaf: '#98AA78', leafH: '#879A68', bud: '#B59E7A', budL: '#8E7A5C', budR: '#A08A69',
+    sprout: '#BFCB9F',
     soil: '#DCD9C9', soilL: '#B7B4A5', soilR: '#CBC8B8',
     railC: '#CFCBC3', railNext: '#F0EDE6', tramT: '#FCFBF8', tramL: '#DFDBD3', tramR: '#F3F1EB', skirt: '#C9C5BD'
   };
@@ -45,11 +48,15 @@
   };
   const cube = (cx, cy, color, h, o, z) => { const k = tone(color); return block(cx, cy, CS, z || 0, h === undefined ? LV : h, k.t, k.l, k.r, o); };
   const iso = (x, y, lvl) => [(x - y) * TW / 2, (x + y) * TH / 2 - lvl * LV];
-  const land = (cx, cy, h, par, top) => { const t = top || (par ? C.b : C.a), s = side(t); return prism(cx, cy, 1, h * LV + TK, t, s.l, s.r); };
+  let FL = null;
+  const land = (cx, cy, h, par, top) => {
+    if (FL && !top) return prism(cx, cy, 1, h * LV + TK, par ? FL.b : FL.a, FL.l, FL.r);
+    const t = top || (par ? C.b : C.a), s = side(t); return prism(cx, cy, 1, h * LV + TK, t, s.l, s.r);
+  };
   const wallDown = (a, b, top, bot, f) => sh(P([[a[0], a[1] - top], [b[0], b[1] - top], [b[0], b[1] + bot], [a[0], a[1] + bot]]), f);
 
   const pit = (cx, cy, o) => {
-    const c = corners(cx, cy, 1), s = side(C.a), out = [];
+    const c = corners(cx, cy, 1), s = FL ? { l: FL.l, r: FL.r } : side(C.a), out = [];
     if (o.nw !== 'p') out.push(wallDown(c.W, c.N, (typeof o.nw === 'number' ? o.nw : 0) * LV, D, s.r));
     if (o.ne !== 'p') out.push(wallDown(c.N, c.E, (typeof o.ne === 'number' ? o.ne : 0) * LV, D, s.l));
     out.push(plate(cx, cy + D, 1, C.pitFloor));
@@ -104,20 +111,81 @@
     return { shapes: out, top: z + S.ct + S.d };
   };
 
+  // leaf: flat kite on the top plane. base (u,v), direction (du,dv) in tile units
+  const leaf = (cx, cy, u, v, du, dv, z, f, wd) => {
+    const L = Math.hypot(du, dv) || 1, w = wd || 0.1, nu = -dv / L * w, nv = du / L * w;
+    const q = [[u, v], [u + du * 0.45 + nu, v + dv * 0.45 + nv], [u + du, v + dv], [u + du * 0.45 - nu, v + dv * 0.45 - nv]];
+    return sh(P(q.map(p => pt(cx, cy, p[0], p[1], z))), f);
+  };
+  const SW = 0.045, SZ = 2;
+  const stemSeg = (cx, cy, dir, half, z) => {
+    // half: 'in' = entry edge → centre, 'out' = centre → exit edge
+    const a = half === 'in' ? -0.5 : -SW, b = half === 'in' ? SW : 0.5;
+    return dir === 'x'
+      ? box3(cx, cy, a, b, -SW, SW, z, SZ, C.stemT, C.stemSL, C.stemSR)
+      : box3(cx, cy, -SW, SW, a, b, z, SZ, C.stemT, C.stemSL, C.stemSR);
+  };
+  // four small leaves per cell, alternating sides; (a = along stem, b = across)
+  const LEAVES = { in: [[-0.38, 1], [-0.14, -1]], out: [[0.1, 1], [0.34, -1]] };
+  const leafFor = (cx, cy, dir, half, z, f) => LEAVES[half].map(([a, s]) => dir === 'x'
+    ? leaf(cx, cy, a, s * SW, 0.08, s * 0.17, z, f, 0.075)
+    : leaf(cx, cy, s * SW, a, s * 0.17, 0.08, z, f, 0.075));
+  const nodeAt = (cx, cy, dir, a) => {
+    const w = 0.035, h = SW + 0.025, top = mix(C.stemT, '#000000', 0.18);
+    return dir === 'x'
+      ? box3(cx, cy, a - w, a + w, -h, h, SZ + 1, SZ + 1, top, C.stemSL, C.stemSR)
+      : box3(cx, cy, -h, h, a - w, a + w, SZ + 1, SZ + 1, top, C.stemSL, C.stemSR);
+  };
+  const sproutAt = (cx, cy, h, big) => {
+    const out = [], s = 0.04;
+    out.push(...box3(cx, cy, -0.09, 0.09, -0.09, 0.09, 2, 2, C.sprout, mix(C.sprout, '#000000', 0.18), mix(C.sprout, '#000000', 0.08)));
+    out.push(...box3(cx, cy, -s, s, -s, s, h, h - 2, C.stemT, C.stemSL, C.stemSR));
+    const k = big ? 0.24 : 0.22;
+    out.push(leaf(cx, cy, 0, 0, k, -k * 0.35, h, C.sprout, 0.11));
+    out.push(leaf(cx, cy, 0, 0, -k * 0.35, k, h, C.sprout, 0.11));
+    return out;
+  };
   const vineCell = (cx, cy, cd) => {
-    const out = [];
-    if (cd.st === 'grown') return prism(cx, cy, 1, TK, C.vineT, C.vineL, C.vineR);
-    if (cd.st === 'future') return [plate(cx, cy + D, 0.26, C.socket)];
-    out.push(plate(cx, cy + D, 0.3, C.socketNext));
-    out.push(...box3(cx, cy + D, -0.05, 0.05, -0.05, 0.05, 22, 22, C.sprout, mix(C.sprout, '#000000', 0.2), mix(C.sprout, '#000000', 0.08)));
-    const tt = mix(C.vineT, '#000000', 0.06);
-    if (cd.from === 'x') out.push(...box3(cx, cy, -0.5, -0.34, -0.17, 0.17, 0, 7, tt, C.vineL, C.vineR));
-    if (cd.from === 'y') out.push(...box3(cx, cy, -0.17, 0.17, -0.5, -0.34, 0, 7, tt, C.vineL, C.vineR));
+    const out = [], dIn = cd.dir || 'x', dOut = cd.turn || dIn;
+    if (cd.st === 'grown') {
+      const H = cd.hard, lf = H ? C.leafH : C.leaf, z = SZ;
+      out.push(...prism(cx, cy, 1, TK, H ? C.vineHT : C.vineT, H ? C.vineHL : C.vineL, H ? C.vineHR : C.vineR));
+      out.push(...leafFor(cx, cy, dIn, 'in', 0.5, lf));
+      if (!cd.knot) out.push(...leafFor(cx, cy, dOut, 'out', 0.5, lf));
+      else out.push(leafFor(cx, cy, dOut, 'out', 0.5, lf)[0]);
+      out.push(...stemSeg(cx, cy, dIn, 'in', z));
+      out.push(...nodeAt(cx, cy, dIn, -0.26));
+      if (cd.knot) {
+        const b = dOut === 'x' ? [0.12, 0.42, -0.13, 0.13] : [-0.13, 0.13, 0.12, 0.42];
+        out.push(...stemSeg(cx, cy, dOut, 'out', z).slice(0, 0));
+        out.push(...box3(cx, cy, dOut === 'x' ? -SW : -SW, dOut === 'x' ? 0.14 : SW, dOut === 'x' ? -SW : -SW, dOut === 'x' ? SW : 0.14, z, SZ, C.stemT, C.stemSL, C.stemSR));
+        out.push(...box3(cx, cy, b[0], b[1], b[2], b[3], 8, 8, C.bud, C.budL, C.budR));
+      } else {
+        out.push(...stemSeg(cx, cy, dOut, 'out', z));
+        out.push(...nodeAt(cx, cy, dOut, 0.22));
+      }
+      return out;
+    }
+    if (cd.st === 'spent') return [];
+    const sk = pt(cx, cy + D, -0.25, -0.25);
+    if (cd.st === 'future') return sproutAt(sk[0], sk[1], 14, false);
+    out.push(...sproutAt(sk[0], sk[1], 24, true));
+    if (cd.from === 'x') { out.push(...box3(cx, cy, -0.5, -0.3, -SW, SW, SZ, SZ, C.stemT, C.stemSL, C.stemSR)); out.push(leaf(cx, cy, -0.42, SW, 0.08, 0.16, 0.5, C.sprout)); }
+    if (cd.from === 'y') { out.push(...box3(cx, cy, -SW, SW, -0.5, -0.3, SZ, SZ, C.stemT, C.stemSL, C.stemSR)); out.push(leaf(cx, cy, SW, -0.42, 0.16, 0.08, 0.5, C.sprout)); }
     return out;
   };
   const root = (cx, cy, dir) => {
-    const p = dir === 'y' ? pt(cx, cy, 0, 0.3) : pt(cx, cy, 0.3, 0);
-    return block(p[0], p[1], 0.26, 0, 5, C.vineT, C.vineL, C.vineR);
+    const out = [];
+    if (dir === 'y') {
+      out.push(leaf(cx, cy, -SW, 0.3, -0.18, 0.06, 0.5, C.leaf));
+      out.push(...box3(cx, cy, -SW, SW, 0.2, 0.5, SZ, SZ, C.stemT, C.stemSL, C.stemSR));
+      out.push(...box3(cx, cy, -0.12, 0.12, 0.12, 0.3, 6, 6, C.stemT, C.stemSL, C.stemSR));
+    } else {
+      out.push(leaf(cx, cy, 0.3, -SW, 0.06, -0.18, 0.5, C.leaf));
+      out.push(...box3(cx, cy, 0.2, 0.5, -SW, SW, SZ, SZ, C.stemT, C.stemSL, C.stemSR));
+      out.push(...box3(cx, cy, 0.12, 0.3, -0.12, 0.12, 6, 6, C.stemT, C.stemSL, C.stemSR));
+    }
+    return out;
   };
   const railCell = (cx, cy, cd) => {
     const out = box3(cx, cy + D, -0.5, 0.5, -0.12, 0.12, 0, 1, cd.next ? C.railNext : C.railC, C.railC, C.railC);
@@ -168,6 +236,7 @@
     for (let y = 0; y < g.length; y++) for (let x = 0; x < g[y].length; x++) if (g[y][x] !== null) list.push({ x, y });
     list.sort((a, b) => (a.x + a.y) - (b.x + b.y) || a.x - b.x);
     const V = (x, y) => (g[y] && g[y][x] !== undefined) ? g[y][x] : null;
+    FL = def.floor || null;
     for (const c of list) {
       const v = g[c.y][c.x], isP = v === 'p', h = isP ? 0 : v, p = iso(c.x, c.y, h), cx = p[0], cy = p[1];
       const par = (c.x + c.y) % 2, key = c.x + ',' + c.y, cd = cells[key];
@@ -186,6 +255,7 @@
       }
       for (const o of (objs[key] || [])) out.push(...obj(o, cx, cy));
     }
+    FL = null;
     return out;
   };
 

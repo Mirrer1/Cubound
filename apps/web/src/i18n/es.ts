@@ -58,6 +58,8 @@ export const es: Partial<Texts> = {
   'guide.mushroom': 'Pisa una seta y saltas dos casillas en esa dirección',
   'guide.mushroom.touch': 'Desliza hacia una seta y saltas dos casillas en esa dirección',
   'guide.mushroomWither': 'La seta pisada se marchita, así que solo sales cuando no queda ninguna',
+  'guide.vine': 'La enredadera llena una casilla de foso por cada movimiento',
+  'guide.vineStop': 'Pisa una enredadera y dejará de crecer ahí',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',
@@ -154,4 +156,17 @@ export const es: Partial<Texts> = {
   'stage.7-8': 'Sobre el Lodazal',
   'stage.7-9': 'El Cruce',
   'stage.7-10': 'El Claro Seco',
+  'world.8': 'Tierra que se Extiende',
+  'world.8.note':
+    'La enredadera avanza una casilla por movimiento. Cuántos movimientos hasta que se abra el paso es la respuesta.',
+  'stage.8-1': 'Primer Brote',
+  'stage.8-2': 'La Espera',
+  'stage.8-3': 'Dos Caminos',
+  'stage.8-4': 'Sitio para Empujar',
+  'stage.8-5': 'La Enredadera Larga',
+  'stage.8-6': 'Raíces Húmedas',
+  'stage.8-7': 'A Destiempo',
+  'stage.8-8': 'El Regreso',
+  'stage.8-9': 'La Maraña',
+  'stage.8-10': 'Donde se Detiene',
 }

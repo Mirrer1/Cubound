@@ -55,6 +55,8 @@ export const en = {
   'guide.mushroom': 'Step on a mushroom and you spring two tiles that way',
   'guide.mushroom.touch': 'Swipe toward a mushroom and you spring two tiles that way',
   'guide.mushroomWither': 'A sprung mushroom withers, so you leave only once every one is gone',
+  'guide.vine': 'A vine fills one pit tile with every move you make',
+  'guide.vineStop': 'Step on a vine and it stops growing there',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',
@@ -150,6 +152,19 @@ export const en = {
   'stage.7-8': 'Over the Mire',
   'stage.7-9': 'The Crossing',
   'stage.7-10': 'The Dry Patch',
+  'world.8': 'Land of the Slow Reach',
+  'world.8.note':
+    'A vine creeps one tile per move. How many moves until the way opens is the answer.',
+  'stage.8-1': 'First Shoot',
+  'stage.8-2': 'The Wait',
+  'stage.8-3': 'Two Ways',
+  'stage.8-4': 'Room to Push',
+  'stage.8-5': 'The Long Vine',
+  'stage.8-6': 'Wet Roots',
+  'stage.8-7': 'Out of Step',
+  'stage.8-8': 'The Way Back',
+  'stage.8-9': 'The Tangle',
+  'stage.8-10': 'Where It Stops',
 }
 
 export type Texts = typeof en
