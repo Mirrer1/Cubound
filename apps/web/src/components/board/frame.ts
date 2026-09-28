@@ -1,5 +1,5 @@
 import { STRUGGLES, isLiftRaised, readMushrooms, standHeight } from '@/game/rules'
-import type { Direction, Entity, GameEvent, GameState, Point, Stage } from '@/game/types'
+import type { Direction, Entity, GameEvent, GameState, Lifted, Point, Stage } from '@/game/types'
 
 const SECONDS = {
   moved: 0.24,
@@ -8,6 +8,7 @@ const SECONDS = {
   climbed: 0.3,
   blocked: 0.2,
   placed: 0.22,
+  planted: 0.24,
   tram: 0.24,
 }
 // 미끄러짐은 칸 수에 상관없이 속도가 같아야 상자와 큐브가 나란히 간다. max는 아주 긴 미끄러짐만 잡는다
@@ -309,7 +310,11 @@ const sinkEnd = (events: GameEvent[]) =>
     ? totalSeconds(segmentsOf(boxPath(events))) - SWAMP.lead + SWAMP.box
     : 0
 
-export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
+// 씨앗이 솟는 시간. 큐브와 상자가 다 움직인 뒤에 따로 붙는다
+const RISE_SECONDS = 0.36
+
+// 솟기를 뺀 이동 몫의 연출 시간
+const moveSeconds = (events: GameEvent[], swamp: SwampTime) =>
   swamp.lead +
   Math.max(
     0,
@@ -320,11 +325,36 @@ export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
     warpEnd(events),
     tramEnd(events),
     sinkEnd(events),
-    ...events.map((e) => (e.type === 'blocked' || e.type === 'placed' ? SECONDS[e.type] : 0)),
+    ...events.map((e) =>
+      e.type === 'blocked' || e.type === 'placed' || e.type === 'planted' ? SECONDS[e.type] : 0,
+    ),
     ...events.map((e) => (e.type === 'cracked' && e.gone ? CRUMBLE_SECONDS : 0)),
     ...events.map((e) => (e.type === 'struggled' ? SWAMP.struggle : 0)),
     ...frostStamps(events).map((stamp) => stamp.at + FROST_FADE),
   )
+
+const rises = (events: GameEvent[]) => events.some((e) => e.type === 'rose')
+
+// at 칸이 솟으며 그 위의 큐브나 상자를 올리는 층 수
+const seedLift = (events: GameEvent[], at: Point, what: Lifted) =>
+  events.some((e) => e.type === 'rose' && same(e.at, at) && e.lifted.includes(what)) ? 1 : 0
+
+export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
+  moveSeconds(events, swamp) + (rises(events) ? RISE_SECONDS : 0)
+
+// 이동 몫의 진행도. 씨앗이 솟는 수는 솟기 전에 1이 된다
+export const stepProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
+  const moving = moveSeconds(events, swamp)
+  return moving <= 0 ? 1 : clamp01((t * durationOf(events, swamp)) / moving)
+}
+
+// 씨앗이 솟는 진행도. 가속해 오르다 끝에서 느려져 튀지 않는다
+export const riseProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
+  if (!rises(events)) return 1
+
+  const p = clamp01((t * durationOf(events, swamp) - moveSeconds(events, swamp)) / RISE_SECONDS)
+  return p * p * (3 - 2 * p)
+}
 
 // 이동이 시작한 뒤로 흐른 시간. 늪에서 뽑혀 나오기를 기다리는 동안은 0보다 작다
 const elapsedAt = (events: GameEvent[], swamp: SwampTime, t: number) =>
@@ -651,8 +681,12 @@ const pathFrame = (
   const startLevel = prev ? standHeight(prev, prev.player) : endLevel
   const pathLevel = segments.reduce((level, s) => levelAfter(level, s.event), startLevel)
   const swamp = swampTime(prev, game)
-  // 이동 경로로 설명되지 않는 높이 차이는 발판이 오르내린 몫이라 칸과 같은 속도로 따라간다
-  const riding = (endLevel - pathLevel) * ridePhase(game, events, player, t, swamp)
+  // 씨앗이 솟아 오르는 몫은 이동이 끝난 뒤에 칸과 같이 오른다
+  const seedUp = seedLift(events, player, 'player')
+  const pathEnd = endLevel - seedUp
+  // 이동 경로로 설명되지 않는 나머지 높이 차이는 발판이 오르내린 몫이라 칸과 같은 속도로 따라간다
+  const risen = seedUp * riseProgress(events, t, swamp)
+  const riding = (pathEnd - pathLevel) * ridePhase(game, events, player, t, swamp) + risen
   // 연출이 이동보다 길 수 있어 큐브는 제 길을 다 가면 그 자리에서 기다린다
   const elapsed = elapsedAt(events, swamp, t)
 
@@ -671,7 +705,7 @@ const pathFrame = (
 
     return {
       ...cell,
-      level: (sinking ? pathLevel + riding : endLevel) - WARP.depth * deep,
+      level: (sinking ? pathLevel + riding : pathEnd + risen) - WARP.depth * deep,
       direction: last ? directionBetween(last.event.from, last.event.to) : still.direction,
       angle: 0,
       cell,
@@ -707,7 +741,7 @@ const pathFrame = (
       land > 0 ? clamp01((cells * p) / restWalk(cells)) : easeIn(clamp01((p - 0.55) / 0.45))
     // 튕겨서 상자 위에 내려서는 수는 오르는 이벤트가 아니라 걷기로 남아 levelAfter가 높이를 못 올린다.
     // 그 몫을 riding에 맡기면 이동 내내 골고루 퍼져 갓을 딛는 동안에도 큐브가 떠 있다
-    const landLevel = index === segments.length - 1 ? endLevel : toLevel
+    const landLevel = index === segments.length - 1 ? pathEnd : toLevel
     const level = hopped
       ? hopLevel(game, event, cells, fromLevel, landLevel, gone * cells)
       : event.type === 'fell'
@@ -720,11 +754,12 @@ const pathFrame = (
       x: lerp(event.from.x, event.to.x, gone),
       y: lerp(event.from.y, event.to.y, gone),
       // 튕겨 가는 이동은 hopLevel이 끝 칸 높이까지 맡는다
-      level: level + (hopped ? 0 : riding),
+      level: level + (hopped ? risen : riding),
       direction: directionBetween(event.from, event.to),
       // 얼음 위와 갓을 딛고 날아가는 동안에는 구르지 않는다. 갓으로 걸어 들어가는 한 칸은 구른다
       angle: event.type === 'slid' ? 0 : hopped ? hopAngle(cells, gone * cells) : (Math.PI / 2) * p,
-      cell: frontOf(event.from, event.to),
+      // 솟는 수는 이동이 끝나면 들어선 칸에 그려 그 칸의 말뚝이 큐브 앞에 남는다
+      cell: rises(events) && p >= 1 ? event.to : frontOf(event.from, event.to),
       squash: span ? squashAt((elapsed - span.from) / (span.to - span.from)) : 0,
       fade: 1,
       lift: hopped
@@ -826,7 +861,10 @@ export const movingBox = (
     event.type === 'slid' || p < 0.6 ? fromLevel : lerp(fromLevel, toLevel, easeIn((p - 0.6) / 0.4))
   // 도착 칸에 서는 높이에서 상자 한 층을 뺀 값이 상자가 앉을 높이다. 발판이 오르내린 몫이 여기서 드러난다
   const endLevel = path.reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
-  const riding = (standHeight(game, to) - 1 - endLevel) * ridePhase(game, events, to, t, swamp)
+  // 씨앗이 솟아 오르는 몫은 상자가 자리에 앉은 뒤 칸과 같이 오른다
+  const riding =
+    (standHeight(game, to) - 1 - seedLift(events, to, 'box') - endLevel) *
+    ridePhase(game, events, to, t, swamp)
   const shift = carry ? carriedBy(carry, ride) : { x: 0, y: 0 }
 
   const cells = cellsOf(event)
@@ -1205,6 +1243,135 @@ export const seedLayers = (stage: Stage, heights: number[][]): Map<string, numbe
   return layers
 }
 
+export interface SeedFrame {
+  level: number // 그 순간 칸 윗면 높이
+  land: number // 볏짚빛 층 수
+  tree: number // 사라지는 나무 단계. 남은 수이고 0이면 없음
+  treeNext: number // 들어서는 나무 단계
+  treeP: number // tree에서 treeNext로 바뀐 정도 0~1
+  stakes: number
+  stakesNext: number
+  stakeP: number
+  leaves: number // 솟은 땅에 남은 잎이 드러난 정도 0~1
+  stalk: number // 보스 기둥 줄기 층 수
+  bud: number // 봉오리가 돋은 정도 0~1
+}
+
+interface SeedLook {
+  level: number
+  land: number
+  left: number
+  leaves: number
+  stalk: number
+  bud: number
+}
+
+const seedLook = (state: GameState, key: string, layers: Map<string, number>): SeedLook => {
+  const [x, y] = key.split('-').map(Number)
+  const land = layers.get(key) ?? 0
+  const left = state.planted.find((seed) => seed.x === x && seed.y === y)?.left ?? 0
+  const boss = Boolean(state.stage.rules?.seedGrow)
+  return {
+    level: state.heights[y][x],
+    land,
+    left,
+    leaves: land > 0 && !boss && left === 0 ? 1 : 0,
+    stalk: boss ? land : 0,
+    bud: boss && land > 0 && left === 0 ? 1 : 0,
+  }
+}
+
+const blendSeed = (was: SeedLook, now: SeedLook, p: number): SeedFrame => ({
+  level: lerp(was.level, now.level, p),
+  land: lerp(was.land, now.land, p),
+  tree: was.left,
+  treeNext: now.left,
+  treeP: p,
+  stakes: was.left,
+  stakesNext: now.left,
+  stakeP: p,
+  leaves: lerp(was.leaves, now.leaves, p),
+  stalk: lerp(was.stalk, now.stalk, p),
+  bud: lerp(was.bud, now.bud, p),
+})
+
+// 나무는 칸 오른쪽 모서리의 흙 자리에서 자라고 흙 자리는 윗면에서 이만큼 솟는다
+export const SAPLING = { spot: 0.36, soil: 2 }
+
+// 심는 수는 씨앗이 흙 자리에 닿을 즈음부터 싹과 말뚝이 드러난다
+const PLANT_FROM = 0.3
+// 큐브 윗면의 씨앗이 흙 자리까지 가는 몫과 흐려지는 구간, 묻힐 때의 크기
+const PLANT_SEED = { travel: 0.7, fadeFrom: 0.35, fade: 0.45, small: 0.5 }
+
+export interface PlantingFrame {
+  go: number // 큐브 윗면에서 흙 자리까지 간 정도 0~1
+  scale: number
+  opacity: number
+}
+
+// 심는 수에 들고 있던 씨앗이 흙 자리로 내려가 묻힌다. 심지 않는 수는 null
+export const plantingSeed = (
+  events: GameEvent[],
+  t: number,
+  swamp: SwampTime = NO_SWAMP,
+): PlantingFrame | null => {
+  if (!events.some((e) => e.type === 'planted')) return null
+
+  const p = stepProgress(events, t, swamp)
+  const q = clamp01(p / PLANT_SEED.travel)
+  const go = q * q * (3 - 2 * q)
+  return {
+    go,
+    scale: lerp(1, PLANT_SEED.small, go),
+    opacity: 1 - clamp01((p - PLANT_SEED.fadeFrom) / PLANT_SEED.fade),
+  }
+}
+
+const seedKeys = (state: GameState, layers: Map<string, number>) => [
+  ...layers.keys(),
+  ...state.planted.map(({ x, y }) => `${x}-${y}`),
+]
+
+// 씨앗이 있거나 솟은 칸마다 이 순간의 모습. 심기와 자람은 한 수 전체에, 솟기는 이동 뒤에 걸친다
+export const seedFrames = (
+  prev: GameState | null,
+  game: GameState,
+  events: GameEvent[],
+  t: number,
+  swamp: SwampTime = NO_SWAMP,
+  restarting = false,
+): Map<string, SeedFrame> => {
+  const after = seedLayers(game.stage, game.heights)
+  if (!prev || t >= 1) {
+    return new Map(
+      seedKeys(game, after).map((key) => {
+        const look = seedLook(game, key, after)
+        return [key, blendSeed(look, look, 1)]
+      }),
+    )
+  }
+
+  const before = seedLayers(prev.stage, prev.heights)
+  const keys = new Set([...seedKeys(game, after), ...seedKeys(prev, before)])
+  const step = stepProgress(events, t, swamp)
+  const rise = riseProgress(events, t, swamp)
+  const eventAt = (type: 'planted' | 'rose', key: string) =>
+    events.some((e) => e.type === type && `${e.at.x}-${e.at.y}` === key)
+
+  return new Map(
+    [...keys].map((key) => {
+      const p = restarting
+        ? t * t * (3 - 2 * t)
+        : eventAt('rose', key)
+          ? rise
+          : eventAt('planted', key)
+            ? clamp01((step - PLANT_FROM) / (1 - PLANT_FROM))
+            : step
+      return [key, blendSeed(seedLook(prev, key, before), seedLook(game, key, after), p)]
+    }),
+  )
+}
+
 export const vineLooks = (state: GameState): Map<string, VineLook> => {
   const looks = new Map<string, VineLook>()
   const vines = state.stage.entities.filter((e) => e.type === 'vine')
@@ -1265,7 +1432,7 @@ export interface VineFrame {
 
 // 이 수에서 덩굴이 움직이는 진행도 0~1. 늪에서 뽑혀 나오는 동안은 0이다
 export const vineProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
-  const moving = durationOf(events, swamp) - swamp.lead
+  const moving = moveSeconds(events, swamp) - swamp.lead
   return moving <= 0 ? 1 : clamp01(elapsedAt(events, swamp, t) / moving)
 }
 

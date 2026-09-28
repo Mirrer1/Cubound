@@ -232,10 +232,16 @@ interface BoardCellProps {
   vineKnot: number // 봉오리가 돋은 정도
   vineOpacity: number
   seed: number // 바닥에 놓인 씨앗 투명도, 0이면 없음
-  seedLeft: number // 심은 씨앗이 솟기까지 남은 수, 0이면 심은 칸이 아님
-  seedLand: number // 씨앗으로 솟은 층 수
-  seedStalk: number // 보스 기둥 층 수, 0이면 기둥 없음
-  seedBud: boolean // 보스 기둥이 다 자라 봉오리로 닫힘
+  seedLand: number // 씨앗으로 솟은 볏짚빛 층 수
+  seedStalk: number // 보스 기둥 줄기 층 수, 0이면 기둥 없음
+  seedBud: number // 보스 기둥 봉오리가 돋은 정도 0~1
+  seedLeaves: number // 솟은 땅에 남은 잎이 드러난 정도 0~1
+  seedTree: number // 사라지는 나무 단계, 0이면 없음
+  seedTreeNext: number // 들어서는 나무 단계, 0이면 없음
+  seedTreeP: number
+  seedStakes: number // 사라지는 말뚝 수
+  seedStakesNext: number // 들어서는 말뚝 수
+  seedStakeP: number
   children?: ReactNode
 }
 
@@ -288,10 +294,16 @@ const BoardCell = ({
   vineKnot,
   vineOpacity,
   seed,
-  seedLeft,
   seedLand,
   seedStalk,
   seedBud,
+  seedLeaves,
+  seedTree,
+  seedTreeNext,
+  seedTreeP,
+  seedStakes,
+  seedStakesNext,
+  seedStakeP,
   children,
 }: BoardCellProps) => {
   const icy = ice && !goal && !filled
@@ -500,7 +512,11 @@ const BoardCell = ({
                   y={y}
                   width={TILE.width}
                   depth={seedRise}
-                  top="var(--color-seed-land-top)"
+                  top={
+                    seedLand >= 1
+                      ? 'var(--color-seed-land-top)'
+                      : blend(faces.top, 'var(--color-seed-land-top)', seedLand)
+                  }
                   left="var(--color-seed-land-left)"
                   right="var(--color-seed-land-right)"
                 />
@@ -516,12 +532,8 @@ const BoardCell = ({
                 right={faces.right}
               />
             )}
-            {seedStalk > 0 && (
-              <BoardSeed x={x} y={y} part="stalk" level={seedStalk} done={seedBud} />
-            )}
-            {seedLand > 0 && seedStalk === 0 && seedLeft === 0 && (
-              <BoardSeed x={x} y={y} part="leaves" />
-            )}
+            {seedStalk > 0 && <BoardSeed x={x} y={y} part="stalk" level={seedStalk} p={seedBud} />}
+            {seedLeaves > 0 && <BoardSeed x={x} y={y} part="leaves" p={seedLeaves} />}
             {(grownVine || vine === 'root') && <BoardVine layer="top" kind={vine} {...vineProps} />}
             {swamp && (
               <g opacity={1 - swampFilled}>
@@ -722,9 +734,9 @@ const BoardCell = ({
           <BoardSeed x={x} y={y} part="seed" />
         </g>
       )}
-      {seedLeft > 0 && (
+      {(seedTree > 0 || seedTreeNext > 0) && (
         <g style={fade}>
-          <BoardSeed x={x} y={y} part="sapling" left={seedLeft} />
+          <BoardSeed x={x} y={y} part="tree" from={seedTree} to={seedTreeNext} p={seedTreeP} />
         </g>
       )}
       {sunk ? (
@@ -739,9 +751,16 @@ const BoardCell = ({
       ) : (
         children
       )}
-      {seedLeft > 0 && (
+      {(seedStakes > 0 || seedStakesNext > 0) && (
         <g style={fade}>
-          <BoardSeed x={x} y={y} part="stakes" left={seedLeft} />
+          <BoardSeed
+            x={x}
+            y={y}
+            part="stakes"
+            from={seedStakes}
+            to={seedStakesNext}
+            p={seedStakeP}
+          />
         </g>
       )}
     </g>

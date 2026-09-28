@@ -8,6 +8,7 @@ import BoardTram from './BoardTram'
 import ClearEffect from './ClearEffect'
 import { rollingCubeFaces } from './cube'
 import {
+  SAPLING,
   boxSink,
   crackFrame,
   crackProgress,
@@ -16,12 +17,14 @@ import {
   movingBox,
   mushroomFrames,
   pickUpProgress,
+  plantingSeed,
   playerFrame,
   pressProgress,
   restartDrop,
   restartDuration,
-  seedLayers,
+  seedFrames,
   slidingCell,
+  stepProgress,
   swampFrame,
   swampTime,
   switchCells,
@@ -33,7 +36,7 @@ import {
 import { shade } from './shade'
 import { useBoardAnimation } from './useBoardAnimation'
 import { useCamera } from './useCamera'
-import { TILE, toScreen } from '@/game/iso'
+import { TILE, isoDelta, toScreen } from '@/game/iso'
 import { occludingCells } from '@/game/occlusion'
 import { isDoorOpen, isIce, isLiftRaised, nextTramSpot } from '@/game/rules'
 import type { Entity, GameEvent, GameState, Point, TramSpot } from '@/game/types'
@@ -135,29 +138,35 @@ const Board = ({
     [heights, stage.heights],
   )
 
+  const seedFrame = seedFrames(moving ? before : null, game, events, t, swampSeconds, dropping)
+  // 솟는 씨앗 칸은 그 순간 높이로 가림을 잰다. 다 솟기 전에 앞 칸을 흐리지 않는다
+  const shown = heights.map((row, y) =>
+    row.map((h, x) => {
+      const frame = seedFrame.get(`${x}-${y}`)
+      return frame ? Math.round(frame.level) : h
+    }),
+  )
   // 가림 처리도 최종 자리가 아니라 지금 그려지는 자리를 본다. 순간이동으로 가라앉는 큐브가 벽에 묻힌다
   const faded = [
-    ...occludingCells(heights, cubeCell, Math.round(cube.level), boxes),
+    ...occludingCells(shown, cubeCell, Math.round(cube.level), boxes),
     // 버섯에 날려 보낸 상자와 그것이 메운 바닥은 큐브에서 멀어 저 혼자 벽에 묻힌다
     ...boxes.flatMap((b, i) =>
       occludingCells(
-        heights,
+        shown,
         b,
-        heights[b.y][b.x] + 1,
+        shown[b.y][b.x] + 1,
         boxes.filter((_, j) => j !== i),
       ),
     ),
-    ...filled.flatMap((p) => occludingCells(heights, p, heights[p.y][p.x], boxes)),
+    ...filled.flatMap((p) => occludingCells(shown, p, shown[p.y][p.x], boxes)),
     // 씨앗과 심은 칸의 나무와 말뚝도 큐브에서 멀면 저 혼자 벽에 묻힌다
     ...[...game.seeds, ...game.planted].flatMap((p) =>
-      occludingCells(heights, p, heights[p.y][p.x], boxes),
+      occludingCells(shown, p, shown[p.y][p.x], boxes),
     ),
     ...leaningLadders
       .filter((l) => (l.direction === 'right' || l.direction === 'down') && same(l, player))
-      .flatMap((l) => occludingCells(heights, l, heights[l.y][l.x], boxes)),
+      .flatMap((l) => occludingCells(shown, l, shown[l.y][l.x], boxes)),
   ]
-
-  const seedRaised = useMemo(() => seedLayers(stage, heights), [stage, heights])
 
   // 발판 길 칸은 바닥이 없어도 구덩이로 그린다. 값은 이웃한 길 칸의 방향이다
   const railDirs = useMemo(() => {
@@ -248,10 +257,20 @@ const Board = ({
           cube.squash,
         )
       : ''
+  // 씨앗이 솟는 수는 이동 몫이 먼저 끝나서 한 수 안에서 일어나는 변화는 이 진행도를 쓴다
+  const stepT = moving ? stepProgress(events, t, swampSeconds) : 1
   // 사다리는 이동이 시작할 때가 아니라 큐브가 그 칸에 닿은 때부터 손으로 옮겨진다
   const pickUpPhase = moving ? pickUpProgress(events, t, swampSeconds) : 1
   const carriedOpacity =
-    pickedUp && !game.carrying ? 0 : pickedUp ? pickUpPhase : placed ? 1 - t : game.carrying ? 1 : 0
+    pickedUp && !game.carrying
+      ? 0
+      : pickedUp
+        ? pickUpPhase
+        : placed
+          ? 1 - stepT
+          : game.carrying
+            ? 1
+            : 0
   const carried = game.carrying ?? before.carrying
   const progress = moving ? t : 1
   // 문과 발판은 이동이 시작할 때가 아니라 스위치가 눌리거나 풀린 때부터 움직인다
@@ -259,7 +278,7 @@ const Board = ({
     moving ? switchProgress(events, cells, pressed, t, swampSeconds) : 1
 
   // 무너지는 칸은 닳을수록 내려앉아서 그 위에 선 것도 같은 만큼 내려간다
-  const crackPhase = moving ? crackProgress(events, t) : 1
+  const crackPhase = moving ? crackProgress(events, stepT) : 1
   const sinkAt = (p: Point) => {
     const left = crackLeft(game, p)
     const was = crackLeft(before, p)
@@ -277,6 +296,19 @@ const Board = ({
   }
 
   const cubeSink = standSink(cube.x, cube.y)
+  // 심는 수에 들고 있던 씨앗이 큐브 윗면에서 그 칸의 흙 자리로 내려간다
+  const planting = moving ? plantingSeed(events, t, swampSeconds) : null
+  const soilSpot = isoDelta(SAPLING.spot, -SAPLING.spot)
+  const plantedSeed = planting && {
+    x: cubeScreen.x + soilSpot.x * planting.go,
+    y: lerp(
+      cubeScreen.y - TILE.layer + cubeSink - cube.lift,
+      cubeScreen.y + soilSpot.y - SAPLING.soil + cubeSink,
+      planting.go,
+    ),
+    scale: planting.scale,
+    opacity: planting.opacity,
+  }
   // 밀리는 상자와 발판 위의 상자. 칸과 따로 움직여서 화면 좌표로 미리 구해 둔다
   const caps = mushroomFrames(dropping ? null : prevGame, game, events, t, chain)
   const pushedScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
@@ -356,7 +388,11 @@ const Board = ({
             : progress
         const raised = lerp(liftLevel(before), liftLevel(game), liftPhase)
         const crackFall = crumble.fall * TILE.layer
-        const cellY = cell.y - raised * TILE.layer + sinkAt(cell.p) + crackFall
+        // 솟거나 재시작으로 내려가는 씨앗 칸은 그 순간 높이로 그린다
+        const seedHere = seedFrame.get(cell.key)
+        const seedShift = seedHere ? cell.h - seedHere.level : 0
+        const cellY =
+          cell.y - raised * TILE.layer + sinkAt(cell.p) + crackFall + seedShift * TILE.layer
         const pickedHere = pickedUp?.type === 'pickedUp' && same(pickedUp.at, cell.p)
         const flatLadder = has(ladders, cell.p)
           ? 1
@@ -364,7 +400,7 @@ const Board = ({
             ? 1 - pickUpPhase
             : 0
         const placedOpacity = (l: Point) =>
-          placed?.type === 'placed' && same(placed.ladder, l) ? t : 1
+          placed?.type === 'placed' && same(placed.ladder, l) ? stepT : 1
         const leaning = [
           ...leaningLadders
             .filter((l) => same(l, cell.p))
@@ -393,21 +429,19 @@ const Board = ({
         const droppingBox = dropping ? boxes.findIndex((b) => same(b, cell.p)) : -1
         const boxDrop = droppingBox >= 0 ? restartDrop(t, droppingBox + 1, boxes.length) : null
         // 재시작하면 메운 칸은 제자리에서 사라지고 무너졌던 칸은 큐브와 같은 빠르기로 돌아온다
-        const restored = dropping
-          ? Math.sign(before.heights[cell.p.y][cell.p.x] - heights[cell.p.y][cell.p.x])
-          : 0
+        const restored =
+          dropping && !seedHere
+            ? Math.sign(before.heights[cell.p.y][cell.p.x] - heights[cell.p.y][cell.p.x])
+            : 0
         const overlay =
           drawBoxes.length > 0 || drawCube || goalEffect || boxDrop !== null || tram !== null
-        const plantedHere = game.planted.find((s) => same(s, cell.p))
-        const seedLand = seedRaised.get(cell.key) ?? 0
-        const seedStalk = stage.rules?.seedGrow ? seedLand : 0
 
         return (
           <BoardCell
             key={cell.key}
             x={cell.x}
             y={cellY}
-            h={cell.h + raised}
+            h={cell.h - seedShift + raised}
             parity={(cell.p.x + cell.p.y) % 2 === 1}
             goal={same(cell.p, stage.goal)}
             filled={isFilled && vine?.kind !== 'grown'}
@@ -461,10 +495,16 @@ const Board = ({
                   ? 1 - pickUpPhase
                   : 0
             }
-            seedLeft={plantedHere?.left ?? 0}
-            seedLand={seedLand}
-            seedStalk={seedStalk}
-            seedBud={seedStalk > 0 && plantedHere === undefined}
+            seedLand={seedHere?.land ?? 0}
+            seedStalk={seedHere?.stalk ?? 0}
+            seedBud={seedHere?.bud ?? 0}
+            seedLeaves={seedHere?.leaves ?? 0}
+            seedTree={seedHere?.tree ?? 0}
+            seedTreeNext={seedHere?.treeNext ?? 0}
+            seedTreeP={seedHere?.treeP ?? 1}
+            seedStakes={seedHere?.stakes ?? 0}
+            seedStakesNext={seedHere?.stakesNext ?? 0}
+            seedStakeP={seedHere?.stakeP ?? 1}
           >
             {overlay ? (
               <>
@@ -509,6 +549,14 @@ const Board = ({
                         y={cubeScreen.y - TILE.layer - 2 + cubeSink - cube.lift}
                       />
                     )}
+                  </g>
+                )}
+                {drawCube && plantedSeed && plantedSeed.opacity > 0 && (
+                  <g
+                    opacity={plantedSeed.opacity}
+                    transform={`translate(${plantedSeed.x} ${plantedSeed.y}) scale(${plantedSeed.scale}) translate(${-plantedSeed.x} ${-plantedSeed.y})`}
+                  >
+                    <BoardSeed x={plantedSeed.x} y={plantedSeed.y} part="seed" />
                   </g>
                 )}
                 {goalEffect && <ClearEffect x={cell.x} y={cell.y} />}

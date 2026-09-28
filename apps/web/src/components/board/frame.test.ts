@@ -16,11 +16,15 @@ import {
   mushroomFrames,
   mushroomPose,
   pickUpProgress,
+  plantingSeed,
   playerFrame,
   pressProgress,
   restartDrop,
   restartDuration,
+  riseProgress,
+  seedFrames,
   seedLayers,
+  stepProgress,
   swampCollar,
   swampFrame,
   swampSink,
@@ -34,7 +38,7 @@ import {
 } from './frame'
 import { TILE } from '@/game/iso'
 import { createState, move } from '@/game/rules'
-import type { GameState, Point, Stage } from '@/game/types'
+import type { Direction, GameState, Point, Stage } from '@/game/types'
 
 const STAGE: Stage = {
   version: 1,
@@ -2159,5 +2163,223 @@ describe('seedLayers', () => {
 
   it('높이가 그대로면 빈 목록이다', () => {
     expect(seedLayers(SEED_FIELD, SEED_FIELD.heights).size).toBe(0)
+  })
+})
+
+// 오른쪽 (3, 1)과 (3, 2)가 한 층 높아 (2, 1)에 심는다
+const SEED_STAGE: Stage = {
+  version: 1,
+  id: 'test-seed-frame',
+  heights: [
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 1, 0, 0],
+  ],
+  start: { x: 0, y: 1 },
+  goal: { x: 5, y: 0 },
+  entities: [{ type: 'seed', x: 1, y: 1 }],
+}
+const SEED_AT = { x: 2, y: 1 }
+const SEED_KEY = '2-1'
+// 씨앗을 주워 (2, 1)에 심는다
+const PLANT: Direction[] = ['right', 'right', 'right']
+// 심은 뒤 옆 칸을 오가 네 번째 수에 큐브가 심은 칸으로 들어서며 솟는다
+const RIDE: Direction[] = [...PLANT, 'left', 'right', 'left', 'right']
+
+// 마지막 수의 앞 상태와 결과
+const lastMove = (stage: Stage, directions: Direction[], from = createState(stage)) => {
+  const prev = directions.slice(0, -1).reduce((state, d) => move(state, d).state, from)
+  const { state, events } = move(prev, directions[directions.length - 1])
+  return { prev, game: state, events }
+}
+
+describe('durationOf 씨앗', () => {
+  it('심는 수는 한 수 이동과 같은 시간이다', () => {
+    const { events } = lastMove(SEED_STAGE, PLANT)
+
+    expect(durationOf(events)).toBeCloseTo(0.24)
+  })
+
+  it('남은 수만 줄어드는 수는 늘어나지 않는다', () => {
+    const { events } = lastMove(SEED_STAGE, [...PLANT, 'left'])
+
+    expect(durationOf(events)).toBeCloseTo(0.24)
+  })
+
+  it('솟는 수에만 이동 뒤에 솟는 시간을 더한다', () => {
+    const { events } = lastMove(SEED_STAGE, RIDE)
+
+    expect(durationOf(events)).toBeCloseTo(0.24 + 0.36)
+  })
+})
+
+describe('stepProgress', () => {
+  it('솟는 수는 이동 몫이 끝날 때 1이 된다', () => {
+    const { events } = lastMove(SEED_STAGE, RIDE)
+
+    expect(stepProgress(events, 0.2)).toBeCloseTo(0.5)
+    expect(stepProgress(events, 0.4)).toBeCloseTo(1)
+    expect(stepProgress(events, 0.8)).toBe(1)
+  })
+
+  it('솟지 않는 수는 t 그대로다', () => {
+    const { events } = lastMove(SEED_STAGE, [...PLANT, 'left'])
+
+    expect(stepProgress(events, 0.3)).toBeCloseTo(0.3)
+  })
+})
+
+describe('riseProgress', () => {
+  it('이동이 끝난 뒤에 시작해 끝에서 1이 된다', () => {
+    const { events } = lastMove(SEED_STAGE, RIDE)
+
+    expect(riseProgress(events, 0)).toBe(0)
+    expect(riseProgress(events, 0.4)).toBeCloseTo(0)
+    expect(riseProgress(events, 0.7)).toBeGreaterThan(0)
+    expect(riseProgress(events, 0.7)).toBeLessThan(1)
+    expect(riseProgress(events, 1)).toBe(1)
+  })
+
+  it('처음과 끝에서 느려 튀지 않는다', () => {
+    const { events } = lastMove(SEED_STAGE, RIDE)
+    const at = (seconds: number) => riseProgress(events, (0.24 + seconds) / 0.6)
+
+    expect(at(0.036)).toBeLessThan(0.05)
+    expect(1 - at(0.324)).toBeLessThan(0.05)
+  })
+})
+
+describe('seedFrames', () => {
+  const frameAt = (moves: ReturnType<typeof lastMove>, t: number, restarting = false) =>
+    seedFrames(moves.prev, moves.game, moves.events, t, undefined, restarting).get(SEED_KEY)
+
+  it('심는 수에 나무와 말뚝 넷이 한 수 전체에 걸쳐 나타난다', () => {
+    const moves = lastMove(SEED_STAGE, PLANT)
+
+    expect(frameAt(moves, 0)).toMatchObject({ tree: 0, treeNext: 4, treeP: 0, stakesNext: 4 })
+    expect(frameAt(moves, 0.6)?.treeP).toBeGreaterThan(0)
+    expect(frameAt(moves, 0.6)?.treeP).toBeLessThan(1)
+    expect(frameAt(moves, 1)).toMatchObject({ tree: 4, treeNext: 4, treeP: 1, stakes: 4 })
+  })
+
+  it('한 수가 지나면 나무가 다음 단계로 자라고 말뚝이 하나 준다', () => {
+    const moves = lastMove(SEED_STAGE, [...PLANT, 'left'])
+    const mid = frameAt(moves, 0.5)
+
+    expect(mid).toMatchObject({ tree: 4, treeNext: 3, stakes: 4, stakesNext: 3 })
+    expect(mid?.treeP).toBeCloseTo(0.5)
+    expect(mid?.stakeP).toBeCloseTo(0.5)
+  })
+
+  it('솟는 칸은 이동이 끝날 때까지 제 높이에 있다가 솟으며 잎이 남는다', () => {
+    const moves = lastMove(SEED_STAGE, RIDE)
+
+    expect(frameAt(moves, 0.4)).toMatchObject({ level: 0, land: 0, leaves: 0, tree: 1, stakes: 1 })
+    expect(frameAt(moves, 0.4)?.treeP).toBe(0)
+    expect(frameAt(moves, 0.7)?.level).toBeGreaterThan(0)
+    expect(frameAt(moves, 0.7)?.level).toBeLessThan(1)
+    expect(frameAt(moves, 1)).toMatchObject({ level: 1, land: 1, leaves: 1, tree: 0, stakes: 0 })
+  })
+
+  it('콩나무는 솟으며 줄기가 한 층 늘고 새 싹과 말뚝 넷이 선다', () => {
+    const moves = lastMove({ ...SEED_STAGE, rules: { seedGrow: true } }, RIDE)
+
+    expect(frameAt(moves, 0.4)).toMatchObject({ stalk: 0, tree: 1, treeNext: 4, treeP: 0 })
+    expect(frameAt(moves, 1)).toMatchObject({
+      stalk: 1,
+      tree: 4,
+      stakes: 4,
+      leaves: 0,
+      bud: 0,
+    })
+  })
+
+  it('콩나무가 세 층에서 멈추면 봉오리가 돋고 말뚝이 안 선다', () => {
+    const stage: Stage = { ...SEED_STAGE, rules: { seedGrow: true } }
+    const from: GameState = {
+      ...createState(stage),
+      heights: [stage.heights[0], [0, 0, 2, 1, 0, 0], stage.heights[2]],
+      player: SEED_AT,
+      seeds: [],
+      planted: [{ ...SEED_AT, left: 1, rises: 2 }],
+    }
+    const moves = lastMove(stage, ['right'], from)
+
+    expect(moves.events).toContainEqual(expect.objectContaining({ type: 'rose', growing: false }))
+    expect(frameAt(moves, 1)).toMatchObject({ level: 3, stalk: 3, bud: 1, tree: 0, stakes: 0 })
+  })
+
+  it('재시작하면 솟은 칸이 제 높이로 내려가고 나무와 말뚝이 사라진다', () => {
+    const risen = lastMove(SEED_STAGE, [...PLANT, 'left', 'right', 'left', 'right', 'left'])
+    const moves = { prev: risen.game, game: createState(SEED_STAGE), events: [] }
+
+    expect(frameAt(moves, 0, true)).toMatchObject({ level: 1, land: 1 })
+    expect(frameAt(moves, 0.99, true)?.level).toBeCloseTo(0, 2)
+    expect(frameAt(moves, 0.99, true)?.leaves).toBeCloseTo(0, 2)
+    expect(frameAt(moves, 1, true)).toBeUndefined()
+  })
+
+  it('움직이지 않으면 지금 상태를 그대로 그린다', () => {
+    const { game } = lastMove(SEED_STAGE, [...PLANT, 'left'])
+
+    expect(seedFrames(null, game, [], 1).get(SEED_KEY)).toMatchObject({
+      level: 0,
+      tree: 3,
+      treeNext: 3,
+      stakes: 3,
+      stakesNext: 3,
+    })
+  })
+})
+
+describe('playerFrame 씨앗', () => {
+  it('솟는 칸에 들어선 큐브는 이동이 끝난 뒤 칸과 같이 오른다', () => {
+    const { prev, game, events } = lastMove(SEED_STAGE, RIDE)
+
+    expect(playerFrame(prev, game, events, 0.4)).toMatchObject({ ...SEED_AT, level: 0 })
+    expect(playerFrame(prev, game, events, 0.7).level).toBeCloseTo(riseProgress(events, 0.7))
+    expect(playerFrame(prev, game, events, 0.7).cell).toEqual(SEED_AT)
+    expect(playerFrame(prev, game, events, 1).level).toBe(1)
+  })
+
+  it('버섯에 튕겨 솟는 칸에 내려선 큐브도 내려선 뒤에 오른다', () => {
+    const stage: Stage = {
+      version: 1,
+      id: 'test-seed-hop',
+      heights: [[0, 0, 0, 0, 0, 0]],
+      mushroom: ['.#....'],
+      start: { x: 0, y: 0 },
+      goal: { x: 5, y: 0 },
+      entities: [],
+    }
+    const from: GameState = { ...createState(stage), planted: [{ x: 3, y: 0, left: 1, rises: 0 }] }
+    const { prev, game, events } = lastMove(stage, ['right'], from)
+    const landed = 1 - 0.36 / durationOf(events)
+
+    expect(game.player).toEqual({ x: 3, y: 0 })
+    expect(playerFrame(prev, game, events, landed).level).toBeCloseTo(0)
+    expect(playerFrame(prev, game, events, 1).level).toBe(1)
+  })
+})
+
+describe('movingBox 씨앗', () => {
+  it('솟는 칸으로 밀린 상자는 미는 동안 오르지 않는다', () => {
+    const stage: Stage = { ...SEED_STAGE, entities: [{ type: 'box', x: 1, y: 1 }] }
+    const from: GameState = { ...createState(stage), planted: [{ ...SEED_AT, left: 1, rises: 0 }] }
+    const { prev, game, events } = lastMove(stage, ['right'], from)
+
+    expect(game.boxes).toEqual([SEED_AT])
+    expect(movingBox(prev, game, events, 0.3)?.level).toBe(0)
+  })
+})
+
+describe('plantingSeed', () => {
+  it('심는 수에만 씨앗이 흙 자리로 내려가 흐려지며 묻힌다', () => {
+    const { events } = lastMove(SEED_STAGE, PLANT)
+
+    expect(plantingSeed(events, 0)).toMatchObject({ go: 0, scale: 1, opacity: 1 })
+    expect(plantingSeed(events, 0.5)?.go).toBeGreaterThan(0)
+    expect(plantingSeed(events, 1)).toMatchObject({ go: 1, opacity: 0 })
+    expect(plantingSeed(lastMove(SEED_STAGE, [...PLANT, 'left']).events, 0.5)).toBeNull()
   })
 })
