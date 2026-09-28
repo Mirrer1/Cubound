@@ -60,6 +60,11 @@ export const es: Partial<Texts> = {
   'guide.mushroomWither': 'La seta pisada se marchita, así que solo sales cuando no queda ninguna',
   'guide.vine': 'La enredadera llena una casilla de foso por cada movimiento',
   'guide.vineStop': 'Pisa una enredadera y dejará de crecer ahí',
+  'guide.seed': 'Lleva una semilla y empuja hacia una casilla más alta para plantarla a tus pies',
+  'guide.seedRise':
+    'Tres movimientos después, la casilla plantada sube un nivel con lo que tenga encima',
+  'guide.seedGrow':
+    'Las semillas que suben siguen creciendo un nivel cada tres movimientos, hasta tres',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',
@@ -169,4 +174,17 @@ export const es: Partial<Texts> = {
   'stage.8-8': 'El Regreso',
   'stage.8-9': 'La Maraña',
   'stage.8-10': 'Donde se Detiene',
+  'world.9': 'Tierra de la Paciencia',
+  'world.9.note':
+    'Una semilla sube un nivel tres movimientos después de plantarla. Dónde plantar de antemano es la respuesta.',
+  'stage.9-1': 'Primera Siembra',
+  'stage.9-2': 'Sembrar Antes',
+  'stage.9-3': 'Alzar',
+  'stage.9-4': 'Dos Semillas',
+  'stage.9-5': 'Dos Pisos',
+  'stage.9-6': 'Campo de Barro',
+  'stage.9-7': 'Campo de Enredaderas',
+  'stage.9-8': 'Brote Saltarín',
+  'stage.9-9': 'El Campo Enredado',
+  'stage.9-10': 'La Planta de Judías',
 }

@@ -10,10 +10,12 @@
     stemT: '#F1EDE2', stemL: '#CFC9B9', stemR: '#E2DCCD',
     vineT: '#D3CDB4', vineL: '#A8A18A', vineR: '#BFB9A1',
     vineHT: '#C9C1A4', vineHL: '#9E9680', vineHR: '#B5AD96',
-    stemT: '#8E7A5C', stemSL: '#6F5F47', stemSR: '#7F6D52',
-    leaf: '#98AA78', leafH: '#879A68', bud: '#B59E7A', budL: '#8E7A5C', budR: '#A08A69',
+    vStemT: '#8E7A5C', stemSL: '#6F5F47', stemSR: '#7F6D52',
+    leaf: '#7E9160', leafH: '#6F8253', bud: '#B59E7A', budL: '#8E7A5C', budR: '#A08A69',
     sprout: '#BFCB9F',
     soil: '#DCD9C9', soilL: '#B7B4A5', soilR: '#CBC8B8',
+    sapStem: '#A8915E', sapLeaf: '#BDBF74',
+    seedLandT: '#EDE4C8', seedLandL: '#C5BB9E', seedLandR: '#D9D0B3',
     railC: '#CFCBC3', railNext: '#F0EDE6', tramT: '#FCFBF8', tramL: '#DFDBD3', tramR: '#F3F1EB', skirt: '#C9C5BD'
   };
   const mix = (h, t, a) => {
@@ -122,16 +124,16 @@
     // half: 'in' = entry edge → centre, 'out' = centre → exit edge
     const a = half === 'in' ? -0.5 : -SW, b = half === 'in' ? SW : 0.5;
     return dir === 'x'
-      ? box3(cx, cy, a, b, -SW, SW, z, SZ, C.stemT, C.stemSL, C.stemSR)
-      : box3(cx, cy, -SW, SW, a, b, z, SZ, C.stemT, C.stemSL, C.stemSR);
+      ? box3(cx, cy, a, b, -SW, SW, z, SZ, C.vStemT, C.stemSL, C.stemSR)
+      : box3(cx, cy, -SW, SW, a, b, z, SZ, C.vStemT, C.stemSL, C.stemSR);
   };
   // four small leaves per cell, alternating sides; (a = along stem, b = across)
-  const LEAVES = { in: [[-0.38, 1], [-0.14, -1]], out: [[0.1, 1], [0.34, -1]] };
+  const LEAVES = { in: [[-0.34, 1], [-0.08, -1]], out: [[0.26, 1]] };
   const leafFor = (cx, cy, dir, half, z, f) => LEAVES[half].map(([a, s]) => dir === 'x'
-    ? leaf(cx, cy, a, s * SW, 0.08, s * 0.17, z, f, 0.075)
-    : leaf(cx, cy, s * SW, a, s * 0.17, 0.08, z, f, 0.075));
+    ? leaf(cx, cy, a, s * SW, 0.1, s * 0.22, z, f, 0.1)
+    : leaf(cx, cy, s * SW, a, s * 0.22, 0.1, z, f, 0.1));
   const nodeAt = (cx, cy, dir, a) => {
-    const w = 0.035, h = SW + 0.025, top = mix(C.stemT, '#000000', 0.18);
+    const w = 0.035, h = SW + 0.025, top = mix(C.vStemT, '#000000', 0.18);
     return dir === 'x'
       ? box3(cx, cy, a - w, a + w, -h, h, SZ + 1, SZ + 1, top, C.stemSL, C.stemSR)
       : box3(cx, cy, -h, h, a - w, a + w, SZ + 1, SZ + 1, top, C.stemSL, C.stemSR);
@@ -139,7 +141,7 @@
   const sproutAt = (cx, cy, h, big) => {
     const out = [], s = 0.04;
     out.push(...box3(cx, cy, -0.09, 0.09, -0.09, 0.09, 2, 2, C.sprout, mix(C.sprout, '#000000', 0.18), mix(C.sprout, '#000000', 0.08)));
-    out.push(...box3(cx, cy, -s, s, -s, s, h, h - 2, C.stemT, C.stemSL, C.stemSR));
+    out.push(...box3(cx, cy, -s, s, -s, s, h, h - 2, C.vStemT, C.stemSL, C.stemSR));
     const k = big ? 0.24 : 0.22;
     out.push(leaf(cx, cy, 0, 0, k, -k * 0.35, h, C.sprout, 0.11));
     out.push(leaf(cx, cy, 0, 0, -k * 0.35, k, h, C.sprout, 0.11));
@@ -158,7 +160,7 @@
       if (cd.knot) {
         const b = dOut === 'x' ? [0.12, 0.42, -0.13, 0.13] : [-0.13, 0.13, 0.12, 0.42];
         out.push(...stemSeg(cx, cy, dOut, 'out', z).slice(0, 0));
-        out.push(...box3(cx, cy, dOut === 'x' ? -SW : -SW, dOut === 'x' ? 0.14 : SW, dOut === 'x' ? -SW : -SW, dOut === 'x' ? SW : 0.14, z, SZ, C.stemT, C.stemSL, C.stemSR));
+        out.push(...box3(cx, cy, dOut === 'x' ? -SW : -SW, dOut === 'x' ? 0.14 : SW, dOut === 'x' ? -SW : -SW, dOut === 'x' ? SW : 0.14, z, SZ, C.vStemT, C.stemSL, C.stemSR));
         out.push(...box3(cx, cy, b[0], b[1], b[2], b[3], 8, 8, C.bud, C.budL, C.budR));
       } else {
         out.push(...stemSeg(cx, cy, dOut, 'out', z));
@@ -170,20 +172,20 @@
     const sk = pt(cx, cy + D, -0.25, -0.25);
     if (cd.st === 'future') return sproutAt(sk[0], sk[1], 14, false);
     out.push(...sproutAt(sk[0], sk[1], 24, true));
-    if (cd.from === 'x') { out.push(...box3(cx, cy, -0.5, -0.3, -SW, SW, SZ, SZ, C.stemT, C.stemSL, C.stemSR)); out.push(leaf(cx, cy, -0.42, SW, 0.08, 0.16, 0.5, C.sprout)); }
-    if (cd.from === 'y') { out.push(...box3(cx, cy, -SW, SW, -0.5, -0.3, SZ, SZ, C.stemT, C.stemSL, C.stemSR)); out.push(leaf(cx, cy, SW, -0.42, 0.16, 0.08, 0.5, C.sprout)); }
+    if (cd.from === 'x') { out.push(...box3(cx, cy, -0.5, -0.3, -SW, SW, SZ, SZ, C.vStemT, C.stemSL, C.stemSR)); out.push(leaf(cx, cy, -0.42, SW, 0.08, 0.16, 0.5, C.sprout)); }
+    if (cd.from === 'y') { out.push(...box3(cx, cy, -SW, SW, -0.5, -0.3, SZ, SZ, C.vStemT, C.stemSL, C.stemSR)); out.push(leaf(cx, cy, SW, -0.42, 0.16, 0.08, 0.5, C.sprout)); }
     return out;
   };
   const root = (cx, cy, dir) => {
     const out = [];
     if (dir === 'y') {
       out.push(leaf(cx, cy, -SW, 0.3, -0.18, 0.06, 0.5, C.leaf));
-      out.push(...box3(cx, cy, -SW, SW, 0.2, 0.5, SZ, SZ, C.stemT, C.stemSL, C.stemSR));
-      out.push(...box3(cx, cy, -0.12, 0.12, 0.12, 0.3, 6, 6, C.stemT, C.stemSL, C.stemSR));
+      out.push(...box3(cx, cy, -SW, SW, 0.2, 0.5, SZ, SZ, C.vStemT, C.stemSL, C.stemSR));
+      out.push(...box3(cx, cy, -0.12, 0.12, 0.12, 0.3, 6, 6, C.vStemT, C.stemSL, C.stemSR));
     } else {
       out.push(leaf(cx, cy, 0.3, -SW, 0.06, -0.18, 0.5, C.leaf));
-      out.push(...box3(cx, cy, 0.2, 0.5, -SW, SW, SZ, SZ, C.stemT, C.stemSL, C.stemSR));
-      out.push(...box3(cx, cy, 0.12, 0.3, -0.12, 0.12, 6, 6, C.stemT, C.stemSL, C.stemSR));
+      out.push(...box3(cx, cy, 0.2, 0.5, -SW, SW, SZ, SZ, C.vStemT, C.stemSL, C.stemSR));
+      out.push(...box3(cx, cy, 0.12, 0.3, -0.12, 0.12, 6, 6, C.vStemT, C.stemSL, C.stemSR));
     }
     return out;
   };
@@ -201,15 +203,53 @@
     const k = tone(C.yellow);
     return block(cx, cy, 0.24, z, 7, k.t, k.l, k.r).concat(block(cx, cy, 0.13, z + 7, 4, mix(k.t, '#FFFFFF', 0.1), k.l, k.r));
   };
-  const planted = (cx, cy, left) => {
+  // sapling on the right corner (E), rooted in a small 2px soil spot with the yellow husk half-buried.
+  // 3 = cotyledons 12px, 2 = stem + crown 21px, 1 = branched tree 28px (< one level)
+  const SAPU = 0.36;
+  const sapling = (cx, cy, left) => {
+    const b = pt(cx, cy, SAPU, -SAPU), X = b[0], Y = b[1], out = [], k = tone(C.yellow), g = 2;
+    const sL = mix(C.sapStem, '#000000', 0.2), sR = mix(C.sapStem, '#000000', 0.08);
+    const lf = (u0, u1, v0, v1, z, th) => box3(X, Y, u0, u1, v0, v1, z + g, th, C.sapLeaf, mix(C.sapLeaf, '#000000', 0.22), mix(C.sapLeaf, '#000000', 0.09));
+    const st = (z0, z1) => box3(X, Y, -0.022, 0.022, -0.022, 0.022, z1 + g, z1 - z0, C.sapStem, sL, sR);
+    out.push(...block(X, Y, 0.24, 0, g, C.soil, C.soilL, C.soilR));
+    out.push(...box3(X, Y, -0.05, 0.05, -0.05, 0.05, 2 + g, 2, k.t, k.l, k.r));
+    if (left >= 3) {
+      out.push(...st(1, 8), ...lf(0.02, 0.13, -0.04, 0.04, 10, 2), ...lf(-0.04, 0.04, -0.13, -0.02, 10, 2));
+    } else if (left === 2) {
+      out.push(...st(1, 17), ...lf(-0.035, 0.035, -0.12, -0.02, 13, 2), ...lf(0.02, 0.12, -0.035, 0.035, 10, 2), ...lf(-0.07, 0.07, -0.07, 0.07, 19, 4));
+    } else {
+      out.push(...st(1, 22));
+      out.push(...box3(X, Y, -0.1, -0.02, -0.015, 0.015, 20 + g, 2, C.sapStem, sL, sR), ...box3(X, Y, 0.02, 0.1, -0.015, 0.015, 17 + g, 2, C.sapStem, sL, sR));
+      out.push(...lf(-0.17, -0.03, -0.07, 0.07, 24, 5), ...lf(-0.07, 0.07, -0.07, 0.07, 26, 5), ...lf(0.03, 0.17, -0.07, 0.07, 21, 5));
+    }
+    return out;
+  };
+  const planted = (cx, cy, left, rider) => {
     const out = [], mh = { 1: 8, 2: 5, 3: 3 }[left] || 3, k = tone(C.yellow);
-    out.push(...block(cx, cy, 0.4, 0, mh, C.soil, C.soilL, C.soilR));
-    out.push(...block(cx, cy, 0.14, mh, 3 + (3 - Math.min(3, left)) * 2, k.t, k.l, k.r));
+    // one seed per tile: planted at the right corner, the sapling grows straight out of that spot
+    out.push(...sapling(cx, cy, left));
+    // rider before stakes: stakes sit in front of the cube footprint and must stay on top
+    if (rider === 'cube') out.push(...cube(cx, cy, C.blue));
+    if (rider === 'box') out.push(...box(cx, cy, 0));
     const base = pt(cx, cy, 0.37, 0.37), gap = 9;
     for (let i = 0; i < left; i++) {
       const dx = (i - (left - 1) / 2) * gap;
       out.push(...block(base[0] + dx, base[1], 0.06, 0, 6, k.t, k.l, k.r));
     }
+    return out;
+  };
+  // boss beanstalk: stem up the middle of the left face; growing = sprout at the top edge, done = bud
+  const stalk = (cx, cy, lv, done) => {
+    const out = [], H = lv * LV, w = 0.045;
+    const a = pt(cx, cy, 0.5, -SAPU + w), b = pt(cx, cy, 0.5, -SAPU - w);
+    out.push(sh(P([a, b, [b[0], b[1] + H], [a[0], a[1] + H]]), C.vStemT));
+    for (let i = 0; ; i++) {
+      const y0 = 9 + i * 15; if (y0 > H - 5) break;
+      const s = i % 2 ? 1 : -1, bs = s > 0 ? b : a, bx = bs[0], by = bs[1] + y0, dx = s * 10, dy = -s * 5;
+      out.push(sh(P([[bx, by], [bx + dx * 0.5, by + dy * 0.5 - 3.5], [bx + dx, by + dy - 1], [bx + dx * 0.5, by + dy * 0.5 + 1.5]]), C.leaf));
+    }
+    if (done) out.push(...box3(cx, cy, 0.3, 0.48, -SAPU - 0.1, -SAPU + 0.1, 7, 7, C.bud, C.budL, C.budR));
+    // growing: the top is the planted sapling itself (drawn by 'planted')
     return out;
   };
 
@@ -225,7 +265,8 @@
       }
       case 'seed': return seed(cx, cy, 0);
       case 'carry': return cube(cx, cy, C.blue).concat(seed(cx, cy, LV));
-      case 'planted': return planted(cx, cy, o.n);
+      case 'planted': return planted(cx, cy, o.n, o.rider);
+      case 'stalk': return stalk(cx, cy, o.lv, o.done);
       case 'root': return root(cx, cy, o.dir);
     }
     return [];
@@ -241,15 +282,21 @@
       const v = g[c.y][c.x], isP = v === 'p', h = isP ? 0 : v, p = iso(c.x, c.y, h), cx = p[0], cy = p[1];
       const par = (c.x + c.y) % 2, key = c.x + ',' + c.y, cd = cells[key];
       if (isP) {
-        const grown = cd && cd.t === 'vine' && cd.st === 'grown';
+        const grown = cd && ((cd.t === 'vine' && cd.st === 'grown') || cd.t === 'filled');
         out.push(...pit(cx, cy, {
           nw: V(c.x - 1, c.y), ne: V(c.x, c.y - 1),
           fl: !grown && V(c.x, c.y + 1) === null, fr: !grown && V(c.x + 1, c.y) === null
         }));
         if (cd && cd.t === 'vine') out.push(...vineCell(cx, cy, cd));
         if (cd && cd.t === 'rail') out.push(...railCell(cx, cy, cd));
+        if (cd && cd.t === 'filled') { const k = tone(C.yellow); out.push(...prism(cx, cy, 1, TK, k.t, k.l, k.r)); }
       } else if (cd && cd.t === 'swamp') {
         out.push(...swamp(cx, cy, h, par, cd.st));
+      } else if (def.grown && def.grown[key]) {
+        // seed-raised layers sit on top of the original ground; the seam shows where the side colour changes
+        const gk = def.grown[key];
+        out.push(...land(cx, cy + gk * LV, h - gk, par));
+        out.push(...prism(cx, cy, 1, gk * LV, C.seedLandT, C.seedLandL, C.seedLandR));
       } else {
         out.push(...land(cx, cy, h, par));
       }
