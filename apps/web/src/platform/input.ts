@@ -12,10 +12,12 @@ const KEY_DIRECTIONS: Record<string, Direction> = {
 }
 
 const SWIPE_MIN_DISTANCE = 28
+// 손을 뗄 때는 짧게 튕긴 스와이프도 받는다. 탭의 흔들림은 이보다 작다
+const FLICK_MIN_DISTANCE = 20
 // 네 방향의 경계가 화면 가로세로축이라 축에 가까운 스와이프는 작은 흔들림에 방향이 뒤집힌다
 const SWIPE_MIN_AXIS = 12
-// 이만큼 밀도록 축에 가까우면 흔들림이 아니라 뜻한 방향이라 보고 더 기다리지 않는다
-const SWIPE_SURE_DISTANCE = 56
+// 축에서 15도 안쪽이면 엄지가 처지며 출발한 흔들림일 수 있어 손을 뗄 때까지 기다린다
+const SWIPE_MIN_SLOPE = Math.tan((15 * Math.PI) / 180)
 
 export const directionFromKey = (key: string): Direction | null =>
   KEY_DIRECTIONS[key] ?? KEY_DIRECTIONS[key.toLowerCase()] ?? null
@@ -24,10 +26,12 @@ export const directionFromKey = (key: string): Direction | null =>
 // 미는 중에는 어느 쪽인지 또렷할 때만 판정하고 손을 뗄 때는 기울기가 얕아도 받는다
 export const directionFromSwipe = (dx: number, dy: number, ended = false): Direction | null => {
   const distance = Math.hypot(dx, dy)
-  if (distance < SWIPE_MIN_DISTANCE) return null
+  if (distance < (ended ? FLICK_MIN_DISTANCE : SWIPE_MIN_DISTANCE)) return null
 
-  const unsure = Math.min(Math.abs(dx), Math.abs(dy)) < SWIPE_MIN_AXIS
-  if (unsure && !ended && distance < SWIPE_SURE_DISTANCE) return null
+  const minor = Math.min(Math.abs(dx), Math.abs(dy))
+  const major = Math.max(Math.abs(dx), Math.abs(dy))
+  const unsure = minor < SWIPE_MIN_AXIS || minor < major * SWIPE_MIN_SLOPE
+  if (unsure && !ended) return null
   if (dx > 0) return dy < 0 ? 'up' : 'right'
   return dy > 0 ? 'down' : 'left'
 }

@@ -75,15 +75,34 @@ describe('directionFromSwipe', () => {
     expect(directionFromSwipe(10, -10, true)).toBeNull()
   })
 
+  // 폰에서 잰 짧게 튕긴 스와이프. 24px라 무시됐다
+  it('손을 뗄 때는 짧게 튕긴 스와이프도 받는다', () => {
+    expect(directionFromSwipe(-7, -23, true)).toBe('left')
+    expect(directionFromSwipe(-7, -23)).toBeNull()
+  })
+
   it('작은 흔들림으로 방향이 뒤집히지 않는다', () => {
     expect(directionFromSwipe(-30, -14)).toBe('left')
     expect(directionFromSwipe(-30, -2)).toBeNull()
     expect(directionFromSwipe(-30, 2)).toBeNull()
   })
 
-  it('축에 가까워도 충분히 길게 밀면 손을 떼기 전에 판정한다', () => {
-    expect(directionFromSwipe(-80, -2)).toBe('left')
-    expect(directionFromSwipe(-80, 2)).toBe('down')
-    expect(directionFromSwipe(-2, -80)).toBe('left')
+  it('축에서 15도 안쪽이면 길게 밀어도 미는 중에는 판정하지 않는다', () => {
+    expect(directionFromSwipe(-80, -2)).toBeNull()
+    expect(directionFromSwipe(-80, 2)).toBeNull()
+    expect(directionFromSwipe(-2, -80)).toBeNull()
+    expect(directionFromSwipe(-100, 20)).toBeNull()
+  })
+
+  it('축에서 15도 넘게 벗어나면 미는 중에 판정한다', () => {
+    expect(directionFromSwipe(-40, -12)).toBe('left')
+    expect(directionFromSwipe(-40, -20)).toBe('left')
+    expect(directionFromSwipe(40, 12)).toBe('right')
+  })
+
+  // 폰에서 잰 왼쪽 위 스와이프. 엄지가 처지며 출발해 63px에서 가로 아래 5도였다가 손을 뗄 때 위로 8도였다
+  it('처지며 출발한 얕은 스와이프는 손을 뗄 때 전체 방향으로 받는다', () => {
+    expect(directionFromSwipe(-63, 5)).toBeNull()
+    expect(directionFromSwipe(-97, -14, true)).toBe('left')
   })
 })
