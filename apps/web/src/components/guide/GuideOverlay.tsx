@@ -160,7 +160,7 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
         />
       )}
       <motion.div
-        layout
+        layout="position"
         className={`absolute flex items-center ${place === 'under' && hole ? align : 'justify-center'} ${PLACES[place]}`}
         style={place === 'under' && hole ? { top: hole.top + hole.height + UNDER_GAP } : undefined}
         transition={{ duration: 0.35 * speed, ease: 'easeInOut' }}
@@ -185,7 +185,7 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
           >
             {guideText(language, guide.id, isTouchDevice(), limit)}
           </motion.p>
-          <div className="flex items-center justify-between">
+          <div className="flex min-h-14 items-center justify-between">
             <button
               type="button"
               className="relative -ml-2 cursor-pointer rounded-lg px-2 py-1 text-sm text-mute transition-soft after:absolute after:-inset-x-1 after:-inset-y-2.5 hover:bg-hover"
