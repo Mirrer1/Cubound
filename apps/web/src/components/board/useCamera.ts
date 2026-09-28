@@ -1,7 +1,7 @@
 import { animate } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
-import { type Box, type ViewSize, cameraHeights, viewBoxFor, zoneBox } from './camera'
+import { type Box, type ViewBox, type ViewSize, cameraHeights, viewBoxFor, zoneBox } from './camera'
 import { zoneIndexAt } from '@/game/camera'
 import { toScreen } from '@/game/iso'
 import type { GameState, Point } from '@/game/types'
@@ -10,6 +10,12 @@ const ZONE_SECONDS = 0.6
 const LOOK_SECONDS = 0.26 // 구르는 큐브를 놓치지 않게 이동 연출과 비슷하게 둔다
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+
+interface ZoneMove {
+  from: ViewBox // 구역이 바뀔 때 보이던 화면
+  to: Box
+  p: number
+}
 
 // focus가 있으면 큐브 대신 그 칸이 속한 구역을 비춘다
 export const useCamera = (game: GameState, focus?: Point) => {
@@ -22,7 +28,8 @@ export const useCamera = (game: GameState, focus?: Point) => {
   const target = zoneBox(heights, zones[nextIndex])
   const targetKey = `${target.minX} ${target.minY} ${target.maxX} ${target.maxY}`
   const [box, setBox] = useState<Box>(target)
-  const current = useRef(box)
+  const [zoneMove, setZoneMove] = useState<ZoneMove | null>(null)
+  const shown = useRef<ViewBox | null>(null)
 
   const cell = focus ?? game.player
   const lookAt = toScreen(cell, heights[cell.y][cell.x])
@@ -33,22 +40,20 @@ export const useCamera = (game: GameState, focus?: Point) => {
   const ref = useRef<SVGSVGElement>(null)
   const [view, setView] = useState<ViewSize>({ width: 0, height: 0 })
 
-  // 구역이 바뀔 때만 보간하고 화면 크기 변화는 바로 반영한다
+  // 구역이 바뀌면 보이던 화면에서 새 구역 화면으로 곧게 옮긴다.
+  // 구역 범위를 보간하면 큐브를 따라가다 가운데 놓기로 바뀌는 순간 화면이 튄다
   useEffect(() => {
-    const from = current.current
+    const from = shown.current
+    if (!from) return
     const [minX, minY, maxX, maxY] = targetKey.split(' ').map(Number)
+    const to = { minX, minY, maxX, maxY }
     const controls = animate(0, 1, {
       duration: ZONE_SECONDS,
       ease: 'easeInOut',
-      onUpdate: (p) => {
-        const next = {
-          minX: lerp(from.minX, minX, p),
-          minY: lerp(from.minY, minY, p),
-          maxX: lerp(from.maxX, maxX, p),
-          maxY: lerp(from.maxY, maxY, p),
-        }
-        current.current = next
-        setBox(next)
+      onUpdate: (p) => setZoneMove({ from, to, p }),
+      onComplete: () => {
+        setBox(to)
+        setZoneMove(null)
       },
     })
     return () => controls.stop()
@@ -84,5 +89,14 @@ export const useCamera = (game: GameState, focus?: Point) => {
     return () => observer.disconnect()
   }, [])
 
-  return { ref, viewBox: viewBoxFor(box, view, look).join(' ') }
+  const settled = viewBoxFor(zoneMove?.to ?? box, view, look)
+  const viewBox = zoneMove
+    ? (zoneMove.from.map((v, i) => lerp(v, settled[i], zoneMove.p)) as ViewBox)
+    : settled
+
+  useEffect(() => {
+    shown.current = viewBox
+  })
+
+  return { ref, viewBox: viewBox.join(' ') }
 }
