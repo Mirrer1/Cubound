@@ -190,7 +190,7 @@ const Board = ({
     [heights, before.heights, railDirs, vines],
   )
 
-  // 구덩이 벽은 옆 칸 윗면에서 시작한다. 옆 칸이 발판 길이나 판이 덜 차오른 덩굴 길이면 구덩이가 이어져 벽이 없다
+  // 옆 칸이 바닥이면 구덩이 벽을 세운다. 옆 칸이 발판 길이나 판이 덜 차오른 덩굴 길이면 구덩이가 이어져 벽이 없다
   const wallHeight = (x: number, y: number) => {
     const key = `${x}-${y}`
     const vine = vineFrame.get(key)

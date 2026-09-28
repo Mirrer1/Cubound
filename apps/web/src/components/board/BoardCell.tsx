@@ -161,9 +161,9 @@ const railSpots = (dx: number, dy: number): [number, number][] =>
         [RAIL_HALF, -RAIL_HALF * dy],
       ]
 
-// 구덩이 뒤쪽 벽. 옆 칸 윗면 모서리에서 구덩이 바닥까지 내려온다
-const wallPoints = (x: number, y: number, h: number, side: number) => {
-  const top = y - h * TILE.layer
+// 구덩이 뒤쪽 벽. 땅 높이에서 구덩이 바닥까지만 칠하고 그 위는 옆 칸이 제 면으로 그린다
+const wallPoints = (x: number, y: number, side: number) => {
+  const top = y
   const hw = (TILE.width / 2) * side
   const hh = TILE.height / 2
   return `${x},${top - hh} ${x + hw},${top} ${x + hw},${y + PIT_FLOOR} ${x},${y - hh + PIT_FLOOR}`
@@ -214,8 +214,8 @@ interface BoardCellProps {
   box: boolean
   rail: string // 이웃한 발판 길 칸 방향을 "x,y"로 이은 값, 빈 값이면 길 칸이 아님
   railNext: boolean // 발판이 다음 수에 들어올 칸
-  pitWallLeft: number // 위 칸의 왼면 자리에 서는 벽의 높이, -1이면 벽 없음
-  pitWallRight: number // 왼 칸의 오른면 자리에 서는 벽의 높이, -1이면 벽 없음
+  pitWallLeft: number // 0 이상이면 위 칸 쪽에 구덩이 벽을 세우고 -1이면 벽 없음
+  pitWallRight: number // 0 이상이면 왼 칸 쪽에 구덩이 벽을 세우고 -1이면 벽 없음
   blockOpacity: number // 칸 블록 투명도
   flatLadder: number // 투명도, 0이면 없음
   leaning: string // "방향:투명도"를 |로 이은 값
@@ -399,14 +399,11 @@ const BoardCell = ({
             style={{ fill: 'var(--color-pit-floor)' }}
           />
           {pitWallLeft >= 0 && (
-            <polygon
-              points={wallPoints(x, y, pitWallLeft, 1)}
-              style={{ fill: 'var(--color-pit-wall-left)' }}
-            />
+            <polygon points={wallPoints(x, y, 1)} style={{ fill: 'var(--color-pit-wall-left)' }} />
           )}
           {pitWallRight >= 0 && (
             <polygon
-              points={wallPoints(x, y, pitWallRight, -1)}
+              points={wallPoints(x, y, -1)}
               style={{ fill: 'var(--color-pit-wall-right)' }}
             />
           )}
