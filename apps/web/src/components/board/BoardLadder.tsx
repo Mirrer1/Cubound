@@ -1,3 +1,4 @@
+import type { TopTilt } from './cube'
 import { darken, shade } from './shade'
 import { TILE, isoDelta } from '@/game/iso'
 import type { Direction, Point } from '@/game/types'
@@ -22,6 +23,7 @@ interface BoardLadderProps {
   y: number
   scale?: number
   direction?: Direction // 있으면 그 방향 높은 칸에 기댄 모습
+  tilt?: TopTilt // 들고 있는 사다리가 기운 큐브를 따라 기울 때
 }
 
 const add = (a: Point, b: Point) => ({ x: a.x + b.x, y: a.y + b.y })
@@ -30,18 +32,14 @@ const lerp = (a: Point, b: Point, t: number) => ({
   y: a.y + (b.y - a.y) * t,
 })
 
-const flatSegments = (origin: Point, s: number) => {
+const flatSegments = (origin: Point, s: number, tilt?: TopTilt) => {
   const center = { x: origin.x, y: origin.y - LIFT }
+  const point = (u: number, v: number) =>
+    add(add(center, isoDelta(u, v)), tilt ? tilt(u, v, LIFT) : { x: 0, y: 0 })
 
   return {
-    rails: [-0.26, 0.26].map((v): Segment => [
-      add(center, isoDelta(-0.42 * s, v * s)),
-      add(center, isoDelta(0.42 * s, v * s)),
-    ]),
-    rungs: RUNGS.map((u): Segment => [
-      add(center, isoDelta(u * s, -0.26 * s)),
-      add(center, isoDelta(u * s, 0.26 * s)),
-    ]),
+    rails: [-0.26, 0.26].map((v): Segment => [point(-0.42 * s, v * s), point(0.42 * s, v * s)]),
+    rungs: RUNGS.map((u): Segment => [point(u * s, -0.26 * s), point(u * s, 0.26 * s)]),
   }
 }
 
@@ -63,10 +61,10 @@ const leaningSegments = (center: Point, direction: Direction) => {
   }
 }
 
-const BoardLadder = ({ x, y, scale = 1, direction }: BoardLadderProps) => {
+const BoardLadder = ({ x, y, scale = 1, direction, tilt }: BoardLadderProps) => {
   const { rails, rungs } = direction
     ? leaningSegments({ x, y }, direction)
-    : flatSegments({ x, y }, scale)
+    : flatSegments({ x, y }, scale, tilt)
   // 바닥에 놓인 사다리는 위에서 보아 옆대가 빛을 받고 가로대가 그 아래로 내려앉는다
   const railStyle = {
     stroke: direction ? shade('tool', 'left') : shade('tool', 'top'),

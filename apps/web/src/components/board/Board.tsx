@@ -6,7 +6,7 @@ import BoardLadder from './BoardLadder'
 import BoardSeed from './BoardSeed'
 import BoardTram from './BoardTram'
 import ClearEffect from './ClearEffect'
-import { rollingCubeFaces } from './cube'
+import { type TopTilt, rollingCubeFaces, tiltOnTop } from './cube'
 import {
   SAPLING,
   boxSink,
@@ -296,19 +296,34 @@ const Board = ({
   }
 
   const cubeSink = standSink(cube.x, cube.y)
+  // 막힌 쪽으로 밀어 큐브가 기울면 머리 위 물건도 윗면을 따라 기운다
+  const carriedBase = { x: cubeScreen.x, y: cubeScreen.y - TILE.layer + cubeSink - cube.lift }
+  const bump = events.some((e) => e.type === 'blocked')
+    ? tiltOnTop(cube.direction, cube.angle)
+    : undefined
+  // 사다리는 큐브 윗면보다 2px 위에 그린다
+  const ladderBump: TopTilt | undefined = bump && ((u, v, z) => bump(u, v, z + 2))
   // 심는 수에 들고 있던 씨앗이 큐브 윗면에서 그 칸의 흙 자리로 내려간다
   const planting = moving ? plantingSeed(events, t, swampSeconds) : null
   const soilSpot = isoDelta(SAPLING.spot, -SAPLING.spot)
   const plantedSeed = planting && {
     x: cubeScreen.x + soilSpot.x * planting.go,
-    y: lerp(
-      cubeScreen.y - TILE.layer + cubeSink - cube.lift,
-      cubeScreen.y + soilSpot.y - SAPLING.soil + cubeSink,
-      planting.go,
-    ),
+    y:
+      lerp(
+        cubeScreen.y - TILE.layer + cubeSink - cube.lift,
+        cubeScreen.y + soilSpot.y - SAPLING.soil + cubeSink,
+        planting.go,
+      ) - planting.hop,
     scale: planting.scale,
     opacity: planting.opacity,
   }
+  // 튀어 오르기 전까지는 턱 쪽으로 기운 큐브 윗면에 얹혀 있고 떨어지는 동안 기울기를 벗는다
+  const plantTilt: TopTilt | undefined = planting
+    ? (u, v, z) => {
+        const d = tiltOnTop(cube.direction, cube.angle)(u, v, z)
+        return { x: d.x * (1 - planting.go), y: d.y * (1 - planting.go) }
+      }
+    : undefined
   // 밀리는 상자와 발판 위의 상자. 칸과 따로 움직여서 화면 좌표로 미리 구해 둔다
   const caps = mushroomFrames(dropping ? null : prevGame, game, events, t, chain)
   const pushedScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
@@ -538,16 +553,9 @@ const Board = ({
                 {drawCube && carriedOpacity > 0 && (
                   <g opacity={carriedOpacity * cube.fade}>
                     {carried === 'seed' ? (
-                      <BoardSeed
-                        x={cubeScreen.x}
-                        y={cubeScreen.y - TILE.layer + cubeSink - cube.lift}
-                        part="seed"
-                      />
+                      <BoardSeed x={carriedBase.x} y={carriedBase.y} part="seed" tilt={bump} />
                     ) : (
-                      <BoardLadder
-                        x={cubeScreen.x}
-                        y={cubeScreen.y - TILE.layer - 2 + cubeSink - cube.lift}
-                      />
+                      <BoardLadder x={carriedBase.x} y={carriedBase.y - 2} tilt={ladderBump} />
                     )}
                   </g>
                 )}
@@ -556,7 +564,7 @@ const Board = ({
                     opacity={plantedSeed.opacity}
                     transform={`translate(${plantedSeed.x} ${plantedSeed.y}) scale(${plantedSeed.scale}) translate(${-plantedSeed.x} ${-plantedSeed.y})`}
                   >
-                    <BoardSeed x={plantedSeed.x} y={plantedSeed.y} part="seed" />
+                    <BoardSeed x={plantedSeed.x} y={plantedSeed.y} part="seed" tilt={plantTilt} />
                   </g>
                 )}
                 {goalEffect && <ClearEffect x={cell.x} y={cell.y} />}

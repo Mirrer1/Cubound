@@ -83,6 +83,25 @@ export interface CubeFace {
   points: string
 }
 
+const project = ([x, y, z]: Vec) => [
+  ((x - y) * TILE.width) / 2,
+  ((x + y) * TILE.height) / 2 - z * TILE.height,
+]
+
+// 큐브 윗면 가운데에서 칸 단위 (u, v)만큼 가고 z px 선 점이 큐브와 함께 기울 때 화면에서 옮겨 가는 거리
+export type TopTilt = (u: number, v: number, z: number) => { x: number; y: number }
+
+export const tiltOnTop =
+  (direction: Direction, angle: number): TopTilt =>
+  (u, v, z) => {
+    const lift = H * (Math.abs(Math.cos(angle)) + Math.abs(Math.sin(angle)))
+    const local: Vec = [u, v, H + z / TILE.height]
+    const [rx, ry, rz] = rotate(local, direction, angle)
+    const [tx, ty] = project([rx, ry, rz + lift])
+    const [fx, fy] = project([u, v, local[2] + H])
+    return { x: tx - fx + 0, y: ty - fy + 0 }
+  }
+
 // (x, y)는 칸 좌표, level은 바닥 높이, angle은 라디안
 export const rollingCubeFaces = (
   x: number,

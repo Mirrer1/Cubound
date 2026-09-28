@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { rollingCubeFaces } from './cube'
+import { CUBE, rollingCubeFaces, tiltOnTop } from './cube'
 import { TILE, blockFaces, toScreen } from '@/game/iso'
 
 const roundPoints = (points: string) =>
@@ -29,5 +29,45 @@ describe('rollingCubeFaces', () => {
       Math.min(...faces.flatMap((f) => f.points.split(' ').map((p) => Number(p.split(',')[1]))))
 
     expect(topY(tilted)).toBeLessThan(topY(flat))
+  })
+})
+
+describe('tiltOnTop', () => {
+  const corners = (direction: 'up' | 'right' | 'down' | 'left', angle: number) =>
+    rollingCubeFaces(0, 0, 0, direction, angle)
+      .find((f) => f.face === 'top')!
+      .points.split(' ')
+      .map((p) => p.split(',').map(Number))
+
+  it('기울지 않으면 옮기지 않는다', () => {
+    expect(tiltOnTop('right', 0)(0.1, -0.2, 5)).toEqual({ x: 0, y: 0 })
+  })
+
+  it('윗면 네 귀퉁이가 기울어진 큐브 윗면의 귀퉁이로 간다', () => {
+    const h = CUBE / 2
+    const local = [
+      [-h, -h],
+      [h, -h],
+      [h, h],
+      [-h, h],
+    ]
+    for (const direction of ['up', 'right', 'down', 'left'] as const) {
+      const flat = corners(direction, 0)
+      const tilted = corners(direction, 0.24)
+      local.forEach(([u, v], i) => {
+        const d = tiltOnTop(direction, 0.24)(u, v, 0)
+        expect(flat[i][0] + d.x).toBeCloseTo(tilted[i][0], 1)
+        expect(flat[i][1] + d.y).toBeCloseTo(tilted[i][1], 1)
+      })
+    }
+  })
+
+  it('윗면에서 높이 선 점은 미는 방향으로 넘어간다', () => {
+    const lean = (direction: 'up' | 'right' | 'down' | 'left') =>
+      tiltOnTop(direction, 0.24)(0, 0, 10).x - tiltOnTop(direction, 0.24)(0, 0, 0).x
+    expect(lean('right')).toBeGreaterThan(0)
+    expect(lean('up')).toBeGreaterThan(0)
+    expect(lean('down')).toBeLessThan(0)
+    expect(lean('left')).toBeLessThan(0)
   })
 })

@@ -3222,7 +3222,7 @@ describe('move 씨앗', () => {
     expect(state.moves).toBe(3)
     expect(state.planted).toEqual([{ x: 2, y: 1, left: 4, rises: 0 }])
     expect(heightAt(state, { x: 2, y: 1 })).toBe(0)
-    expect(events).toEqual([{ type: 'planted', at: { x: 2, y: 1 } }])
+    expect(events).toEqual([{ type: 'planted', at: { x: 2, y: 1 }, direction: 'right' }])
   })
 
   it('두 층 높은 칸 쪽으로는 심지 않는다', () => {

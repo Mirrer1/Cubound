@@ -2194,10 +2194,10 @@ const lastMove = (stage: Stage, directions: Direction[], from = createState(stag
 }
 
 describe('durationOf 씨앗', () => {
-  it('심는 수는 한 수 이동과 같은 시간이다', () => {
+  it('심는 수는 턱에 부딪히고 씨앗이 떨어질 때까지 0.44초다', () => {
     const { events } = lastMove(SEED_STAGE, PLANT)
 
-    expect(durationOf(events)).toBeCloseTo(0.24)
+    expect(durationOf(events)).toBeCloseTo(0.44)
   })
 
   it('남은 수만 줄어드는 수는 늘어나지 않는다', () => {
@@ -2253,12 +2253,13 @@ describe('seedFrames', () => {
   const frameAt = (moves: ReturnType<typeof lastMove>, t: number, restarting = false) =>
     seedFrames(moves.prev, moves.game, moves.events, t, undefined, restarting).get(SEED_KEY)
 
-  it('심는 수에 나무와 말뚝 넷이 한 수 전체에 걸쳐 나타난다', () => {
+  it('심는 수에 나무와 말뚝 넷이 떨어진 씨앗이 흙 자리에 닿을 즈음부터 나타난다', () => {
     const moves = lastMove(SEED_STAGE, PLANT)
 
     expect(frameAt(moves, 0)).toMatchObject({ tree: 0, treeNext: 4, treeP: 0, stakesNext: 4 })
-    expect(frameAt(moves, 0.6)?.treeP).toBeGreaterThan(0)
-    expect(frameAt(moves, 0.6)?.treeP).toBeLessThan(1)
+    expect(frameAt(moves, 0.5)?.treeP).toBe(0)
+    expect(frameAt(moves, 0.8)?.treeP).toBeGreaterThan(0)
+    expect(frameAt(moves, 0.8)?.treeP).toBeLessThan(1)
     expect(frameAt(moves, 1)).toMatchObject({ tree: 4, treeNext: 4, treeP: 1, stakes: 4 })
   })
 
@@ -2381,5 +2382,27 @@ describe('plantingSeed', () => {
     expect(plantingSeed(events, 0.5)?.go).toBeGreaterThan(0)
     expect(plantingSeed(events, 1)).toMatchObject({ go: 1, opacity: 0 })
     expect(plantingSeed(lastMove(SEED_STAGE, [...PLANT, 'left']).events, 0.5)).toBeNull()
+  })
+
+  it('큐브가 턱 쪽으로 가장 기운 때까지 씨앗은 윗면에 있다가 그때 튀어 떨어진다', () => {
+    const { events } = lastMove(SEED_STAGE, PLANT)
+
+    expect(plantingSeed(events, 0.2)?.go).toBe(0)
+    expect(plantingSeed(events, 0.3)?.go).toBeGreaterThan(0)
+    expect(plantingSeed(events, 0.5)?.hop).toBeGreaterThan(0)
+    expect(plantingSeed(events, 0)?.hop).toBeCloseTo(0)
+    expect(plantingSeed(events, 1)?.hop).toBeCloseTo(0)
+  })
+})
+
+describe('playerFrame 심기', () => {
+  it('심는 수에 큐브가 턱 쪽으로 기울었다가 돌아온다', () => {
+    const { prev, game, events } = lastMove(SEED_STAGE, PLANT)
+
+    expect(playerFrame(prev, game, events, 0).angle).toBe(0)
+    expect(playerFrame(prev, game, events, 0.25)).toMatchObject({ direction: 'right', ...SEED_AT })
+    expect(playerFrame(prev, game, events, 0.25).angle).toBeGreaterThan(0.2)
+    expect(playerFrame(prev, game, events, 0.5).angle).toBeCloseTo(0)
+    expect(playerFrame(prev, game, events, 1).angle).toBeCloseTo(0)
   })
 })

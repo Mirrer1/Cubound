@@ -411,7 +411,7 @@ const climbOrPlaceLadder = (
         planted: [...state.planted, { ...at, left: SEED_WAIT, rises: 0 }],
         moves: state.moves + 1,
       },
-      events: [{ type: 'planted', at }],
+      events: [{ type: 'planted', at, direction }],
     }
   }
 

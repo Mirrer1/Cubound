@@ -134,7 +134,7 @@ export type GameEvent =
   | { type: 'warped'; from: Point; to: Point }
   | { type: 'tram'; id: string; from: Point; to: Point }
   | { type: 'grew'; id: string; at: Point } // 덩굴이 한 칸 뻗어 메움
-  | { type: 'planted'; at: Point }
+  | { type: 'planted'; at: Point; direction: Direction } // direction은 턱 쪽으로 민 방향
   | { type: 'seedTicked'; at: Point; left: number } // 심은 칸이 솟기까지 남은 수가 줄어듦
   | { type: 'rose'; at: Point; height: number; lifted: Lifted[]; growing: boolean } // height는 솟은 뒤 바닥 높이이고 growing은 또 솟을 차례가 남았는지
   | { type: 'blocked'; direction: Direction }

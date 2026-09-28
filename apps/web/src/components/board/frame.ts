@@ -8,7 +8,7 @@ const SECONDS = {
   climbed: 0.3,
   blocked: 0.2,
   placed: 0.22,
-  planted: 0.24,
+  planted: 0.44,
   tram: 0.24,
 }
 // 미끄러짐은 칸 수에 상관없이 속도가 같아야 상자와 큐브가 나란히 간다. max는 아주 긴 미끄러짐만 잡는다
@@ -29,6 +29,17 @@ const CAP_WITHER = { from: 1.2, span: 1.4 }
 // 큐브가 올라선 갓의 press 값
 const CAP_ON = 2
 const TILT = 0.24
+// 심는 수의 구간. 큐브가 bump 동안 턱 쪽으로 기울었다 돌아오고 가장 기운 pop에 씨앗이 튀어 travel 동안 흙 자리로 간다.
+// hop은 떨어지며 솟는 높이 px이고 묻히는 동안 fadeFrom부터 흐려진다
+const PLANT_SEED = {
+  bump: 0.45,
+  pop: 0.225,
+  travel: 0.4,
+  hop: 8,
+  fadeFrom: 0.65,
+  fade: 0.35,
+  small: 0.5,
+}
 
 // 짝 칸으로 가라앉는 시간, 짝인 칸에서 솟아오르는 시간, 잠기는 층 수
 const WARP = { sink: 0.2, rise: 0.2, depth: 0.6 }
@@ -778,6 +789,13 @@ const pathFrame = (
     return { ...still, direction: blocked.direction, angle: Math.sin(Math.PI * t) * TILT }
   }
 
+  // 심는 수는 턱에 부딪혀 기울었다가 앞 절반 안에 돌아온다. 그 반동에 씨앗이 떨어진다
+  const planted = events.find((e) => e.type === 'planted')
+  if (planted?.type === 'planted') {
+    const bump = clamp01(t / PLANT_SEED.bump)
+    return { ...still, direction: planted.direction, angle: Math.sin(Math.PI * bump) * TILT }
+  }
+
   // 제 힘으로 가지 않은 이동은 떠나기 전 칸에 서 있는다
   const hold = prev ? prev.player : player
   return { ...still, x: hold.x, y: hold.y, cell: hold, level: startLevel + riding }
@@ -1298,13 +1316,11 @@ const blendSeed = (was: SeedLook, now: SeedLook, p: number): SeedFrame => ({
 // 나무는 칸 오른쪽 모서리의 흙 자리에서 자라고 흙 자리는 윗면에서 이만큼 솟는다
 export const SAPLING = { spot: 0.36, soil: 2 }
 
-// 심는 수는 씨앗이 흙 자리에 닿을 즈음부터 싹과 말뚝이 드러난다
-const PLANT_FROM = 0.3
-// 큐브 윗면의 씨앗이 흙 자리까지 가는 몫과 흐려지는 구간, 묻힐 때의 크기
-const PLANT_SEED = { travel: 0.7, fadeFrom: 0.35, fade: 0.45, small: 0.5 }
-
+// 심는 수는 튀어 떨어진 씨앗이 흙 자리에 닿을 즈음부터 싹과 말뚝이 드러난다
+const PLANT_FROM = 0.6
 export interface PlantingFrame {
   go: number // 큐브 윗면에서 흙 자리까지 간 정도 0~1
+  hop: number // 떨어지는 길에서 솟은 높이 px
   scale: number
   opacity: number
 }
@@ -1318,10 +1334,11 @@ export const plantingSeed = (
   if (!events.some((e) => e.type === 'planted')) return null
 
   const p = stepProgress(events, t, swamp)
-  const q = clamp01(p / PLANT_SEED.travel)
+  const q = clamp01((p - PLANT_SEED.pop) / PLANT_SEED.travel)
   const go = q * q * (3 - 2 * q)
   return {
     go,
+    hop: Math.sin(Math.PI * q) * PLANT_SEED.hop,
     scale: lerp(1, PLANT_SEED.small, go),
     opacity: 1 - clamp01((p - PLANT_SEED.fadeFrom) / PLANT_SEED.fade),
   }

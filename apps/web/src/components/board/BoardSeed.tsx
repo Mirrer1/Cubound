@@ -1,3 +1,4 @@
+import type { TopTilt } from './cube'
 import { SAPLING } from './frame'
 import { darken } from './shade'
 import { TILE, isoDelta } from '@/game/iso'
@@ -69,10 +70,11 @@ const fadeOut = (p: number) => 1 - clamp01((p - (1 - FADE)) / FADE)
 
 const pointsOf = (list: Corner[]) => list.map(([a, b]) => `${a},${b}`).join(' ')
 
-// 칸 윗면 중심 (x, y)에서 칸 단위 (u, v)만큼 가고 z px 올라간 화면 점
-const at = (x: number, y: number, u: number, v: number, z: number): Corner => {
+// 칸 윗면 중심 (x, y)에서 칸 단위 (u, v)만큼 가고 z px 올라간 화면 점. tilt가 있으면 기운 큐브 윗면을 따라 옮긴다
+const at = (x: number, y: number, u: number, v: number, z: number, tilt?: TopTilt): Corner => {
   const d = isoDelta(u, v)
-  return [x + d.x, y + d.y - z]
+  const t = tilt ? tilt(u, v, z) : { x: 0, y: 0 }
+  return [x + d.x + t.x, y + d.y - z + t.y]
 }
 
 // 칸 단위 범위의 직육면체. z는 윗면 높이이고 depth만큼 아래로 옆면이 내려온다
@@ -83,27 +85,37 @@ const cuboid = (
   z: number,
   depth: number,
   faces: Faces,
+  tilt?: TopTilt,
 ): Shape[] => {
-  const a = at(x, y, u0, v0, z)
-  const b = at(x, y, u1, v0, z)
-  const c = at(x, y, u1, v1, z)
-  const d = at(x, y, u0, v1, z)
-  const down = ([p, q]: Corner): Corner => [p, q + depth]
+  const a = at(x, y, u0, v0, z, tilt)
+  const b = at(x, y, u1, v0, z, tilt)
+  const c = at(x, y, u1, v1, z, tilt)
+  const d = at(x, y, u0, v1, z, tilt)
+  const bc = at(x, y, u1, v0, z - depth, tilt)
+  const cc = at(x, y, u1, v1, z - depth, tilt)
+  const dc = at(x, y, u0, v1, z - depth, tilt)
   return [
-    { points: pointsOf([b, c, down(c), down(b)]), fill: faces.right },
-    { points: pointsOf([d, c, down(c), down(d)]), fill: faces.left },
+    { points: pointsOf([b, c, cc, bc]), fill: faces.right },
+    { points: pointsOf([d, c, cc, dc]), fill: faces.left },
     { points: pointsOf([a, b, c, d]), fill: faces.top },
   ]
 }
 
 // 가운데에 선 정사각 블록. size는 칸 단위 폭이고 bottom은 밑면 높이다
-const block = (x: number, y: number, size: number, bottom: number, height: number, faces: Faces) =>
-  cuboid(x, y, [-size / 2, size / 2, -size / 2, size / 2], bottom + height, height, faces)
+const block = (
+  x: number,
+  y: number,
+  size: number,
+  bottom: number,
+  height: number,
+  faces: Faces,
+  tilt?: TopTilt,
+) => cuboid(x, y, [-size / 2, size / 2, -size / 2, size / 2], bottom + height, height, faces, tilt)
 
 // 두 단으로 쌓은 도토리꼴
-const seedShapes = (x: number, y: number) => [
-  ...block(x, y, 0.24, 0, 7, SEED),
-  ...block(x, y, 0.13, 7, 4, CROWN),
+const seedShapes = (x: number, y: number, tilt?: TopTilt) => [
+  ...block(x, y, 0.24, 0, 7, SEED, tilt),
+  ...block(x, y, 0.13, 7, 4, CROWN, tilt),
 ]
 
 const soilSpot = (x: number, y: number) => at(x, y, SAPLING.spot, -SAPLING.spot, 0)
@@ -328,12 +340,13 @@ interface BoardSeedProps {
   to?: number // 들어서는 나무 단계나 말뚝 수
   p?: number // from에서 to로 바뀐 정도. 잎과 봉오리는 드러난 정도
   level?: number // 기둥 층 수
+  tilt?: TopTilt // 들고 있는 씨앗이 기운 큐브를 따라 기울 때
 }
 
-const BoardSeed = ({ x, y, part, from = 0, to = 0, p = 1, level = 0 }: BoardSeedProps) => {
+const BoardSeed = ({ x, y, part, from = 0, to = 0, p = 1, level = 0, tilt }: BoardSeedProps) => {
   const layers: Layer[] =
     part === 'seed'
-      ? [{ key: 'seed', shapes: seedShapes(x, y), opacity: 1, scale: 1, origin: [x, y] }]
+      ? [{ key: 'seed', shapes: seedShapes(x, y, tilt), opacity: 1, scale: 1, origin: [x, y] }]
       : part === 'tree'
         ? treeLayers(x, y, from, to, p)
         : part === 'stakes'
