@@ -104,6 +104,27 @@
   --color-vine-bud: #b59e7a;
   --color-vine-bud-left: #8e7a5c;
   --color-vine-bud-right: #a08a69;
+
+  --color-seed-top: #e6d39c;
+  --color-seed-left: #ad9c6c;
+  --color-seed-right: #cfbb81;
+  --color-seed-crown: #e9d7a6;
+  --color-seed-soil-top: #dcd9c9;
+  --color-seed-soil-left: #b7b4a5;
+  --color-seed-soil-right: #cbc8b8;
+  --color-seed-sapling-stem: #a8915e;
+  --color-seed-sapling-leaf: #bdbf74;
+  --color-seed-sapling-leaf-left: #93955a;
+  --color-seed-sapling-leaf-right: #acae6a;
+  --color-seed-land-top: #ede4c8;
+  --color-seed-land-left: #c5bb9e;
+  --color-seed-land-right: #d9d0b3;
+  --color-seed-stalk: #8e7a5c;
+  --color-seed-stalk-leaf: #7e9160;
+  --color-seed-stalk-tip: #bfcb9f;
+  --color-seed-stalk-bud: #b59e7a;
+  --color-seed-stalk-bud-left: #8e7a5c;
+  --color-seed-stalk-bud-right: #a08a69;
 }
 
 /* 세계 색은 사이클마다 갈린다. 1사이클은 위 기본값을 그대로 쓴다 */

@@ -3,6 +3,7 @@ import { type ReactNode, memo } from 'react'
 import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
 import BoardLadder from './BoardLadder'
+import BoardSeed from './BoardSeed'
 import BoardVine from './BoardVine'
 import { CUBE } from './cube'
 import { type VineKind, crackThickness, mushroomPose, swampCollar, swampSink } from './frame'
@@ -230,6 +231,11 @@ interface BoardCellProps {
   vineHard: number // 굳은 정도
   vineKnot: number // 봉오리가 돋은 정도
   vineOpacity: number
+  seed: number // 바닥에 놓인 씨앗 투명도, 0이면 없음
+  seedLeft: number // 심은 씨앗이 솟기까지 남은 수, 0이면 심은 칸이 아님
+  seedLand: number // 씨앗으로 솟은 층 수
+  seedStalk: number // 보스 기둥 층 수, 0이면 기둥 없음
+  seedBud: boolean // 보스 기둥이 다 자라 봉오리로 닫힘
   children?: ReactNode
 }
 
@@ -281,6 +287,11 @@ const BoardCell = ({
   vineHard,
   vineKnot,
   vineOpacity,
+  seed,
+  seedLeft,
+  seedLand,
+  seedStalk,
+  seedBud,
   children,
 }: BoardCellProps) => {
   const icy = ice && !goal && !filled
@@ -332,6 +343,8 @@ const BoardCell = ({
   const plateSink = (1 - vineRise) * PIT_FLOOR
   const faces = evenOdd ? { ...plain, top: checker(plain.top, parity) } : plain
   const depth = crack ? crackThickness(crackStage) + h * TILE.layer : h * TILE.layer + TILE.lip
+  // 씨앗으로 솟은 층은 원래 땅 위에 볏짚빛으로 얹혀 옆면 색이 바뀌는 자리가 경계다
+  const seedRise = seedLand * TILE.layer
   // 갈라짐은 한 번 밟은 뒤부터다. 무너지는 중에는 조각이 따로 날아간다
   const split = crack && crackBroken === 0 ? clamp01(crackStage) : 0
   const quarters =
@@ -471,6 +484,27 @@ const BoardCell = ({
                   right={faces.right}
                 />
               ))
+            ) : seedLand > 0 ? (
+              <>
+                <BoardBlock
+                  x={x}
+                  y={y + seedRise}
+                  width={TILE.width}
+                  depth={depth - seedRise}
+                  top={faces.top}
+                  left={faces.left}
+                  right={faces.right}
+                />
+                <BoardBlock
+                  x={x}
+                  y={y}
+                  width={TILE.width}
+                  depth={seedRise}
+                  top="var(--color-seed-land-top)"
+                  left="var(--color-seed-land-left)"
+                  right="var(--color-seed-land-right)"
+                />
+              </>
             ) : (
               <BoardBlock
                 x={x}
@@ -481,6 +515,12 @@ const BoardCell = ({
                 left={faces.left}
                 right={faces.right}
               />
+            )}
+            {seedStalk > 0 && (
+              <BoardSeed x={x} y={y} part="stalk" level={seedStalk} done={seedBud} />
+            )}
+            {seedLand > 0 && seedStalk === 0 && seedLeft === 0 && (
+              <BoardSeed x={x} y={y} part="leaves" />
             )}
             {(grownVine || vine === 'root') && <BoardVine layer="top" kind={vine} {...vineProps} />}
             {swamp && (
@@ -677,6 +717,16 @@ const BoardCell = ({
           <BoardLadder x={x} y={y} direction={direction} />
         </g>
       ))}
+      {seed > 0 && (
+        <g style={fade} opacity={seed}>
+          <BoardSeed x={x} y={y} part="seed" />
+        </g>
+      )}
+      {seedLeft > 0 && (
+        <g style={fade}>
+          <BoardSeed x={x} y={y} part="sapling" left={seedLeft} />
+        </g>
+      )}
       {sunk ? (
         <>
           <clipPath id={`swamp-clip-${x}-${y}`}>
@@ -688,6 +738,11 @@ const BoardCell = ({
         </>
       ) : (
         children
+      )}
+      {seedLeft > 0 && (
+        <g style={fade}>
+          <BoardSeed x={x} y={y} part="stakes" left={seedLeft} />
+        </g>
       )}
     </g>
   )

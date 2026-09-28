@@ -20,6 +20,7 @@ import {
   pressProgress,
   restartDrop,
   restartDuration,
+  seedLayers,
   swampCollar,
   swampFrame,
   swampSink,
@@ -666,7 +667,7 @@ describe('pickUpProgress', () => {
   it('미끄러져 도착하기 전에는 사다리가 그대로다', () => {
     const { prev, state, events } = slideToLadder()
 
-    expect(state.carrying).toBe(true)
+    expect(state.carrying).toBe('ladder')
     for (let t = 0; t <= 1; t += 0.02) {
       if (playerFrame(prev, state, events, t).x < state.player.x) {
         expect(pickUpProgress(events, t)).toBe(0)
@@ -2119,5 +2120,44 @@ describe('vineFrames', () => {
     expect(at(0.99)?.opacity).toBeLessThan(0.05)
     expect(at(0.99)?.sproutOpacity).toBeGreaterThan(0.95)
     expect(at(0.99)?.sprout).toBe(14)
+  })
+})
+
+describe('seedLayers', () => {
+  // (1, 0)은 기본 바닥, (2, 0)은 구덩이, (3, 0)은 무너지는 칸
+  const SEED_FIELD: Stage = {
+    version: 1,
+    id: 'test-seed-layers',
+    heights: [[0, 0, -1, 0, 1]],
+    cracks: ['...2.'],
+    start: { x: 0, y: 0 },
+    goal: { x: 4, y: 0 },
+    entities: [],
+  }
+
+  it('스테이지 원본보다 높아진 기본 바닥 칸을 솟은 층 수로 모은다', () => {
+    const layers = seedLayers(SEED_FIELD, [[0, 2, -1, 0, 1]])
+
+    expect([...layers]).toEqual([['1-0', 2]])
+  })
+
+  it('원래 높은 칸 위에 솟은 것도 원본과의 차이만 센다', () => {
+    const layers = seedLayers(SEED_FIELD, [[0, 0, -1, 0, 3]])
+
+    expect(layers.get('4-0')).toBe(2)
+  })
+
+  it('상자나 덩굴이 메운 구덩이는 세지 않는다', () => {
+    expect(seedLayers(SEED_FIELD, [[0, 0, 0, 0, 1]]).size).toBe(0)
+    expect(seedLayers(SEED_FIELD, [[0, 0, 1, 0, 1]]).size).toBe(0)
+  })
+
+  it('무너지는 칸은 무너졌다가 원본보다 높게 메워져도 세지 않는다', () => {
+    expect(seedLayers(SEED_FIELD, [[0, 0, -1, -1, 1]]).size).toBe(0)
+    expect(seedLayers(SEED_FIELD, [[0, 0, -1, 1, 1]]).size).toBe(0)
+  })
+
+  it('높이가 그대로면 빈 목록이다', () => {
+    expect(seedLayers(SEED_FIELD, SEED_FIELD.heights).size).toBe(0)
   })
 })

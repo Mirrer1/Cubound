@@ -479,3 +479,104 @@ describe('solve 덩굴', () => {
     expect(end.cleared).toBe(true)
   })
 })
+
+// 한 층 내려선 (2, 0)에 심고 올라선 채 솟아야 구멍에 닿는다. 나갈 길이 없고 발판은 한 층 높아 못 타서
+// 발판 길 쪽으로 밀어 제자리에서 네 수를 기다린다
+const SEED_STAGE: Stage = {
+  version: 1,
+  id: 'test-solver-seed',
+  heights: [
+    [1, 1, 0, 1],
+    [-1, -1, -1, -1],
+  ],
+  start: { x: 0, y: 0 },
+  goal: { x: 3, y: 0 },
+  entities: [
+    { type: 'seed', x: 1, y: 0 },
+    {
+      type: 'tram',
+      id: 't',
+      level: 1,
+      dir: 1,
+      x: 3,
+      y: 1,
+      cells: [
+        { x: 2, y: 1 },
+        { x: 3, y: 1 },
+      ],
+    },
+  ],
+}
+
+describe('solve 씨앗', () => {
+  it('평지에서 옆 칸을 오가며 기다려 올라탄 채 솟아야만 한 층 위 구멍에 닿는다', () => {
+    const stage: Stage = {
+      version: 1,
+      id: 'test-solver-seed-flat',
+      heights: [[0, 0, 0, 1]],
+      start: { x: 0, y: 0 },
+      goal: { x: 3, y: 0 },
+      entities: [{ type: 'seed', x: 1, y: 0 }],
+    }
+    const result = solve(stage)
+
+    expect(result.status).toBe('solved')
+    if (result.status !== 'solved') return
+    expect(result.moves).toBe(8)
+
+    const end = result.path.reduce((state, d) => move(state, d).state, createState(stage))
+    expect(end.cleared).toBe(true)
+  })
+
+  it('심은 칸 위에서 기다린 수를 다른 상태로 보고 같이 솟아 건넌다', () => {
+    const result = solve(SEED_STAGE)
+
+    expect(result.status).toBe('solved')
+    if (result.status !== 'solved') return
+    expect(result.moves).toBe(8)
+
+    const end = result.path.reduce((state, d) => move(state, d).state, createState(SEED_STAGE))
+    expect(end.cleared).toBe(true)
+  })
+
+  it('콩나무는 남기고 찾아 두 번 솟은 칸에서 두 층 높은 구멍으로 간다', () => {
+    // (2, 1)에 위쪽을 보고 심는다. 발판 길을 세 칸으로 늘려 솟은 칸 위에서 이어 기다릴 수 있다
+    const stage: Stage = {
+      ...SEED_STAGE,
+      heights: [
+        [0, 0, 1, 0],
+        [0, 0, 0, 2],
+        [0, 0, -1, -1],
+        [0, 0, -1, -1],
+      ],
+      start: { x: 0, y: 1 },
+      goal: { x: 3, y: 1 },
+      entities: [
+        { type: 'seed', x: 1, y: 1 },
+        {
+          type: 'tram',
+          id: 't',
+          level: 0,
+          dir: 1,
+          x: 2,
+          y: 3,
+          cells: [
+            { x: 2, y: 2 },
+            { x: 2, y: 3 },
+            { x: 3, y: 3 },
+          ],
+        },
+      ],
+      rules: { seedGrow: true },
+    }
+    const result = solve(stage)
+
+    expect(solve({ ...stage, rules: undefined }).status).toBe('unsolvable')
+    expect(result.status).toBe('solved')
+    if (result.status !== 'solved') return
+    expect(result.moves).toBe(12)
+
+    const end = result.path.reduce((state, d) => move(state, d).state, createState(stage))
+    expect(end.cleared).toBe(true)
+  })
+})

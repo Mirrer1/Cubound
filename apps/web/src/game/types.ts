@@ -12,6 +12,7 @@ export type Entity = (
   | { type: 'lift'; id: string }
   | { type: 'warp'; id: string }
   | { type: 'ladder' }
+  | { type: 'seed' }
   | { type: 'tram'; id: string; level: number; cells: Point[]; dir: 1 | -1 } // x, y는 cells 안의 시작 자리
   | { type: 'vine'; id: string; cells: Point[] } // x, y는 뿌리 칸이고 cells는 자랄 순서
 ) &
@@ -28,6 +29,7 @@ export interface StageRules {
   swampDeepen?: boolean // 늪에 빠질수록 버둥이 한 수씩 는다
   mushroomWither?: boolean // 밟힌 버섯이 시들고 맵의 버섯을 다 밟아야 클리어된다
   vineStop?: boolean // 큐브가 밟은 덩굴이 그 길이로 굳는다
+  seedGrow?: boolean // 솟은 씨앗 칸이 4수마다 한 층씩 세 층까지 솟는다
 }
 
 export interface Stage {
@@ -81,9 +83,19 @@ export interface VineSpot {
   stopped: boolean
 }
 
+export type Carried = 'ladder' | 'seed'
+
+// 솟는 칸과 함께 올라간 것
+export type Lifted = 'player' | 'box'
+
+export interface PlantedSeed extends Point {
+  left: number // 다음에 솟기까지 남은 수
+  rises: number // 이미 솟은 층 수
+}
+
 export interface GameState {
   stage: Stage
-  heights: number[][] // 상자와 덩굴로 메운 칸이 반영된 높이
+  heights: number[][] // 상자와 덩굴로 메운 칸과 씨앗으로 솟은 칸이 반영된 높이
   boxes: Point[]
   cracks: Crack[]
   trams: TramSpot[]
@@ -94,7 +106,9 @@ export interface GameState {
   sinks: number // 늪에 빠진 횟수
   ladders: Point[] // 바닥에 놓인 사다리
   leaningLadders: LeaningLadder[]
-  carrying: boolean
+  seeds: Point[] // 바닥에 놓인 씨앗
+  planted: PlantedSeed[] // 아직 솟을 차례가 남은 심은 칸
+  carrying: Carried | null
   player: Point
   moves: number
   pushes: number // 상자를 민 이동의 수
@@ -113,13 +127,16 @@ export type GameEvent =
   | { type: 'cracked'; at: Point; left: number; gone: boolean } // gone은 바닥 없는 칸이 되었는지
   | { type: 'struggled'; at: Point } // 늪에서 제자리에 선 수
   | { type: 'sank'; at: Point } // 늪에 밀려 들어간 상자가 가라앉음
-  | { type: 'pickedUp'; at: Point }
+  | { type: 'pickedUp'; at: Point; item: Carried }
   | { type: 'placed'; ladder: LeaningLadder }
   | { type: 'door'; id: string; open: boolean }
   | { type: 'lift'; id: string; up: boolean }
   | { type: 'warped'; from: Point; to: Point }
   | { type: 'tram'; id: string; from: Point; to: Point }
   | { type: 'grew'; id: string; at: Point } // 덩굴이 한 칸 뻗어 메움
+  | { type: 'planted'; at: Point }
+  | { type: 'seedTicked'; at: Point; left: number } // 심은 칸이 솟기까지 남은 수가 줄어듦
+  | { type: 'rose'; at: Point; height: number; lifted: Lifted[]; growing: boolean } // height는 솟은 뒤 바닥 높이이고 growing은 또 솟을 차례가 남았는지
   | { type: 'blocked'; direction: Direction }
   | { type: 'limit'; limit: Limit } // 보스 제약에 막힘
   | { type: 'cleared' }

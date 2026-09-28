@@ -62,9 +62,9 @@ export const es: Partial<Texts> = {
   'guide.vineStop': 'Pisa una enredadera y dejará de crecer ahí',
   'guide.seed': 'Lleva una semilla y empuja hacia una casilla más alta para plantarla a tus pies',
   'guide.seedRise':
-    'Tres movimientos después, la casilla plantada sube un nivel con lo que tenga encima',
+    'Cuatro movimientos después, la casilla plantada sube un nivel con lo que tenga encima',
   'guide.seedGrow':
-    'Las semillas que suben siguen creciendo un nivel cada tres movimientos, hasta tres',
+    'Las semillas que suben siguen creciendo un nivel cada cuatro movimientos, hasta tres',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',
@@ -176,7 +176,7 @@ export const es: Partial<Texts> = {
   'stage.8-10': 'Donde se Detiene',
   'world.9': 'Tierra de la Paciencia',
   'world.9.note':
-    'Una semilla sube un nivel tres movimientos después de plantarla. Dónde plantar de antemano es la respuesta.',
+    'Una semilla sube un nivel cuatro movimientos después de plantarla. Dónde plantar de antemano es la respuesta.',
   'stage.9-1': 'Primera Siembra',
   'stage.9-2': 'Sembrar Antes',
   'stage.9-3': 'Alzar',

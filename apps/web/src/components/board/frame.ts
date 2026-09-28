@@ -1192,6 +1192,19 @@ export interface VineLook {
 }
 
 // 덩굴 뿌리와 길 칸마다 무엇을 그릴지. 키는 "x-y"다
+// 씨앗으로 솟은 칸과 층 수. 원본이 바닥이고 무너지는 칸이 아닌 칸이 원본보다 높아진 만큼이다
+export const seedLayers = (stage: Stage, heights: number[][]): Map<string, number> => {
+  const layers = new Map<string, number>()
+  heights.forEach((row, y) =>
+    row.forEach((h, x) => {
+      const origin = stage.heights[y][x]
+      const crack = (stage.cracks?.[y]?.[x] ?? '.') !== '.'
+      if (origin >= 0 && !crack && h > origin) layers.set(`${x}-${y}`, h - origin)
+    }),
+  )
+  return layers
+}
+
 export const vineLooks = (state: GameState): Map<string, VineLook> => {
   const looks = new Map<string, VineLook>()
   const vines = state.stage.entities.filter((e) => e.type === 'vine')

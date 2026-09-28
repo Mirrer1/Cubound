@@ -58,8 +58,8 @@ export const en = {
   'guide.vine': 'A vine fills one pit tile with every move you make',
   'guide.vineStop': 'Step on a vine and it stops growing there',
   'guide.seed': 'Carry a seed and push toward a higher tile to plant it at your feet',
-  'guide.seedRise': 'Three moves later the planted tile rises one level, lifting whatever is on it',
-  'guide.seedGrow': 'Risen seeds keep growing one level every three moves, up to three',
+  'guide.seedRise': 'Four moves later the planted tile rises one level, lifting whatever is on it',
+  'guide.seedGrow': 'Risen seeds keep growing one level every four moves, up to three',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',
@@ -170,7 +170,7 @@ export const en = {
   'stage.8-10': 'Where It Stops',
   'world.9': 'Land of Patience',
   'world.9.note':
-    'A seed rises one level three moves after you plant it. Where to plant ahead is the answer.',
+    'A seed rises one level four moves after you plant it. Where to plant ahead is the answer.',
   'stage.9-1': 'First Sprouting',
   'stage.9-2': 'Plant Ahead',
   'stage.9-3': 'The Lift',

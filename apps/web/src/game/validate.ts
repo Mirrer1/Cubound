@@ -2,7 +2,7 @@ import type { Stage } from './types'
 
 export const STAGE_VERSION = 1
 
-const ENTITY_TYPES = ['box', 'switch', 'door', 'lift', 'warp', 'ladder', 'tram', 'vine']
+const ENTITY_TYPES = ['box', 'switch', 'door', 'lift', 'warp', 'ladder', 'tram', 'vine', 'seed']
 const GUIDE_TARGETS = ['restart', 'moves', 'pushes', 'climbs', 'rides', 'dir']
 const DIRECTIONS = ['up', 'right', 'down', 'left']
 const MAX_GUIDES = 3
@@ -206,6 +206,7 @@ export const validateStage = (data: unknown): ValidateResult => {
 
   const vineIds = new Set<string>()
   const vineCells = new Set<string>()
+  const vineRoots = new Set<string>()
 
   entities.forEach((entity, i) => {
     if (!isObject(entity) || entity.type !== 'vine') return
@@ -217,6 +218,7 @@ export const validateStage = (data: unknown): ValidateResult => {
 
     if (!isFloor(entity)) add(`entities[${i}]의 뿌리가 바닥 칸이 아니다`)
     else if (crackCells.has(key(entity))) add(`entities[${i}]의 뿌리가 무너지는 칸에 있다`)
+    else vineRoots.add(key(entity))
 
     const cells = Array.isArray(entity.cells) ? entity.cells : []
     if (cells.length === 0) {
@@ -294,6 +296,12 @@ export const validateStage = (data: unknown): ValidateResult => {
       }
       if (iceRows[entity.y]?.[entity.x] === '#') add(`entities[${i}]이 얼음 칸에 있다`)
     }
+
+    // 씨앗은 심을 수 있는 기본 바닥 칸에만 둔다
+    if (entity.type === 'seed') {
+      if (iceRows[entity.y]?.[entity.x] === '#') add(`entities[${i}]이 얼음 칸에 있다`)
+      if (vineRoots.has(key(entity))) add(`entities[${i}]이 덩굴 뿌리에 있다`)
+    }
   })
 
   warpCells.forEach((cells, id) => {
@@ -318,7 +326,7 @@ export const validateStage = (data: unknown): ValidateResult => {
     if (!isObject(data.rules)) add('rules가 객체가 아니다')
     else {
       const { moveLimit, pushLimit, climbLimit, rideLimit, dirLimit } = data.rules
-      const { swampDeepen, mushroomWither, vineStop } = data.rules
+      const { swampDeepen, mushroomWither, vineStop, seedGrow } = data.rules
       if (moveLimit !== undefined) {
         if (!(isInt(moveLimit) && moveLimit > 0)) add('rules.moveLimit은 양의 정수여야 한다')
         else if (isInt(data.best) && moveLimit < data.best) add('rules.moveLimit이 best보다 작다')
@@ -347,6 +355,9 @@ export const validateStage = (data: unknown): ValidateResult => {
       }
       if (vineStop !== undefined && typeof vineStop !== 'boolean') {
         add('rules.vineStop은 참이나 거짓이어야 한다')
+      }
+      if (seedGrow !== undefined && typeof seedGrow !== 'boolean') {
+        add('rules.seedGrow는 참이나 거짓이어야 한다')
       }
     }
   }

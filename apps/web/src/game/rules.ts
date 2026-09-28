@@ -5,6 +5,7 @@ import type {
   GameEvent,
   GameState,
   LeaningLadder,
+  Lifted,
   Limit,
   MoveResult,
   Point,
@@ -18,6 +19,9 @@ type Vine = Extract<Entity, { type: 'vine' }>
 
 // 늪에서 나가기 전에 제자리에서 버둥거리는 수
 export const STRUGGLES = 2
+
+// 심은 씨앗이 솟기까지 드는 수
+export const SEED_WAIT = 4
 
 const OFFSETS: Record<Direction, Point> = {
   up: { x: 0, y: -1 },
@@ -212,8 +216,10 @@ export const createState = (stage: Stage): GameState => ({
   struggles: 0,
   sinks: 0,
   ladders: stage.entities.filter((e) => e.type === 'ladder').map(({ x, y }) => ({ x, y })),
+  seeds: stage.entities.filter((e) => e.type === 'seed').map(({ x, y }) => ({ x, y })),
+  planted: [],
   leaningLadders: [],
-  carrying: false,
+  carrying: null,
   player: stage.start,
   moves: 0,
   pushes: 0,
@@ -284,17 +290,25 @@ const arrive = (
   }
   if (state.carrying) return { state: next, events }
 
-  const pickedUp: GameEvent = { type: 'pickedUp', at }
+  const pickedUp: GameEvent = { type: 'pickedUp', at, item: 'ladder' }
 
   if (state.ladders.some((l) => same(l, at))) {
     const ladders = state.ladders.filter((l) => !same(l, at))
-    return { state: { ...next, ladders, carrying: true }, events: [...events, pickedUp] }
+    return { state: { ...next, ladders, carrying: 'ladder' }, events: [...events, pickedUp] }
   }
 
   const climbedDown = (l: LeaningLadder) => same(l, at) && same(step(l, l.direction), from)
   if (state.leaningLadders.some(climbedDown)) {
     const leaningLadders = state.leaningLadders.filter((l) => !climbedDown(l))
-    return { state: { ...next, leaningLadders, carrying: true }, events: [...events, pickedUp] }
+    return { state: { ...next, leaningLadders, carrying: 'ladder' }, events: [...events, pickedUp] }
+  }
+
+  if (state.seeds.some((s) => same(s, at))) {
+    const seeds = state.seeds.filter((s) => !same(s, at))
+    return {
+      state: { ...next, seeds, carrying: 'seed' },
+      events: [...events, { ...pickedUp, item: 'seed' }],
+    }
   }
 
   return { state: next, events }
@@ -346,7 +360,30 @@ const spring = (
   direction: Direction,
 ) => walk({ ...state, mushrooms: wither(state, sprung) }, to, height, direction)
 
-// 한 층 높은 칸 앞에서 기대 놓인 사다리로 오르거나 들고 있던 사다리를 놓는다
+const isPlanted = (state: GameState, p: Point) => state.planted.some((seed) => same(seed, p))
+
+// 아무것도 없는 기본 바닥 칸. 스테이지에서 구덩이였던 칸은 메워져도 제외된다
+const canPlant = (state: GameState, p: Point) => {
+  const { stage } = state
+  return (
+    stage.heights[p.y][p.x] >= 0 &&
+    !isIce(state, p) &&
+    !isSwamp(state, p) &&
+    !isMushroom(state, p) &&
+    !state.cracks.some((crack) => same(crack, p)) &&
+    !onTramPath(stage, p) &&
+    !same(p, stage.goal) &&
+    !stage.entities.some(
+      (e) => ['switch', 'door', 'lift', 'warp', 'vine'].includes(e.type) && same(e, p),
+    ) &&
+    !state.ladders.some((l) => same(l, p)) &&
+    !state.leaningLadders.some((l) => same(l, p) || same(step(l, l.direction), p)) &&
+    !state.seeds.some((s) => same(s, p)) &&
+    !isPlanted(state, p)
+  )
+}
+
+// 한 층 높은 칸 앞에서 기대 놓인 사다리로 오르거나 들고 있던 사다리를 놓거나 씨앗을 발밑에 심는다
 const climbOrPlaceLadder = (
   state: GameState,
   to: Point,
@@ -363,13 +400,29 @@ const climbOrPlaceLadder = (
     return arrive(climbing, to, direction, { type: 'climbed', from, to, via: 'ladder' })
   }
 
-  if (!state.carrying) return null
+  if (state.carrying === 'seed') {
+    if (!canPlant(state, from)) return null
+
+    const at = { x: from.x, y: from.y }
+    return {
+      state: {
+        ...state,
+        carrying: null,
+        planted: [...state.planted, { ...at, left: SEED_WAIT, rises: 0 }],
+        moves: state.moves + 1,
+      },
+      events: [{ type: 'planted', at }],
+    }
+  }
+
+  // 심은 칸은 솟으면 사다리 높이가 어긋나서 발치로도 기댈 칸으로도 쓰지 않는다
+  if (!state.carrying || isPlanted(state, from) || isPlanted(state, to)) return null
 
   const ladder = { ...from, direction }
   return {
     state: {
       ...state,
-      carrying: false,
+      carrying: null,
       leaningLadders: [...state.leaningLadders, ladder],
       moves: state.moves + 1,
     },
@@ -387,6 +440,7 @@ const boxLanding = (state: GameState, p: Point, level: number): number | null =>
     hasBox(state, p) ||
     state.ladders.some((l) => same(l, p)) ||
     state.leaningLadders.some((l) => same(l, p)) ||
+    state.seeds.some((s) => same(s, p)) ||
     same(p, state.stage.goal) ||
     isClosedDoor(state, p)
   )
@@ -636,11 +690,46 @@ const growVines = (state: GameState): MoveResult => {
   return { state: { ...state, heights, vines: grown }, events }
 }
 
-// 이동으로 센 수마다 무너지는 칸이 닳고 발판이 한 칸 가고 덩굴이 뻗고 문과 엘리베이터 발판이 따라 바뀐다
+// 심은 씨앗은 센 수마다 남은 수가 줄고 다 되면 칸이 한 층 솟는다. 위의 큐브와 상자는 높이를 따라 같이 오른다
+const riseSeeds = (before: GameState, state: GameState): MoveResult => {
+  if (state.planted.length === 0) return { state, events: [] }
+
+  const events: GameEvent[] = []
+  let heights = state.heights
+
+  const planted = state.planted.flatMap((seed) => {
+    // 이번 수에 심은 씨앗은 세지 않는다
+    if (!isPlanted(before, seed)) return [seed]
+
+    const { x, y } = seed
+    const left = seed.left - 1
+    if (left > 0) {
+      events.push({ type: 'seedTicked', at: { x, y }, left })
+      return [{ ...seed, left }]
+    }
+
+    const height = heights[y][x] + 1
+    heights = heights.map((row, i) => (i === y ? row.map((h, j) => (j === x ? height : h)) : row))
+    const rises = seed.rises + 1
+    // 콩나무는 세 층까지 솟는다
+    const growing = Boolean(state.stage.rules?.seedGrow) && rises < 3
+    const lifted: Lifted[] = [
+      ...(hasBox(state, seed) ? ['box' as const] : []),
+      ...(same(state.player, seed) ? ['player' as const] : []),
+    ]
+    events.push({ type: 'rose', at: { x, y }, height, lifted, growing })
+    return growing ? [{ x, y, left: SEED_WAIT, rises }] : []
+  })
+
+  return { state: { ...state, heights, planted }, events }
+}
+
+// 이동으로 센 수마다 무너지는 칸이 닳고 발판이 한 칸 가고 덩굴이 뻗고 씨앗이 자라고 문과 엘리베이터 발판이 따라 바뀐다
 const tick = (before: GameState, after: GameState, events: GameEvent[]): MoveResult => {
   const { state: crumbled, events: crackEvents } = crumble(before, after)
   const { state: rode, events: tramEvents } = rideTrams(crumbled)
-  const { state: moved, events: vineEvents } = growVines(rode)
+  const { state: grown, events: vineEvents } = growVines(rode)
+  const { state: moved, events: seedEvents } = riseSeeds(before, grown)
 
   const doorEvents: GameEvent[] = doors(before.stage)
     .map((door) => ({
@@ -662,6 +751,7 @@ const tick = (before: GameState, after: GameState, events: GameEvent[]): MoveRes
       ...crackEvents,
       ...tramEvents,
       ...vineEvents,
+      ...seedEvents,
       ...doorEvents,
       ...liftEvents,
       ...(moved.cleared ? [{ type: 'cleared' } as const] : []),

@@ -1,9 +1,11 @@
-import { STRUGGLES, readCracks, readMushrooms, readSwamps } from './rules'
+import { SEED_WAIT, STRUGGLES, readCracks, readMushrooms, readSwamps } from './rules'
 import type {
+  Carried,
   Crack,
   Direction,
   GameState,
   LeaningLadder,
+  PlantedSeed,
   Point,
   Stage,
   TramSpot,
@@ -26,7 +28,9 @@ export interface Session {
   sinks?: number // 전에 저장된 것에는 없다
   ladders: Point[]
   leaningLadders: LeaningLadder[]
-  carrying: boolean
+  seeds?: Point[] // 전에 저장된 것에는 없다
+  planted?: PlantedSeed[] // 전에 저장된 것에는 없다
+  carrying: Carried | null // 전에 저장된 것은 사다리를 들었는지만 참과 거짓으로 담았다
   player: Point
   moves: number
   pushes: number
@@ -59,6 +63,8 @@ export const toSession = (game: GameState): Session => ({
   sinks: game.sinks,
   ladders: game.ladders,
   leaningLadders: game.leaningLadders,
+  seeds: game.seeds,
+  planted: game.planted,
   carrying: game.carrying,
   player: game.player,
   moves: game.moves,
@@ -160,6 +166,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   }
 
   const crackKeys = new Set(cracks.map(({ x, y }) => `${x},${y}`))
+  const seedCount = countOf(stage, 'seed')
   const rows = saved.heights
   const sameShape =
     Array.isArray(rows) &&
@@ -168,12 +175,13 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
       (row, y) =>
         Array.isArray(row) &&
         row.length === stage.heights[y].length &&
-        // 상자로 메운 칸과 무너진 칸만 스테이지 높이와 달라질 수 있다
+        // 상자로 메운 칸과 무너진 칸과 씨앗으로 솟은 칸만 스테이지 높이와 달라질 수 있다
         row.every(
           (h, x) =>
             h === stage.heights[y][x] ||
             (stage.heights[y][x] < 0 && isCount(h)) ||
-            (crackKeys.has(`${x},${y}`) && (h === -1 || isCount(h))),
+            (crackKeys.has(`${x},${y}`) && (h === -1 || isCount(h))) ||
+            (seedCount > 0 && isCount(h) && h > stage.heights[y][x]),
         ),
     )
   if (!sameShape) return null
@@ -201,11 +209,27 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   const boxes = listOf<Point>(saved.boxes, onFloor, boxCount)
   const ladders = listOf<Point>(saved.ladders, onFloor, ladderCount)
   const leaningLadders = listOf<LeaningLadder>(saved.leaningLadders, isLeaning, ladderCount)
-  const carrying = saved.carrying
+  // 콩나무가 아니면 한 번 솟고 끝나 층이 늘 0이다
+  const mostRises = stage.rules?.seedGrow ? 2 : 0
+  const isPlanted = (value: unknown): value is PlantedSeed => {
+    if (!onFloor(value)) return false
+    const { left, rises } = value as PlantedSeed
+    return isCount(left) && left >= 1 && left <= SEED_WAIT && isCount(rises) && rises <= mostRises
+  }
+  const seeds =
+    saved.seeds === undefined
+      ? stage.entities.filter((e) => e.type === 'seed').map(({ x, y }) => ({ x, y }))
+      : listOf<Point>(saved.seeds, onFloor, seedCount)
+  const planted = saved.planted === undefined ? [] : listOf(saved.planted, isPlanted, seedCount)
+  // 예전 저장은 사다리를 들었는지만 담았다
+  const carrying: unknown =
+    saved.carrying === true ? 'ladder' : saved.carrying === false ? null : saved.carrying
 
-  if (!boxes || !ladders || !leaningLadders) return null
-  if (typeof carrying !== 'boolean') return null
-  if (ladders.length + leaningLadders.length + (carrying ? 1 : 0) > ladderCount) return null
+  if (!boxes || !ladders || !leaningLadders || !seeds || !planted) return null
+  if (carrying !== null && carrying !== 'ladder' && carrying !== 'seed') return null
+  const holds = (item: Carried) => (carrying === item ? 1 : 0)
+  if (ladders.length + leaningLadders.length + holds('ladder') > ladderCount) return null
+  if (seeds.length + planted.length + holds('seed') > seedCount) return null
   if (!isCount(saved.moves) || !isCount(saved.pushes) || !isCount(saved.climbs)) return null
   if (saved.rides !== undefined && !isCount(saved.rides)) return null
   if (saved.dirUses !== undefined && !isCount(saved.dirUses)) return null
@@ -231,7 +255,9 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     sinks: sinks as number,
     ladders: ladders.map(({ x, y }) => ({ x, y })),
     leaningLadders: leaningLadders.map(({ x, y, direction }) => ({ x, y, direction })),
-    carrying,
+    seeds: seeds.map(({ x, y }) => ({ x, y })),
+    planted: planted.map(({ x, y, left, rises }) => ({ x, y, left, rises })),
+    carrying: carrying as Carried | null,
     player: { x: saved.player.x, y: saved.player.y },
     moves: saved.moves as number,
     pushes: saved.pushes as number,

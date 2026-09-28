@@ -213,7 +213,10 @@
     const st = (z0, z1) => box3(X, Y, -0.022, 0.022, -0.022, 0.022, z1 + g, z1 - z0, C.sapStem, sL, sR);
     out.push(...block(X, Y, 0.24, 0, g, C.soil, C.soilL, C.soilR));
     out.push(...box3(X, Y, -0.05, 0.05, -0.05, 0.05, 2 + g, 2, k.t, k.l, k.r));
-    if (left >= 3) {
+    if (left >= 4) {
+      // just planted: husk tip + a 2px green point, 7px total
+      out.push(...st(1, 5), ...lf(-0.025, 0.025, -0.025, 0.025, 5, 2));
+    } else if (left === 3) {
       out.push(...st(1, 8), ...lf(0.02, 0.13, -0.04, 0.04, 10, 2), ...lf(-0.04, 0.04, -0.13, -0.02, 10, 2));
     } else if (left === 2) {
       out.push(...st(1, 17), ...lf(-0.035, 0.035, -0.12, -0.02, 13, 2), ...lf(0.02, 0.12, -0.035, 0.035, 10, 2), ...lf(-0.07, 0.07, -0.07, 0.07, 19, 4));
@@ -224,6 +227,11 @@
     }
     return out;
   };
+  // raised seed land keeps two low leaves on the right corner where the tree stood (3px, no husk, no soil)
+  const seedLeaves = (cx, cy) => {
+    const b = pt(cx, cy, SAPU, -SAPU), X = b[0], Y = b[1], l = mix(C.sapLeaf, '#000000', 0.22), rr = mix(C.sapLeaf, '#000000', 0.09);
+    return box3(X, Y, -0.035, 0.035, -0.13, 0.0, 3, 3, C.sapLeaf, l, rr).concat(box3(X, Y, 0.0, 0.13, -0.035, 0.035, 3, 3, C.sapLeaf, l, rr));
+  };
   const planted = (cx, cy, left, rider) => {
     const out = [], mh = { 1: 8, 2: 5, 3: 3 }[left] || 3, k = tone(C.yellow);
     // one seed per tile: planted at the right corner, the sapling grows straight out of that spot
@@ -231,10 +239,10 @@
     // rider before stakes: stakes sit in front of the cube footprint and must stay on top
     if (rider === 'cube') out.push(...cube(cx, cy, C.blue));
     if (rider === 'box') out.push(...box(cx, cy, 0));
-    const base = pt(cx, cy, 0.37, 0.37), gap = 9;
+    const base = pt(cx, cy, 0.34, 0.34), gap = 8; // stakes 4.2px wide, 3.8px apart; four span 28px inside the ±16px front corner
     for (let i = 0; i < left; i++) {
       const dx = (i - (left - 1) / 2) * gap;
-      out.push(...block(base[0] + dx, base[1], 0.06, 0, 6, k.t, k.l, k.r));
+      out.push(...block(base[0] + dx, base[1], 0.04, 0, 6, k.t, k.l, k.r));
     }
     return out;
   };
@@ -297,6 +305,8 @@
         const gk = def.grown[key];
         out.push(...land(cx, cy + gk * LV, h - gk, par));
         out.push(...prism(cx, cy, 1, gk * LV, C.seedLandT, C.seedLandL, C.seedLandR));
+        // leaves hide while a new seed grows here (planted) or on boss stalks (sapling / bud take the corner)
+        if (!(objs[key] || []).some(o => o.t === 'planted' || o.t === 'stalk')) out.push(...seedLeaves(cx, cy));
       } else {
         out.push(...land(cx, cy, h, par));
       }

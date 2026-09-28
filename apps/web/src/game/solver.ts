@@ -15,15 +15,15 @@ const points = (list: Point[]) =>
     .sort()
     .join(' ')
 
-// 보스 제한은 빼고 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것은 남긴다.
+// 보스 제한은 빼고 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것은 남긴다.
 // 제한이 너무 작을 때도 진짜 최소 이동 수가 나오고 늪에 드는 수와 클리어 조건은 그대로다
 const forSearch = (stage: Stage): Stage => {
-  const { swampDeepen, mushroomWither, vineStop } = stage.rules ?? {}
+  const { swampDeepen, mushroomWither, vineStop, seedGrow } = stage.rules ?? {}
   return {
     ...stage,
     rules:
-      swampDeepen || mushroomWither || vineStop
-        ? { swampDeepen, mushroomWither, vineStop }
+      swampDeepen || mushroomWither || vineStop || seedGrow
+        ? { swampDeepen, mushroomWither, vineStop, seedGrow }
         : undefined,
   }
 }
@@ -45,7 +45,7 @@ const stateKey = (state: GameState, deep = true) => {
     points(state.ladders),
     points(filled),
     leaning.join(' '),
-    state.carrying,
+    state.carrying === 'ladder',
     ...(cracks.length > 0 ? [cracks.join('')] : []),
     // 늪에 선 같은 자리라도 버둥거린 수가 다르면 다른 상태다
     ...(state.stage.swamp ? [`${state.struggles}`, points(state.swamps)] : []),
@@ -53,6 +53,16 @@ const stateKey = (state: GameState, deep = true) => {
     ...(state.stage.rules?.mushroomWither ? [points(state.mushrooms)] : []),
     // 자란 길이는 메운 칸에 들어 있어 굳는 자리에서만 굳었는지를 더한다
     ...(state.stage.rules?.vineStop ? [state.vines.map((v) => (v.stopped ? 1 : 0)).join('')] : []),
+    // 같은 칸에 여러 번 심으면 메운 칸 자리만으로는 높이가 갈리지 않는다.
+    // 심은 칸은 솟기까지 남은 수가 달라 제자리에서 기다린 수도 다른 상태다
+    ...(state.stage.entities.some((e) => e.type === 'seed')
+      ? [
+          state.carrying === 'seed',
+          points(state.seeds),
+          filled.map(({ x, y }) => `${x},${y},${state.heights[y][x]}`).join(' '),
+          state.planted.map(({ x, y, left, rises }) => `${x},${y},${left},${rises}`).join(' '),
+        ]
+      : []),
     // 깊어지는 늪은 빠진 횟수에 따라 앞으로 드는 수가 다르다
     ...(deep && state.stage.rules?.swampDeepen ? [`${state.sinks}`] : []),
     ...(state.trams.length > 0

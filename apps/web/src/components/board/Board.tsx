@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import BoardBox from './BoardBox'
 import BoardCell, { BOX_SINK, PIT_FLOOR } from './BoardCell'
 import BoardLadder from './BoardLadder'
+import BoardSeed from './BoardSeed'
 import BoardTram from './BoardTram'
 import ClearEffect from './ClearEffect'
 import { rollingCubeFaces } from './cube'
@@ -19,6 +20,7 @@ import {
   pressProgress,
   restartDrop,
   restartDuration,
+  seedLayers,
   slidingCell,
   swampFrame,
   swampTime,
@@ -146,10 +148,16 @@ const Board = ({
       ),
     ),
     ...filled.flatMap((p) => occludingCells(heights, p, heights[p.y][p.x], boxes)),
+    // 씨앗과 심은 칸의 나무와 말뚝도 큐브에서 멀면 저 혼자 벽에 묻힌다
+    ...[...game.seeds, ...game.planted].flatMap((p) =>
+      occludingCells(heights, p, heights[p.y][p.x], boxes),
+    ),
     ...leaningLadders
       .filter((l) => (l.direction === 'right' || l.direction === 'down') && same(l, player))
       .flatMap((l) => occludingCells(heights, l, heights[l.y][l.x], boxes)),
   ]
+
+  const seedRaised = useMemo(() => seedLayers(stage, heights), [stage, heights])
 
   // 발판 길 칸은 바닥이 없어도 구덩이로 그린다. 값은 이웃한 길 칸의 방향이다
   const railDirs = useMemo(() => {
@@ -244,6 +252,7 @@ const Board = ({
   const pickUpPhase = moving ? pickUpProgress(events, t, swampSeconds) : 1
   const carriedOpacity =
     pickedUp && !game.carrying ? 0 : pickedUp ? pickUpPhase : placed ? 1 - t : game.carrying ? 1 : 0
+  const carried = game.carrying ?? before.carrying
   const progress = moving ? t : 1
   // 문과 발판은 이동이 시작할 때가 아니라 스위치가 눌리거나 풀린 때부터 움직인다
   const linkedPhase = (cells: Point[], pressed: boolean) =>
@@ -389,6 +398,9 @@ const Board = ({
           : 0
         const overlay =
           drawBoxes.length > 0 || drawCube || goalEffect || boxDrop !== null || tram !== null
+        const plantedHere = game.planted.find((s) => same(s, cell.p))
+        const seedLand = seedRaised.get(cell.key) ?? 0
+        const seedStalk = stage.rules?.seedGrow ? seedLand : 0
 
         return (
           <BoardCell
@@ -442,6 +454,17 @@ const Board = ({
             vineHard={vine?.hard ?? 0}
             vineKnot={vine?.knot ?? 0}
             vineOpacity={vine?.opacity ?? 1}
+            seed={
+              has(game.seeds, cell.p)
+                ? 1
+                : pickedHere && has(before.seeds, cell.p)
+                  ? 1 - pickUpPhase
+                  : 0
+            }
+            seedLeft={plantedHere?.left ?? 0}
+            seedLand={seedLand}
+            seedStalk={seedStalk}
+            seedBud={seedStalk > 0 && plantedHere === undefined}
           >
             {overlay ? (
               <>
@@ -474,10 +497,18 @@ const Board = ({
                 )}
                 {drawCube && carriedOpacity > 0 && (
                   <g opacity={carriedOpacity * cube.fade}>
-                    <BoardLadder
-                      x={cubeScreen.x}
-                      y={cubeScreen.y - TILE.layer - 2 + cubeSink - cube.lift}
-                    />
+                    {carried === 'seed' ? (
+                      <BoardSeed
+                        x={cubeScreen.x}
+                        y={cubeScreen.y - TILE.layer + cubeSink - cube.lift}
+                        part="seed"
+                      />
+                    ) : (
+                      <BoardLadder
+                        x={cubeScreen.x}
+                        y={cubeScreen.y - TILE.layer - 2 + cubeSink - cube.lift}
+                      />
+                    )}
                   </g>
                 )}
                 {goalEffect && <ClearEffect x={cell.x} y={cell.y} />}

@@ -27,7 +27,9 @@ const MID = {
   struggles: 0,
   ladders: [],
   leaningLadders: [],
-  carrying: false,
+  seeds: [],
+  planted: [],
+  carrying: null,
   player: { x: 1, y: 0 },
   moves: 1,
   pushes: 1,
@@ -112,6 +114,19 @@ describe('restoreSession', () => {
 
   it('사다리가 스테이지보다 많으면 버린다', () => {
     expect(restoreSession(saved({ ...MID, ladders: [{ x: 0, y: 1 }] }), STAGE)).toBeNull()
+  })
+
+  it('든 것이 참과 거짓이던 예전 저장은 참을 사다리로 읽는다', () => {
+    const stage: Stage = { ...STAGE, entities: [...STAGE.entities, { type: 'ladder', x: 0, y: 1 }] }
+
+    expect(restoreSession(saved({ ...MID, carrying: true }), stage)?.carrying).toBe('ladder')
+    expect(restoreSession(saved({ ...MID, carrying: false }), stage)?.carrying).toBeNull()
+    expect(restoreSession(saved({ ...MID, carrying: true }), STAGE)).toBeNull()
+  })
+
+  it('든 것이 사다리도 씨앗도 아니면 버린다', () => {
+    expect(restoreSession(saved({ ...MID, carrying: 'box' }), STAGE)).toBeNull()
+    expect(restoreSession(saved({ ...MID, carrying: 'seed' }), STAGE)).toBeNull()
   })
 
   it('이동 수가 음수이거나 정수가 아니면 버린다', () => {
@@ -413,6 +428,88 @@ const VINE_STAGE: Stage = {
     },
   ],
 }
+
+// (3, 0)이 한 층 높아 (2, 0)에 심는다
+const SEED_STAGE: Stage = {
+  version: 1,
+  id: '9-1',
+  heights: [
+    [0, 0, 0, 1],
+    [0, 0, 0, 0],
+  ],
+  start: { x: 0, y: 0 },
+  goal: { x: 3, y: 1 },
+  entities: [
+    { type: 'seed', x: 1, y: 0 },
+    { type: 'seed', x: 1, y: 1 },
+  ],
+}
+
+const played = (stage: Stage, directions: Direction[]) =>
+  directions.reduce((state, d) => move(state, d).state, createState(stage))
+
+// 하나를 (2, 0)에 심고 두 수 뒤 다른 하나를 주운 상태
+const SEEDED: Direction[] = ['right', 'right', 'right', 'down', 'left']
+
+describe('restoreSession 씨앗', () => {
+  it('심은 칸의 남은 수와 든 것을 그대로 이어간다', () => {
+    const state = played(SEED_STAGE, SEEDED)
+
+    expect(state.planted).toEqual([{ x: 2, y: 0, left: 2, rises: 0 }])
+    expect(state.carrying).toBe('seed')
+    expect(state.seeds).toEqual([])
+    expect(restoreSession(toSession(state), SEED_STAGE)).toEqual(state)
+  })
+
+  it('솟은 높이와 콩나무의 층을 그대로 이어간다', () => {
+    const stage: Stage = { ...SEED_STAGE, rules: { seedGrow: true } }
+    const state = played(stage, [...SEEDED, 'right', 'left'])
+
+    expect(state.heights[0][2]).toBe(1)
+    expect(state.planted).toEqual([{ x: 2, y: 0, left: 4, rises: 1 }])
+    expect(restoreSession(toSession(state), stage)).toEqual(state)
+  })
+
+  it('씨앗이 없던 때 저장한 것은 바닥의 씨앗을 스테이지대로 읽는다', () => {
+    const { seeds: _seeds, planted: _planted, ...session } = toSession(createState(SEED_STAGE))
+    const state = restoreSession(session, SEED_STAGE)
+
+    expect(state?.seeds).toEqual([
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+    ])
+    expect(state?.planted).toEqual([])
+  })
+
+  it('씨앗이 스테이지보다 많으면 버린다', () => {
+    const session = toSession(played(SEED_STAGE, SEEDED))
+    const more = { ...session, seeds: [{ x: 0, y: 1 }] }
+
+    expect(restoreSession(more, SEED_STAGE)).toBeNull()
+  })
+
+  it('심은 칸의 값이 어긋나면 버린다', () => {
+    const session = toSession(played(SEED_STAGE, SEEDED))
+    const planted = (value: unknown) => restoreSession({ ...session, planted: value }, SEED_STAGE)
+
+    expect(planted([{ x: 2, y: 0, left: 4, rises: 0 }])?.planted).toEqual([
+      { x: 2, y: 0, left: 4, rises: 0 },
+    ])
+    expect(planted([{ x: 2, y: 0, left: 0, rises: 0 }])).toBeNull()
+    expect(planted([{ x: 2, y: 0, left: 5, rises: 0 }])).toBeNull()
+    expect(planted([{ x: 2, y: 0, left: 2, rises: 1 }])).toBeNull()
+    expect(planted([{ x: 9, y: 0, left: 2, rises: 0 }])).toBeNull()
+    expect(planted('2,0')).toBeNull()
+  })
+
+  it('씨앗이 없는 판에서 바닥이 솟아 있으면 버린다', () => {
+    const risen = toSession(played(SEED_STAGE, [...SEEDED, 'right', 'left']))
+    const stage: Stage = { ...SEED_STAGE, entities: [] }
+
+    expect(restoreSession(risen, SEED_STAGE)?.heights[0][2]).toBe(1)
+    expect(restoreSession({ ...risen, seeds: [], carrying: null }, stage)).toBeNull()
+  })
+})
 
 describe('restoreSession 덩굴', () => {
   it('자란 길이와 굳은 것을 그대로 이어간다', () => {
