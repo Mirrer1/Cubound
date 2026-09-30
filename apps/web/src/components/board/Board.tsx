@@ -129,14 +129,18 @@ const Board = ({
   const pickedUp = moving ? events.find((e) => e.type === 'pickedUp') : undefined
   const placed = moving ? events.find((e) => e.type === 'placed') : undefined
 
-  // 상자가 구덩이를 메워 생긴 바닥. 길을 다시 짜는 데 쓰는 자리라 가려지면 안 된다
-  const filled = useMemo(
-    () =>
-      heights.flatMap((row, y) =>
-        row.flatMap((h, x) => (h >= 0 && stage.heights[y][x] < 0 ? [{ x, y }] : [])),
+  // 상자가 구덩이를 메워 생긴 바닥. 길을 다시 짜는 데 쓰는 자리라 가려지면 안 된다.
+  // 덩굴이 메운 칸은 판을 짤 때 보이게 두어서 빼고, 넣으면 긴 덩굴 앞의 칸이 줄줄이 흐려진다
+  const filled = useMemo(() => {
+    const grown = stage.entities.flatMap((e) =>
+      e.type === 'vine' ? e.cells.slice(0, game.vines.find((v) => v.id === e.id)?.grown ?? 0) : [],
+    )
+    return heights.flatMap((row, y) =>
+      row.flatMap((h, x) =>
+        h >= 0 && stage.heights[y][x] < 0 && !has(grown, { x, y }) ? [{ x, y }] : [],
       ),
-    [heights, stage.heights],
-  )
+    )
+  }, [heights, stage.heights, stage.entities, game.vines])
 
   const seedFrame = seedFrames(moving ? before : null, game, events, t, swampSeconds, dropping)
   // 솟는 씨앗 칸은 그 순간 높이로 가림을 잰다. 다 솟기 전에 앞 칸을 흐리지 않는다

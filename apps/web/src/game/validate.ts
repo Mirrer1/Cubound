@@ -218,6 +218,9 @@ export const validateStage = (data: unknown): ValidateResult => {
 
     if (!isFloor(entity)) add(`entities[${i}]의 뿌리가 바닥 칸이 아니다`)
     else if (crackCells.has(key(entity))) add(`entities[${i}]의 뿌리가 무너지는 칸에 있다`)
+    // 뿌리 그림이 구멍 위로 솟아 가지처럼 보인다
+    else if (isFloor(data.goal) && key(data.goal) === key(entity))
+      add(`entities[${i}]의 뿌리에 goal이 있다`)
     else vineRoots.add(key(entity))
 
     const cells = Array.isArray(entity.cells) ? entity.cells : []

@@ -645,6 +645,12 @@ describe('validateStage 덩굴', () => {
     expect(vineErrors({ x: 1, y: 2 })).toContain('entities[0]의 뿌리가 바닥 칸이 아니다')
   })
 
+  it('뿌리에는 goal을 둘 수 없다', () => {
+    expect(errorsOf({ ...VINE_VALID, goal: { x: 0, y: 1 } })).toContain(
+      'entities[0]의 뿌리에 goal이 있다',
+    )
+  })
+
   it('뿌리는 무너지는 칸에 둘 수 없다', () => {
     const cracks = ['.....', '1....', '.....']
 
