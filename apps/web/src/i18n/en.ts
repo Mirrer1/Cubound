@@ -181,6 +181,18 @@ export const en = {
   'stage.9-8': 'Bouncing Sprout',
   'stage.9-9': 'The Tangled Field',
   'stage.9-10': 'The Beanstalk',
+  'world.10': 'Windswept Land',
+  'world.10.note': 'Everything you have learned meets in one field. Head home against the wind.',
+  'stage.10-1': 'Wet Leap',
+  'stage.10-2': 'Growing Path',
+  'stage.10-3': 'Leaping Bridge',
+  'stage.10-4': 'Sunken Seed',
+  'stage.10-5': 'Beyond the Door',
+  'stage.10-6': 'Wet Stairs',
+  'stage.10-7': 'Four Ways',
+  'stage.10-8': 'Crumbled Field',
+  'stage.10-9': 'The Last Field',
+  'stage.10-10': 'Headwind',
 }
 
 export type Texts = typeof en
