@@ -29,20 +29,18 @@ const CAP_WITHER = { from: 1.2, span: 1.4 }
 // 큐브가 올라선 갓의 press 값
 const CAP_ON = 2
 const TILT = 0.24
-// 구를 때 머리 위 물건이 윗면에 붙어 있는 구르기 몫과 튀어 오르는 높이 px
-const CARRY_RIDE = 0.35
-const CARRY_HOP = { alone: 6, chained: 3 }
+// 구를 때 머리 위 물건의 가장 큰 기울기 라디안과 그 기울기가 풀리는 구르기 몫, 튀어 오르는 높이 px
+const CARRY_LEAN = { max: 0.31, until: 0.6 }
+const CARRY_HOP = { alone: 6, chained: 3, from: 0.3 }
 
-// 머리 위 물건은 앞쪽 동안 윗면에 붙어 기울고 그 뒤로 튀어 올라 가장 높을 때 반듯해진 채 새 윗면에 앉는다
+// 머리 위 물건은 윗면을 따라 기울었다 풀리고 그 사이 떠올랐다 새 윗면에 앉으며 두 움직임 모두 멈춘 채 시작하고 끝난다
 export const carriedRoll = (p: number, chained: boolean) => {
-  if (p < CARRY_RIDE) return { angle: (Math.PI / 2) * p, lean: 1, hop: 0 }
-
-  const q = (p - CARRY_RIDE) / (1 - CARRY_RIDE)
+  const lean = Math.min(1, p / CARRY_LEAN.until)
+  const q = clamp01((p - CARRY_HOP.from) / (1 - CARRY_HOP.from))
   const height = chained ? CARRY_HOP.chained : CARRY_HOP.alone
   return {
-    angle: (Math.PI / 2) * CARRY_RIDE,
-    lean: (1 - Math.min(1, q / 0.5)) ** 2,
-    hop: height * Math.sin(Math.PI * q),
+    angle: CARRY_LEAN.max * Math.sin(Math.PI * lean),
+    hop: height * Math.sin(Math.PI * q) ** 2,
   }
 }
 // 심는 수의 구간. 큐브가 bump 동안 턱 쪽으로 기울었다 돌아오고 가장 기운 pop에 씨앗이 튀어 travel 동안 흙 자리로 간다.

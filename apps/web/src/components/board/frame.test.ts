@@ -2376,21 +2376,21 @@ describe('movingBox 씨앗', () => {
 })
 
 describe('carriedRoll', () => {
-  it('구르기 앞쪽 동안은 윗면에 붙어 큐브와 같은 각도로 기운다', () => {
-    expect(carriedRoll(0, false)).toEqual({ angle: 0, lean: 1, hop: 0 })
-    expect(carriedRoll(0.2, false)).toMatchObject({ angle: (0.2 * Math.PI) / 2, lean: 1, hop: 0 })
+  it('구르기 앞쪽에 윗면을 따라 기울었다가 떠오른 동안 반듯해진다', () => {
+    expect(carriedRoll(0, false)).toEqual({ angle: 0, hop: 0 })
+    expect(carriedRoll(0.3, false).angle).toBeCloseTo(0.31)
+    expect(carriedRoll(0.6, false).angle).toBeCloseTo(0)
+    expect(carriedRoll(0.2, false).hop).toBe(0)
   })
 
-  it('그 뒤로 튀어 올라 가장 높을 때 이미 반듯하고 내려앉으면 제자리다', () => {
-    const top = carriedRoll(0.675, false)
-    expect(top.lean).toBeCloseTo(0)
-    expect(top.hop).toBeCloseTo(6)
-    expect(carriedRoll(0.5, false).lean).toBeGreaterThan(0)
+  it('가운데 뒤에서 가장 높이 떴다가 끝에 새 윗면에 앉는다', () => {
+    expect(carriedRoll(0.65, false).hop).toBeCloseTo(6)
     expect(carriedRoll(1, false).hop).toBeCloseTo(0)
+    expect(carriedRoll(1, false).angle).toBeCloseTo(0)
   })
 
   it('연달아 구르는 동안에는 절반 높이로 튄다', () => {
-    expect(carriedRoll(0.675, true).hop).toBeCloseTo(3)
+    expect(carriedRoll(0.65, true).hop).toBeCloseTo(3)
   })
 })
 

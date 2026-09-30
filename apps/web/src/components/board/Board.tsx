@@ -314,7 +314,7 @@ const Board = ({
   const roll = carriedRoll(Math.min(1, cube.angle / (Math.PI / 2)), chain.in || chain.out)
   const rolling: TopTilt = (u, v, z) => {
     const d = tiltOnTop(cube.direction, roll.angle)(u, v, z)
-    return { x: d.x * roll.lean, y: d.y * roll.lean - roll.hop }
+    return { x: d.x, y: d.y - roll.hop }
   }
   const bump = events.some((e) => e.type === 'blocked')
     ? tiltOnTop(cube.direction, cube.angle)
