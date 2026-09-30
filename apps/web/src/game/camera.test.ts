@@ -17,7 +17,11 @@ describe('zoneIndexAt', () => {
     expect(zoneIndexAt(ZONES, { x: 4, y: 2 }, 1)).toBe(1)
   })
 
-  it('어느 구역에도 없으면 첫 구역을 쓴다', () => {
-    expect(zoneIndexAt(ZONES, { x: 20, y: 20 }, 1)).toBe(0)
+  it('어느 구역에도 없으면 지금 구역을 유지한다', () => {
+    expect(zoneIndexAt(ZONES, { x: 20, y: 20 }, 1)).toBe(1)
+  })
+
+  it('지금 구역이 없고 어느 구역에도 없으면 첫 구역을 쓴다', () => {
+    expect(zoneIndexAt(ZONES, { x: 20, y: 20 }, 5)).toBe(0)
   })
 })
