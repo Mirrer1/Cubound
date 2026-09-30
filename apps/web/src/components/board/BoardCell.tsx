@@ -90,8 +90,6 @@ const LUMP_SPOTS: [number, number][] = [
 const MUD_DIP = (TILE.width * CUBE) / 4
 // 가라앉는 상자가 진흙 아래로 다 들어가는 거리. 상자 윗면 꼭짓점이 진흙 면 밑까지 내려간다
 export const BOX_SINK = TILE.layer + MUD.drop + (TILE.width * CUBE) / 4
-// 메운 늪은 상자 윗면만 남는다
-const FILLED_INNER = 0.52
 
 // 버섯은 짧은 대 위에 넓은 갓을 얹고 머리 판을 하나 더 올린 모양이다. 모습은 frame이 정한다
 const STEM_SCALE = 0.2
@@ -579,10 +577,6 @@ const BoardCell = ({
                 <polygon
                   points={blockFaces(x, y, TILE.width * MUD.scale, 0).top}
                   style={{ fill: 'var(--color-swamp-filled)' }}
-                />
-                <polygon
-                  points={blockFaces(x, y, TILE.width * MUD.scale * FILLED_INNER, 0).top}
-                  style={{ fill: darken('tool', 13) }}
                 />
               </g>
             )}
