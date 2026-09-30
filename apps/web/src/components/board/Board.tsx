@@ -193,9 +193,17 @@ const Board = ({
   const vines = useMemo(() => vineLooks(game), [game])
   const vineFrame = vineFrames(moving ? before : null, game, events, t, swampSeconds, dropping)
 
-  // 상자가 날아가 메우는 구덩이는 상자가 내려앉기 전까지 구덩이로 남긴다
+  // 상자가 메우는 구덩이는 상자가 한 칸 안으로 들어올 때까지 구덩이로 두고 그 뒤로는 바닥이 먼저 깔린다.
+  // 덩굴이 올 칸은 먼저 깔린 바닥이 빈칸으로 보여서 상자가 다 가라앉을 때까지 싹 달린 구덩이로 둔다
   const filling = box ? events.find((e) => e.type === 'pushed' && e.result === 'filled') : undefined
-  const fillingKey = filling?.type === 'pushed' ? `${filling.to.x}-${filling.to.y}` : null
+  const fillingAt = filling?.type === 'pushed' ? `${filling.to.x}-${filling.to.y}` : null
+  const fillingKey =
+    box &&
+    filling?.type === 'pushed' &&
+    fillingAt &&
+    (vines.has(fillingAt) || Math.hypot(box.x - filling.to.x, box.y - filling.to.y) > 1)
+      ? fillingAt
+      : null
   const heightNow = (x: number, y: number) =>
     `${x}-${y}` === fillingKey ? before.heights[y][x] : heights[y]?.[x]
 
