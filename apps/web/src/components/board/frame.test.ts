@@ -4,6 +4,7 @@ import {
   CAP_TOP_IDLE,
   MUSHROOM_STAND,
   boxSink,
+  carriedRoll,
   crackFrame,
   crackProgress,
   crackSink,
@@ -2371,6 +2372,25 @@ describe('movingBox 씨앗', () => {
 
     expect(game.boxes).toEqual([SEED_AT])
     expect(movingBox(prev, game, events, 0.3)?.level).toBe(0)
+  })
+})
+
+describe('carriedRoll', () => {
+  it('구르기 앞쪽 동안은 윗면에 붙어 큐브와 같은 각도로 기운다', () => {
+    expect(carriedRoll(0, false)).toEqual({ angle: 0, lean: 1, hop: 0 })
+    expect(carriedRoll(0.2, false)).toMatchObject({ angle: (0.2 * Math.PI) / 2, lean: 1, hop: 0 })
+  })
+
+  it('그 뒤로 튀어 올라 가장 높을 때 이미 반듯하고 내려앉으면 제자리다', () => {
+    const top = carriedRoll(0.675, false)
+    expect(top.lean).toBeCloseTo(0)
+    expect(top.hop).toBeCloseTo(6)
+    expect(carriedRoll(0.5, false).lean).toBeGreaterThan(0)
+    expect(carriedRoll(1, false).hop).toBeCloseTo(0)
+  })
+
+  it('연달아 구르는 동안에는 절반 높이로 튄다', () => {
+    expect(carriedRoll(0.675, true).hop).toBeCloseTo(3)
   })
 })
 

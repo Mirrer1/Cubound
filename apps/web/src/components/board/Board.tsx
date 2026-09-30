@@ -10,6 +10,7 @@ import { type TopTilt, rollingCubeFaces, tiltOnTop } from './cube'
 import {
   SAPLING,
   boxSink,
+  carriedRoll,
   crackFrame,
   crackProgress,
   crackSink,
@@ -309,9 +310,17 @@ const Board = ({
   const cubeSink = standSink(cube.x, cube.y)
   // 막힌 쪽으로 밀어 큐브가 기울면 머리 위 물건도 윗면을 따라 기운다
   const carriedBase = { x: cubeScreen.x, y: cubeScreen.y - TILE.layer + cubeSink - cube.lift }
+  // 구를 때는 윗면에 붙어 같이 기울다가 새 윗면으로 살짝 튀어 올라앉는다
+  const roll = carriedRoll(Math.min(1, cube.angle / (Math.PI / 2)), chain.in || chain.out)
+  const rolling: TopTilt = (u, v, z) => {
+    const d = tiltOnTop(cube.direction, roll.angle)(u, v, z)
+    return { x: d.x * roll.lean, y: d.y * roll.lean - roll.hop }
+  }
   const bump = events.some((e) => e.type === 'blocked')
     ? tiltOnTop(cube.direction, cube.angle)
-    : undefined
+    : moving && cube.angle > 0
+      ? rolling
+      : undefined
   // 사다리는 큐브 윗면보다 2px 위에 그린다
   const ladderBump: TopTilt | undefined = bump && ((u, v, z) => bump(u, v, z + 2))
   // 심는 수에 들고 있던 씨앗이 큐브 윗면에서 그 칸의 흙 자리로 내려간다
