@@ -192,6 +192,12 @@ const Board = ({
   const vines = useMemo(() => vineLooks(game), [game])
   const vineFrame = vineFrames(moving ? before : null, game, events, t, swampSeconds, dropping)
 
+  // 상자가 날아가 메우는 구덩이는 상자가 내려앉기 전까지 구덩이로 남긴다
+  const filling = box ? events.find((e) => e.type === 'pushed' && e.result === 'filled') : undefined
+  const fillingKey = filling?.type === 'pushed' ? `${filling.to.x}-${filling.to.y}` : null
+  const heightNow = (x: number, y: number) =>
+    `${x}-${y}` === fillingKey ? before.heights[y][x] : heights[y]?.[x]
+
   // x, y는 화면 좌표, p는 칸 좌표. 메운 칸이 다시 구멍이 될 때는 사라지기 전 높이로 그린다
   // 발판 길과 아직 바닥 없는 덩굴 길은 구덩이로 그린다
   const cells = useMemo(
@@ -201,14 +207,15 @@ const Board = ({
           row.map((_, x) => {
             const key = `${x}-${y}`
             const rail = railDirs.get(key) ?? ''
-            const pit = rail !== '' || (vines.has(key) && heights[y][x] < 0)
-            const h = pit ? 0 : Math.max(heights[y][x], before.heights[y][x])
+            const now = key === fillingKey ? before.heights[y][x] : heights[y][x]
+            const pit = rail !== '' || (vines.has(key) && now < 0)
+            const h = pit ? 0 : Math.max(now, before.heights[y][x])
             return { ...toScreen({ x, y }, h), h, rail, pit, p: { x, y }, key }
           }),
         )
         .filter((cell) => cell.h >= 0)
         .sort((a, b) => a.p.x + a.p.y - (b.p.x + b.p.y)),
-    [heights, before.heights, railDirs, vines],
+    [heights, before.heights, railDirs, vines, fillingKey],
   )
 
   // 옆 칸이 바닥이면 구덩이 벽을 세운다. 옆 칸이 발판 길이나 판이 덜 차오른 덩굴 길이면 구덩이가 이어져 벽이 없다
@@ -218,10 +225,10 @@ const Board = ({
     const vinePit =
       vine !== undefined &&
       vine.kind !== 'root' &&
-      ((heights[y]?.[x] ?? -1) < 0 || (vine.kind === 'grown' && vine.rise < 1))
+      ((heightNow(x, y) ?? -1) < 0 || (vine.kind === 'grown' && vine.rise < 1))
     return railDirs.has(key) || vinePit
       ? -1
-      : Math.max(heights[y]?.[x] ?? -1, before.heights[y]?.[x] ?? -1)
+      : Math.max(heightNow(x, y) ?? -1, before.heights[y]?.[x] ?? -1)
   }
   // 발판은 이전 자리에서 다음 자리로 미끄러진다. 코와 밝은 레일은 도착하는 순간에 다음 쪽으로 넘어간다
   const tramPhase = moving ? tramProgress(events, t, swampSeconds) : 1
