@@ -66,9 +66,12 @@ const zoneMoves = (stage: Stage, path: Direction[]) => {
   if (!zones || zones.length < 2) return null
 
   const counts = zones.map(() => 0)
-  // 제한만 빼고 시드는 버섯과 깊어지는 늪은 남긴다. 빼면 버섯이 안 시들어 풀이가 다른 길로 샌다
-  const { swampDeepen, mushroomWither } = stage.rules ?? {}
-  let state = createState({ ...stage, rules: { swampDeepen, mushroomWither } })
+  // 제한만 빼고 판을 바꾸는 규칙은 남긴다. 빼면 버섯이 안 시들거나 덩굴이 안 굳어 풀이가 다른 길로 샌다
+  const { swampDeepen, mushroomWither, vineStop, seedGrow } = stage.rules ?? {}
+  let state = createState({
+    ...stage,
+    rules: { swampDeepen, mushroomWither, vineStop, seedGrow },
+  })
   let zone = zoneIndexAt(zones, state.player, 0)
 
   for (const direction of path) {
