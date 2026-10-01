@@ -23,6 +23,9 @@ export const STRUGGLES = 2
 // 심은 씨앗이 솟기까지 드는 수
 export const SEED_WAIT = 4
 
+// 바람이 한 번 불기까지 세는 수
+export const WIND_EVERY = 4
+
 const OFFSETS: Record<Direction, Point> = {
   up: { x: 0, y: -1 },
   right: { x: 1, y: 0 },
@@ -180,6 +183,10 @@ export const capsLeft = (state: GameState) =>
 // 덩굴이 굳는 판이 아니면 null. 아직 안 굳은 덩굴 수다
 export const vinesLeft = (state: GameState) =>
   state.stage.rules?.vineStop ? state.vines.filter((vine) => !vine.stopped).length : null
+
+// 바람이 부는 판이 아니면 null. 다음 바람까지 남은 수이고 바람은 센 수로 불어 이동 수로 정해진다
+export const windLeft = (state: GameState) =>
+  state.stage.rules?.wind ? WIND_EVERY - (state.moves % WIND_EVERY) : null
 
 // 보스 방향 제한이 없으면 null
 export const dirLeft = (state: GameState) => {
@@ -597,20 +604,21 @@ const restingOn = (state: GameState, p: Point) =>
 // 기대 놓은 사다리는 발을 딛고 서 있어 그 칸이 다 닳아도 무너지지 않는다. 사다리가 허공에 남지 않는다
 const holdsLadder = (state: GameState, p: Point) => state.leaningLadders.some((l) => same(l, p))
 
-// 딛고 있던 것이 바뀐 무너지는 칸의 남은 횟수를 줄인다. 다 쓰고 비면 바닥 없는 칸이 된다
-const crumble = (before: GameState, after: GameState): MoveResult => {
-  if (after.cracks.length === 0) return { state: after, events: [] }
+// before에서 after로 딛고 있던 것이 바뀐 무너지는 칸의 남은 횟수를 base에서 줄인다.
+// 다 쓰고 수가 끝난 base에서도 비어 있으면 바닥 없는 칸이 된다
+const crumble = (before: GameState, after: GameState, base: GameState = after): MoveResult => {
+  if (base.cracks.length === 0) return { state: base, events: [] }
 
   const events: GameEvent[] = []
-  const heights = [...after.heights]
+  const heights = [...base.heights]
 
-  const cracks = after.cracks.map((crack) => {
+  const cracks = base.cracks.map((crack) => {
     const was = restingOn(before, crack)
     const now = restingOn(after, crack)
     if (crack.left < 0 || was === null || was === now) return crack
 
     const left = Math.max(crack.left - 1, 0)
-    const gone = left === 0 && now === null && !holdsLadder(after, crack)
+    const gone = left === 0 && restingOn(base, crack) === null && !holdsLadder(base, crack)
     const { x, y } = crack
     events.push({ type: 'cracked', at: { x, y }, left, gone })
     if (gone) heights[y] = heights[y].map((h, i) => (i === x ? -1 : h))
@@ -618,8 +626,8 @@ const crumble = (before: GameState, after: GameState): MoveResult => {
     return { x, y, left: gone ? -1 : left }
   })
 
-  if (events.length === 0) return { state: after, events }
-  return { state: { ...after, cracks, heights }, events }
+  if (events.length === 0) return { state: base, events }
+  return { state: { ...base, cracks, heights }, events }
 }
 
 // 이동 한 번마다 발판이 길을 한 칸 가고 끝에 닿으면 방향을 뒤집는다. 위에 있던 큐브와 상자는 같이 간다
@@ -724,9 +732,50 @@ const riseSeeds = (before: GameState, state: GameState): MoveResult => {
   return { state: { ...state, heights, planted }, events }
 }
 
-// 이동으로 센 수마다 무너지는 칸이 닳고 발판이 한 칸 가고 덩굴이 뻗고 씨앗이 자라고 문과 엘리베이터 발판이 따라 바뀐다
-const tick = (before: GameState, after: GameState, events: GameEvent[]): MoveResult => {
-  const { state: crumbled, events: crackEvents } = crumble(before, after)
+// 바람에 밀려 간 결과. 그 방향 키를 누른 것과 같지만 상자 밀기, 올라서기, 사다리 놓기, 씨앗 심기는 하지 않고 버틴다
+const windStep = (state: GameState, direction: Direction): MoveResult | null => {
+  const from = state.player
+  if (isMushroom(state, from)) {
+    const hopped = hop(state, from, direction)
+    return hopped && spring(state, hopped, direction)
+  }
+
+  const to = step(from, direction)
+  const toFloor = floorAt(state, to)
+  if (toFloor === null || isClosedDoor(state, to)) return null
+  if (hasBox(state, to)) {
+    return toFloor + 1 <= standHeight(state, from) ? walk(state, to, toFloor + 1, direction) : null
+  }
+  if (toFloor > standHeight(state, from)) return null
+
+  const hopped = isMushroom(state, to) ? hop(state, to, direction) : null
+  return hopped ? spring(state, hopped, direction) : walk(state, to, toFloor, direction)
+}
+
+// 센 수가 WIND_EVERY의 배수가 되면 큐브만 바람 쪽으로 한 칸 밀린다. 늪에 선 큐브는 발이 묶여 버틴다
+const blow = (state: GameState): MoveResult => {
+  const direction = state.stage.rules?.wind
+  if (!direction || state.cleared || state.moves % WIND_EVERY !== 0) return { state, events: [] }
+
+  const pushed = isSwamp(state, state.player) ? null : windStep(state, direction)
+  if (!pushed) return { state, events: [{ type: 'braced', direction }] }
+
+  const from = state.player
+  // 바람에 밀린 것은 이동 수로 세지 않는다
+  return {
+    state: { ...pushed.state, moves: state.moves },
+    events: [{ type: 'blown', from, to: step(from, direction), direction }, ...pushed.events],
+  }
+}
+
+// 이동으로 센 수마다 바람이 불고 무너지는 칸이 닳고 발판이 한 칸 가고 덩굴이 뻗고 씨앗이 자라고 문과 엘리베이터 발판이 따라 바뀐다
+const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveResult => {
+  const { state: after, events: windEvents } = blow(acted)
+  // 내 이동으로 바뀐 칸과 바람에 밀려 바뀐 칸을 따로 본다. 밟고 바로 밀려 떠난 칸도 한 번 닳는다
+  const { state: stepped, events: stepEvents } = crumble(before, acted, after)
+  const { state: crumbled, events: windCrackEvents } =
+    after === acted ? { state: stepped, events: [] } : crumble(acted, after, stepped)
+  const crackEvents = [...stepEvents, ...windCrackEvents]
   const { state: rode, events: tramEvents } = rideTrams(crumbled)
   const { state: grown, events: vineEvents } = growVines(rode)
   const { state: moved, events: seedEvents } = riseSeeds(before, grown)
@@ -748,6 +797,7 @@ const tick = (before: GameState, after: GameState, events: GameEvent[]): MoveRes
     state: moved,
     events: [
       ...events,
+      ...windEvents,
       ...crackEvents,
       ...tramEvents,
       ...vineEvents,

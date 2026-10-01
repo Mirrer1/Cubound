@@ -30,6 +30,7 @@ export interface StageRules {
   mushroomWither?: boolean // 밟힌 버섯이 시들고 맵의 버섯을 다 밟아야 클리어된다
   vineStop?: boolean // 큐브가 밟은 덩굴이 그 길이로 굳는다
   seedGrow?: boolean // 솟은 씨앗 칸이 4수마다 한 층씩 세 층까지 솟는다
+  wind?: Direction // 4수마다 큐브가 밀려 가는 방향
 }
 
 export interface Stage {
@@ -51,7 +52,8 @@ export interface Stage {
 }
 
 // 칸 좌표나 화면 요소 이름
-export type GuideTarget = Point | 'restart' | 'moves' | 'pushes' | 'climbs' | 'rides' | 'dir'
+export type GuideTarget =
+  Point | 'restart' | 'moves' | 'pushes' | 'climbs' | 'rides' | 'dir' | 'wind'
 
 export interface Guide {
   id: string // 문구 모음의 키
@@ -137,6 +139,8 @@ export type GameEvent =
   | { type: 'planted'; at: Point; direction: Direction } // direction은 턱 쪽으로 민 방향
   | { type: 'seedTicked'; at: Point; left: number } // 심은 칸이 솟기까지 남은 수가 줄어듦
   | { type: 'rose'; at: Point; height: number; lifted: Lifted[]; growing: boolean } // height는 솟은 뒤 바닥 높이이고 growing은 또 솟을 차례가 남았는지
+  | { type: 'blown'; from: Point; to: Point; direction: Direction } // 바람에 밀려 to 쪽으로 감. 그 이동의 이벤트가 뒤에 이어진다
+  | { type: 'braced'; direction: Direction } // 바람에 기대서 버팀
   | { type: 'blocked'; direction: Direction }
   | { type: 'limit'; limit: Limit } // 보스 제약에 막힘
   | { type: 'cleared' }

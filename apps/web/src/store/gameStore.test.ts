@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { useGameStore } from './gameStore'
+import { queueInput, useGameStore } from './gameStore'
+import type { GameEvent } from '@/game/types'
 
 const store = () => useGameStore.getState()
 
@@ -51,5 +52,26 @@ describe('재시작 연출', () => {
     expect(store().restarting).toBe(false)
     store().move('up')
     expect(store().game?.moves).toBe(1)
+  })
+})
+
+describe('queueInput', () => {
+  const moved: GameEvent = { type: 'moved', from: { x: 0, y: 0 }, to: { x: 1, y: 0 } }
+
+  it('바람이 불지 않은 수의 연출 중 입력은 대기열에 하나까지 넣는다', () => {
+    expect(queueInput([], 'up', [moved])).toEqual(['up'])
+    expect(queueInput(['up'], 'down', [moved])).toEqual(['up'])
+  })
+
+  it('바람이 분 수의 연출 중 입력은 버린다', () => {
+    const blown: GameEvent[] = [
+      moved,
+      { type: 'blown', from: { x: 1, y: 0 }, to: { x: 0, y: 0 }, direction: 'left' },
+      { type: 'moved', from: { x: 1, y: 0 }, to: { x: 0, y: 0 } },
+    ]
+    const braced: GameEvent[] = [moved, { type: 'braced', direction: 'left' }]
+
+    expect(queueInput([], 'up', blown)).toEqual([])
+    expect(queueInput([], 'up', braced)).toEqual([])
   })
 })

@@ -3,7 +3,7 @@ import type { Stage } from './types'
 export const STAGE_VERSION = 1
 
 const ENTITY_TYPES = ['box', 'switch', 'door', 'lift', 'warp', 'ladder', 'tram', 'vine', 'seed']
-const GUIDE_TARGETS = ['restart', 'moves', 'pushes', 'climbs', 'rides', 'dir']
+const GUIDE_TARGETS = ['restart', 'moves', 'pushes', 'climbs', 'rides', 'dir', 'wind']
 const DIRECTIONS = ['up', 'right', 'down', 'left']
 const MAX_GUIDES = 3
 
@@ -329,7 +329,7 @@ export const validateStage = (data: unknown): ValidateResult => {
     if (!isObject(data.rules)) add('rules가 객체가 아니다')
     else {
       const { moveLimit, pushLimit, climbLimit, rideLimit, dirLimit } = data.rules
-      const { swampDeepen, mushroomWither, vineStop, seedGrow } = data.rules
+      const { swampDeepen, mushroomWither, vineStop, seedGrow, wind } = data.rules
       if (moveLimit !== undefined) {
         if (!(isInt(moveLimit) && moveLimit > 0)) add('rules.moveLimit은 양의 정수여야 한다')
         else if (isInt(data.best) && moveLimit < data.best) add('rules.moveLimit이 best보다 작다')
@@ -361,6 +361,9 @@ export const validateStage = (data: unknown): ValidateResult => {
       }
       if (seedGrow !== undefined && typeof seedGrow !== 'boolean') {
         add('rules.seedGrow는 참이나 거짓이어야 한다')
+      }
+      if (wind !== undefined && (typeof wind !== 'string' || !DIRECTIONS.includes(wind))) {
+        add('rules.wind는 네 방향 중 하나여야 한다')
       }
     }
   }

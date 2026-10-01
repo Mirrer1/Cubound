@@ -10,6 +10,12 @@ import { STAGES } from '@/stages'
 // 기다리는 입력은 하나만 받는다. 더 받아 두면 손을 뗀 뒤에도 큐브가 움직여 이동 수를 까먹는다
 const MAX_QUEUE = 1
 
+// 연출 중 들어온 입력을 넣은 대기열. 바람이 분 수는 어디로 밀렸는지 보기 전에 누른 입력이라 버린다
+export const queueInput = (queue: Direction[], direction: Direction, events: GameEvent[]) =>
+  queue.length >= MAX_QUEUE || events.some((e) => e.type === 'blown' || e.type === 'braced')
+    ? queue
+    : [...queue, direction]
+
 interface GameStore {
   progress: Progress
   game: GameState | null
@@ -63,10 +69,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
     }),
   move: (direction, chained = false) =>
-    set(({ game, progress, animating, restarting, queue, turn, guideStep }) => {
+    set(({ game, progress, animating, restarting, queue, turn, guideStep, events }) => {
       if (!game || guideStep !== null || restarting) return {}
       if (animating) {
-        return queue.length < MAX_QUEUE ? { queue: [...queue, direction] } : {}
+        const queued = queueInput(queue, direction, events)
+        return queued === queue ? {} : { queue: queued }
       }
 
       const result = move(game, direction)

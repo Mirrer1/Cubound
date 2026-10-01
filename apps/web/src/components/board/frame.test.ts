@@ -16,6 +16,7 @@ import {
   movingBox,
   mushroomFrames,
   mushroomPose,
+  ownProgress,
   pickUpProgress,
   plantingSeed,
   playerFrame,
@@ -36,6 +37,8 @@ import {
   vineFrames,
   vineLooks,
   vineProgress,
+  windLeaning,
+  windSeconds,
 } from './frame'
 import { TILE } from '@/game/iso'
 import { createState, move } from '@/game/rules'
@@ -2424,5 +2427,132 @@ describe('playerFrame 심기', () => {
     expect(playerFrame(prev, game, events, 0.25).angle).toBeGreaterThan(0.2)
     expect(playerFrame(prev, game, events, 0.5).angle).toBeCloseTo(0)
     expect(playerFrame(prev, game, events, 1).angle).toBeCloseTo(0)
+  })
+})
+
+// 바람은 왼쪽으로 불고 이동 세 번을 쓴 상태라 다음 센 수에 분다
+const WIND_STAGE: Stage = {
+  version: 1,
+  id: 'test-wind',
+  name: '바람',
+  heights: [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+  ],
+  start: { x: 3, y: 1 },
+  goal: { x: 4, y: 0 },
+  entities: [],
+  rules: { wind: 'left' },
+}
+
+const gust = (stage: Partial<Stage> = {}, direction: Direction = 'up') => {
+  const prev = { ...createState({ ...WIND_STAGE, ...stage }), moves: 3 }
+  const { state: game, events } = move(prev, direction)
+  return { prev, game, events }
+}
+
+describe('durationOf 바람', () => {
+  it('밀리는 한 칸과 버팀은 내 이동 연출 뒤에 제 시간을 더한다', () => {
+    const blown = gust()
+    const braced = gust({
+      heights: [
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+    })
+
+    expect(durationOf(blown.events)).toBeCloseTo(0.24 + 0.3)
+    expect(durationOf(braced.events)).toBeCloseTo(0.24 + 0.3)
+  })
+})
+
+describe('playerFrame 바람', () => {
+  it('내 이동이 끝난 뒤에 구르지 않고 바람 쪽으로 기울며 미끄러진다', () => {
+    const { prev, game, events } = gust()
+    const own = 0.24 / 0.54
+    const mid = (own + 1) / 2
+
+    expect(playerFrame(prev, game, events, own)).toMatchObject({ x: 3, y: 0 })
+    expect(playerFrame(prev, game, events, own).angle).toBeCloseTo(0)
+    expect(playerFrame(prev, game, events, mid).x).toBeGreaterThan(2)
+    expect(playerFrame(prev, game, events, mid).x).toBeLessThan(3)
+    expect(playerFrame(prev, game, events, mid)).toMatchObject({ direction: 'left' })
+    expect(playerFrame(prev, game, events, mid).angle).toBeCloseTo(0.24)
+    expect(playerFrame(prev, game, events, 0.999).angle).toBeLessThan(0.05)
+  })
+
+  it('버틸 때는 제자리에서 바람 쪽으로 기울었다 돌아온다', () => {
+    const { prev, game, events } = gust({
+      heights: [
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+    })
+    const mid = (0.24 / 0.54 + 1) / 2
+
+    expect(playerFrame(prev, game, events, mid)).toMatchObject({ x: 3, y: 0, direction: 'left' })
+    expect(playerFrame(prev, game, events, mid).angle).toBeCloseTo(0.24)
+    expect(playerFrame(prev, game, events, 0.999).angle).toBeLessThan(0.05)
+  })
+
+  it('밀려 떨어지는 칸은 미끄러진 뒤에 내려간다', () => {
+    const { prev, game, events } = gust({
+      heights: [
+        [0, 0, 0, 1, 0],
+        [0, 0, 0, 1, 0],
+      ],
+    })
+    const at = (t: number) => playerFrame(prev, game, events, t)
+    const total = durationOf(events)
+    const own = 0.24 / total
+
+    expect(at(own).level).toBeCloseTo(1)
+    expect(at(own + 0.1 / total).level).toBeCloseTo(1)
+    expect(at(1).level).toBe(0)
+  })
+})
+
+describe('ownProgress', () => {
+  it('바람이 분 수는 바람이 불기 전에 1이 되고 안 분 수는 stepProgress와 같다', () => {
+    const { events } = gust()
+    const calm = move(createState(STAGE), 'right').events
+
+    expect(ownProgress(events, 0.24 / 0.54)).toBeCloseTo(1)
+    expect(ownProgress(events, 0.12 / 0.54)).toBeCloseTo(0.5)
+    expect(ownProgress(calm, 0.3)).toBe(stepProgress(calm, 0.3))
+  })
+})
+
+describe('windLeaning', () => {
+  it('바람에 밀리거나 기대는 동안만 참이다', () => {
+    const { events } = gust()
+
+    expect(windLeaning(events, 0.2)).toBe(false)
+    expect(windLeaning(events, 0.7)).toBe(true)
+    expect(windLeaning(move(createState(STAGE), 'right').events, 0.5)).toBe(false)
+  })
+})
+
+describe('mushroomFrames 바람', () => {
+  it('밀려 버섯을 밟으면 걸어서 밟은 것처럼 갓이 눌렸다 튕긴다', () => {
+    const { prev, game, events } = gust({ mushroom: ['..#..', '.....'] })
+    const own = 0.24 / durationOf(events)
+    const press = (t: number) =>
+      mushroomFrames(prev, game, events, t).find((f) => f.cell.x === 2)?.press ?? 0
+    const blown = Array.from({ length: 50 }, (_, i) => press(own + ((1 - own) * i) / 50))
+
+    expect(game.player).toEqual({ x: 0, y: 0 })
+    expect(press(own)).toBe(0)
+    expect(Math.max(...blown)).toBeGreaterThan(0.5)
+    expect(Math.min(...blown)).toBeLessThan(0)
+  })
+})
+
+describe('windSeconds', () => {
+  it('내 이동 연출이 끝나 바람이 부는 초를 돌려주고 바람이 안 분 수는 null이다', () => {
+    const { events } = gust()
+
+    expect(windSeconds(events)).toBeCloseTo(0.24)
+    expect(windSeconds(move(createState(STAGE), 'right').events)).toBeNull()
   })
 })

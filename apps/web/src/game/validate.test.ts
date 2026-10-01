@@ -792,3 +792,19 @@ describe('validateStage 씨앗', () => {
     expect(errorsOf({ ...SEED_VALID, guides })).toEqual([])
   })
 })
+
+describe('validateStage 바람', () => {
+  it('바람은 네 방향 중 하나여야 한다', () => {
+    const wind = (value: unknown) => errorsOf({ ...VALID, rules: { wind: value } })
+
+    expect(wind('left')).toEqual([])
+    expect(wind('north')).toContain('rules.wind는 네 방향 중 하나여야 한다')
+    expect(wind(1)).toContain('rules.wind는 네 방향 중 하나여야 한다')
+  })
+
+  it('바람 가이드를 바람 칸에 둔다', () => {
+    const guides = [{ id: 'wind', target: 'wind' }]
+
+    expect(errorsOf({ ...VALID, rules: { wind: 'left' }, guides })).toEqual([])
+  })
+})

@@ -580,3 +580,24 @@ describe('solve 씨앗', () => {
     expect(end.cleared).toBe(true)
   })
 })
+
+describe('solve 바람', () => {
+  it('바람에 밀려 같은 칸을 다시 지나도 남은 수가 다르면 다른 상태로 본다', () => {
+    // 네 수째에 왼쪽으로 한 칸 밀려 두 수를 더 걷는다
+    const stage: Stage = {
+      version: 1,
+      id: 'test-wind',
+      heights: [[0, 0, 0, 0, 0, 0]],
+      start: { x: 0, y: 0 },
+      goal: { x: 5, y: 0 },
+      entities: [],
+      rules: { wind: 'left' },
+    }
+    const result = solve(stage)
+
+    expect(result.status).toBe('solved')
+    if (result.status !== 'solved') return
+    expect(result.moves).toBe(6)
+    expect(solve({ ...stage, rules: undefined })).toMatchObject({ status: 'solved', moves: 5 })
+  })
+})

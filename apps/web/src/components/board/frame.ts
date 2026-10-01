@@ -29,6 +29,8 @@ const CAP_WITHER = { from: 1.2, span: 1.4 }
 // 큐브가 올라선 갓의 press 값
 const CAP_ON = 2
 const TILT = 0.24
+// 바람에 밀려 한 칸 미끄러지는 시간과 기대서 버티는 시간. 내 이동 연출이 끝난 뒤에 붙는다
+const WIND = { slide: 0.3, brace: 0.3 }
 // 구를 때 머리 위 물건의 가장 큰 기울기 라디안과 그 기울기가 풀리는 구르기 몫, 튀어 오르는 높이 px
 const CARRY_LEAN = { max: 0.31, until: 0.6 }
 const CARRY_HOP = { alone: 6, chained: 3, from: 0.3 }
@@ -117,6 +119,7 @@ const secondsOf = (event: PathEvent) =>
 interface Segment {
   event: PathEvent
   seconds: number
+  wait?: boolean // 내 이동 연출이 끝나고 바람이 불기를 기다리는 구간
 }
 
 const segmentsOf = (path: PathEvent[]): Segment[] =>
@@ -160,8 +163,37 @@ const lastTile = (event: PathEvent): { before: PathEvent | null; tile: PathEvent
   return { before: { ...event, to: edge }, tile: { ...event, from: edge } }
 }
 
+const isWind = (e: GameEvent) => e.type === 'blown' || e.type === 'braced'
+
+// 바람이 분 수에서 바람 앞의 내 이동 이벤트. 바람이 안 분 수면 null
+const ownPart = (events: GameEvent[]) => {
+  const at = events.findIndex(isWind)
+  return at < 0 ? null : events.slice(0, at)
+}
+
+// 바람에 밀려 가는 길은 내 이동 연출이 다 끝난 뒤에 이어진다
+const windSegments = (events: GameEvent[], own: GameEvent[]): Segment[] => {
+  const mine = playerSegments(own)
+  const path = playerPath(events.slice(own.length))
+  if (path.length === 0) return mine
+
+  const hold = mine.at(-1)?.event.to ?? path[0].from
+  const wait = Math.max(0, moveSeconds(own, NO_SWAMP) - totalSeconds(mine))
+  return [
+    ...mine,
+    { event: { type: 'moved', from: hold, to: hold }, seconds: wait, wait: true },
+    ...path.map((event) => ({
+      event,
+      seconds: event.type === 'moved' && cellsOf(event) === 1 ? WIND.slide : secondsOf(event),
+    })),
+  ]
+}
+
 // 상자가 메우는 중인 칸에 큐브가 올라서면 빈 공간 위에 뜬다. 멈춰 세우면 걸리는 느낌이 나서 다가가는 속도만 늦춘다
 const playerSegments = (events: GameEvent[]): Segment[] => {
+  const own = ownPart(events)
+  if (own) return windSegments(events, own)
+
   const path = playerPath(events)
   const landing = boxLanding(events)
   const last = path.at(-1)
@@ -221,9 +253,9 @@ const touchAt = (events: GameEvent[], p: Point) => {
   let leave: number | null = null
   for (const segments of [playerSegments(events), segmentsOf(boxPath(events))]) {
     let start = 0
-    for (const { event, seconds } of segments) {
-      if (leave === null && same(event.from, p)) leave = start
-      if (same(event.to, p)) arrive = start + seconds
+    for (const { event, seconds, wait } of segments) {
+      if (!wait && leave === null && same(event.from, p)) leave = start
+      if (!wait && same(event.to, p)) arrive = start + seconds
       start += seconds
     }
   }
@@ -356,7 +388,8 @@ const moveSeconds = (events: GameEvent[], swamp: SwampTime) =>
     ...events.map((e) => (e.type === 'cracked' && e.gone ? CRUMBLE_SECONDS : 0)),
     ...events.map((e) => (e.type === 'struggled' ? SWAMP.struggle : 0)),
     ...frostStamps(events).map((stamp) => stamp.at + FROST_FADE),
-  )
+  ) +
+  (events.some((e) => e.type === 'braced') ? WIND.brace : 0)
 
 const rises = (events: GameEvent[]) => events.some((e) => e.type === 'rose')
 
@@ -384,6 +417,43 @@ export const riseProgress = (events: GameEvent[], t: number, swamp: SwampTime = 
 // 이동이 시작한 뒤로 흐른 시간. 늪에서 뽑혀 나오기를 기다리는 동안은 0보다 작다
 const elapsedAt = (events: GameEvent[], swamp: SwampTime, t: number) =>
   t * durationOf(events, swamp) - swamp.lead
+
+// 바람이 부는 때와 그치는 때. elapsedAt과 같은 시각이고 바람이 안 분 수면 null
+const windSpan = (events: GameEvent[], swamp: SwampTime) => {
+  if (events.some((e) => e.type === 'braced')) {
+    const from = moveSeconds(events, swamp) - swamp.lead - WIND.brace
+    return { from, to: from + WIND.brace }
+  }
+  const segments = playerSegments(events)
+  const wait = segments.findIndex((s) => s.wait)
+  if (wait < 0) return null
+  return { from: totalSeconds(segments.slice(0, wait + 1)), to: totalSeconds(segments) }
+}
+
+// 큐브가 바람에 밀리거나 기대는 동안이면 바람 쪽으로 기운 몫 0~1, 아니면 null
+const windLean = (events: GameEvent[], swamp: SwampTime, t: number) => {
+  const span = windSpan(events, swamp)
+  const elapsed = elapsedAt(events, swamp, t)
+  if (span === null || elapsed < span.from || elapsed >= span.to) return null
+  return Math.sin(Math.PI * clamp01((elapsed - span.from) / (span.to - span.from)))
+}
+
+// 이 수의 연출이 시작한 뒤 바람이 부는 초. 바람이 안 분 수면 null
+export const windSeconds = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) => {
+  const span = windSpan(events, swamp)
+  return span === null ? null : swamp.lead + span.from
+}
+
+// 바람에 밀리거나 기대는 동안은 머리 위 물건이 구르지 않고 큐브와 같이 기운다
+export const windLeaning = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) =>
+  windLean(events, swamp, t) !== null
+
+// 내 이동 몫의 진행도. 바람이 분 수는 바람이 불기 전에 1이 된다
+export const ownProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
+  const span = windSpan(events, swamp)
+  if (span === null) return stepProgress(events, t, swamp)
+  return span.from <= 0 ? 1 : clamp01(elapsedAt(events, swamp, t) / span.from)
+}
 
 // cells 중 한 칸이 pressed 상태가 되는 시각. 이 이동에서 닿지 않는 칸뿐이면 null
 const pressedAt = (events: GameEvent[], cells: Point[], pressed: boolean) => {
@@ -559,10 +629,14 @@ const stepAt = (segments: Segment[], seconds: number, chain: Chain): Step | null
     const last = index === segments.length - 1
     if (seconds < start + span || last) {
       const local = span === 0 ? 1 : Math.min(1, Math.max(0, (seconds - start) / span))
+      // 바람을 기다리는 구간 앞뒤에서는 멈췄다가 다시 출발한다
       return {
         event,
         index,
-        p: moveEase(local, { in: index > 0 || chain.in, out: !last || chain.out }),
+        p: moveEase(local, {
+          in: index > 0 ? !segments[index - 1].wait : chain.in,
+          out: (!last && !segments[index + 1].wait) || chain.out,
+        }),
       }
     }
     start += span
@@ -715,10 +789,29 @@ const pathFrame = (
   // 연출이 이동보다 길 수 있어 큐브는 제 길을 다 가면 그 자리에서 기다린다
   const elapsed = elapsedAt(events, swamp, t)
 
+  // 바람이 분 수는 내 이동 연출이 다 끝난 뒤에 바람에 밀리거나 기댄다
+  const wind = windSpan(events, swamp)
+  const lean = windLean(events, swamp, t)
+  const braced = events.find((e) => e.type === 'braced')
+  if (braced?.type === 'braced' && lean !== null) {
+    return { ...still, level: pathEnd + risen, direction: braced.direction, angle: lean * TILT }
+  }
+
   const warped = events.find((e) => e.type === 'warped')
   const warpStart = warpAt(events)
+  // 내 이동에서 순간이동한 뒤 바람에 밀리면 그때부터는 밀리는 길을 그린다
+  const ownWarp = wind !== null && warpStart !== null && warpStart < wind.from
+  const waitAt = segments.findIndex((s) => s.wait)
+  const ownLevel = segments
+    .slice(0, waitAt < 0 ? segments.length : waitAt)
+    .reduce((level, s) => levelAfter(level, s.event), startLevel)
   // 순간이동은 길을 다 간 뒤에 일어나서 가라앉는 동안 들어간 칸에, 솟는 동안 나온 칸에 그린다
-  if (warped?.type === 'warped' && warpStart !== null && elapsed >= warpStart) {
+  if (
+    warped?.type === 'warped' &&
+    warpStart !== null &&
+    elapsed >= warpStart &&
+    !(ownWarp && elapsed >= wind.from)
+  ) {
     const sinking = elapsed < warpStart + WARP.sink
     const p = sinking
       ? (elapsed - warpStart) / WARP.sink
@@ -730,7 +823,8 @@ const pathFrame = (
 
     return {
       ...cell,
-      level: (sinking ? pathLevel + riding : pathEnd + risen) - WARP.depth * deep,
+      level:
+        (ownWarp ? ownLevel : sinking ? pathLevel + riding : pathEnd + risen) - WARP.depth * deep,
       direction: last ? directionBetween(last.event.from, last.event.to) : still.direction,
       angle: 0,
       cell,
@@ -744,7 +838,14 @@ const pathFrame = (
   if (swamp.tail > 0 && elapsed >= totalSeconds(segments)) return still
 
   // 늪에서 뽑혀 나오기를 기다리는 동안은 떠나기 전 칸에 그대로 선다
-  const step = elapsed < 0 ? null : stepAt(segments, elapsed, slideChain(events, chain))
+  const moving = elapsed < 0 ? null : stepAt(segments, elapsed, slideChain(events, chain))
+  // 바람을 기다리는 동안은 내 이동이 끝난 자리에 선다
+  const step =
+    moving && segments[moving.index].wait
+      ? moving.index > 0
+        ? { event: segments[moving.index - 1].event, index: moving.index - 1, p: 1 }
+        : null
+      : moving
   if (prev && step) {
     const span = slideSpan(segments)
     const { event, index, p } = step
@@ -782,7 +883,15 @@ const pathFrame = (
       level: level + (hopped ? risen : riding),
       direction: directionBetween(event.from, event.to),
       // 얼음 위와 갓을 딛고 날아가는 동안에는 구르지 않는다. 갓으로 걸어 들어가는 한 칸은 구른다
-      angle: event.type === 'slid' ? 0 : hopped ? hopAngle(cells, gone * cells) : (Math.PI / 2) * p,
+      // 바람에 밀려 가는 동안은 구르지 않고 바람 쪽으로 기울었다 돌아온다
+      angle:
+        waitAt >= 0 && index > waitAt
+          ? (lean ?? 0) * TILT
+          : event.type === 'slid'
+            ? 0
+            : hopped
+              ? hopAngle(cells, gone * cells)
+              : (Math.PI / 2) * p,
       // 솟는 수는 이동이 끝나면 들어선 칸에 그려 그 칸의 말뚝이 큐브 앞에 남는다
       cell: rises(events) && p >= 1 ? event.to : frontOf(event.from, event.to),
       squash: span ? squashAt((elapsed - span.from) / (span.to - span.from)) : 0,
@@ -803,15 +912,19 @@ const pathFrame = (
     return { ...still, direction: blocked.direction, angle: Math.sin(Math.PI * t) * TILT }
   }
 
-  // 심는 수는 턱에 부딪혀 기울었다가 앞 절반 안에 돌아온다. 그 반동에 씨앗이 떨어진다
-  const planted = events.find((e) => e.type === 'planted')
-  if (planted?.type === 'planted') {
-    const bump = clamp01(t / PLANT_SEED.bump)
-    return { ...still, direction: planted.direction, angle: Math.sin(Math.PI * bump) * TILT }
-  }
-
   // 제 힘으로 가지 않은 이동은 떠나기 전 칸에 서 있는다
   const hold = prev ? prev.player : player
+
+  // 심는 수는 턱에 부딪혀 기울었다가 앞 절반 안에 돌아온다. 그 반동에 씨앗이 떨어진다
+  // 바람이 분 수는 바람이 불기 전까지가 심는 수의 몫이고 그동안은 심은 칸에 선다
+  const planted = events.find((e) => e.type === 'planted')
+  if (planted?.type === 'planted') {
+    const own = wind === null ? t : wind.from > 0 ? clamp01(elapsed / wind.from) : 1
+    const bump = clamp01(own / PLANT_SEED.bump)
+    const at = wind === null ? still : { ...still, ...hold, cell: hold, level: startLevel }
+    return { ...at, direction: planted.direction, angle: Math.sin(Math.PI * bump) * TILT }
+  }
+
   return { ...still, x: hold.x, y: hold.y, cell: hold, level: startLevel + riding }
 }
 
@@ -1164,7 +1277,7 @@ const capTouch = (
   if (!step) return null
 
   let before = 0
-  let found: { arrive: number; rest: boolean; deep: number; from: number } | null = null
+  const touches: { arrive: number; rest: boolean; deep: number; from: number; index: number }[] = []
   let now = 0
   for (const [i, { event }] of segments.entries()) {
     const cells = cellsOf(event)
@@ -1179,19 +1292,24 @@ const capTouch = (
             ? { start: at, index: -1, rest: true }
             : null
 
-    if (touch && found === null) {
+    if (touch) {
       const lead = cells % 2
-      found = {
+      touches.push({
         arrive: before + touch.start,
         rest: touch.rest,
         deep: touch.rest ? CAP_ON : capDeep(touch.index, lead),
         from: touch.rest ? 0 : capFrom(touch.index, lead),
-      }
+        index: i,
+      })
     }
     if (i === step.index) now = before + (hopped ? hopSpan(cells) : cells) * step.p
     before += hopped ? hopSpan(cells) : cells
   }
 
+  // 내 이동으로 올라선 갓에서 바람에 밀려 튀면 바람이 분 뒤로는 튕기는 갓을 그린다
+  const wait = segments.findIndex((s) => s.wait)
+  const blown = touches.filter((touch) => wait >= 0 && step.index > wait && touch.index > wait)
+  const found = blown[0] ?? touches[0]
   if (!found) return null
   return { phase: now - found.arrive + found.from, rest: found.rest, deep: found.deep }
 }
@@ -1347,7 +1465,7 @@ export const plantingSeed = (
 ): PlantingFrame | null => {
   if (!events.some((e) => e.type === 'planted')) return null
 
-  const p = stepProgress(events, t, swamp)
+  const p = ownProgress(events, t, swamp)
   const q = clamp01((p - PLANT_SEED.pop) / PLANT_SEED.travel)
   const go = q * q * (3 - 2 * q)
   return {

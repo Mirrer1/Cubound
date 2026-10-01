@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createState, isLiftRaised, move } from './rules'
+import { createState, isLiftRaised, move, windLeft } from './rules'
 import { SESSION_VERSION, restoreSession, toSession } from './session'
 import type { Direction, Stage } from './types'
 
@@ -537,5 +537,28 @@ describe('restoreSession 덩굴', () => {
     expect(vines([{ id: 'vine-a', grown: 3, stopped: false }])).toBeNull()
     expect(vines([{ id: 'vine-a', grown: -1, stopped: false }])).toBeNull()
     expect(vines([{ id: 'vine-a', grown: 0, stopped: 1 }])).toBeNull()
+  })
+})
+
+describe('restoreSession 바람', () => {
+  it('이동 수에서 다음 바람까지 남은 수를 그대로 이어간다', () => {
+    const stage: Stage = {
+      version: 1,
+      id: '10-10',
+      heights: [[0, 0, 0, 0, 0, 0]],
+      start: { x: 2, y: 0 },
+      goal: { x: 5, y: 0 },
+      entities: [],
+      rules: { wind: 'left' },
+    }
+    const state = (['right', 'left', 'right'] as Direction[]).reduce(
+      (s, d) => move(s, d).state,
+      createState(stage),
+    )
+    const restored = restoreSession(toSession(state), stage)
+
+    expect(restored).toEqual(state)
+    expect(restored && windLeft(restored)).toBe(1)
+    expect(restored && move(restored, 'right').state.player).toEqual({ x: 3, y: 0 })
   })
 })

@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
   type MouseEvent,
   type PointerEvent,
@@ -10,6 +10,7 @@ import {
 } from 'react'
 
 import Board from '@/components/board/Board'
+import { swampTime, windSeconds } from '@/components/board/frame'
 import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
@@ -23,6 +24,7 @@ import {
   ridesLeft,
   sinkCount,
   vinesLeft,
+  windLeft,
 } from '@/game/rules'
 import { stageTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
@@ -64,11 +66,13 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const queued = useGameStore((s) => s.queue.length)
   const chained = useGameStore((s) => s.chained)
   const restarting = useGameStore((s) => s.restarting)
+  const animating = useGameStore((s) => s.animating)
   const guideStep = useGameStore((s) => s.guideStep)
   const openGuide = useGameStore((s) => s.openGuide)
   const nextGuide = useGameStore((s) => s.nextGuide)
   const closeGuide = useGameStore((s) => s.closeGuide)
   const [asking, setAsking] = useState(false)
+  const [gustTurn, setGustTurn] = useState(-1) // 바람이 불어 숫자가 바뀐 차례
   const sectionRef = useRef<HTMLElement>(null)
   const swipeStart = useRef<{ x: number; y: number } | null>(null)
   const swiped = useRef(false)
@@ -92,6 +96,12 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const mudSinks = game ? sinkCount(game) : null
   const caps = game ? capsLeft(game) : null
   const vines = game ? vinesLeft(game) : null
+  const reduced = useReducedMotion()
+  // 바람이 분 수는 내 이동 연출이 끝나 바람이 부는 때에 숫자가 바뀌며 깜빡인다
+  const gustAt = game && prevGame ? windSeconds(events, swampTime(prevGame, game)) : null
+  const gusted = gustAt === null || gustTurn === turn || !animating
+  const wind = game ? windLeft(gusted ? game : (prevGame ?? game)) : null
+  const blew = gustAt !== null && gusted
   const limitedDir = game?.stage.rules?.dirLimit?.dir
   const limited = events.flatMap((e) => (e.type === 'limit' ? [e.limit] : []))[0]
   const outOfMoves = left === 0 && !game?.cleared
@@ -148,6 +158,12 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     swiped.current = false
     e.stopPropagation()
   }
+
+  useEffect(() => {
+    if (gustAt === null) return
+    const timer = setTimeout(() => setGustTurn(turn), gustAt * 1000 * (reduced ? 0.35 : 1))
+    return () => clearTimeout(timer)
+  }, [gustAt, turn, reduced])
 
   // 남아 있는 중간 상태가 있으면 이어서 시작하고 없으면 처음부터 시작한다
   useEffect(() => {
@@ -261,6 +277,15 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                   <div className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2">
                     <span className="font-mono text-[10px] tracking-[0.22em] text-mute">VINE</span>
                     <LimitCount hit={null}>{vines}</LimitCount>
+                  </div>
+                )}
+                {wind !== null && (
+                  <div
+                    data-guide="wind"
+                    className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
+                  >
+                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">WIND</span>
+                    <LimitCount hit={blew ? turn : null}>{wind}</LimitCount>
                   </div>
                 )}
                 <div

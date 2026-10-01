@@ -1,4 +1,4 @@
-import { createState, move } from './rules'
+import { WIND_EVERY, createState, move } from './rules'
 import type { Direction, GameState, Point, Stage } from './types'
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
@@ -15,15 +15,15 @@ const points = (list: Point[]) =>
     .sort()
     .join(' ')
 
-// 보스 제한은 빼고 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것은 남긴다.
+// 보스 제한은 빼고 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람은 남긴다.
 // 제한이 너무 작을 때도 진짜 최소 이동 수가 나오고 늪에 드는 수와 클리어 조건은 그대로다
 const forSearch = (stage: Stage): Stage => {
-  const { swampDeepen, mushroomWither, vineStop, seedGrow } = stage.rules ?? {}
+  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind } = stage.rules ?? {}
   return {
     ...stage,
     rules:
-      swampDeepen || mushroomWither || vineStop || seedGrow
-        ? { swampDeepen, mushroomWither, vineStop, seedGrow }
+      swampDeepen || mushroomWither || vineStop || seedGrow || wind
+        ? { swampDeepen, mushroomWither, vineStop, seedGrow, wind }
         : undefined,
   }
 }
@@ -63,6 +63,8 @@ const stateKey = (state: GameState, deep = true) => {
           state.planted.map(({ x, y, left, rises }) => `${x},${y},${left},${rises}`).join(' '),
         ]
       : []),
+    // 바람은 센 수로 불어 같은 자리라도 다음 바람까지 남은 수가 다르면 다른 상태다
+    ...(state.stage.rules?.wind ? [`${state.moves % WIND_EVERY}`] : []),
     // 깊어지는 늪은 빠진 횟수에 따라 앞으로 드는 수가 다르다
     ...(deep && state.stage.rules?.swampDeepen ? [`${state.sinks}`] : []),
     ...(state.trams.length > 0

@@ -60,6 +60,8 @@ export const en = {
   'guide.seed': 'Carry a seed and push toward a higher tile to plant it at your feet',
   'guide.seedRise': 'Four moves later the planted tile rises one level, lifting whatever is on it',
   'guide.seedGrow': 'Risen seeds keep growing one level every four moves, up to three',
+  'guide.wind':
+    'Every four moves the wind blows away from home, so lean on a wall or a box to hold on',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',

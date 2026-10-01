@@ -17,6 +17,7 @@ import {
   frostAt,
   movingBox,
   mushroomFrames,
+  ownProgress,
   pickUpProgress,
   plantingSeed,
   playerFrame,
@@ -33,6 +34,7 @@ import {
   tramProgress,
   vineFrames,
   vineLooks,
+  windLeaning,
 } from './frame'
 import { shade } from './shade'
 import { useBoardAnimation } from './useBoardAnimation'
@@ -279,6 +281,8 @@ const Board = ({
       : ''
   // 씨앗이 솟는 수는 이동 몫이 먼저 끝나서 한 수 안에서 일어나는 변화는 이 진행도를 쓴다
   const stepT = moving ? stepProgress(events, t, swampSeconds) : 1
+  // 놓는 사다리는 바람이 불기 전에 다 놓인다
+  const ownT = moving ? ownProgress(events, t, swampSeconds) : 1
   // 사다리는 이동이 시작할 때가 아니라 큐브가 그 칸에 닿은 때부터 손으로 옮겨진다
   const pickUpPhase = moving ? pickUpProgress(events, t, swampSeconds) : 1
   const carriedOpacity =
@@ -287,7 +291,7 @@ const Board = ({
       : pickedUp
         ? pickUpPhase
         : placed
-          ? 1 - stepT
+          ? 1 - ownT
           : game.carrying
             ? 1
             : 0
@@ -324,11 +328,12 @@ const Board = ({
     const d = tiltOnTop(cube.direction, roll.angle)(u, v, z)
     return { x: d.x, y: d.y - roll.hop }
   }
-  const bump = events.some((e) => e.type === 'blocked')
-    ? tiltOnTop(cube.direction, cube.angle)
-    : moving && cube.angle > 0
-      ? rolling
-      : undefined
+  const bump =
+    events.some((e) => e.type === 'blocked') || (moving && windLeaning(events, t, swampSeconds))
+      ? tiltOnTop(cube.direction, cube.angle)
+      : moving && cube.angle > 0
+        ? rolling
+        : undefined
   // 사다리는 큐브 윗면보다 2px 위에 그린다
   const ladderBump: TopTilt | undefined = bump && ((u, v, z) => bump(u, v, z + 2))
   // 심는 수에 들고 있던 씨앗이 큐브 윗면에서 그 칸의 흙 자리로 내려간다
@@ -443,7 +448,7 @@ const Board = ({
             ? 1 - pickUpPhase
             : 0
         const placedOpacity = (l: Point) =>
-          placed?.type === 'placed' && same(placed.ladder, l) ? stepT : 1
+          placed?.type === 'placed' && same(placed.ladder, l) ? ownT : 1
         const leaning = [
           ...leaningLadders
             .filter((l) => same(l, cell.p))

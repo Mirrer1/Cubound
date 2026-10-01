@@ -65,6 +65,8 @@ export const es: Partial<Texts> = {
     'Cuatro movimientos después, la casilla plantada sube un nivel con lo que tenga encima',
   'guide.seedGrow':
     'Las semillas que suben siguen creciendo un nivel cada cuatro movimientos, hasta tres',
+  'guide.wind':
+    'Cada cuatro movimientos el viento sopla al lado contrario de casa; apóyate en una pared o una caja para aguantar',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',
