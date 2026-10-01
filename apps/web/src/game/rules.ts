@@ -743,9 +743,8 @@ const windStep = (state: GameState, direction: Direction): MoveResult | null => 
   const to = step(from, direction)
   const toFloor = floorAt(state, to)
   if (toFloor === null || isClosedDoor(state, to)) return null
-  if (hasBox(state, to)) {
-    return toFloor + 1 <= standHeight(state, from) ? walk(state, to, toFloor + 1, direction) : null
-  }
+  // 상자는 높이와 상관없이 기댈 자리라 그 위로 밀려 올라가지 않는다
+  if (hasBox(state, to)) return null
   if (toFloor > standHeight(state, from)) return null
 
   const hopped = isMushroom(state, to) ? hop(state, to, direction) : null

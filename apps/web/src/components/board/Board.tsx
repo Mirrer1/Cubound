@@ -71,6 +71,13 @@ interface BoardProps {
 const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y
 const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+// 천천히 시작해 천천히 멈춘다. 0~1 밖은 끝값으로 자른다
+const smooth01 = (v: number) => {
+  const p = Math.min(1, Math.max(0, v))
+  return p * p * (3 - 2 * p)
+}
+// 재시작에 메운 바닥이 사라지는 진행도
+const RESTORE_FADE = 0.25
 
 const GUIDE_MARGIN = 12
 
@@ -351,7 +358,10 @@ const Board = ({
             h={cell.h - seedShift + raised}
             parity={(cell.p.x + cell.p.y) % 2 === 1}
             goal={same(cell.p, stage.goal)}
-            filled={isFilled && vine?.kind !== 'grown'}
+            filled={
+              (isFilled || (restored > 0 && stage.heights[cell.p.y][cell.p.x] < 0)) &&
+              vine?.kind !== 'grown'
+            }
             ice={isIce(game, cell.p)}
             frost={frostAt(events, cell.p, t, swampSeconds)}
             crack={Math.max(left, was) >= 0}
@@ -380,7 +390,11 @@ const Board = ({
             pitWallLeft={pitShown ? wallHeight(walls, cell.p.x, cell.p.y - 1) : -1}
             pitWallRight={pitShown ? wallHeight(walls, cell.p.x - 1, cell.p.y) : -1}
             blockOpacity={
-              restored > 0 ? 1 - t : restored < 0 ? (cubeDrop?.opacity ?? 1) : crumble.opacity
+              restored > 0
+                ? 1 - smooth01(t / RESTORE_FADE)
+                : restored < 0
+                  ? (cubeDrop?.opacity ?? 1)
+                  : crumble.opacity
             }
             flatLadder={flatLadder}
             leaning={leaning}

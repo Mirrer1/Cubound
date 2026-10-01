@@ -66,7 +66,7 @@ describe('queueInput', () => {
     expect(queueInput(['up'], 'down', [moved])).toEqual(['up'])
   })
 
-  it('바람이 분 수의 연출 중 입력은 버린다', () => {
+  it('바람에 밀린 수의 연출 중 입력은 버리고 버틴 수는 받는다', () => {
     const blown: GameEvent[] = [
       moved,
       { type: 'blown', from: { x: 1, y: 0 }, to: { x: 0, y: 0 }, direction: 'left' },
@@ -75,7 +75,7 @@ describe('queueInput', () => {
     const braced: GameEvent[] = [moved, { type: 'braced', direction: 'left' }]
 
     expect(queueInput([], 'up', blown)).toEqual([])
-    expect(queueInput([], 'up', braced)).toEqual([])
+    expect(queueInput([], 'up', braced)).toEqual(['up'])
   })
 })
 

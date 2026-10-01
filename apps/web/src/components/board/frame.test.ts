@@ -375,7 +375,9 @@ describe('movingBox', () => {
 
     expect(state.boxes).toEqual([{ x: 2, y: 1 }])
     expect(movingBox(prev, state, events, 0)?.level).toBe(1)
-    expect(movingBox(prev, state, events, 0.99)?.level).toBeCloseTo(0, 1)
+    // 상자가 자리에 앉기 직전에는 내려가는 발판과 같은 높이에 있다
+    const lift = 1 - switchProgress(events, [{ x: 0, y: 1 }], false, 0.8)
+    expect(movingBox(prev, state, events, 0.8)?.level).toBeCloseTo(lift, 1)
   })
 })
 

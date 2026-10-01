@@ -3793,6 +3793,24 @@ describe('move 바람', () => {
     expect(events.at(-1)).toEqual({ type: 'braced', direction: 'left' })
   })
 
+  it('낮은 칸의 상자도 높이와 상관없이 기대서 버티고 그 위로 밀려 올라가지 않는다', () => {
+    const state = gusty(
+      {
+        heights: [
+          [0, 0, -1, 1, 0, 0],
+          [0, 0, 0, 1, 0, 0],
+          [0, 0, 0, 0, 0, 0],
+        ],
+        entities: [{ type: 'box', x: 2, y: 1 }],
+      },
+      { player: { x: 3, y: 0 } },
+    )
+    const { state: next, events } = move(state, 'down')
+
+    expect(next.player).toEqual({ x: 3, y: 1 })
+    expect(events.at(-1)).toEqual({ type: 'braced', direction: 'left' })
+  })
+
   it('늪에 서 있으면 버둥을 다 했어도 발이 묶여 버틴다', () => {
     const state = gusty({ swamp: ['......', '......', '..#...'] }, { player: { x: 3, y: 2 } })
     const { state: next, events } = move(state, 'left')

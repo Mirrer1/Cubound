@@ -23,6 +23,7 @@ import type {
 const SECONDS = {
   moved: 0.24,
   pushed: 0.26,
+  filled: 0.34, // 상자가 구덩이를 메우는 밀기. 가라앉는 몫이 있어 보통 밀기보다 길다
   fell: 0.32,
   climbed: 0.3,
   blocked: 0.2,
@@ -96,6 +97,8 @@ const SWAMP = {
 
 const easeIn = (t: number) => t * t
 const easeOut = (t: number) => 1 - (1 - t) ** 2
+// 천천히 시작해 천천히 멈춘다. 씨앗이 솟는 곡선과 같다
+const smooth = (t: number) => t * t * (3 - 2 * t)
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
@@ -132,7 +135,9 @@ const secondsOf = (event: PathEvent) =>
     ? Math.min(SLIDE.max, SLIDE.perCell * cellsOf(event))
     : hopCells(event) > 0
       ? Math.min(HOP.max, HOP.perCell * hopSpan(hopCells(event)))
-      : SECONDS[event.type]
+      : event.type === 'pushed' && event.result === 'filled'
+        ? SECONDS.filled
+        : SECONDS[event.type]
 
 // 기다리는 구간이 섞일 수 있어 길이를 이벤트와 따로 둔다
 interface Segment {
@@ -282,7 +287,7 @@ const touchAt = (events: GameEvent[], p: Point) => {
 }
 
 // 스위치가 눌리거나 풀린 뒤 문과 발판이 따라 움직이는 시간
-const SWITCH_SECONDS = 0.16
+const SWITCH_SECONDS = 0.3
 
 // 눌림은 구간 끝에서, 풀림은 구간 시작에서 일어난다. 가장 늦은 때에 맞춰 연출할 시간을 남긴다
 const switchEnd = (events: GameEvent[]) => {
@@ -509,7 +514,7 @@ export const switchProgress = (
   const at = pressedAt(events, cells, pressed)
   return at === null
     ? t
-    : Math.min(1, Math.max(0, (elapsedAt(events, swamp, t) - at) / SWITCH_SECONDS))
+    : smooth(Math.min(1, Math.max(0, (elapsedAt(events, swamp, t) - at) / SWITCH_SECONDS)))
 }
 
 // 스위치 자신이 눌리고 풀리는 시간. 닿아서 생기는 일이라 멀리 있는 문과 발판보다 짧다
@@ -606,7 +611,7 @@ export const tramProgress = (events: GameEvent[], t: number, swamp: SwampTime = 
   const at = tramStart(events)
   if (at === null) return 1
 
-  return Math.min(1, Math.max(0, (elapsedAt(events, swamp, t) - at) / SECONDS.tram))
+  return smooth(Math.min(1, Math.max(0, (elapsedAt(events, swamp, t) - at) / SECONDS.tram)))
 }
 
 export const switchCells = (stage: Stage, target: string): Point[] =>
@@ -950,7 +955,8 @@ const pathFrame = (
   const wind = windSpan(events, swamp)
   const lean = windLean(events, swamp, t)
   const braced = events.find((e) => e.type === 'braced')
-  if (braced?.type === 'braced' && lean !== null) {
+  // 늪에 빠져 버티는 수는 버둥 사이에 끼면 리듬만 끊겨 기울거나 눌리지 않는다
+  if (braced?.type === 'braced' && lean !== null && !inSwamp(game, player)) {
     return { ...still, level: pathEnd + risen, direction: braced.direction, angle: lean * TILT }
   }
 
@@ -1159,8 +1165,12 @@ export const movingBox = (
     .slice(0, index)
     .reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
   const toLevel = boxLevelAfter(prev, fromLevel, event)
+  // 구덩이를 메우는 상자는 반쯤 가서부터 부드럽게 가라앉고 떨어지는 상자는 끝에서 빨라진다
+  const filling = event.type === 'pushed' && event.result === 'filled'
   const level =
-    event.type === 'slid' || p < 0.6 ? fromLevel : lerp(fromLevel, toLevel, easeIn((p - 0.6) / 0.4))
+    event.type === 'slid' || p < (filling ? 0.5 : 0.6)
+      ? fromLevel
+      : lerp(fromLevel, toLevel, filling ? smooth((p - 0.5) / 0.5) : easeIn((p - 0.6) / 0.4))
   // 도착 칸에 서는 높이에서 상자 한 층을 뺀 값이 상자가 앉을 높이다. 발판이 오르내린 몫이 여기서 드러난다
   const endLevel = path.reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
   // 씨앗이 솟아 오르는 몫은 상자가 자리에 앉은 뒤 칸과 같이 오른다
