@@ -1540,6 +1540,22 @@ describe('playerFrame 버섯', () => {
     expect(Math.max(...lifts)).toBeGreaterThan(TILE.layer)
   })
 
+  it('두 층 벽은 한 층 벽보다 한 층만큼 더 높이 넘고 구덩이는 한 층 벽과 같다', () => {
+    const peak = (stage: Stage) => {
+      const { prev, state, events } = hop(stage)
+      return Math.max(
+        ...Array.from({ length: 201 }, (_, i) => playerFrame(prev, state, events, i / 200).lift),
+      )
+    }
+    const low = peak(HOP_STAGE)
+
+    expect(peak({ ...HOP_STAGE, heights: [[0, 0, 2, 0, 0, 0, 0]] }) - low).toBeCloseTo(
+      TILE.layer,
+      -1,
+    )
+    expect(peak({ ...HOP_STAGE, heights: [[0, 0, -1, 0, 0, 0, 0]] })).toBeCloseTo(low)
+  })
+
   it('갓으로 걸어 들어가는 한 칸은 구르고 날아가는 동안은 안 구른다', () => {
     const { prev, state, events } = hop(HOP_STAGE)
     const angleAt = (t: number) => playerFrame(prev, state, events, t).angle
@@ -1766,6 +1782,25 @@ describe('movingBox 버섯', () => {
     expect(state.pushes).toBe(1)
     expect(lifts[0]).toBe(0)
     expect(Math.max(...lifts)).toBeGreaterThan(TILE.layer)
+  })
+
+  it('높은 버섯에서 낮은 버섯으로 이어 튀는 상자는 두 번째 갓을 딛고 지나간다', () => {
+    // (2,0) 한 층 버섯에서 (4,0) 바닥 버섯을 거쳐 (6,0)에 내린다
+    const stage: Stage = {
+      ...BOX_HOP_STAGE,
+      heights: [[1, 1, 1, 1, 0, 0, 0, 0]],
+      goal: { x: 7, y: 0 },
+      mushroom: ['..#.#...'],
+    }
+    const prev = createState(stage)
+    const { state, events } = move(prev, 'right')
+    const onSecond = Array.from({ length: 201 }, (_, i) => movingBox(prev, state, events, i / 200))
+      .filter((f) => f !== null && Math.abs(f.x - 4) < 0.01)
+      .map((f) => f!.level)
+
+    expect(state.boxes).toEqual([{ x: 6, y: 0 }])
+    expect(onSecond.length).toBeGreaterThan(0)
+    for (const level of onSecond) expect(level).toBeCloseTo(0)
   })
 
   it('상자가 지나간 버섯도 눌린다', () => {

@@ -916,6 +916,34 @@ const hopLevel = (
   return b === a ? floorOf(a) : lerp(floorOf(a), floorOf(b), clamp01((u - a) / (b - a)))
 }
 
+// 튕김마다 꼭대기에 더 솟는 px. 한 층 넘게 솟은 사이 벽은 그 몫만큼 더 높이 넘는다
+const hopClear = (
+  state: GameState,
+  event: PathEvent,
+  cells: number,
+  fromLevel: number,
+  toLevel: number,
+) => {
+  const dx = Math.sign(event.to.x - event.from.x)
+  const dy = Math.sign(event.to.y - event.from.y)
+  const lead = cells % 2
+  const floorOf = (n: number) =>
+    n === 0
+      ? fromLevel
+      : n === cells
+        ? toLevel
+        : (state.heights[event.from.y + dy * n]?.[event.from.x + dx * n] ?? fromLevel)
+  const clear: number[] = []
+  for (let a = lead; a < cells; a += 2) {
+    const wall = { x: event.from.x + dx * (a + 1), y: event.from.y + dy * (a + 1) }
+    const middle = (floorOf(a) + floorOf(a + 2)) / 2
+    const over =
+      (state.heights[wall.y]?.[wall.x] ?? -1) < 0 ? 0 : standHeight(state, wall) - middle - 1
+    clear.push(Math.max(0, over) * TILE.layer)
+  }
+  return clear
+}
+
 // 큐브가 제 힘으로 간 몫만 그린 프레임. 발판에 실린 몫은 playerFrame이 더한다
 const pathFrame = (
   prev: GameState | null,
@@ -1061,7 +1089,12 @@ const pathFrame = (
       squash: span ? squashAt((elapsed - span.from) / (span.to - span.from)) : 0,
       fade: 1,
       lift: hopped
-        ? hopLift(cells, hopSpan(cells) * p, land)
+        ? hopLift(
+            cells,
+            hopSpan(cells) * p,
+            land,
+            hopClear(prev, event, cells, fromLevel, landLevel),
+          )
         : land > 0
           ? restLift(
               cells * (p - 1),
@@ -1127,14 +1160,19 @@ export interface BoxFrame {
   lift: number // 버섯에 튕겨 떠오른 화면 거리
 }
 
-const boxLevelAfter = (prev: GameState, level: number, event: PathEvent) =>
-  event.type !== 'pushed'
-    ? level
-    : event.result === 'filled'
-      ? level - 1
-      : event.result === 'fell'
-        ? prev.heights[event.to.y][event.to.x]
-        : level
+// 튕겨 간 상자는 마지막 갓에서 떠나 도착 칸 높이에 앉는다
+const boxLevelAfter = (prev: GameState, level: number, event: PathEvent) => {
+  if (event.type !== 'pushed') return level
+  const hopped = hopCells(event) > 0
+  const dx = Math.sign(event.to.x - event.from.x)
+  const dy = Math.sign(event.to.y - event.from.y)
+  const launch = hopped ? prev.heights[event.to.y - dy * 2][event.to.x - dx * 2] : level
+  return event.result === 'filled'
+    ? launch - 1
+    : event.result === 'fell' || hopped
+      ? prev.heights[event.to.y][event.to.x]
+      : level
+}
 
 export const movingBox = (
   prev: GameState | null,
@@ -1166,12 +1204,18 @@ export const movingBox = (
     .slice(0, index)
     .reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
   const toLevel = boxLevelAfter(prev, fromLevel, event)
-  // 구덩이를 메우는 상자는 반쯤 가서부터 부드럽게 가라앉고 떨어지는 상자는 끝에서 빨라진다
+  const cells = cellsOf(event)
+  const hopped = hopCells(event) > 0
+  const gone = hopped ? hopProgress(cells, p) : p
+  // 구덩이를 메우는 상자는 반쯤 가서부터 부드럽게 가라앉고 떨어지는 상자는 끝에서 빨라진다.
+  // 버섯을 이어 튀는 상자는 큐브처럼 딛는 갓마다 그 칸 높이를 따라간다
   const filling = event.type === 'pushed' && event.result === 'filled'
   const level =
-    event.type === 'slid' || p < (filling ? 0.5 : 0.6)
-      ? fromLevel
-      : lerp(fromLevel, toLevel, filling ? smooth((p - 0.5) / 0.5) : easeIn((p - 0.6) / 0.4))
+    hopped && cells > 3
+      ? hopLevel(prev, event, cells, fromLevel, toLevel, gone * cells)
+      : event.type === 'slid' || p < (filling ? 0.5 : 0.6)
+        ? fromLevel
+        : lerp(fromLevel, toLevel, filling ? smooth((p - 0.5) / 0.5) : easeIn((p - 0.6) / 0.4))
   // 도착 칸에 서는 높이에서 상자 한 층을 뺀 값이 상자가 앉을 높이다. 발판이 오르내린 몫이 여기서 드러난다
   const endLevel = path.reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
   // 씨앗이 솟아 오르는 몫은 상자가 자리에 앉은 뒤 칸과 같이 오른다
@@ -1180,15 +1224,13 @@ export const movingBox = (
     ridePhase(game, events, to, t, swamp)
   const shift = carry ? carriedBy(carry, ride) : { x: 0, y: 0 }
 
-  const cells = cellsOf(event)
-  const hopped = hopCells(event) > 0
-  const gone = hopped ? hopProgress(cells, p) : p
-
   return {
     x: lerp(event.from.x, event.to.x, gone) + shift.x,
     y: lerp(event.from.y, event.to.y, gone) + shift.y,
     level: level + riding,
-    lift: hopped ? hopLift(cells, hopSpan(cells) * p, 0) : 0,
+    lift: hopped
+      ? hopLift(cells, hopSpan(cells) * p, 0, hopClear(prev, event, cells, fromLevel, toLevel))
+      : 0,
     to,
     // 잠기는 상자는 멈춘 자리에 있어 그 칸에 그려야 진흙에 가려진다
     cell:
@@ -1494,7 +1536,7 @@ export const hopProgress = (cells: number, p: number) =>
   hopStepAt(cells, hopSpan(cells) * p).u / cells
 
 // 큐브나 상자가 머무름까지 더한 자리 q에 있을 때 떠오른 화면 거리. land는 도착 칸에서 앉는 높이다
-export const hopLift = (cells: number, q: number, land: number) => {
+export const hopLift = (cells: number, q: number, land: number, clear: number[] = []) => {
   const lead = cells % 2
   const bounces = (cells - lead) / 2
   const { u, index, phase } = hopStepAt(cells, q)
@@ -1509,7 +1551,7 @@ export const hopLift = (cells: number, q: number, land: number) => {
   // 이어지는 갓에는 평소 높이로 내려서고 마지막에는 땅으로 내린다
   // 마지막에 갓 위에 내려서면 평소 높이로 내린 뒤에 눌린다
   const to = b + 1 < bounces || land > 0 ? CAP_TOP_IDLE : land
-  const flying = lerp(CAP_TOP_SPRING, to, s) + HOP.peak * Math.sin(Math.PI * s)
+  const flying = lerp(CAP_TOP_SPRING, to, s) + (HOP.peak + (clear[b] ?? 0)) * Math.sin(Math.PI * s)
   return land > 0 ? restLift(q - hopSpan(cells), flying) : flying
 }
 
