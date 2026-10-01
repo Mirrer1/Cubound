@@ -97,11 +97,11 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const caps = game ? capsLeft(game) : null
   const vines = game ? vinesLeft(game) : null
   const reduced = useReducedMotion()
-  // 바람이 분 수는 내 이동 연출이 끝나 바람이 부는 때에 숫자가 바뀌며 깜빡인다
+  // 바람이 분 수는 내 이동 연출이 끝나 바람이 부는 동안 0이 흔들리고 연출이 끝나면 다음 숫자로 깜빡인다
   const gustAt = game && prevGame ? windSeconds(events, swampTime(prevGame, game)) : null
-  const gusted = gustAt === null || gustTurn === turn || !animating
-  const wind = game ? windLeft(gusted ? game : (prevGame ?? game)) : null
-  const blew = gustAt !== null && gusted
+  const gusting = gustAt !== null && gustTurn === turn && animating
+  const wind = game ? windLeft(gustAt === null || !animating ? game : (prevGame ?? game)) : null
+  const blew = gustAt !== null && !animating
   const limitedDir = game?.stage.rules?.dirLimit?.dir
   const limited = events.flatMap((e) => (e.type === 'limit' ? [e.limit] : []))[0]
   const outOfMoves = left === 0 && !game?.cleared
@@ -285,7 +285,18 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                     className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                   >
                     <span className="font-mono text-[10px] tracking-[0.22em] text-mute">WIND</span>
-                    <LimitCount hit={blew ? turn : null}>{wind}</LimitCount>
+                    {gusting ? (
+                      <motion.span
+                        key={`gust-${turn}`}
+                        animate={reduced ? { x: 0 } : { x: [0, -3, 3, -2, 2, 0] }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        className="text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]"
+                      >
+                        0
+                      </motion.span>
+                    ) : (
+                      <LimitCount hit={blew ? turn : null}>{wind}</LimitCount>
+                    )}
                   </div>
                 )}
                 <div
