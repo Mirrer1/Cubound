@@ -61,7 +61,7 @@ export const zhHant: Partial<Texts> = {
   'guide.seed': '拿著種子朝高一層的格子推，就會種在腳下',
   'guide.seedRise': '種下的格子四步後連同上面的東西一起升高一層',
   'guide.seedGrow': '升起的種子不會停，每四步長高一層，最多三層',
-  'guide.wind': '風一吹就會被推回一格，但站在牆或箱子旁邊就不會被推動',
+  'guide.wind': '風一吹就會被推回一格，但站在牆或箱子後面就不會被推動',
 
   'chapter.1': '踏石之路',
   'chapter.2': '草木叢生之路',

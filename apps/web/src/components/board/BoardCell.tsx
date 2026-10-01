@@ -519,6 +519,17 @@ const BoardCell = ({
                   right="var(--color-seed-land-right)"
                 />
               </>
+            ) : filled && h > 0 ? (
+              // 높은 데서 메운 칸은 끊긴 땅 사이에 걸친 판자처럼 0층 메움과 같은 두께의 판만 그린다
+              <BoardBlock
+                x={x}
+                y={y}
+                width={TILE.width}
+                depth={TILE.lip}
+                top={faces.top}
+                left={faces.left}
+                right={faces.right}
+              />
             ) : (
               <BoardBlock
                 x={x}

@@ -61,7 +61,7 @@ export const en = {
   'guide.seedRise': 'Four moves later the planted tile rises one level, lifting whatever is on it',
   'guide.seedGrow': 'Risen seeds keep growing one level every four moves, up to three',
   'guide.wind':
-    'The wind pushes you back one tile, but standing next to a wall or a box keeps you in place',
+    'The wind pushes you back one tile, but standing behind a wall or a box keeps you in place',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',

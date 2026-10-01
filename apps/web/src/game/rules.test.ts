@@ -3811,6 +3811,29 @@ describe('move 바람', () => {
     expect(events.at(-1)).toEqual({ type: 'braced', direction: 'left' })
   })
 
+  it('상자 위에 서 있으면 바람 쪽에 붙은 같은 높이 상자 위로 밀려 간다', () => {
+    // (3,1) 상자 쪽으로 가면 뒤의 (2,1) 상자에 막혀 못 밀고 올라선다
+    const state = gusty(
+      {
+        entities: [
+          { type: 'box', x: 2, y: 1 },
+          { type: 'box', x: 3, y: 1 },
+        ],
+      },
+      { player: { x: 4, y: 1 } },
+    )
+    const { state: next, events } = move(state, 'left')
+
+    expect(next.player).toEqual({ x: 2, y: 1 })
+    expect(standHeight(next, next.player)).toBe(1)
+    expect(next.boxes).toEqual([
+      { x: 2, y: 1 },
+      { x: 3, y: 1 },
+    ])
+    expect(next.moves).toBe(4)
+    expect(events.some((e) => e.type === 'blown')).toBe(true)
+  })
+
   it('늪에 서 있으면 버둥을 다 했어도 발이 묶여 버틴다', () => {
     const state = gusty({ swamp: ['......', '......', '..#...'] }, { player: { x: 3, y: 2 } })
     const { state: next, events } = move(state, 'left')
@@ -3991,18 +4014,18 @@ describe('move 바람', () => {
     const state = gusty(
       {
         heights: [
-          [0, 0, 0, 0, 1, 0],
+          [0, 0, 0, 1, 0, 0],
           [0, 0, 0, 0, 0, 0],
           [0, 0, 0, 0, 0, 0],
         ],
-        cracks: ['...2..', '......', '......'],
+        cracks: ['......', '...2..', '......'],
       },
-      { player: { x: 3, y: 0 }, carrying: 'ladder' },
+      { player: { x: 3, y: 1 }, carrying: 'ladder' },
     )
-    const { state: next, events } = move(state, 'right')
+    const { state: next, events } = move(state, 'up')
 
-    expect(next.player).toEqual({ x: 2, y: 0 })
-    expect(events).toContainEqual({ type: 'cracked', at: { x: 3, y: 0 }, left: 1, gone: false })
+    expect(next.player).toEqual({ x: 2, y: 1 })
+    expect(events).toContainEqual({ type: 'cracked', at: { x: 3, y: 1 }, left: 1, gone: false })
   })
 
   it('이동으로 밟은 무너지는 칸을 같은 수에 바람에 밀려 떠나면 한 번 닳는다', () => {
@@ -4038,6 +4061,91 @@ describe('move 바람', () => {
     expect(next.heights[0][3]).toBe(0)
     expect(next.cracks).toEqual([{ x: 3, y: 0, left: 0 }])
     expect(events).toContainEqual({ type: 'cracked', at: { x: 3, y: 0 }, left: 0, gone: false })
+  })
+
+  it('바람이 오는 쪽 옆 칸에 상자가 있으면 숨어서 버틴다', () => {
+    const state = gusty({ entities: [{ type: 'box', x: 4, y: 0 }] }, { player: { x: 3, y: 1 } })
+    const { state: next, events } = move(state, 'up')
+
+    expect(next.player).toEqual({ x: 3, y: 0 })
+    expect(events.at(-1)).toEqual({ type: 'braced', direction: 'left', sheltered: true })
+  })
+
+  it('바람이 오는 쪽 옆 칸이 선 높이보다 높으면 숨어서 버틴다', () => {
+    const heights = [
+      [0, 0, 0, 0, 1, 0],
+      [0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0],
+    ]
+    const { state: next, events } = move(gusty({ heights }, { player: { x: 3, y: 1 } }), 'up')
+
+    expect(next.player).toEqual({ x: 3, y: 0 })
+    expect(events.at(-1)).toEqual({ type: 'braced', direction: 'left', sheltered: true })
+  })
+
+  it('바람이 오는 쪽 옆 칸이 같은 높이 바닥이나 낮은 칸이나 구덩이면 그대로 밀린다', () => {
+    for (const upwind of [1, 0, -1]) {
+      const heights = [
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, upwind, 1],
+        [1, 1, 1, 1, 1, 1],
+      ]
+      const { state: next, events } = move(gusty({ heights }, { player: { x: 3, y: 0 } }), 'down')
+
+      expect(next.player).toEqual({ x: 2, y: 1 })
+      expect(events.at(-2)).toEqual({
+        type: 'blown',
+        from: { x: 3, y: 1 },
+        to: { x: 2, y: 1 },
+        direction: 'left',
+      })
+    }
+  })
+
+  it('상자 위에 서 있으면 바람 오는 쪽의 같은 높이 상자는 못 막아 주고 밀려 떨어진다', () => {
+    const state = gusty(
+      {
+        entities: [
+          { type: 'box', x: 3, y: 0 },
+          { type: 'box', x: 4, y: 0 },
+        ],
+      },
+      { player: { x: 3, y: 1 } },
+    )
+    const { state: next, events } = move(state, 'up')
+
+    expect(next.player).toEqual({ x: 2, y: 0 })
+    expect(events.slice(1)).toEqual([
+      { type: 'blown', from: { x: 3, y: 0 }, to: { x: 2, y: 0 }, direction: 'left' },
+      { type: 'fell', from: { x: 3, y: 0 }, to: { x: 2, y: 0 }, drop: 1 },
+    ])
+  })
+
+  it('상자 위에 서 있어도 바람 오는 쪽이 더 높은 벽이면 숨어서 버틴다', () => {
+    const heights = [
+      [0, 0, 0, 0, 2, 0],
+      [0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0],
+    ]
+    const state = gusty(
+      { heights, entities: [{ type: 'box', x: 3, y: 0 }] },
+      { player: { x: 3, y: 1 } },
+    )
+    const { state: next, events } = move(state, 'up')
+
+    expect(next.player).toEqual({ x: 3, y: 0 })
+    expect(events.at(-1)).toEqual({ type: 'braced', direction: 'left', sheltered: true })
+  })
+
+  it('상자 위에 서 있고 바람 오는 쪽이 낮으면 밀려 떨어진다', () => {
+    const state = gusty({ entities: [{ type: 'box', x: 3, y: 0 }] }, { player: { x: 3, y: 1 } })
+    const { state: next, events } = move(state, 'up')
+
+    expect(next.player).toEqual({ x: 2, y: 0 })
+    expect(events.slice(1)).toEqual([
+      { type: 'blown', from: { x: 3, y: 0 }, to: { x: 2, y: 0 }, direction: 'left' },
+      { type: 'fell', from: { x: 3, y: 0 }, to: { x: 2, y: 0 }, drop: 1 },
+    ])
   })
 
   it('바람이 없는 판에서는 네 번째 수에도 밀리지 않는다', () => {

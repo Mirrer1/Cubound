@@ -2499,6 +2499,26 @@ describe('durationOf 바람', () => {
   })
 })
 
+describe('playerFrame 숨기', () => {
+  it('바람 오는 쪽에 막힌 것이 있어 숨으면 기울지 않고 기대면 기운다', () => {
+    const mid = (0.24 / 0.54 + 1) / 2
+    const hidden = gust({ entities: [{ type: 'box', x: 4, y: 0 }] })
+    const leaning = gust({
+      heights: [
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+    })
+
+    // 구르기를 마친 90도는 반듯하게 선 모습과 같다
+    const tilt = (angle: number) => Math.abs(Math.sin(angle * 2))
+    expect(tilt(playerFrame(hidden.prev, hidden.game, hidden.events, mid).angle)).toBeCloseTo(0)
+    expect(
+      tilt(playerFrame(leaning.prev, leaning.game, leaning.events, mid).angle),
+    ).toBeGreaterThan(0.4)
+  })
+})
+
 describe('playerFrame 바람', () => {
   it('내 이동이 끝난 뒤에 구르지 않고 바람 쪽으로 기울며 미끄러진다', () => {
     const { prev, game, events } = gust()

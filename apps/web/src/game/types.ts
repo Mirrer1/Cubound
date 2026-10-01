@@ -140,7 +140,7 @@ export type GameEvent =
   | { type: 'seedTicked'; at: Point; left: number } // 심은 칸이 솟기까지 남은 수가 줄어듦
   | { type: 'rose'; at: Point; height: number; lifted: Lifted[]; growing: boolean } // height는 솟은 뒤 바닥 높이이고 growing은 또 솟을 차례가 남았는지
   | { type: 'blown'; from: Point; to: Point; direction: Direction } // 바람에 밀려 to 쪽으로 감. 그 이동의 이벤트가 뒤에 이어진다
-  | { type: 'braced'; direction: Direction } // 바람에 기대서 버팀
+  | { type: 'braced'; direction: Direction; sheltered?: true } // 바람에 버팀. sheltered는 바람 오는 쪽이 막혀 숨은 것
   | { type: 'blocked'; direction: Direction }
   | { type: 'limit'; limit: Limit } // 보스 제약에 막힘
   | { type: 'cleared' }

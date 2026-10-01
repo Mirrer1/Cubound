@@ -956,7 +956,8 @@ const pathFrame = (
   const lean = windLean(events, swamp, t)
   const braced = events.find((e) => e.type === 'braced')
   // 늪에 빠져 버티는 수는 버둥 사이에 끼면 리듬만 끊겨 기울거나 눌리지 않는다
-  if (braced?.type === 'braced' && lean !== null && !inSwamp(game, player)) {
+  // 늪에 묶이거나 숨어서 버틴 수는 기울지 않는다
+  if (braced?.type === 'braced' && lean !== null && !inSwamp(game, player) && !braced.sheltered) {
     return { ...still, level: pathEnd + risen, direction: braced.direction, angle: lean * TILT }
   }
 
