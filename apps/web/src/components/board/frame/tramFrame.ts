@@ -11,7 +11,7 @@ import {
 } from './timeFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { nextTramSpot } from '@/game/rules'
-import type { Entity, GameEvent, GameState, Point, TramSpot } from '@/game/types'
+import type { GameEvent, GameState, Point, Tram, TramSpot } from '@/game/types'
 
 // 발판이 다음 칸으로 가는 진행도 0~1. 발판이 가지 않는 이동은 1
 export const tramProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
@@ -37,8 +37,6 @@ export const carriedBy = (carry: TramEvent, p: number) => ({
   x: (carry.to.x - carry.from.x) * p,
   y: (carry.to.y - carry.from.y) * p,
 })
-
-export type Tram = Extract<Entity, { type: 'tram' }>
 
 export const tramNext = (tram: Tram, spot: TramSpot) =>
   tram.cells[nextTramSpot(tram.cells, spot).at]

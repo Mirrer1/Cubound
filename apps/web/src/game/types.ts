@@ -18,6 +18,8 @@ export type Entity = (
 ) &
   Point
 
+export type Tram = Extract<Entity, { type: 'tram' }>
+
 export type Limit = 'moves' | 'pushes' | 'climbs' | 'rides' | 'dir'
 
 export interface StageRules {

@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { playerFrame } from './cubeFrame'
 import { board, ride } from './testStages'
 import {
-  type Tram,
   railDirsOf,
   slidingCell,
   tramFacing,
@@ -12,6 +11,7 @@ import {
   tramProgress,
 } from './tramFrame'
 import { TILE, toScreen } from '@/game/iso'
+import type { Tram } from '@/game/types'
 
 describe('tramProgress', () => {
   it('되돌아가지 않고 끝에서 다 간다', () => {

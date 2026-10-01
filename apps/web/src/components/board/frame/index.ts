@@ -24,7 +24,6 @@ export {
 export {
   railDirsOf,
   slidingCell,
-  type Tram,
   tramFacing,
   tramFramesOf,
   tramNext,
@@ -76,3 +75,4 @@ export {
   vineLooks,
   vineProgress,
 } from './vineFrame'
+export type { Tram } from '@/game/types'
