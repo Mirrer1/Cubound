@@ -18,7 +18,7 @@ Claude Design으로 받은 프로토타입이다. **모양과 색과 치수를 �
 | `Cubound Swamp.dc.html` | 늪 | **썼다.** 6월드 |
 | `Cubound Mushroom.dc.html` | 버섯. 시드는 것과 올라선 큐브까지 | **썼다.** 7월드 |
 | `Cubound Vine.dc.html` | 덩굴. 싹과 줄기와 굳은 칸 | **썼다.** 8월드 |
-| `Cubound Seed.dc.html` | 씨앗. 자라는 나무, 솟은 땅, 쓰는 법 세 장면, 보스 기둥 | **쓰는 중.** 9월드 |
+| `Cubound Seed.dc.html` | 씨앗. 자라는 나무, 솟은 땅, 쓰는 법 세 장면, 보스 기둥 | **썼다.** 9월드 |
 
 ## 규칙
 

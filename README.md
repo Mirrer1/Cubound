@@ -94,7 +94,7 @@ $ pnpm stage:check src/stages/world-1/10.json
 | 상태          | Zustand                                                                                    |
 | 스타일        | Tailwind CSS v4                                                                            |
 | 영속화        | localStorage 키 `cubound:progress`, `cubound:session`, `cubound:language`, `cubound:world` |
-| 테스트        | Vitest 순수 함수 1090여 개 + Playwright 스모크와 화면 캡처                                 |
+| 테스트        | Vitest 순수 함수 1300여 개 + Playwright 스모크와 화면 캡처                                 |
 | 코드 퀄리티   | oxlint + Prettier + Husky + lint-staged                                                    |
 | 호스팅        | Vercel                                                                                     |
 
@@ -126,7 +126,7 @@ pnpm dev
 apps/web/
   src/
     game/         # 순수 로직 — 규칙 / 풀이 검사기 / 형식 검사 / 가림 처리 / 진행 / 이어하기 / 좌표 / 카메라
-    stages/       # 스테이지 JSON — world-1 ~ world-6
+    stages/       # 스테이지 JSON — world-1 ~ world-10
     store/        # Zustand — 게임 상태 / 연출 / 입력 대기열 / 설정
     platform/     # 브라우저 의존 — 저장 / 입력 / 주소 / 탭 제목
     components/   # board 필드와 연출 / guide 스텝 가이드 / ui 공용
