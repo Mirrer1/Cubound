@@ -20,12 +20,17 @@ describe('스테이지 데이터', () => {
     expect(result.ok ? [] : result.errors).toEqual([])
   })
 
-  it.each(STAGES)('%s는 풀 수 있고 best가 최소 이동 수와 같다', (_, stage) => {
-    const result = solve(stage)
+  // 10월드 네 요소 판은 탐색이 5초 안팎이라 기본 제한보다 넉넉히 둔다
+  it.each(STAGES)(
+    '%s는 풀 수 있고 best가 최소 이동 수와 같다',
+    (_, stage) => {
+      const result = solve(stage)
 
-    expect(result.status).toBe('solved')
-    expect(stage.best).toBe(result.status === 'solved' ? result.moves : undefined)
-  })
+      expect(result.status).toBe('solved')
+      expect(stage.best).toBe(result.status === 'solved' ? result.moves : undefined)
+    },
+    20000,
+  )
 
   it.each(STAGES)('%s의 id가 파일 경로와 맞다', (path, stage) => {
     const [, world, file] = path.match(/world-(\d+)\/(\d+)\.json$/) ?? []
