@@ -1,7 +1,10 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { queueInput, useGameStore } from './gameStore'
-import type { GameEvent } from '@/game/types'
+import { createState, move } from '@/game/rules'
+import { toSession } from '@/game/session'
+import type { Direction, GameEvent } from '@/game/types'
+import { STAGES } from '@/stages'
 
 const store = () => useGameStore.getState()
 
@@ -73,5 +76,75 @@ describe('queueInput', () => {
 
     expect(queueInput([], 'up', blown)).toEqual([])
     expect(queueInput([], 'up', braced)).toEqual([])
+  })
+})
+
+// 저장소는 브라우저 localStorage를 쓰므로 테스트마다 빈 것으로 바꿔 둔다
+const fakeStorage = () => {
+  const items = new Map<string, string>()
+  return {
+    getItem: (key: string) => items.get(key) ?? null,
+    setItem: (key: string, value: string) => void items.set(key, value),
+    removeItem: (key: string) => void items.delete(key),
+  }
+}
+
+describe('enter', () => {
+  beforeEach(() => {
+    vi.stubGlobal('localStorage', fakeStorage())
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('중간 상태가 없으면 처음부터 시작하고 가이드를 띄운다', () => {
+    store().enter('1-1')
+
+    expect(store().game?.moves).toBe(0)
+    expect(store().guideStep).toBe(0)
+  })
+
+  it('중간 상태가 남아 있으면 이어서 시작하고 가이드를 띄우지 않는다', () => {
+    const saved = move(createState(STAGES['1-1']), 'up').state
+    localStorage.setItem('cubound:session', JSON.stringify(toSession(saved)))
+
+    store().enter('1-1')
+
+    expect(store().game?.moves).toBe(1)
+    expect(store().guideStep).toBeNull()
+  })
+})
+
+describe('move 클리어 기록', () => {
+  const SOLUTION: Direction[] = ['up', 'up', 'right', 'right', 'right', 'down', 'down', 'left']
+
+  beforeEach(() => {
+    vi.stubGlobal('localStorage', fakeStorage())
+    store().enter('1-1')
+    store().closeGuide()
+    for (const direction of SOLUTION) {
+      store().move(direction)
+      store().finishAnimation()
+    }
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('클리어하면 기록을 남긴다', () => {
+    expect(store().game?.cleared).toBe(true)
+    expect(store().progress.stages['1-1']).toEqual({ bestMoves: 8, stars: 3 })
+  })
+
+  it('이미 클리어한 판에서 누른 입력은 기록을 다시 쓰지 않는다', () => {
+    const progress = store().progress
+    const turn = store().turn
+
+    store().move('left')
+
+    expect(store().progress).toBe(progress)
+    expect(store().turn).toBe(turn)
   })
 })

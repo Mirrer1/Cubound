@@ -1,31 +1,57 @@
 import { describe, expect, it } from 'vitest'
 
+import { tiltOnTop } from './cube'
 import {
+  type BoxFrame,
   CAP_TOP_IDLE,
   MUSHROOM_STAND,
+  type PlantingFrame,
+  SAPLING,
+  type Tram,
+  type VineFrame,
+  type VineLook,
+  atStage,
+  boxFramesOf,
   boxSink,
+  carriedBaseOf,
+  carriedOpacityOf,
   carriedRoll,
+  carriedTilt,
   crackFrame,
+  crackLeft,
   crackProgress,
   crackSink,
   crackThickness,
+  directionBetween,
   durationOf,
+  filledCells,
+  fillingCellKey,
   frostAt,
+  heightNow,
+  hopLift,
   hopProgress,
+  ladderTilt,
   moveEase,
   movingBox,
   mushroomFrames,
   mushroomPose,
   ownProgress,
   pickUpProgress,
+  plantTiltOf,
+  plantedSeedAt,
   plantingSeed,
   playerFrame,
   pressProgress,
+  railDirsOf,
   restartDrop,
   restartDuration,
   riseProgress,
+  rollingTilt,
   seedFrames,
   seedLayers,
+  sinkAt,
+  slidingCell,
+  standSink,
   stepProgress,
   swampCollar,
   swampFrame,
@@ -33,16 +59,21 @@ import {
   swampTime,
   switchCells,
   switchProgress,
+  tramFacing,
+  tramFramesOf,
+  tramNext,
   tramProgress,
   vineFrames,
   vineLooks,
   vineProgress,
+  wallHeight,
+  windDisplay,
   windLeaning,
   windSeconds,
 } from './frame'
-import { TILE } from '@/game/iso'
-import { createState, move } from '@/game/rules'
-import type { Direction, GameState, Point, Stage } from '@/game/types'
+import { TILE, isoDelta, toScreen } from '@/game/iso'
+import { createState, move, windLeft } from '@/game/rules'
+import type { Direction, Entity, GameEvent, GameState, Point, Stage } from '@/game/types'
 
 const STAGE: Stage = {
   version: 1,
@@ -2554,5 +2585,610 @@ describe('windSeconds', () => {
 
     expect(windSeconds(events)).toBeCloseTo(0.24)
     expect(windSeconds(move(createState(STAGE), 'right').events)).toBeNull()
+  })
+})
+
+describe('slidingCell', () => {
+  const from = { x: 1, y: 1 }
+  const to = { x: 2, y: 1 }
+
+  it('출발 전에는 출발 칸, 도착 뒤에는 도착 칸에 그린다', () => {
+    expect(slidingCell(from, to, 0)).toBe(from)
+    expect(slidingCell(from, to, 1)).toBe(to)
+  })
+
+  it('가는 동안은 두 칸 중 앞쪽 칸에 그린다', () => {
+    expect(slidingCell(from, to, 0.5)).toBe(to)
+    expect(slidingCell(to, from, 0.5)).toBe(to)
+  })
+
+  it('앞뒤가 같은 줄이면 출발 칸에 그린다', () => {
+    const side = { x: 2, y: 0 }
+
+    expect(slidingCell(from, side, 0.5)).toBe(from)
+  })
+})
+
+describe('directionBetween', () => {
+  it('두 칸 사이 방향을 돌려준다', () => {
+    const at = { x: 1, y: 1 }
+
+    expect(directionBetween(at, { x: 2, y: 1 })).toBe('right')
+    expect(directionBetween(at, { x: 0, y: 1 })).toBe('left')
+    expect(directionBetween(at, { x: 1, y: 2 })).toBe('down')
+    expect(directionBetween(at, { x: 1, y: 0 })).toBe('up')
+  })
+
+  it('가로와 세로가 다 다르면 가로 방향을 먼저 본다', () => {
+    expect(directionBetween({ x: 0, y: 0 }, { x: 1, y: 1 })).toBe('right')
+  })
+})
+
+describe('atStage', () => {
+  const STEPS = [0, 10, 30]
+
+  it('정수 단계는 그 자리 값이다', () => {
+    expect(atStage(STEPS, 0)).toBe(0)
+    expect(atStage(STEPS, 1)).toBe(10)
+    expect(atStage(STEPS, 2)).toBe(30)
+  })
+
+  it('단계 사이는 앞뒤 값을 섞는다', () => {
+    expect(atStage(STEPS, 0.5)).toBe(5)
+    expect(atStage(STEPS, 1.5)).toBe(20)
+  })
+})
+
+describe('hopLift', () => {
+  it('걸어 들어가는 한 칸은 평소 갓 꼭대기까지 오른다', () => {
+    expect(hopLift(3, 0, 0)).toBe(0)
+    expect(hopLift(3, 0.5, 0)).toBeCloseTo(CAP_TOP_IDLE / 2)
+    expect(hopLift(3, 1, 0)).toBeCloseTo(CAP_TOP_IDLE)
+  })
+
+  it('갓에 머무는 동안 눌렸다가 다 펴진 꼭대기에서 날아오른다', () => {
+    expect(hopLift(3, 1.55, 0)).toBeCloseTo(16)
+    expect(hopLift(3, 2, 0)).toBeCloseTo(27)
+  })
+
+  it('나는 동안 포물선 꼭대기를 지나 땅에 내린다', () => {
+    expect(hopLift(3, 3, 0)).toBeCloseTo(45.5)
+    expect(hopLift(3, 4, 0)).toBeCloseTo(0)
+  })
+
+  it('이미 올라서 있던 갓은 눌린 높이에서 시작한다', () => {
+    expect(hopLift(2, 0, 0)).toBeCloseTo(MUSHROOM_STAND)
+  })
+
+  it('연쇄에서는 다음 갓에 평소 높이로 내려선다', () => {
+    expect(hopLift(5, 4, 0)).toBeCloseTo(CAP_TOP_IDLE)
+  })
+
+  it('마지막에 갓 위에 내려서면 눌린 갓 높이에 선다', () => {
+    expect(hopLift(3, 4, 5)).toBeCloseTo(MUSHROOM_STAND)
+  })
+})
+
+describe('filledCells', () => {
+  const STAGE_HEIGHTS = [[0, -1, -1, -1]]
+  const VINE: Entity = {
+    type: 'vine',
+    id: 'v',
+    x: 0,
+    y: 0,
+    cells: [
+      { x: 2, y: 0 },
+      { x: 3, y: 0 },
+    ],
+  }
+
+  it('처음에 구덩이였다가 바닥이 된 칸을 고른다', () => {
+    expect(filledCells([[0, 0, -1, -1]], STAGE_HEIGHTS, [], [])).toEqual([{ x: 1, y: 0 }])
+  })
+
+  it('처음부터 바닥이던 칸과 아직 구덩이인 칸은 뺀다', () => {
+    expect(filledCells([[0, -1, -1, -1]], STAGE_HEIGHTS, [], [])).toEqual([])
+  })
+
+  it('덩굴이 자라 메운 칸은 빼고 아직 안 자란 길 칸은 상자가 메웠으면 넣는다', () => {
+    const vines = [{ id: 'v', grown: 1, stopped: false }]
+
+    expect(filledCells([[0, 0, 0, 0]], STAGE_HEIGHTS, [VINE], vines)).toEqual([
+      { x: 1, y: 0 },
+      { x: 3, y: 0 },
+    ])
+  })
+})
+
+describe('fillingCellKey', () => {
+  const FILLED: GameEvent = {
+    type: 'pushed',
+    from: { x: 1, y: 0 },
+    to: { x: 2, y: 0 },
+    result: 'filled',
+  }
+  const NO_VINES = new Map<string, VineLook>()
+  const VINE_AT_TARGET = new Map<string, VineLook>([
+    ['2-0', { kind: 'next', enter: 'right', leave: null, hard: false, knot: false }],
+  ])
+
+  it('옆에서 밀어 한 칸 안에 있으면 바로 바닥으로 그린다', () => {
+    expect(fillingCellKey({ x: 1.5, y: 0 }, [FILLED], NO_VINES)).toBeNull()
+    expect(fillingCellKey({ x: 1, y: 0 }, [FILLED], NO_VINES)).toBeNull()
+  })
+
+  it('멀리서 날아오는 상자는 한 칸 안으로 들어올 때까지 구덩이로 둔다', () => {
+    const far: GameEvent = { ...FILLED, from: { x: 0, y: 0 }, to: { x: 3, y: 0 } }
+
+    expect(fillingCellKey({ x: 1.5, y: 0 }, [far], NO_VINES)).toBe('3-0')
+    expect(fillingCellKey({ x: 2, y: 0 }, [far], NO_VINES)).toBeNull()
+  })
+
+  it('덩굴이 올 칸은 상자가 옆에 있어도 상자가 움직이는 동안 구덩이로 둔다', () => {
+    expect(fillingCellKey({ x: 1.9, y: 0 }, [FILLED], VINE_AT_TARGET)).toBe('2-0')
+  })
+
+  it('상자가 다 움직였거나 메우는 이동이 아니면 없다', () => {
+    const slid: GameEvent = { ...FILLED, result: 'slid' }
+
+    expect(fillingCellKey(null, [FILLED], VINE_AT_TARGET)).toBeNull()
+    expect(fillingCellKey({ x: 1.5, y: 0 }, [slid], VINE_AT_TARGET)).toBeNull()
+  })
+})
+
+describe('heightNow', () => {
+  const view = { heights: [[0, 1]], before: { heights: [[0, -1]] }, fillingKey: '1-0' }
+
+  it('메우는 중이라 아직 구덩이로 그리는 칸은 앞 높이를 쓴다', () => {
+    expect(heightNow(view, 1, 0)).toBe(-1)
+  })
+
+  it('나머지 칸은 지금 높이를 쓰고 맵 밖은 없다', () => {
+    expect(heightNow(view, 0, 0)).toBe(0)
+    expect(heightNow({ ...view, fillingKey: null }, 1, 0)).toBe(1)
+    expect(heightNow(view, 0, 5)).toBeUndefined()
+  })
+})
+
+describe('wallHeight', () => {
+  const vineAt = (kind: VineFrame['kind'], rise: number) =>
+    new Map([['1-0', { kind, rise } as VineFrame]])
+  const base = {
+    heights: [[0, 2, -1]],
+    before: { heights: [[0, 1, -1]] },
+    fillingKey: null,
+    vineFrame: new Map<string, VineFrame>(),
+    railDirs: new Map<string, string>(),
+  }
+
+  it('옆 칸의 지금 높이와 앞 높이 중 높은 쪽까지 벽을 세운다', () => {
+    expect(wallHeight(base, 1, 0)).toBe(2)
+    expect(wallHeight({ ...base, heights: [[0, 0, -1]] }, 1, 0)).toBe(1)
+  })
+
+  it('옆 칸이 구덩이이거나 맵 밖이면 -1이다', () => {
+    expect(wallHeight(base, 2, 0)).toBe(-1)
+    expect(wallHeight(base, 0, 3)).toBe(-1)
+  })
+
+  it('옆 칸이 발판 길이면 구덩이가 이어져 벽이 없다', () => {
+    expect(wallHeight({ ...base, railDirs: new Map([['1-0', '1,0']]) }, 1, 0)).toBe(-1)
+  })
+
+  it('옆 칸이 아직 구덩이인 덩굴 길이거나 판이 덜 차오른 덩굴 칸이면 벽이 없다', () => {
+    const pit = { ...base, heights: [[0, -1, -1]], before: { heights: [[0, -1, -1]] } }
+
+    expect(wallHeight({ ...pit, vineFrame: vineAt('next', 0) }, 1, 0)).toBe(-1)
+    expect(wallHeight({ ...base, vineFrame: vineAt('grown', 0.5) }, 1, 0)).toBe(-1)
+  })
+
+  it('다 차오른 덩굴 칸과 뿌리 칸은 높이만큼 벽을 세운다', () => {
+    expect(wallHeight({ ...base, vineFrame: vineAt('grown', 1) }, 1, 0)).toBe(2)
+    expect(wallHeight({ ...base, vineFrame: vineAt('root', 0) }, 1, 0)).toBe(2)
+  })
+
+  it('메우는 중인 칸은 앞 높이로 본다', () => {
+    const filling = { ...base, heights: [[0, 0, -1]], before: { heights: [[0, -1, -1]] } }
+
+    expect(wallHeight(filling, 1, 0)).toBe(0)
+    expect(wallHeight({ ...filling, fillingKey: '1-0' }, 1, 0)).toBe(-1)
+  })
+})
+
+describe('crackLeft', () => {
+  const state = { cracks: [{ x: 1, y: 0, left: 2 }] }
+
+  it('무너지는 칸이 앞으로 견디는 횟수를 돌려준다', () => {
+    expect(crackLeft(state, { x: 1, y: 0 })).toBe(2)
+  })
+
+  it('목록에 없는 칸은 -1이다', () => {
+    expect(crackLeft(state, { x: 0, y: 0 })).toBe(-1)
+  })
+})
+
+describe('sinkAt', () => {
+  const at = { x: 1, y: 0 }
+  const view = (was: number, left: number, crackPhase: number) => ({
+    game: { cracks: [{ ...at, left }] },
+    before: { cracks: [{ ...at, left: was }] },
+    crackPhase,
+  })
+
+  it('무너지는 칸은 닳은 단계만큼 내려앉는다', () => {
+    expect(sinkAt(view(1, 1, 1), at)).toBe(crackSink(crackFrame(1, 1, 1).stage))
+    expect(sinkAt(view(1, 1, 1), at)).toBeGreaterThan(0)
+  })
+
+  it('이 수에 닳는 칸은 진행도만큼 내려앉는다', () => {
+    expect(sinkAt(view(2, 1, 0.5), at)).toBe(crackSink(crackFrame(2, 1, 0.5).stage))
+  })
+
+  it('무너지는 칸이 아니거나 이미 무너진 칸은 0이다', () => {
+    expect(sinkAt(view(1, 1, 1), { x: 0, y: 0 })).toBe(0)
+    expect(sinkAt(view(-1, -1, 1), at)).toBe(0)
+  })
+
+  it('이 수에 무너진 칸은 앞 횟수로 본다', () => {
+    expect(sinkAt(view(1, -1, 0.5), at)).toBe(crackSink(crackFrame(1, -1, 0.5).stage))
+  })
+})
+
+describe('standSink', () => {
+  const view = {
+    game: { cracks: [{ x: 1, y: 1, left: 1 }] },
+    before: { cracks: [{ x: 1, y: 1, left: 1 }] },
+    crackPhase: 1,
+  }
+  const deep = sinkAt(view, { x: 1, y: 1 })
+
+  it('칸 위에 서 있으면 그 칸의 내려앉은 양이다', () => {
+    expect(standSink(view, 1, 1)).toBe(deep)
+    expect(standSink(view, 0, 1)).toBe(0)
+  })
+
+  it('칸 사이를 지나는 동안은 앞뒤 칸을 섞는다', () => {
+    expect(standSink(view, 0.5, 1)).toBeCloseTo(deep / 2)
+    expect(standSink(view, 1, 0.25)).toBeCloseTo(deep * 0.25)
+  })
+})
+
+describe('발판 그리기', () => {
+  const TRAM: Tram = {
+    type: 'tram',
+    id: 't',
+    x: 0,
+    y: 0,
+    level: 1,
+    dir: 1,
+    cells: [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+    ],
+  }
+  const spot = (at: number, dir: 1 | -1) => ({ id: 't', at, dir })
+
+  it('tramNext는 다음 수에 갈 칸이고 끝에서는 되돌아온다', () => {
+    expect(tramNext(TRAM, spot(0, 1))).toEqual({ x: 1, y: 0 })
+    expect(tramNext(TRAM, spot(2, 1))).toEqual({ x: 1, y: 0 })
+  })
+
+  it('tramFacing은 다음에 갈 쪽을 가리키고 끝에 닿으면 오던 쪽을 유지한다', () => {
+    expect(tramFacing(TRAM, spot(1, 1))).toEqual({ x: 0, y: 1 })
+    expect(tramFacing(TRAM, spot(1, -1))).toEqual({ x: -1, y: 0 })
+    expect(tramFacing(TRAM, spot(2, 1))).toEqual({ x: 0, y: 1 })
+  })
+
+  it('railDirsOf는 길 칸마다 이웃한 길 칸의 방향을 담는다', () => {
+    expect(railDirsOf([TRAM])).toEqual(
+      new Map([
+        ['0-0', '1,0'],
+        ['1-0', '-1,0|0,1'],
+        ['1-1', '0,-1'],
+      ]),
+    )
+  })
+
+  const frames = (from: number, to: number, tramPhase: number) =>
+    tramFramesOf({
+      trams: [TRAM],
+      before: { trams: [spot(from, 1)] },
+      game: { trams: [spot(to, 1)] },
+      tramPhase,
+      PIT_FLOOR: 10,
+    })[0]
+
+  it('tramFramesOf는 진행도만큼 미끄러진 화면 자리와 발판 높이만큼 올린 깊이를 준다', () => {
+    const half = frames(0, 1, 0.5)
+    const screen = toScreen({ x: 0.5, y: 0 }, 0)
+
+    expect(half.x).toBe(screen.x)
+    expect(half.y).toBe(screen.y - TILE.layer)
+    expect(half.depth).toBe(10 + TILE.layer)
+  })
+
+  it('가는 동안은 가는 쪽을 가리키고 앞쪽 칸에 그린다', () => {
+    const half = frames(0, 1, 0.5)
+
+    expect({ dx: half.dx, dy: half.dy }).toEqual({ dx: 1, dy: 0 })
+    expect(half.cell).toEqual({ x: 1, y: 0 })
+    expect(half.next).toEqual({ x: 1, y: 0 })
+  })
+
+  it('도착하면 코와 다음 칸이 그다음 쪽으로 넘어간다', () => {
+    const done = frames(0, 1, 1)
+
+    expect({ dx: done.dx, dy: done.dy }).toEqual({ dx: 0, dy: 1 })
+    expect(done.next).toEqual({ x: 1, y: 1 })
+    expect(done.to).toEqual({ x: 1, y: 0 })
+  })
+
+  it('출발 전에는 앞 자리 기준으로 다음 쪽을 가리킨다', () => {
+    const start = frames(0, 1, 0)
+
+    expect(start.cell).toEqual({ x: 0, y: 0 })
+    expect({ dx: start.dx, dy: start.dy }).toEqual({ dx: 1, dy: 0 })
+  })
+})
+
+describe('머리 위 물건', () => {
+  const PICKED: GameEvent = { type: 'pickedUp', at: { x: 1, y: 0 }, item: 'ladder' }
+  const PLACED: GameEvent = { type: 'placed', ladder: { x: 1, y: 0, direction: 'right' } }
+  const carry = (view: Partial<Parameters<typeof carriedOpacityOf>[0]>) =>
+    carriedOpacityOf({
+      pickedUp: undefined,
+      placed: undefined,
+      game: { carrying: null },
+      pickUpPhase: 0.3,
+      ownT: 0.4,
+      ...view,
+    })
+
+  it('carriedOpacityOf는 줍는 수에 줍는 진행도만큼 나타난다', () => {
+    expect(carry({ pickedUp: PICKED, game: { carrying: 'ladder' } })).toBe(0.3)
+  })
+
+  it('carriedOpacityOf는 줍는 수인데 들고 있지 않으면 안 보인다', () => {
+    expect(carry({ pickedUp: PICKED })).toBe(0)
+  })
+
+  it('carriedOpacityOf는 놓는 수에 내 이동 몫만큼 사라진다', () => {
+    expect(carry({ placed: PLACED })).toBeCloseTo(0.6)
+  })
+
+  it('carriedOpacityOf는 들고 있으면 1, 아니면 0이다', () => {
+    expect(carry({ game: { carrying: 'seed' } })).toBe(1)
+    expect(carry({})).toBe(0)
+  })
+
+  it('carriedBaseOf는 큐브 윗면에 내려앉음과 떠오름을 더한다', () => {
+    expect(carriedBaseOf({ x: 10, y: 100 }, 4, { lift: 6 })).toEqual({
+      x: 10,
+      y: 100 - TILE.layer + 4 - 6,
+    })
+  })
+
+  it('rollingTilt는 구른 정도만큼 윗면을 따라 기울고 그만큼 떠오른다', () => {
+    const cube = { angle: Math.PI / 4, direction: 'right' as const }
+    const roll = carriedRoll(0.5, false)
+    const tilted = tiltOnTop('right', roll.angle)(3, -2, 5)
+
+    expect(rollingTilt(cube, { in: false, out: false })(3, -2, 5)).toEqual({
+      x: tilted.x,
+      y: tilted.y - roll.hop,
+    })
+  })
+
+  it('rollingTilt는 이어서 구르면 낮게 떠오른다', () => {
+    const cube = { angle: Math.PI / 4, direction: 'right' as const }
+    const roll = carriedRoll(0.5, true)
+    const tilted = tiltOnTop('right', roll.angle)(0, 0, 0)
+
+    expect(rollingTilt(cube, { in: true, out: false })(0, 0, 0).y).toBe(tilted.y - roll.hop)
+  })
+
+  const rolling = () => ({ x: 0, y: 0 })
+  const tilt = (view: Partial<Parameters<typeof carriedTilt>[0]>) =>
+    carriedTilt({
+      events: [],
+      moving: true,
+      t: 0.5,
+      swampSeconds: swampTime(null, createState(STAGE)),
+      cube: { angle: 0.3, direction: 'left' },
+      rolling,
+      ...view,
+    })
+
+  it('carriedTilt는 막힌 수에 큐브와 같은 각도로 기운다', () => {
+    const bump = tilt({ events: [{ type: 'blocked', direction: 'left' }], moving: false })
+
+    expect(bump?.(1, 2, 3)).toEqual(tiltOnTop('left', 0.3)(1, 2, 3))
+  })
+
+  it('carriedTilt는 바람에 밀리거나 기대는 동안 큐브와 같은 각도로 기운다', () => {
+    const { events } = gust()
+    const bump = tilt({ events, t: 0.7 })
+
+    expect(bump).not.toBe(rolling)
+    expect(bump?.(1, 2, 3)).toEqual(tiltOnTop('left', 0.3)(1, 2, 3))
+  })
+
+  it('carriedTilt는 구르는 동안 rolling을 쓴다', () => {
+    expect(tilt({})).toBe(rolling)
+  })
+
+  it('carriedTilt는 멈춰 있거나 기울지 않으면 없다', () => {
+    expect(tilt({ moving: false })).toBeUndefined()
+    expect(tilt({ cube: { angle: 0, direction: 'left' } })).toBeUndefined()
+  })
+
+  it('ladderTilt는 2px 위에서 같은 기울기를 쓰고 기울기가 없으면 없다', () => {
+    const bump = tiltOnTop('up', 0.2)
+
+    expect(ladderTilt(bump)?.(1, 2, 3)).toEqual(bump(1, 2, 5))
+    expect(ladderTilt(undefined)).toBeUndefined()
+  })
+})
+
+describe('심는 씨앗', () => {
+  const view = (planting: PlantingFrame | null) => ({
+    planting,
+    cubeScreen: { x: 10, y: 100 },
+    cubeSink: 4,
+    cube: { lift: 6 },
+  })
+  const frame = (go: number): PlantingFrame => ({ go, hop: 3, scale: 0.8, opacity: 0.5 })
+  const soil = isoDelta(SAPLING.spot, -SAPLING.spot)
+
+  it('plantedSeedAt은 심는 수가 아니면 없다', () => {
+    expect(plantedSeedAt(view(null))).toBeNull()
+  })
+
+  it('plantedSeedAt은 큐브 윗면에서 떨어지는 길만큼 솟은 채 출발한다', () => {
+    expect(plantedSeedAt(view(frame(0)))).toEqual({
+      x: 10,
+      y: 100 - TILE.layer + 4 - 6 - 3,
+      scale: 0.8,
+      opacity: 0.5,
+    })
+  })
+
+  it('plantedSeedAt은 다 가면 그 칸의 흙 자리에 닿는다', () => {
+    const seed = plantedSeedAt(view(frame(1)))
+
+    expect(seed?.x).toBeCloseTo(10 + soil.x)
+    expect(seed?.y).toBeCloseTo(100 + soil.y - SAPLING.soil + 4 - 3)
+  })
+
+  it('plantTiltOf는 출발할 때 큐브 윗면과 같이 기울고 다 가면 기울기를 벗는다', () => {
+    const cube = { angle: 0.3, direction: 'right' as const }
+    const start = plantTiltOf(frame(0), cube)?.(1, 2, 3)
+    const tilted = tiltOnTop('right', 0.3)(1, 2, 3)
+    const done = plantTiltOf(frame(1), cube)?.(1, 2, 3)
+
+    expect(start?.x).toBeCloseTo(tilted.x)
+    expect(start?.y).toBeCloseTo(tilted.y)
+    expect(done?.x).toBeCloseTo(0)
+    expect(done?.y).toBeCloseTo(0)
+  })
+
+  it('plantTiltOf는 심는 수가 아니면 없다', () => {
+    expect(plantTiltOf(null, { angle: 0.3, direction: 'right' })).toBeUndefined()
+  })
+})
+
+describe('boxFramesOf', () => {
+  const NO_CRACK = { game: { cracks: [] }, before: { cracks: [] }, crackPhase: 1 }
+  const BOX: BoxFrame = {
+    x: 1.5,
+    y: 0,
+    level: 1,
+    to: { x: 2, y: 0 },
+    cell: { x: 2, y: 0 },
+    lift: 5,
+  }
+  const view = (over: Partial<Parameters<typeof boxFramesOf>[0]>) =>
+    boxFramesOf({
+      box: null,
+      sinkingBox: null,
+      tramFrames: [],
+      boxes: [],
+      crackView: NO_CRACK,
+      BOX_SINK: 20,
+      ...over,
+    })
+  const pushed = toScreen({ x: 1.5, y: 0 }, 1)
+
+  it('움직이는 상자가 없고 발판 위 상자도 없으면 비어 있다', () => {
+    expect(view({})).toEqual([])
+  })
+
+  it('밀리는 상자는 그 순간 화면 자리에서 떠오른 만큼 올려 그린다', () => {
+    expect(view({ box: BOX })).toEqual([
+      { x: pushed.x, y: pushed.y - TILE.layer - 5, to: BOX.to, cell: BOX.cell },
+    ])
+  })
+
+  it('늪에 가라앉는 상자는 잠긴 정도만큼 내려간다', () => {
+    const sinkingBox = { at: { x: 2, y: 0 }, deep: 0.5, filled: 0 }
+
+    expect(view({ box: BOX, sinkingBox })[0].y).toBe(pushed.y - TILE.layer - 5 + 10)
+  })
+
+  it('무너지는 칸 위를 지나는 상자는 내려앉은 만큼 내려간다', () => {
+    const crackView = {
+      game: { cracks: [{ x: 2, y: 0, left: 1 }] },
+      before: { cracks: [{ x: 2, y: 0, left: 1 }] },
+      crackPhase: 1,
+    }
+
+    expect(view({ box: BOX, crackView })[0].y).toBeCloseTo(
+      pushed.y - TILE.layer - 5 + standSink(crackView, 1.5, 0),
+    )
+  })
+
+  it('발판 위의 상자는 발판 판 위에 얹어 그린다', () => {
+    const tram = { x: 40, y: 50, to: { x: 3, y: 0 }, cell: { x: 3, y: 0 } }
+
+    expect(view({ tramFrames: [tram], boxes: [{ x: 3, y: 0 }] })).toEqual([
+      { x: 40, y: 50 - TILE.layer, to: tram.to, cell: tram.cell },
+    ])
+  })
+
+  it('발판으로 밀려 가는 상자는 발판 위 상자로 두 번 그리지 않는다', () => {
+    const tram = { x: 40, y: 50, to: { x: 2, y: 0 }, cell: { x: 2, y: 0 } }
+
+    expect(view({ box: BOX, tramFrames: [tram], boxes: [{ x: 2, y: 0 }] })).toHaveLength(1)
+  })
+
+  it('상자가 없는 발판은 그리지 않는다', () => {
+    const tram = { x: 40, y: 50, to: { x: 3, y: 0 }, cell: { x: 3, y: 0 } }
+
+    expect(view({ tramFrames: [tram] })).toEqual([])
+  })
+})
+
+describe('windDisplay', () => {
+  it('바람이 분 수의 연출 중에는 바람 시각을 주고 숫자는 앞 상태로 둔다', () => {
+    const { prev, game, events } = gust()
+    const shown = windDisplay({ game, prevGame: prev, events, animating: true })
+
+    expect(shown.gustAt).toBe(windSeconds(events, swampTime(prev, game)))
+    expect(shown.gustAt).not.toBeNull()
+    expect(shown.wind).toBe(windLeft(prev))
+    expect(shown.blew).toBe(false)
+  })
+
+  it('바람이 분 수의 연출이 끝나면 다음 숫자로 바뀌고 깜빡일 차례다', () => {
+    const { prev, game, events } = gust()
+    const shown = windDisplay({ game, prevGame: prev, events, animating: false })
+
+    expect(shown.wind).toBe(windLeft(game))
+    expect(shown.wind).not.toBe(windLeft(prev))
+    expect(shown.blew).toBe(true)
+  })
+
+  it('바람이 안 분 수는 연출 중에도 지금 숫자를 보인다', () => {
+    const prev = createState(WIND_STAGE)
+    const { state: game, events } = move(prev, 'up')
+    const shown = windDisplay({ game, prevGame: prev, events, animating: true })
+
+    expect(shown).toEqual({ gustAt: null, wind: windLeft(game), blew: false })
+  })
+
+  it('앞 상태가 없으면 바람 시각이 없고 판이 없으면 숫자도 없다', () => {
+    const game = createState(WIND_STAGE)
+
+    expect(windDisplay({ game, prevGame: null, events: [], animating: false })).toEqual({
+      gustAt: null,
+      wind: windLeft(game),
+      blew: false,
+    })
+    expect(windDisplay({ game: null, prevGame: null, events: [], animating: false })).toEqual({
+      gustAt: null,
+      wind: null,
+      blew: false,
+    })
   })
 })

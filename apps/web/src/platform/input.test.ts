@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { directionFromKey, directionFromSwipe } from './input'
+import { directionFromKey, directionFromSwipe, isRestartKey } from './input'
 
 describe('directionFromKey', () => {
   it('방향키를 네 방향으로 읽는다', () => {
@@ -104,5 +104,17 @@ describe('directionFromSwipe', () => {
   it('처지며 출발한 얕은 스와이프는 손을 뗄 때 전체 방향으로 받는다', () => {
     expect(directionFromSwipe(-63, 5)).toBeNull()
     expect(directionFromSwipe(-97, -14, true)).toBe('left')
+  })
+})
+
+describe('isRestartKey', () => {
+  it('r은 대소문자 모두 재시작이다', () => {
+    expect(isRestartKey('r')).toBe(true)
+    expect(isRestartKey('R')).toBe(true)
+  })
+
+  it('다른 키는 재시작이 아니다', () => {
+    expect(isRestartKey('Enter')).toBe(false)
+    expect(isRestartKey('ㄱ')).toBe(false)
   })
 })

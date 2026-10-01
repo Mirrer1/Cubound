@@ -6,10 +6,16 @@ import {
   createState,
   dirLeft,
   isDoorOpen,
+  isIce,
   isLiftRaised,
+  isMushroom,
   move,
   movesLeft,
+  nextTramSpot,
   pushesLeft,
+  readCracks,
+  readMushrooms,
+  readSwamps,
   ridesLeft,
   sinkCount,
   standHeight,
@@ -4033,5 +4039,88 @@ describe('windLeft', () => {
 
     expect(counts).toEqual([4, 3, 2, 1, 4, 3])
     expect(windLeft(createState(FLAT_STAGE))).toBeNull()
+  })
+})
+
+describe('nextTramSpot', () => {
+  const CELLS: Point[] = [
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+    { x: 2, y: 0 },
+  ]
+
+  it('가던 방향으로 한 칸 간다', () => {
+    expect(nextTramSpot(CELLS, { id: 't', at: 1, dir: 1 })).toEqual({ id: 't', at: 2, dir: 1 })
+    expect(nextTramSpot(CELLS, { id: 't', at: 1, dir: -1 })).toEqual({ id: 't', at: 0, dir: -1 })
+  })
+
+  it('길 끝에 닿아 있으면 방향을 뒤집어 한 칸 돌아온다', () => {
+    expect(nextTramSpot(CELLS, { id: 't', at: 2, dir: 1 })).toEqual({ id: 't', at: 1, dir: -1 })
+    expect(nextTramSpot(CELLS, { id: 't', at: 0, dir: -1 })).toEqual({ id: 't', at: 1, dir: 1 })
+  })
+})
+
+describe('isIce', () => {
+  const state = createState({ ...FLAT_STAGE, ice: ['.#.', '...', '..#'] })
+
+  it("ice에서 '#'인 칸만 얼음이다", () => {
+    expect(isIce(state, { x: 1, y: 0 })).toBe(true)
+    expect(isIce(state, { x: 2, y: 2 })).toBe(true)
+    expect(isIce(state, { x: 0, y: 0 })).toBe(false)
+  })
+
+  it('맵 밖과 얼음이 없는 스테이지는 얼음이 아니다', () => {
+    expect(isIce(state, { x: 5, y: 5 })).toBe(false)
+    expect(isIce(createState(FLAT_STAGE), { x: 1, y: 0 })).toBe(false)
+  })
+})
+
+describe('isMushroom', () => {
+  it('남아 있는 버섯 칸만 버섯이다', () => {
+    const state = createState({ ...FLAT_STAGE, mushroom: ['...', '#..', '...'] })
+
+    expect(isMushroom(state, { x: 0, y: 1 })).toBe(true)
+    expect(isMushroom(state, { x: 1, y: 1 })).toBe(false)
+    expect(isMushroom({ ...state, mushrooms: [] }, { x: 0, y: 1 })).toBe(false)
+  })
+})
+
+describe('readCracks', () => {
+  it('숫자 칸을 견디는 횟수와 함께 읽는다', () => {
+    expect(readCracks({ ...FLAT_STAGE, cracks: ['.2.', '...', '1.9'] })).toEqual([
+      { x: 1, y: 0, left: 2 },
+      { x: 0, y: 2, left: 1 },
+      { x: 2, y: 2, left: 9 },
+    ])
+  })
+
+  it('cracks가 없으면 비어 있다', () => {
+    expect(readCracks(FLAT_STAGE)).toEqual([])
+  })
+})
+
+describe('readSwamps', () => {
+  it("'#' 칸을 행 순서대로 읽는다", () => {
+    expect(readSwamps({ ...FLAT_STAGE, swamp: ['..#', '#..', '...'] })).toEqual([
+      { x: 2, y: 0 },
+      { x: 0, y: 1 },
+    ])
+  })
+
+  it('swamp가 없으면 비어 있다', () => {
+    expect(readSwamps(FLAT_STAGE)).toEqual([])
+  })
+})
+
+describe('readMushrooms', () => {
+  it("'#' 칸을 행 순서대로 읽는다", () => {
+    expect(readMushrooms({ ...FLAT_STAGE, mushroom: ['#..', '...', '.#.'] })).toEqual([
+      { x: 0, y: 0 },
+      { x: 1, y: 2 },
+    ])
+  })
+
+  it('mushroom이 없으면 비어 있다', () => {
+    expect(readMushrooms(FLAT_STAGE)).toEqual([])
   })
 })

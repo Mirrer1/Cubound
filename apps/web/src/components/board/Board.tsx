@@ -6,45 +6,55 @@ import BoardLadder from './BoardLadder'
 import BoardSeed from './BoardSeed'
 import BoardTram from './BoardTram'
 import ClearEffect from './ClearEffect'
-import { type TopTilt, rollingCubeFaces, tiltOnTop } from './cube'
+import { rollingCubeFaces } from './cube'
 import {
-  SAPLING,
+  type Tram,
+  boxFramesOf,
   boxSink,
-  carriedRoll,
+  carriedBaseOf,
+  carriedOpacityOf,
+  carriedTilt,
   crackFrame,
+  crackLeft,
   crackProgress,
-  crackSink,
+  filledCells,
+  fillingCellKey,
   frostAt,
+  ladderTilt,
   movingBox,
   mushroomFrames,
   ownProgress,
   pickUpProgress,
+  plantTiltOf,
+  plantedSeedAt,
   plantingSeed,
   playerFrame,
   pressProgress,
+  railDirsOf,
   restartDrop,
   restartDuration,
+  rollingTilt,
   seedFrames,
-  slidingCell,
+  sinkAt,
+  standSink,
   stepProgress,
   swampFrame,
   swampTime,
   switchCells,
   switchProgress,
+  tramFramesOf,
   tramProgress,
   vineFrames,
   vineLooks,
-  windLeaning,
+  wallHeight,
 } from './frame'
 import { shade } from './shade'
 import { useBoardAnimation } from './useBoardAnimation'
 import { useCamera } from './useCamera'
-import { TILE, isoDelta, toScreen } from '@/game/iso'
+import { TILE, toScreen } from '@/game/iso'
 import { occludingCells } from '@/game/occlusion'
-import { isDoorOpen, isIce, isLiftRaised, nextTramSpot } from '@/game/rules'
-import type { Entity, GameEvent, GameState, Point, TramSpot } from '@/game/types'
-
-type Tram = Extract<Entity, { type: 'tram' }>
+import { isDoorOpen, isIce, isLiftRaised } from '@/game/rules'
+import type { Entity, GameEvent, GameState, Point } from '@/game/types'
 
 interface BoardProps {
   game: GameState
@@ -61,19 +71,6 @@ interface BoardProps {
 const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y
 const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-
-// 무너지는 칸이 앞으로 견디는 횟수. 목록에 없는 칸은 바닥 없는 칸과 같게 본다
-const crackLeft = (state: GameState, p: Point) => state.cracks.find((c) => same(c, p))?.left ?? -1
-
-const tramNext = (tram: Tram, spot: TramSpot) => tram.cells[nextTramSpot(tram.cells, spot).at]
-
-// 코는 다음에 갈 쪽을 가리킨다. 끝에 닿으면 오던 쪽 그대로 둔다
-const tramFacing = (tram: Tram, spot: TramSpot) => {
-  const at = tram.cells[spot.at]
-  const ahead = tram.cells[spot.at + spot.dir]
-  const back = tram.cells[spot.at - spot.dir]
-  return ahead ? { x: ahead.x - at.x, y: ahead.y - at.y } : { x: at.x - back.x, y: at.y - back.y }
-}
 
 const GUIDE_MARGIN = 12
 
@@ -132,18 +129,10 @@ const Board = ({
   const pickedUp = moving ? events.find((e) => e.type === 'pickedUp') : undefined
   const placed = moving ? events.find((e) => e.type === 'placed') : undefined
 
-  // 상자가 구덩이를 메워 생긴 바닥. 길을 다시 짜는 데 쓰는 자리라 가려지면 안 된다.
-  // 덩굴이 메운 칸은 판을 짤 때 보이게 두어서 빼고, 넣으면 긴 덩굴 앞의 칸이 줄줄이 흐려진다
-  const filled = useMemo(() => {
-    const grown = stage.entities.flatMap((e) =>
-      e.type === 'vine' ? e.cells.slice(0, game.vines.find((v) => v.id === e.id)?.grown ?? 0) : [],
-    )
-    return heights.flatMap((row, y) =>
-      row.flatMap((h, x) =>
-        h >= 0 && stage.heights[y][x] < 0 && !has(grown, { x, y }) ? [{ x, y }] : [],
-      ),
-    )
-  }, [heights, stage.heights, stage.entities, game.vines])
+  const filled = useMemo(
+    () => filledCells(heights, stage.heights, stage.entities, game.vines),
+    [heights, stage.heights, stage.entities, game.vines],
+  )
 
   const seedFrame = seedFrames(moving ? before : null, game, events, t, swampSeconds, dropping)
   // 솟는 씨앗 칸은 그 순간 높이로 가림을 잰다. 다 솟기 전에 앞 칸을 흐리지 않는다
@@ -175,39 +164,14 @@ const Board = ({
       .flatMap((l) => occludingCells(shown, l, shown[l.y][l.x], boxes)),
   ]
 
-  // 발판 길 칸은 바닥이 없어도 구덩이로 그린다. 값은 이웃한 길 칸의 방향이다
-  const railDirs = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const tram of trams)
-      tram.cells.forEach((cell, i) =>
-        map.set(
-          `${cell.x}-${cell.y}`,
-          [tram.cells[i - 1], tram.cells[i + 1]]
-            .filter((near) => near !== undefined)
-            .map((near) => `${near.x - cell.x},${near.y - cell.y}`)
-            .join('|'),
-        ),
-      )
-    return map
-  }, [trams])
+  const railDirs = useMemo(() => railDirsOf(trams), [trams])
 
   // 덩굴 뿌리와 길 칸. 구덩이로 그릴 칸을 가리는 데만 쓰고 그 순간의 모습은 vineFrame이 정한다
   const vines = useMemo(() => vineLooks(game), [game])
   const vineFrame = vineFrames(moving ? before : null, game, events, t, swampSeconds, dropping)
 
-  // 상자가 메우는 구덩이는 상자가 한 칸 안으로 들어올 때까지 구덩이로 두고 그 뒤로는 바닥이 먼저 깔린다.
-  // 덩굴이 올 칸은 먼저 깔린 바닥이 빈칸으로 보여서 상자가 다 가라앉을 때까지 싹 달린 구덩이로 둔다
-  const filling = box ? events.find((e) => e.type === 'pushed' && e.result === 'filled') : undefined
-  const fillingAt = filling?.type === 'pushed' ? `${filling.to.x}-${filling.to.y}` : null
-  const fillingKey =
-    box &&
-    filling?.type === 'pushed' &&
-    fillingAt &&
-    (vines.has(fillingAt) || Math.hypot(box.x - filling.to.x, box.y - filling.to.y) > 1)
-      ? fillingAt
-      : null
-  const heightNow = (x: number, y: number) =>
-    `${x}-${y}` === fillingKey ? before.heights[y][x] : heights[y]?.[x]
+  // cells 메모의 의존성이라 메모한다. 안 하면 React Compiler 검사가 cells 메모를 보존하지 못한다
+  const fillingKey = useMemo(() => fillingCellKey(box, events, vines), [box, events, vines])
 
   // x, y는 화면 좌표, p는 칸 좌표. 메운 칸이 다시 구멍이 될 때는 사라지기 전 높이로 그린다
   // 발판 길과 아직 바닥 없는 덩굴 길은 구덩이로 그린다
@@ -229,41 +193,9 @@ const Board = ({
     [heights, before.heights, railDirs, vines, fillingKey],
   )
 
-  // 옆 칸이 바닥이면 구덩이 벽을 세운다. 옆 칸이 발판 길이나 판이 덜 차오른 덩굴 길이면 구덩이가 이어져 벽이 없다
-  const wallHeight = (x: number, y: number) => {
-    const key = `${x}-${y}`
-    const vine = vineFrame.get(key)
-    const vinePit =
-      vine !== undefined &&
-      vine.kind !== 'root' &&
-      ((heightNow(x, y) ?? -1) < 0 || (vine.kind === 'grown' && vine.rise < 1))
-    return railDirs.has(key) || vinePit
-      ? -1
-      : Math.max(heightNow(x, y) ?? -1, before.heights[y]?.[x] ?? -1)
-  }
-  // 발판은 이전 자리에서 다음 자리로 미끄러진다. 코와 밝은 레일은 도착하는 순간에 다음 쪽으로 넘어간다
+  const walls = { heights, before, fillingKey, vineFrame, railDirs }
   const tramPhase = moving ? tramProgress(events, t, swampSeconds) : 1
-  const tramFrames = trams.map((tram, i) => {
-    const from = tram.cells[before.trams[i].at]
-    const to = tram.cells[game.trams[i].at]
-    const spot = tramPhase < 1 ? before.trams[i] : game.trams[i]
-    const sliding = tramPhase > 0 && tramPhase < 1
-    const facing = sliding ? { x: to.x - from.x, y: to.y - from.y } : tramFacing(tram, spot)
-    const screen = toScreen(
-      { x: lerp(from.x, to.x, tramPhase), y: lerp(from.y, to.y, tramPhase) },
-      0,
-    )
-    return {
-      x: screen.x,
-      y: screen.y - tram.level * TILE.layer,
-      depth: PIT_FLOOR + tram.level * TILE.layer,
-      dx: facing.x,
-      dy: facing.y,
-      to,
-      cell: slidingCell(from, to, tramPhase),
-      next: tramNext(tram, spot),
-    }
-  })
+  const tramFrames = tramFramesOf({ trams, before, game, tramPhase, PIT_FLOOR })
   const nextRails = new Set(tramFrames.map((frame) => `${frame.next.x}-${frame.next.y}`))
 
   const cubeDrop = dropping ? restartDrop(t, 0, boxes.length) : null
@@ -285,103 +217,26 @@ const Board = ({
   const ownT = moving ? ownProgress(events, t, swampSeconds) : 1
   // 사다리는 이동이 시작할 때가 아니라 큐브가 그 칸에 닿은 때부터 손으로 옮겨진다
   const pickUpPhase = moving ? pickUpProgress(events, t, swampSeconds) : 1
-  const carriedOpacity =
-    pickedUp && !game.carrying
-      ? 0
-      : pickedUp
-        ? pickUpPhase
-        : placed
-          ? 1 - ownT
-          : game.carrying
-            ? 1
-            : 0
+  const carriedOpacity = carriedOpacityOf({ pickedUp, placed, game, pickUpPhase, ownT })
   const carried = game.carrying ?? before.carrying
   const progress = moving ? t : 1
   // 문과 발판은 이동이 시작할 때가 아니라 스위치가 눌리거나 풀린 때부터 움직인다
   const linkedPhase = (cells: Point[], pressed: boolean) =>
     moving ? switchProgress(events, cells, pressed, t, swampSeconds) : 1
 
-  // 무너지는 칸은 닳을수록 내려앉아서 그 위에 선 것도 같은 만큼 내려간다
   const crackPhase = moving ? crackProgress(events, stepT) : 1
-  const sinkAt = (p: Point) => {
-    const left = crackLeft(game, p)
-    const was = crackLeft(before, p)
-    return Math.max(left, was) >= 0 ? crackSink(crackFrame(was, left, crackPhase).stage) : 0
-  }
-  // 칸 사이를 지나는 동안에는 앞뒤 칸의 내려앉은 양을 섞는다
-  const standSink = (x: number, y: number) => {
-    const x0 = Math.floor(x)
-    const x1 = Math.ceil(x)
-    const y0 = Math.floor(y)
-    const y1 = Math.ceil(y)
-    const near = lerp(sinkAt({ x: x0, y: y0 }), sinkAt({ x: x1, y: y0 }), x - x0)
-    const far = lerp(sinkAt({ x: x0, y: y1 }), sinkAt({ x: x1, y: y1 }), x - x0)
-    return lerp(near, far, y - y0)
-  }
+  const crackView = { game, before, crackPhase }
 
-  const cubeSink = standSink(cube.x, cube.y)
-  // 막힌 쪽으로 밀어 큐브가 기울면 머리 위 물건도 윗면을 따라 기운다
-  const carriedBase = { x: cubeScreen.x, y: cubeScreen.y - TILE.layer + cubeSink - cube.lift }
-  // 구를 때는 윗면에 붙어 같이 기울다가 새 윗면으로 살짝 튀어 올라앉는다
-  const roll = carriedRoll(Math.min(1, cube.angle / (Math.PI / 2)), chain.in || chain.out)
-  const rolling: TopTilt = (u, v, z) => {
-    const d = tiltOnTop(cube.direction, roll.angle)(u, v, z)
-    return { x: d.x, y: d.y - roll.hop }
-  }
-  const bump =
-    events.some((e) => e.type === 'blocked') || (moving && windLeaning(events, t, swampSeconds))
-      ? tiltOnTop(cube.direction, cube.angle)
-      : moving && cube.angle > 0
-        ? rolling
-        : undefined
-  // 사다리는 큐브 윗면보다 2px 위에 그린다
-  const ladderBump: TopTilt | undefined = bump && ((u, v, z) => bump(u, v, z + 2))
-  // 심는 수에 들고 있던 씨앗이 큐브 윗면에서 그 칸의 흙 자리로 내려간다
+  const cubeSink = standSink(crackView, cube.x, cube.y)
+  const carriedBase = carriedBaseOf(cubeScreen, cubeSink, cube)
+  const rolling = rollingTilt(cube, chain)
+  const bump = carriedTilt({ events, moving, t, swampSeconds, cube, rolling })
+  const ladderBump = ladderTilt(bump)
   const planting = moving ? plantingSeed(events, t, swampSeconds) : null
-  const soilSpot = isoDelta(SAPLING.spot, -SAPLING.spot)
-  const plantedSeed = planting && {
-    x: cubeScreen.x + soilSpot.x * planting.go,
-    y:
-      lerp(
-        cubeScreen.y - TILE.layer + cubeSink - cube.lift,
-        cubeScreen.y + soilSpot.y - SAPLING.soil + cubeSink,
-        planting.go,
-      ) - planting.hop,
-    scale: planting.scale,
-    opacity: planting.opacity,
-  }
-  // 튀어 오르기 전까지는 턱 쪽으로 기운 큐브 윗면에 얹혀 있고 떨어지는 동안 기울기를 벗는다
-  const plantTilt: TopTilt | undefined = planting
-    ? (u, v, z) => {
-        const d = tiltOnTop(cube.direction, cube.angle)(u, v, z)
-        return { x: d.x * (1 - planting.go), y: d.y * (1 - planting.go) }
-      }
-    : undefined
-  // 밀리는 상자와 발판 위의 상자. 칸과 따로 움직여서 화면 좌표로 미리 구해 둔다
+  const plantedSeed = plantedSeedAt({ planting, cubeScreen, cubeSink, cube })
+  const plantTilt = plantTiltOf(planting, cube)
   const caps = mushroomFrames(dropping ? null : prevGame, game, events, t, chain)
-  const pushedScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
-  const boxFrames = [
-    ...(box && pushedScreen
-      ? [
-          {
-            x: pushedScreen.x,
-            // 늪에 밀려 들어간 상자는 멈춘 자리에서 진흙 아래로 내려간다
-            y:
-              pushedScreen.y -
-              TILE.layer +
-              standSink(box.x, box.y) -
-              box.lift +
-              (sinkingBox ? BOX_SINK * sinkingBox.deep : 0),
-            to: box.to,
-            cell: box.cell,
-          },
-        ]
-      : []),
-    // 발판 위의 상자는 발판과 한 몸이라 판 위에 얹혀 그려져야 한다
-    ...tramFrames
-      .filter((frame) => has(boxes, frame.to) && !(box && same(box.to, frame.to)))
-      .map((frame) => ({ x: frame.x, y: frame.y - TILE.layer, to: frame.to, cell: frame.cell })),
-  ]
+  const boxFrames = boxFramesOf({ box, sinkingBox, tramFrames, boxes, crackView, BOX_SINK })
   const guideLevel = guideCell ? Math.max(0, heights[guideCell.y][guideCell.x]) : 0
   const guideScreen = guideCell ? toScreen(guideCell, guideLevel) : null
   // 칸 위에 선 것은 한 층보다 높이 솟아서 위쪽을 더 잡는다
@@ -440,7 +295,11 @@ const Board = ({
         const seedHere = seedFrame.get(cell.key)
         const seedShift = seedHere ? cell.h - seedHere.level : 0
         const cellY =
-          cell.y - raised * TILE.layer + sinkAt(cell.p) + crackFall + seedShift * TILE.layer
+          cell.y -
+          raised * TILE.layer +
+          sinkAt(crackView, cell.p) +
+          crackFall +
+          seedShift * TILE.layer
         const pickedHere = pickedUp?.type === 'pickedUp' && same(pickedUp.at, cell.p)
         const flatLadder = has(ladders, cell.p)
           ? 1
@@ -518,8 +377,8 @@ const Board = ({
             box={has(boxes, cell.p) && !movedBoxHere && boxDrop === null}
             rail={cell.rail}
             railNext={nextRails.has(cell.key)}
-            pitWallLeft={pitShown ? wallHeight(cell.p.x, cell.p.y - 1) : -1}
-            pitWallRight={pitShown ? wallHeight(cell.p.x - 1, cell.p.y) : -1}
+            pitWallLeft={pitShown ? wallHeight(walls, cell.p.x, cell.p.y - 1) : -1}
+            pitWallRight={pitShown ? wallHeight(walls, cell.p.x - 1, cell.p.y) : -1}
             blockOpacity={
               restored > 0 ? 1 - t : restored < 0 ? (cubeDrop?.opacity ?? 1) : crumble.opacity
             }

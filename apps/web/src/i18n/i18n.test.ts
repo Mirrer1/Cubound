@@ -4,10 +4,12 @@ import {
   DICTIONARIES,
   type Language,
   type TextKey,
+  chapterTextKey,
   guideText,
   isLanguage,
   languageFrom,
   text,
+  worldNoteKey,
 } from '.'
 import { en } from './en'
 
@@ -114,5 +116,19 @@ describe('isLanguage', () => {
     expect(isLanguage('ko')).toBe(true)
     expect(isLanguage('fr')).toBe(false)
     expect(isLanguage(null)).toBe(false)
+  })
+})
+
+describe('worldNoteKey', () => {
+  it('월드 아래 한 줄 문구의 키를 만든다', () => {
+    expect(worldNoteKey(7)).toBe('world.7.note')
+    expect(worldNoteKey(7) in en).toBe(true)
+  })
+})
+
+describe('chapterTextKey', () => {
+  it('장 이름 문구의 키를 만든다', () => {
+    expect(chapterTextKey(2)).toBe('chapter.2')
+    expect(chapterTextKey(2) in en).toBe(true)
   })
 })

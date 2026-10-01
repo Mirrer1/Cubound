@@ -10,7 +10,7 @@ import {
 } from 'react'
 
 import Board from '@/components/board/Board'
-import { swampTime, windSeconds } from '@/components/board/frame'
+import { windDisplay } from '@/components/board/frame'
 import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
@@ -24,7 +24,6 @@ import {
   ridesLeft,
   sinkCount,
   vinesLeft,
-  windLeft,
 } from '@/game/rules'
 import { stageTextKey } from '@/i18n'
 import { useText } from '@/i18n/useText'
@@ -97,11 +96,8 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const caps = game ? capsLeft(game) : null
   const vines = game ? vinesLeft(game) : null
   const reduced = useReducedMotion()
-  // 바람이 분 수는 내 이동 연출이 끝나 바람이 부는 동안 0이 흔들리고 연출이 끝나면 다음 숫자로 깜빡인다
-  const gustAt = game && prevGame ? windSeconds(events, swampTime(prevGame, game)) : null
+  const { gustAt, wind, blew } = windDisplay({ game, prevGame, events, animating })
   const gusting = gustAt !== null && gustTurn === turn && animating
-  const wind = game ? windLeft(gustAt === null || !animating ? game : (prevGame ?? game)) : null
-  const blew = gustAt !== null && !animating
   const limitedDir = game?.stage.rules?.dirLimit?.dir
   const limited = events.flatMap((e) => (e.type === 'limit' ? [e.limit] : []))[0]
   const outOfMoves = left === 0 && !game?.cleared

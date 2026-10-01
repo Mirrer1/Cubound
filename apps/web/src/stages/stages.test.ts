@@ -1,6 +1,21 @@
 import { describe, expect, it } from 'vitest'
 
-import { STAGES_PER_WORLD, WORLDS, nextStageId, parseStageId, stageIdsOf } from '.'
+import {
+  STAGES_PER_WORLD,
+  WORLDS,
+  chapterStageIds,
+  chapterUnlockStageId,
+  currentWorldOf,
+  cycleOf,
+  isBossStage,
+  nextStageId,
+  parseStageId,
+  previousWorld,
+  stageIdsOf,
+  worldUnlockStageId,
+  worldsOf,
+} from '.'
+import { EMPTY_PROGRESS, type Progress } from '@/game/progress'
 import { solve } from '@/game/solver'
 import type { Stage } from '@/game/types'
 import { validateStage } from '@/game/validate'
@@ -104,5 +119,89 @@ describe('nextStageId', () => {
 
   it('만들지 않은 스테이지에서는 다음이 없다', () => {
     expect(nextStageId('99-1')).toBeUndefined()
+  })
+})
+
+const cleared = (...ids: string[]): Progress => ({
+  ...EMPTY_PROGRESS,
+  stages: Object.fromEntries(ids.map((id) => [id, { bestMoves: 1, stars: 3 }])),
+})
+
+describe('cycleOf', () => {
+  it('월드 다섯이 한 장이다', () => {
+    expect([1, 5, 6, 10, 11].map(cycleOf)).toEqual([1, 1, 2, 2, 3])
+  })
+})
+
+describe('worldsOf', () => {
+  it('그 장에 든 월드를 번호순으로 돌려준다', () => {
+    expect(worldsOf(1)).toEqual([1, 2, 3, 4, 5])
+    expect(worldsOf(2)).toEqual([6, 7, 8, 9, 10])
+  })
+
+  it('만들지 않은 장은 비어 있다', () => {
+    expect(worldsOf(99)).toEqual([])
+  })
+})
+
+describe('chapterStageIds', () => {
+  it('그 장의 스테이지를 월드 순서대로 이어 돌려준다', () => {
+    const ids = chapterStageIds(1)
+
+    expect(ids).toHaveLength(50)
+    expect(ids[0]).toBe('1-1')
+    expect(ids[10]).toBe('2-1')
+    expect(ids[49]).toBe('5-10')
+  })
+})
+
+describe('previousWorld', () => {
+  it('목록에서 한 칸 앞 월드를 돌려준다', () => {
+    expect(previousWorld(6)).toBe(5)
+  })
+
+  it('첫 월드는 앞이 없다', () => {
+    expect(previousWorld(1)).toBeUndefined()
+  })
+})
+
+describe('worldUnlockStageId', () => {
+  it('앞 월드의 보스 스테이지를 클리어해야 열린다', () => {
+    expect(worldUnlockStageId(2)).toBe('1-10')
+    expect(worldUnlockStageId(6)).toBe('5-10')
+  })
+
+  it('첫 월드는 처음부터 열려 있다', () => {
+    expect(worldUnlockStageId(1)).toBeUndefined()
+  })
+})
+
+describe('chapterUnlockStageId', () => {
+  it('장의 첫 월드를 여는 스테이지와 같다', () => {
+    expect(chapterUnlockStageId(2)).toBe('5-10')
+  })
+
+  it('첫 장은 처음부터 열려 있다', () => {
+    expect(chapterUnlockStageId(1)).toBeUndefined()
+  })
+})
+
+describe('currentWorldOf', () => {
+  it('그 장에서 마지막으로 열린 월드를 돌려준다', () => {
+    expect(currentWorldOf(cleared('1-10', '2-10'), 1)).toBe(3)
+    expect(currentWorldOf(cleared('5-10', '6-10'), 2)).toBe(7)
+  })
+
+  it('장의 월드가 하나도 안 열렸으면 그 장의 첫 월드를 돌려준다', () => {
+    expect(currentWorldOf(EMPTY_PROGRESS, 2)).toBe(6)
+  })
+})
+
+describe('isBossStage', () => {
+  it('월드의 열 번째 스테이지만 보스다', () => {
+    expect(isBossStage('1-10')).toBe(true)
+    expect(isBossStage('10-10')).toBe(true)
+    expect(isBossStage('1-9')).toBe(false)
+    expect(isBossStage('10-1')).toBe(false)
   })
 })
