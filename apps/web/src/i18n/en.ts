@@ -210,6 +210,18 @@ export const en = {
   'stage.11-8': 'Far Shore',
   'stage.11-9': 'Waterways',
   'stage.11-10': 'Moored Boats',
+  'world.12': 'Land of Whirlpools',
+  'world.12.note': 'Whirlpools pull in empty boats. Where you step off is the answer.',
+  'stage.12-1': 'Swept Along',
+  'stage.12-2': 'Reeling In',
+  'stage.12-3': 'In Line',
+  'stage.12-4': 'Out of the Pull',
+  'stage.12-5': 'The Narrows',
+  'stage.12-6': 'Crumbling Shore',
+  'stage.12-7': 'Pull Across',
+  'stage.12-8': 'Cliff Edge',
+  'stage.12-9': 'Twin Whirlpools',
+  'stage.12-10': 'The Plug',
 }
 
 export type Texts = typeof en

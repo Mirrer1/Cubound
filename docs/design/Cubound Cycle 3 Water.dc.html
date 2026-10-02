@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<script src="cubound-iso.js?v=20261002e"></script>
+<script src="cubound-iso.js?v=20261002f"></script>
 <style>
   html, body { margin: 0; padding: 0; background: #E9E7E2; }
   a { color: #3A3936; }
@@ -218,6 +218,28 @@
     </div>
 
     <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">I</span><span style="font-size:22px;font-weight:400">12월드 · 소용돌이가 끄는 물길</span></div>
+      <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:860px;word-break:keep-all;text-wrap:pretty">소용돌이는 같은 가로줄과 세로줄의 아무도 안 탄 뜬 상자를 매 수 끝에 한 칸씩 끌어당깁니다. 상자는 소용돌이 바로 앞 칸에서 멈춥니다. 큐브가 탄 상자, 땅 위 상자와 큐브는 그대로입니다.</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(520px, 1fr));gap:16px">
+        <sc-for list="{{ I }}" as="g" hint-placeholder-count="9">
+          <div style="background:#D9E7E8;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><span style="font-size:13px;color:#5F6566;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+              <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <div style="width:{{ f.w }};max-width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#4F5859">{{ f.cap }}</span>
+                  <div style="width:{{ f.w60 }};display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                </div>
+              </sc-for>
+            </div>
+            <span style="font-size:13px;color:#3A3936;line-height:1.6;word-break:keep-all;text-wrap:pretty;border-top:1px solid #C9D7D8;padding-top:10px">{{ g.pick }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
       <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">G</span><span style="font-size:22px;font-weight:400">장 고르기와 월드 이름</span></div>
       <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:860px;word-break:keep-all;text-wrap:pretty">장 들어가는 자리 v2의 확정안(3안)을 그대로 따랐습니다. 지금 보는 장이 3장이라 목록 화면 전체가 3장 세계 색이고, 카드 창은 각 장의 실제 세계 색입니다.</span>
       <div style="background:#D9E7E8;border-radius:22px;padding:14px">
@@ -366,8 +388,8 @@ class Component extends DCLogic {
         [{ W: 2, base: -1, g: [[2, 2, 2, 2], [1, 0, 1, 0], [2, 2, 2, 2]], cells: { '2,1': { bed: true }, '3,1': { bed: true } } }], ['잠김 1 · 잠김 2 · 물 1 · 물 2']),
       G('뜬 상자', '상자는 24px 잠겨 수면 위로 6px만 나옵니다. 수면이 땅보다 6px 낮으니 윗면이 물가 땅과 같은 높이라, 큐브는 땅과 상자 사이를 평지처럼 오갑니다. 둘레에 반사색 물테가 생깁니다(늪의 진흙 테와 같은 문법).',
         [{ W: 0, base: -1, g: [[0, -1, 0]], objs: { '1,0': [{ t: 'fbox' }] } }, { W: 0, base: -1, g: [[0, -1, 0]], objs: { '1,0': [{ t: 'fbox', rider: true }] } }], ['혼자', '큐브가 탐']),
-      G('소용돌이 (확정 · 깊어지는 면)', '원 넷이 가운데로 갈수록 깊은 물빛이 되고, 도는 쪽으로 조금씩 밀립니다. 원마다 반사 초승달이 도는 방향으로 감깁니다. 시계와 반시계.',
-        [{ W: 0, base: -1, g: [[0, 0, 0], [0, -1, 0]], cells: { '1,1': { t: 'whirl', dir: 'cw', style: 'bowl' } } }, { W: 0, base: -1, g: [[0, 0, 0], [0, -1, 0]], cells: { '1,1': { t: 'whirl', dir: 'ccw', style: 'bowl' } } }], ['시계', '반시계']),
+      G('소용돌이 (확정 · 깊어지는 면)', '원 넷이 가운데로 갈수록 깊은 물빛이 됩니다. 도는 방향에 이제 뜻이 없어 한 방향(시계)으로 통일했습니다. 끄는 범위는 I절에 있습니다.',
+        [{ W: 0, base: -1, g: [[0, 0, 0], [0, -1, 0]], cells: { '1,1': { t: 'whirl' } } }], ['소용돌이']),
       G('얼음 돌', '상자보다 넓고 낮은 26px 계단꼴 흰 돌입니다(14 + 8 + 4). 바닥은 칸 폭의 0.64배로 칸 안에 들어와 옆 칸을 덮지 않습니다(상자는 0.58배). 서리도 칸 안(0.9배)입니다. 노란 상자(30px 정육면체)와 색도 꼴도 다릅니다. 돌이 선 칸에는 서리가 깔리고, 옆 물이 업니다.',
         [{ W: 0, base: -1, g: [[0, 0], [0, 0]], objs: { '0,0': [{ t: 'stone', frost: true }], '1,1': [{ t: 'box' }] } }, { W: 0, base: -1, g: [[0, -1], [0, -1]], cells: { '1,0': { t: 'ice', from: 'x-' } }, objs: { '0,0': [{ t: 'stone', frost: true }] } }], ['땅 위 · 상자와 비교', '물가 · 옆 물이 언 상태']),
       G('얼음 칸 (언 물)', '1장 얼음과 같은 계열의 푸른 흰 판이 수면 위로 4px 솟고, 광택선 하나가 섭니다. 물보다 훨씬 밝아 큐브와 상자가 또렷합니다.',
@@ -401,10 +423,7 @@ class Component extends DCLogic {
         ['전', '(가) 가라앉음', '(나) 뜸'], '의견 · (가). 돌은 가라앉는 것이 자연스럽고, 뜬 상자와 꼴이 겹치지 않습니다. (나)는 물 위 흰 덩이가 얼음 칸과 가까워 보입니다.'),
       G('5 · 상자 밑 얼음이 녹으면', '얼음 돌이 떠나 얼음이 녹자 상자가 그대로 뜹니다.',
         [{ W: 0, base: -1, g: [[0, -1, 0]], cells: { '1,0': { t: 'ice', from: 'x-' } }, objs: { '0,0': [{ t: 'stone', frost: true }], '1,0': [{ t: 'box' }] } }, { W: 0, base: -1, g: [[0, -1, 0]], objs: { '1,0': [{ t: 'fbox' }] } }],
-        ['전 · 얼음 위 상자', '후 · 뜬 상자'], ''),
-      G('6 · 꺾인 쪽이 막힌 소용돌이', '왼쪽에서 들어와 시계로 꺾이면 왼쪽 아래 칸으로 나가야 하는데, 그 칸이 땅이라 뜬 상자가 소용돌이 칸에 머뭅니다. 상자가 앉으면 물테 대신 원이 칸 가장자리까지 넓어지고 초승달 셋이 모두 바깥 원으로 나와, 상자 둘레로 도는 방향이 보여 "아직 도는 칸"이 남습니다.',
-        [{ W: 0, base: -1, g: [[0, 0, 0], [-1, -1, 0], [0, 0, 0]], cells: { '1,1': { t: 'whirl', dir: 'cw' } }, objs: { '1,1': [{ t: 'fbox' }] } }],
-        ['머묾'], '')
+        ['전 · 얼음 위 상자', '후 · 뜬 상자'], '')
     ];
 
     // ---------- D ----------
@@ -425,9 +444,6 @@ class Component extends DCLogic {
       G('뜬 상자에 올라타기 · 타고 한 칸', '땅과 상자 윗면이 같은 높이라 큐브는 평소처럼 한 칸 굴러 올라탑니다. 올라앉으면 상자가 3px 더 잠겼다 돌아옵니다. 저어 갈 때는 물테가 뒤따릅니다.',
         [L({ '1,1': [{ t: 'cube' }], '2,1': [{ t: 'fbox' }] }), L({ '2,1': [{ t: 'fbox' }, { t: 'cube', air: 6, u: -0.5 }] }), L({ '2,1': [{ t: 'fbox', rider: true, dip: 3 }] }), L({ '3,1': [{ t: 'fbox', rider: true, u: -0.5 }] })],
         ['1 · 물가', '2 · 굴러 올라탐', '3 · 앉음 (3px 잠김)', '4 · 한 칸 가는 중']),
-      G('소용돌이에서 꺾임', '오른쪽 아래로 들어온 상자가 가운데에서 시계 방향으로 꺾여 왼쪽 아래로 나갑니다. 원과 초승달도 같이 돕니다.',
-        [WLs({ '2,1': [{ t: 'fbox', u: -0.55 }] }, 0), WLs({ '2,1': [{ t: 'fbox' }] }, 40), WLs({ '2,2': [{ t: 'fbox', v: -0.5 }] }, 80), WLs({ '2,2': [{ t: 'fbox' }] }, 120)],
-        ['1 · 들어옴', '2 · 가운데', '3 · 꺾여 나감', '4 · 다음 칸']),
       G('얼어붙음', '얼음 돌이 물가에 닿으면 돌 쪽 가장자리부터 얼음 판이 수면을 덮어 갑니다.',
         [FZ(0, 0), FZ(1, 0.34, 'x-'), FZ(1, 0.68, 'x-'), FZ(1, 1, 'x-')], ['1', '2', '3', '4 · 얼음']),
       G('녹음', '돌이 떠나면 먼 쪽 가장자리부터 얼음이 물러납니다.',
@@ -439,16 +455,14 @@ class Component extends DCLogic {
     // ---------- E ----------
     const E = [
       G('뜬 상자를 타고 건너기', '물을 사이에 둔 두 땅. 가운데 두 칸이 두 층 깊이라 색이 한 단계 어둡습니다.', [boardA], ['']),
-      G('소용돌이로만 닿는 곳', '곧장 가면 오른쪽 둔덕에 막힙니다. 시계 소용돌이에서 꺾여 아래로 내려가야 집 옆 물가에 닿습니다.',
-        [{ W: 0, base: -1, g: [[0, 0, 0, 0, 0], [0, -1, -1, -1, 1], [0, 0, 0, -1, 0], [0, 0, 0, -1, 0], [0, 0, 0, -1, 0]], cells: { '3,1': { t: 'whirl', dir: 'cw' } }, objs: { '1,1': [{ t: 'fbox', rider: true }], '4,3': [{ t: 'hole' }] } }], ['']),
       G('얼음 돌이 만든 얼음길', '물 가운데 곶에 얼음 돌이 서 있어 둘레 세 칸이 얼었습니다. 그 칸만 걸어서 건넙니다.',
         [{ W: 0, base: -1, g: [[0, 0, 0, 0, 0], [-1, -1, 0, -1, -1], [-1, -1, -1, -1, -1], [0, 0, 0, 0, 0]], cells: { '1,1': { t: 'ice', from: 'x+' }, '3,1': { t: 'ice', from: 'x-' }, '2,2': { t: 'ice', from: 'y-' } }, objs: { '2,1': [{ t: 'stone', frost: true }], '2,2': [{ t: 'cube' }] } }], ['']),
       G('같은 판 · 수위 낮음과 높음', '수위가 오르면 앞 줄 땅이 잠기고(비침), 뜬 상자가 한 층 올라 위 땅과 닿습니다.',
         [{ W: 0, base: -1, g: [[2, 1, 1, 1], [1, 0, -1, 1], [0, 0, -1, 0], [0, 0, 0, 0]], objs: { '2,1': [{ t: 'fbox' }], '0,2': [{ t: 'cube' }] } },
          { W: 1, base: -1, g: [[2, 1, 1, 1], [1, 0, -1, 1], [0, 0, -1, 0], [0, 0, 0, 0]], objs: { '2,1': [{ t: 'fbox' }], '1,0': [{ t: 'cube' }] } }], ['수위 0', '수위 1']),
-      G('한 판에 다', '큐브, 물(한 층, 두 층), 얼음, 뜬 상자, 반시계 소용돌이, 얼음 돌, 수위 스위치, 집.',
+      G('한 판에 다', '큐브, 물(한 층, 두 층), 얼음, 뜬 상자, 소용돌이와 끄는 줄, 얼음 돌, 수위 스위치, 집. 뜬 상자는 끄는 줄 밖에 있어 그대로입니다.',
         [{ W: 0, base: -2, g: [[0, 0, 0, 1, 1, 1], [0, -1, -1, -1, -1, 1], [0, 0, -1, -2, -1, 0], [-1, -1, -1, -2, -1, 0], [0, 0, 0, 0, 0, 0]],
-          cells: { '3,1': { t: 'whirl', dir: 'ccw' }, '1,3': { t: 'ice', from: 'y+' } }, objs: { '1,4': [{ t: 'stone', frost: true }], '2,2': [{ t: 'fbox' }], '5,2': [{ t: 'lsw' }], '4,0': [{ t: 'hole' }], '0,2': [{ t: 'cube' }] } }], ['']),
+          pull: [{ p: [3, 1] }], cells: { '3,1': { t: 'whirl' }, '1,3': { t: 'ice', from: 'y+' } }, objs: { '1,4': [{ t: 'stone', frost: true }], '2,2': [{ t: 'fbox' }], '5,2': [{ t: 'lsw' }], '4,0': [{ t: 'hole' }], '0,2': [{ t: 'cube' }] } }], ['']),
       G('기존 장치와 함께', '물가에 놓인 사다리, 물 옆 무너지는 칸, 잠긴 땅 아래 비치는 노란 스위치(밟을 수 없음). 기존 장치 그림은 자리만 잡은 근사입니다.',
         [{ W: 1, base: -1, g: [[2, 2, 2, 1], [1, 1, 0, 0], [1, 0, -1, -1], [1, 1, 0, 0]], cells: { '1,1': { t: 'crack' } }, objs: { '0,2': [{ t: 'ladder' }], '2,1': [{ t: 'sw' }], '0,3': [{ t: 'cube' }] } }], [''])
     ];
@@ -471,6 +485,39 @@ class Component extends DCLogic {
       G('범위 끝에서 더 저을 때', '끝 칸에서 바깥으로 저으면 상자가 4분의 1칸쯤 나갔다가 줄에 당겨 돌아오고, 작은 고리가 퍼집니다. 수는 쓰이지 않습니다.',
         [M1([2, 2], { rope: { taut: true }, box: { rider: true } }), M1([2, 2], { rope: { taut: true, bv: 0.2, dip: 2 }, box: { rider: true, v: 0.2, dip: 2 } }), M1([2, 2], { rope: { taut: true }, box: { rider: true, ring: 0.8, ro: 0.5 } })],
         ['1 · 끝 칸', '2 · 당겨짐', '3 · 돌아옴'], '')
+    ];
+
+    // ---------- I · 소용돌이 끌기 ----------
+    const ig = [[0, 0, 0, 0, 0, 0], [0, -1, -1, -1, -1, -1], [0, 0, 0, -1, 0, 0], [0, 0, 0, -1, 0, 0]];
+    const IW = (st, objs, extra) => Object.assign({ W: 0, base: -1, g: ig, pull: [{ p: [5, 1], st }], cells: { '5,1': { t: 'whirl' } }, objs: objs || {} }, extra || {});
+    const lg = [[0, 0, 0, 0, 0], [-1, -1, -1, -1, -1], [0, 0, 0, 0, 0]];
+    const LW = (objs, cells, pull) => ({ W: 0, base: -1, g: lg, pull: pull === undefined ? [{ p: [4, 1] }] : pull, cells: Object.assign({ '4,1': { t: 'whirl' } }, cells || {}), objs });
+    const pg = [[0, 0, 0, 0, 0], [0, 0, -1, -1, -1], [0, 0, 0, -1, 0]];
+    const PW = (objs, cells, pull) => ({ W: 0, base: -1, g: pg, pull: pull === undefined ? [{ p: [2, 1] }] : pull, cells: cells === undefined ? { '2,1': { t: 'whirl' } } : cells, objs });
+    const tw = [[0, 0, 0, 0, 0, 0], [0, -1, -1, -1, -1, -1], [0, 0, 0, 0, 0, 0], [-1, -1, -1, -1, -1, 0], [0, 0, 0, 0, 0, 0]];
+    const I = [
+      G('끄는 범위 · 세 안', '소용돌이에서 가로와 세로로 빈 물이 이어진 데까지 늘 보입니다. 땅이나 얼음에 닿으면 끊깁니다. 셋 다 화살표 없이 "물이 그쪽으로 모인다"만 보여 줍니다.',
+        [IW('streak'), IW('lane'), IW('ripple')], ['가 · 물결 결', '나 · 물길 (추천)', '다 · 칸 사이 잔물결'],
+        '추천 · 나. 묶인 배 범위(H)는 칸마다 밝아지는 0.9배 마름모인데, 물길은 어두워지는 0.4배 띠가 칸을 가로질러 이어집니다. 밝기도 꼴도 반대라 둘이 한 판에 있어도 갈리고, 60px에서도 띠 하나로 남습니다. 가는 결의 굵기 차가 60px에서 사라지고, 다는 칸마다 같은 자리에 서서 바닥 줄눈처럼 읽힙니다.'),
+      G('묶인 배 범위와 나란히', '왼쪽은 말뚝 범위(밝은 마름모), 오른쪽은 소용돌이 물길(어두운 띠).',
+        [{ W: 0, base: -1, g: [[0, 0, 0, 0, 0, 0, 0, 0], [-1, -1, -1, 0, -1, -1, -1, -1], [-1, -1, -1, 0, 0, 0, 0, 0]], moor: [{ p: [1, 0], L: 2 }], ropes: [{ p: [1, 0], b: [1, 1] }], pull: [{ p: [7, 1] }], cells: { '7,1': { t: 'whirl' } }, objs: { '1,0': [{ t: 'post' }], '1,1': [{ t: 'fbox' }], '5,1': [{ t: 'fbox' }] } }], [''], ''),
+      G('한 칸 떠내려감', '매 수 끝에 한 칸. 상자가 8px 더 잠긴 채 미끄러지듯 가고, 뒤로 물테 셋이 꼬리처럼 남습니다. 큐브가 저어 갈 때는 상자가 수평으로 가고 물테는 둘레에만 생겨, 꼬리 유무로 갈립니다.',
+        [LW({ '1,1': [{ t: 'fbox' }] }), LW({ '1,1': [{ t: 'fbox', u: 0.5, dip: 8, wake: [1, 0] }] }), LW({ '2,1': [{ t: 'fbox', dip: 2, ring: 0.8, ro: 0.4 }] })],
+        ['시작', '중간 (8px 더 잠김, 꼬리)', '끝 (작은 고리)'], ''),
+      G('앞 칸에 멈춘 상자', '소용돌이 칸에는 못 들어갑니다. 바로 앞 칸에서 상자가 소용돌이 쪽으로 0.08칸 쏠리고 3px 기울듯 잠겼다가 돌아오기를 되풀이합니다. 규칙으로는 서 있습니다.',
+        [LW({ '3,1': [{ t: 'fbox' }] }), LW({ '3,1': [{ t: 'fbox', u: 0.08, dip: 3, ring: 0.62, ro: 0.5 }] })], ['쉼', '쏠림'], ''),
+      G('줄 선 상자', '앞 상자가 막아 뒤 상자는 그 뒤에서 멈춥니다. 앞 상자만 쏠리고, 뒤 상자는 가만히 있습니다.',
+        [LW({ '3,1': [{ t: 'fbox', u: 0.08, dip: 3 }], '2,1': [{ t: 'fbox' }] })], [''], ''),
+      G('큐브가 탄 상자', '큐브가 탄 상자는 끌리지 않습니다. 물길 띠는 상자 밑으로 지나가고, 상자 둘레 물테가 띠 위에 얹혀 큐브와 상자가 그대로 또렷합니다.',
+        [LW({ '1,1': [{ t: 'fbox', rider: true }] }), LW({ '2,1': [{ t: 'fbox', rider: true, u: -0.5 }] })], ['물길 위', '저어 가는 중'], ''),
+      G('소용돌이 둘 (119)', '위 소용돌이는 가로 줄, 아래 소용돌이도 가로 줄만 물로 이어지고 세로는 땅에 막혀, 두 물길이 겹치지 않습니다.',
+        [{ W: 0, base: -1, g: tw, pull: [{ p: [1, 1] }, { p: [4, 3] }], cells: { '1,1': { t: 'whirl' }, '4,3': { t: 'whirl' } }, objs: { '4,1': [{ t: 'fbox' }], '1,3': [{ t: 'fbox' }], '2,2': [{ t: 'cube' }], '5,4': [{ t: 'hole' }] } }], [''], ''),
+      G('마개 (120) · 밀어 넣기', '땅 위 상자를 소용돌이 칸으로 밉니다. 상자는 원 안으로 빨려 들며 가라앉고, 막히는 순간 소용돌이와 물길이 함께 사라집니다.',
+        [PW({ '0,1': [{ t: 'cube' }], '1,1': [{ t: 'box' }] }), PW({ '1,1': [{ t: 'cube' }], '2,1': [{ t: 'fbox', dip: 14 }] }), PW({ '1,1': [{ t: 'cube' }], '2,1': [{ t: 'fbox', dip: 26 }] }, { '2,1': { t: 'whirl' } }, [{ p: [2, 1], o: 0.4 }]), PW({ '1,1': [{ t: 'cube' }] }, {}, [])],
+        ['밀기 시작', '빨려 듦 (14px 더 잠김)', '막힘 (물길 흐려짐)', '보통 물'], ''),
+      G('마개 · 막힌 뒤 칸', '막힌 칸은 보통 물이라 배가 지나갑니다.',
+        [PW({ '1,1': [{ t: 'cube' }] }, {}, []), PW({ '1,1': [{ t: 'cube' }] }, { '2,1': { plug: 'ghost' } }, [])], ['가 · 흔적 없음', '나 · 가라앉은 상자가 비침'],
+        '의견 · 나. 판을 다시 볼 때 "여기를 막았다"가 남아 자기 수를 되짚을 수 있습니다. 비침은 잠긴 땅 비침과 같은 문법이고 노란 기운이 남아 땅과 갈립니다. 다만 배가 지나갈 때 걸림돌로 읽힐 수 있어, 게임에서 헷갈리면 가로 가겠습니다.')
     ];
 
     // ---------- F ----------
@@ -507,7 +554,7 @@ class Component extends DCLogic {
       `--color-water-d1: ${m.d1};`, `--color-water-d2: ${m.d2};`, `--color-water-d3: ${m.d3};`,
       `--color-water-left: ${m.wl};`, `--color-water-right: ${m.wr};`, `--color-water-reflect: ${m.refl};   /* 물가 띠 · 물테 · 잔물결 · 소용돌이 날개 */`,
       `--color-water-sunk-1: ${mx(m.d1, m.a, 0.4)};   /* 잠긴 땅 비침 · 0.8 마름모 */`, `--color-water-sunk-2: ${mx(m.d2, m.a, 0.22)};`, `--color-water-sunk-3: ${mx(m.d3, m.a, 0.1)};`,
-      `--color-whirl-eye: ${m.d3};`,
+      `--color-whirl-eye: ${m.d3};`, `--color-whirl-pull: ${mx(m.d1, m.d3, 0.42)};   /* 물길 띠 · 칸 폭 0.4배 (d1 위 기준) */`, `--color-whirl-pull-edge: ${mx(m.d1, m.refl, 0.55)};   /* 띠 먼 가장자리 0.035 */`, `--color-whirl-plug-ghost: ${mx(C.yellow, m.d1, 0.62)};   /* 마개 흔적 나 */`,
       '', '/* 얼음 (언 물) · 수면 위 4px */',
       `--color-ice-top: ${m.iceT};`, `--color-ice-left: ${m.iceL};`, `--color-ice-right: ${m.iceR};`, `--color-ice-gloss: ${m.gloss};`,
       `--color-ice-sunk: ${mx(m.iceT, m.d1, 0.5)};   /* 갈림길 3 (나) */`,
@@ -526,7 +573,7 @@ class Component extends DCLogic {
     const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { if (o.shapes && o.vb) { const vbp = o.vb.split(' ');
         o.bgi = 'url("data:image/svg+xml,' + toSrc(o.shapes, o.vb) + '")';   // no ";utf8": the template style parser splits on ";"
         o.ar = vbp[2] + ' / ' + vbp[3]; delete o.shapes; } Object.values(o).forEach(walk); } };
-    const out = { variants, side, B, Cf, D, E, H, F: Fb, tide, chapters, wtable, css };
+    const out = { variants, side, B, Cf, D, E, H, I, F: Fb, tide, chapters, wtable, css };
     walk(out);
     return out;
   }

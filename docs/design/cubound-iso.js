@@ -385,6 +385,26 @@
     const f = mix(FL ? FL.l : C.a, '#000000', 0.25);
     return [[[0.02, -0.03], [-0.02, 0.03], [-0.36, 0.12]], [[-0.03, -0.02], [0.03, 0.02], [0.14, -0.36]], [[-0.02, 0.0], [0.03, 0.02], [0.24, 0.22]]].map(q => uvpoly(cx, cy, q, f));
   };
+  // whirl pull range (12월드). p = { ax:'x'|'y', sg: ±1 toward the whirl, k: cells away, st: style, o: 0..1 }
+  // 가 'streak': two light current streaks per cell, wide upstream and thin toward the whirl
+  // 나 'lane'  : a darker channel 0.4 wide running through the cross, continuous from cell to cell (recommended)
+  // 다 'ripple': two light ripple bars across the line near each cell's whirl-side edge
+  const pullMark = (cx, cy, p, top, pal) => {
+    const o = p.o === undefined ? 1 : p.o, A = (t, s) => p.ax === 'x' ? [t * p.sg, s] : [s, t * p.sg], out = [];
+    const poly = (pts, f) => out.push(uvpoly(cx, cy, pts.map(q => A(q[0], q[1])), f));
+    if (p.st === 'lane') {
+      const w = 0.2, f = mix(top, pal.d3, 0.42 * o);
+      poly([[-0.5, -w], [0.5, -w], [0.5, w], [-0.5, w]], f);
+      poly([[-0.5, -w], [0.5, -w], [0.5, -w + 0.035], [-0.5, -w + 0.035]], mix(top, pal.refl, 0.55 * o));
+    } else if (p.st === 'ripple') {
+      const f = mix(top, pal.refl, 0.8 * o);
+      [[0.36, 0.26], [0.18, 0.17]].forEach(([t, h]) => poly([[t - 0.03, -h], [t + 0.03, -h], [t + 0.03, h], [t - 0.03, h]], f));
+    } else {
+      const f = mix(top, pal.refl, 0.8 * o);
+      [[-0.15, -0.42, 0.12], [0.15, -0.12, 0.42]].forEach(([s, t0, t1]) => poly([[t0, s - 0.045], [t1, s - 0.008], [t1, s + 0.008], [t0, s + 0.045]], f));
+    }
+    return out;
+  };
   const floatBox = (X, Y, o, pal, kind) => {
     const out = [], dip = DIP + (o.dip || 0);
     if (o.ring) out.push(...ringAt(X, Y, o.ring, 0.07, pal.refl, o.top, o.ro));
@@ -410,7 +430,9 @@
     const onWhirl = cd && cd.t === 'whirl';
     // a box centred on the whirl drops its collar; the opened rings take its place
     const occ = onWhirl && list.some(o => (o.t === 'fbox' || o.t === 'fstone') && Math.abs(o.u || 0) < 0.2 && Math.abs(o.v || 0) < 0.2);
-    if (onWhirl) out.push(...whirl(cx, cyS, cd.dir, cd.ph, pal, cd.style, occ));
+    if (onWhirl) out.push(...whirl(cx, cyS, 'cw', cd.ph, pal, cd.style, occ));
+    if (cd && cd.plug === 'ghost') out.push(plate(cx, cyS, CS * 1.05, mix(C.yellow, top, 0.62)), plate(cx, cyS, CS * 0.62, mix(C.yellow, top, 0.72)));
+    if (WT.pull && WT.pull[x + ',' + y] && !onWhirl) out.push(...pullMark(cx, cyS, WT.pull[x + ',' + y], top, pal));
     if (WT.range && WT.range[x + ',' + y]) out.push(plate(cx, cyS, 0.9, mix(top, pal.refl, 0.42 * WT.range[x + ',' + y])));
     let surf = null;
     if (cd && cd.t === 'ice') {
@@ -429,6 +451,7 @@
     for (const o of list) {
       if (surf !== null && !o.float) { out.push(...obj(o, cx, surf)); continue; }
       const q = pt(cx, cyS, o.u || 0, o.v || 0), X = q[0], Y = q[1] - (o.lift || 0);
+      if (o.wake) { const n = o.wake; [0.28, 0.5, 0.72].forEach((d, i) => { const w = pt(cx, cyS, (o.u || 0) - n[0] * d, (o.v || 0) - n[1] * d); out.push(plate(w[0], w[1], CS * (1.2 - i * 0.22), pal.refl, 0.75 - i * 0.22)); }); }
       if (o.t === 'fbox') { out.push(...floatBox(X, Y, Object.assign({ top, noCollar: onWhirl }, o), pal, 'box')); continue; }
       if (o.t === 'fstone') { out.push(...floatBox(X, Y, Object.assign({ top, noCollar: onWhirl }, o), pal, 'stone')); continue; }
       if (o.t === 'cube' && o.air !== undefined) { out.push(...cube(X, Y, C.blue, LV, 1, o.air)); continue; }
@@ -496,6 +519,16 @@
       const w = 1.1, up = pts.map(p => [p[0], p[1] - w]), dn = pts.map(p => [p[0], p[1] + w]).reverse();
       (ROPES[bk] = ROPES[bk] || []).push(sh(P(up.concat(dn)), POST.rope));
     });
+    }
+    if (WT && def.pull) {
+      WT.pull = {};
+      def.pull.forEach(pw => { if (pw.show === false) return; [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+        for (let k = 1; ; k++) {
+          const x = pw.p[0] + dx * k, y = pw.p[1] + dy * k, v = V(x, y), cd = cells[x + ',' + y];
+          if (typeof v !== 'number' || v >= def.W - 0.2 || (cd && (cd.t === 'ice' || cd.t === 'whirl'))) break;
+          WT.pull[x + ',' + y] = { ax: dx ? 'x' : 'y', sg: -(dx || dy), k, st: pw.st || 'lane', o: pw.o };
+        }
+      }); });
     }
     if (WT && def.moor) {
       WT.range = {};
