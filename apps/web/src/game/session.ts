@@ -19,6 +19,7 @@ export interface Session {
   stageId: string
   heights: number[][] // 상자와 덩굴로 메운 칸, 무너진 칸, 씨앗으로 솟은 칸이 반영된 높이
   boxes: Point[]
+  tethered?: Point[] // 예전 저장에는 없는 값
   cracks: Crack[]
   trams: TramSpot[]
   swamps?: Point[] // 예전 저장에는 없는 값
@@ -54,6 +55,7 @@ export const toSession = (game: GameState): Session => ({
   stageId: game.stage.id,
   heights: game.heights,
   boxes: game.boxes,
+  tethered: game.tethered,
   cracks: game.cracks,
   trams: game.trams,
   swamps: game.swamps,
@@ -224,7 +226,15 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   const carrying: unknown =
     saved.carrying === true ? 'ladder' : saved.carrying === false ? null : saved.carrying
 
-  if (!boxes || !ladders || !leaningLadders || !seeds || !planted) return null
+  const stagePosts = stage.entities.filter((e) => e.type === 'post')
+  const tethered =
+    saved.tethered === undefined
+      ? stagePosts.map(({ boat }) => ({ x: boat.x, y: boat.y }))
+      : listOf<Point>(saved.tethered, onFloor, stagePosts.length)
+
+  if (!boxes || !ladders || !leaningLadders || !seeds || !planted || !tethered) return null
+  const tiedToBox = (boat: Point) => boxes.some(({ x, y }) => x === boat.x && y === boat.y)
+  if (tethered.length !== stagePosts.length || !tethered.every(tiedToBox)) return null
   if (carrying !== null && carrying !== 'ladder' && carrying !== 'seed') return null
   const holds = (item: Carried) => (carrying === item ? 1 : 0)
   if (ladders.length + leaningLadders.length + holds('ladder') > ladderCount) return null
@@ -238,6 +248,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     stage,
     heights,
     boxes: boxes.map(({ x, y }) => ({ x, y })),
+    tethered: tethered.map(({ x, y }) => ({ x, y })),
     cracks: (savedCracks as Crack[]).map(({ x, y, left }) => ({ x, y, left })),
     trams: (savedTrams as TramSpot[]).map(({ id, at, dir }) => ({ id, at, dir })),
     swamps:

@@ -15,6 +15,7 @@ export type Entity = (
   | { type: 'seed' }
   | { type: 'tram'; id: string; level: number; cells: Point[]; dir: 1 | -1 } // x, y는 cells 안의 시작 자리
   | { type: 'vine'; id: string; cells: Point[] } // x, y는 뿌리 칸, cells는 자랄 순서
+  | { type: 'post'; length: number; boat: Point } // x, y는 말뚝 칸, boat는 묶인 배의 처음 자리
 ) &
   Point
 
@@ -102,6 +103,7 @@ export interface GameState {
   stage: Stage
   heights: number[][] // 상자와 덩굴로 메운 칸, 무너진 칸, 씨앗으로 솟은 칸이 반영된 높이
   boxes: Point[]
+  tethered: Point[] // 말뚝 순서대로 묶인 배의 지금 자리
   cracks: Crack[]
   trams: TramSpot[]
   swamps: Point[] // 남아 있는 늪 칸, 상자가 가라앉은 칸은 제외

@@ -19,6 +19,7 @@ const STAGE: Stage = {
 const MID = {
   heights: STAGE.heights,
   boxes: [{ x: 2, y: 0 }],
+  tethered: [],
   cracks: [],
   trams: [],
   swamps: [],
@@ -560,5 +561,51 @@ describe('restoreSession 바람', () => {
     expect(restored).toEqual(state)
     expect(restored && windLeft(restored)).toBe(1)
     expect(restored && move(restored, 'right').state.player).toEqual({ x: 3, y: 0 })
+  })
+})
+
+describe('restoreSession 묶인 배', () => {
+  // 물 높이 1, (0,1) 말뚝에 줄 길이 2로 묶인 배가 (1,1)
+  const TETHER_STAGE: Stage = {
+    version: 1,
+    id: '11-10',
+    heights: [
+      [1, 1, 1, 1, 1],
+      [1, 0, 0, 0, 1],
+      [1, 1, 1, 1, 1],
+    ],
+    water: 1,
+    start: { x: 1, y: 0 },
+    goal: { x: 4, y: 2 },
+    entities: [
+      { type: 'box', x: 1, y: 1 },
+      { type: 'post', x: 0, y: 1, length: 2, boat: { x: 1, y: 1 } },
+    ],
+  }
+  const rowed = (['down', 'right'] as Direction[]).reduce(
+    (s, d) => move(s, d).state,
+    createState(TETHER_STAGE),
+  )
+
+  it('묶인 배 자리를 그대로 이어가고 줄 길이 끝에서 막힌다', () => {
+    const restored = restoreSession(toSession(rowed), TETHER_STAGE)
+
+    expect(restored).toEqual(rowed)
+    expect(restored?.tethered).toEqual([{ x: 2, y: 1 }])
+    expect(restored && move(restored, 'right').state).toBe(restored)
+  })
+
+  it('묶인 배가 없던 때 저장한 것은 판의 처음 자리로 읽는다', () => {
+    const session = { ...toSession(createState(TETHER_STAGE)), tethered: undefined }
+
+    expect(restoreSession(session, TETHER_STAGE)?.tethered).toEqual([{ x: 1, y: 1 }])
+  })
+
+  it('묶인 배가 상자 자리에 없거나 말뚝 수와 다르면 버린다', () => {
+    const session = toSession(rowed)
+
+    expect(restoreSession({ ...session, tethered: [{ x: 3, y: 1 }] }, TETHER_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, tethered: [] }, TETHER_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, tethered: undefined }, TETHER_STAGE)).toBeNull()
   })
 })

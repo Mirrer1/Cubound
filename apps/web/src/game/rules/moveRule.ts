@@ -9,6 +9,7 @@ import { riseSeeds } from './seedRule'
 import { floorAt, standHeight } from './stateRule'
 import { struggling } from './swampRule'
 import { doors, isClosedDoor, isDoorOpen, isLiftRaised, lifts } from './switchRule'
+import { withinReach } from './tetherRule'
 import { boardsTram, onTramPath, rideTrams, tramLevelAt } from './tramRule'
 import { growVines } from './vineRule'
 import { arrive, walk } from './walkRule'
@@ -29,7 +30,7 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
   }
 
   if (isWater(state, from) && isWater(state, to) && !hasBox(state, to)) {
-    return row(state, to, direction)
+    return withinReach(state, from, to) ? row(state, to, direction) : blocked
   }
   if (toFloor === null || isClosedDoor(state, to)) return blocked
 

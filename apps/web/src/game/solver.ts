@@ -66,6 +66,8 @@ const stateKey = (state: GameState, deep = true) => {
     ...(state.stage.rules?.wind ? [`${state.moves % WIND_EVERY}`] : []),
     // 깊어지는 늪은 빠진 횟수에 따라 달라지는 앞으로 드는 수
     ...(deep && state.stage.rules?.swampDeepen ? [`${state.sinks}`] : []),
+    // 자리 집합만으로는 갈리지 않는 묶인 배와 자유 배의 맞바꿈
+    ...(state.tethered.length > 0 ? [state.tethered.map(({ x, y }) => `${x},${y}`).join(' ')] : []),
     ...(state.trams.length > 0
       ? [state.trams.map(({ at, dir }) => `${at}${dir > 0 ? '+' : '-'}`).join(' ')]
       : []),

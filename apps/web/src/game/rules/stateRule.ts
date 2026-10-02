@@ -1,15 +1,16 @@
 import type { Crack, Entity, GameState, Point, Stage } from '../types'
 import { hasBox, isWater, same } from './cellRule'
 import { isLiftRaised } from './switchRule'
+import { isPost, posts } from './tetherRule'
 import { tramLevelAt, trams } from './tramRule'
 import { vines } from './vineRule'
 
 type Lift = Extract<Entity, { type: 'lift' }>
 
-// 필드 밖은 undefined, 바닥 없는 칸은 -1, 물 칸은 뜬 상자 바닥 높이, 움직이는 발판이 선 칸은 발판 높이, 올라간 엘리베이터 발판은 한 층 위
+// 필드 밖과 말뚝 칸은 undefined, 바닥 없는 칸은 -1, 물 칸은 뜬 상자 바닥 높이, 움직이는 발판이 선 칸은 발판 높이, 올라간 엘리베이터 발판은 한 층 위
 export const rawHeight = (state: GameState, p: Point): number | undefined => {
   const h = state.heights[p.y]?.[p.x]
-  if (h === undefined) return undefined
+  if (h === undefined || isPost(state.stage, p)) return undefined
   if (isWater(state, p)) return (state.stage.water ?? 0) - 1
 
   const tramLevel = tramLevelAt(state, p)
@@ -44,6 +45,7 @@ export const createState = (stage: Stage): GameState => ({
   stage,
   heights: stage.heights,
   boxes: stage.entities.filter((e) => e.type === 'box').map(({ x, y }) => ({ x, y })),
+  tethered: posts(stage).map(({ boat }) => ({ x: boat.x, y: boat.y })),
   cracks: readCracks(stage),
   trams: trams(stage).map(({ id, cells, dir, x, y }) => ({
     id,

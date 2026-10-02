@@ -655,3 +655,55 @@ describe('solve 물', () => {
     })
   })
 })
+
+describe('solve 묶인 배', () => {
+  // 물 높이 1, y 1~3이 물 칸, (2,0) 말뚝에 줄 길이 2로 묶인 배가 (1,1), 자유 배가 (2,3)
+  const TETHER_STAGE: Stage = {
+    version: 1,
+    id: 'test-solver-tether',
+    heights: [
+      [1, 1, 1, 1, 1],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [1, 1, 1, 1, 1],
+    ],
+    water: 1,
+    start: { x: 1, y: 0 },
+    goal: { x: 0, y: 4 },
+    entities: [
+      { type: 'box', x: 1, y: 1 },
+      { type: 'box', x: 2, y: 3 },
+      { type: 'post', x: 2, y: 0, length: 2, boat: { x: 1, y: 1 } },
+    ],
+  }
+
+  it('묶인 배가 못 가는 곳은 자유 배로 갈아타 건너는 길을 찾는다', () => {
+    expect(solve(TETHER_STAGE)).toEqual({
+      status: 'solved',
+      moves: 7,
+      path: ['down', 'right', 'down', 'down', 'down', 'left', 'left'],
+    })
+  })
+
+  it('묶인 배와 자유 배가 자리를 맞바꾸면 다른 상태로 센다', () => {
+    const pond: Stage = {
+      ...TETHER_STAGE,
+      heights: [
+        [1, 1, 1, 1],
+        [1, 0, 0, 1],
+        [1, 0, 0, 1],
+        [1, 1, 1, 1],
+      ],
+      goal: { x: 3, y: 3 },
+      entities: [
+        { type: 'box', x: 1, y: 1 },
+        { type: 'box', x: 2, y: 2 },
+        { type: 'post', x: 0, y: 1, length: 3, boat: { x: 1, y: 1 } },
+      ],
+    }
+    const found = deadEnds(pond)
+
+    expect(found.status === 'ok' && found.states).toBe(148)
+  })
+})
