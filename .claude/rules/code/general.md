@@ -54,6 +54,7 @@
 - 앱과 패키지 구분, 의존성 위치, catalog, tsconfig 확장 규칙은 `CLAUDE.md` "프로젝트 구조"를 따른다
 - `apps/web/src/` 안의 폴더 역할은 `docs/ARCHITECTURE.md` "web 폴더 구조"를 따른다
 - 게임 규칙은 `game/`, 브라우저와 앱 환경에 의존하는 코드(저장, 입력)는 `platform/`에만 둔다
+- `components/board/`에는 화면 컴포넌트만 둔다. 훅은 `hooks/`, 시간에 따라 바뀌는 연출 계산은 `frame/`, 시간과 무관한 그림 계산은 `view/`에 둔다
 - import는 `@/` 경로 별칭을 쓴다. 같은 폴더 안은 `./`를 허용한다
 - 공유 타입은 `game/types.ts`, Props와 작은 로컬 타입은 그 파일 안. 2~3곳 이상 반복되면 공유 타입으로 올린다
 
