@@ -1,6 +1,15 @@
 import { directionBetween } from './cubeFrame'
 import { clamp01, easeOut, lerp } from './curveFrame'
-import { NO_SWAMP, type SwampTime, elapsedAt, moveSeconds } from './timeFrame'
+import { swampTime } from './swampFrame'
+import {
+  type CountView,
+  NO_SWAMP,
+  type SwampTime,
+  countDisplay,
+  elapsedAt,
+  moveSeconds,
+} from './timeFrame'
+import { vinesLeft } from '@/game/rules'
 import type { Direction, GameEvent, GameState } from '@/game/types'
 
 export type VineKind = 'root' | 'grown' | 'next' | 'future' | 'spent'
@@ -180,3 +189,12 @@ export const vineFrames = (
     }),
   )
 }
+
+// 새로 굳은 덩굴마다 판이 짙어지기 시작하는 초
+export const hardenSeconds = (prev: GameState, game: GameState, events: GameEvent[]) => {
+  const swamp = swampTime(prev, game)
+  const at = swamp.lead + VINE_HARD.from * (moveSeconds(events, swamp) - swamp.lead)
+  return game.vines.filter((v, i) => v.stopped && !prev.vines[i].stopped).map(() => at)
+}
+
+export const vinesDisplay = (view: CountView) => countDisplay(view, vinesLeft, hardenSeconds)

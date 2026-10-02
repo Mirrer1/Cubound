@@ -1,9 +1,10 @@
-export { type Chain, moveEase } from './curveFrame'
-export { durationOf, riseProgress, stepProgress, type SwampTime } from './timeFrame'
+export { type Chain, clamp01, lerp, moveEase, smooth } from './curveFrame'
+export { durationOf, has, riseProgress, same, stepProgress, type SwampTime } from './timeFrame'
 export { frostAt } from './iceFrame'
 export {
   boxSink,
   type BoxSinkFrame,
+  mudDisplay,
   swampCollar,
   swampFrame,
   type SwampFrame,
@@ -39,6 +40,7 @@ export {
 export { boardCells, cubeFirst } from './cellFrame'
 export {
   CAP_TOP_IDLE,
+  capsDisplay,
   hopLift,
   hopProgress,
   MUSHROOM_STAND,
@@ -81,5 +83,6 @@ export {
   type VineLook,
   vineLooks,
   vineProgress,
+  vinesDisplay,
 } from './vineFrame'
 export type { Tram } from '@/game/types'

@@ -1,15 +1,17 @@
 import { NO_CHAIN, clamp01, easeIn, easeOut, lerp, moveEase } from './curveFrame'
 import {
+  type CountView,
   NO_SWAMP,
   SWAMP,
   type SwampTime,
+  countDisplay,
   elapsedAt,
   playerSegments,
   same,
   sinkEnd,
   totalSeconds,
 } from './timeFrame'
-import { STRUGGLES } from '@/game/rules'
+import { STRUGGLES, sinkCount } from '@/game/rules'
 import type { GameEvent, GameState, Point } from '@/game/types'
 
 export const inSwamp = (state: GameState, p: Point) => state.swamps.some((cell) => same(cell, p))
@@ -106,3 +108,9 @@ export const boxSink = (events: GameEvent[], swamp: SwampTime, t: number): BoxSi
 
   return { at: sank.at, deep: easeIn(p), filled: clamp01((p - SWAMP.fill) / (1 - SWAMP.fill)) }
 }
+
+// 늪에 빠지는 수에서 큐브가 잠기기 시작하는 초
+export const sinkSeconds = (prev: GameState, game: GameState, events: GameEvent[]) =>
+  game.sinks > prev.sinks ? [swampTime(prev, game).lead + totalSeconds(playerSegments(events))] : []
+
+export const mudDisplay = (view: CountView) => countDisplay(view, sinkCount, sinkSeconds)

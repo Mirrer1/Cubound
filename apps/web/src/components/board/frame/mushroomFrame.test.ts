@@ -5,15 +5,17 @@ import { playerFrame } from './cubeFrame'
 import {
   CAP_TOP_IDLE,
   MUSHROOM_STAND,
+  capsDisplay,
   hopLift,
   hopProgress,
   mushroomFrames,
   mushroomPose,
+  witherSeconds,
 } from './mushroomFrame'
 import { swampFrame, swampTime } from './swampFrame'
 import { DRY_STAGE, HOP_STAGE, STAGE, STAND_STAGE, gust, hop } from './testStages'
 import { durationOf } from './timeFrame'
-import { createState, move } from '@/game/rules'
+import { capsLeft, createState, move } from '@/game/rules'
 import type { Stage } from '@/game/types'
 
 describe('mushroomFrames', () => {
@@ -256,5 +258,51 @@ describe('hopLift', () => {
 
   it('마지막에 갓 위에 내려서면 눌린 갓 높이에 선다', () => {
     expect(hopLift(3, 4, 5)).toBeCloseTo(MUSHROOM_STAND)
+  })
+})
+
+describe('witherSeconds', () => {
+  it('밟혀 시든 갓마다 시들기 시작하는 초를 이른 순서로 준다', () => {
+    const { prev, state, events } = hop(DRY_STAGE)
+    const at = witherSeconds(prev, state, events)
+    const duration = durationOf(events)
+    const wither = (x: number, seconds: number) =>
+      mushroomFrames(prev, state, events, seconds / duration).find((f) => f.cell.x === x)!.wither
+
+    expect(at).toHaveLength(2)
+    expect(at[0]).toBeLessThan(at[1])
+    expect(at[1]).toBeLessThan(duration)
+    expect(wither(1, at[0] - 0.01)).toBe(0)
+    expect(wither(1, at[0] + 0.01)).toBeGreaterThan(0)
+    expect(wither(3, at[1] - 0.01)).toBe(0)
+    expect(wither(3, at[1] + 0.01)).toBeGreaterThan(0)
+  })
+
+  it('시드는 판이 아니면 빈 목록이다', () => {
+    const { prev, state, events } = hop(HOP_STAGE)
+
+    expect(witherSeconds(prev, state, events)).toEqual([])
+  })
+})
+
+describe('capsDisplay', () => {
+  it('연출 중에는 지난 시드는 순간 수만큼만 줄어든 숫자다', () => {
+    const { prev, state, events } = hop(DRY_STAGE)
+    const view = { game: state, prevGame: prev, events, animating: true }
+
+    expect(capsDisplay({ ...view, passed: 0 })).toEqual({
+      at: witherSeconds(prev, state, events),
+      count: capsLeft(prev),
+    })
+    expect(capsDisplay({ ...view, passed: 1 }).count).toBe(1)
+    expect(capsDisplay({ ...view, passed: 2 }).count).toBe(capsLeft(state))
+  })
+
+  it('연출이 끝나면 지금 숫자다', () => {
+    const { prev, state, events } = hop(DRY_STAGE)
+
+    expect(
+      capsDisplay({ game: state, prevGame: prev, events, animating: false, passed: 0 }),
+    ).toEqual({ at: [], count: 0 })
   })
 })

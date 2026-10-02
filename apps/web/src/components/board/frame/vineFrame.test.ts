@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { STAGE } from './testStages'
 import { durationOf } from './timeFrame'
-import { vineFrames, vineLooks, vineProgress } from './vineFrame'
-import { createState, move } from '@/game/rules'
+import { hardenSeconds, vineFrames, vineLooks, vineProgress, vinesDisplay } from './vineFrame'
+import { createState, move, vinesLeft } from '@/game/rules'
 import type { GameState, Stage } from '@/game/types'
 
 // 뿌리 (0,1)에서 오른쪽으로 세 칸 자라는 덩굴
@@ -230,5 +230,48 @@ describe('vineFrames', () => {
     expect(at(0.99)?.opacity).toBeLessThan(0.05)
     expect(at(0.99)?.sproutOpacity).toBeGreaterThan(0.95)
     expect(at(0.99)?.sprout).toBe(14)
+  })
+})
+
+describe('hardenSeconds', () => {
+  const stage: Stage = { ...VINE_STAGE, rules: { vineStop: true } }
+
+  it('덩굴이 굳는 수는 판이 짙어지기 시작하는 초다', () => {
+    const before = move(createState(stage), 'down').state
+    const { state, events } = move(before, 'right')
+    const at = hardenSeconds(before, state, events)
+    const hard = (seconds: number) =>
+      vineFrames(before, state, events, seconds / durationOf(events)).get('1-1')!.hard
+
+    expect(at).toHaveLength(1)
+    expect(hard(at[0] - 0.01)).toBe(0)
+    expect(hard(at[0] + 0.01)).toBeGreaterThan(0)
+  })
+
+  it('굳지 않는 수는 빈 목록이다', () => {
+    const start = createState(stage)
+    const { state, events } = move(start, 'down')
+
+    expect(hardenSeconds(start, state, events)).toEqual([])
+  })
+})
+
+describe('vinesDisplay', () => {
+  const stage: Stage = { ...VINE_STAGE, rules: { vineStop: true } }
+
+  it('연출 중에는 굳는 순간이 지나야 줄어든 숫자다', () => {
+    const before = move(createState(stage), 'down').state
+    const { state, events } = move(before, 'right')
+    const view = { game: state, prevGame: before, events, animating: true }
+
+    expect(vinesDisplay({ ...view, passed: 0 })).toEqual({
+      at: hardenSeconds(before, state, events),
+      count: vinesLeft(before),
+    })
+    expect(vinesDisplay({ ...view, passed: 1 }).count).toBe(vinesLeft(state))
+    expect(vinesDisplay({ ...view, animating: false, passed: 0 })).toEqual({
+      at: [],
+      count: vinesLeft(state),
+    })
   })
 })

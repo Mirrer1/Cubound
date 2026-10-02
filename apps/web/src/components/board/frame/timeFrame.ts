@@ -1,5 +1,6 @@
 import { type Chain, clamp01, moveEase } from './curveFrame'
-import type { GameEvent, Point } from '@/game/types'
+import { same } from '@/game/rules'
+import type { GameEvent, GameState, Point } from '@/game/types'
 
 export const SECONDS = {
   moved: 0.24,
@@ -91,7 +92,7 @@ export const boxPath = (events: GameEvent[]) =>
     (e): e is PathEvent => e.type === 'pushed' || (e.type === 'slid' && e.subject === 'box'),
   )
 
-export const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y
+export { same }
 
 export const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
 
@@ -390,4 +391,30 @@ export const hopSpan = (cells: number) => {
   const lead = cells % 2
   const bounces = (cells - lead) / 2
   return cells + bounces * (CAP_PRESS.press + CAP_PRESS.spring) - capFrom(0, lead)
+}
+
+export interface CountView {
+  game: GameState | null
+  prevGame: GameState | null
+  events: GameEvent[]
+  animating: boolean
+  passed: number // 이 수의 연출에서 이미 지난 숫자가 바뀌는 순간 수
+}
+
+type Moments = (prev: GameState, game: GameState, events: GameEvent[]) => number[]
+
+// 지난 순간 수만큼만 다음 숫자로 다가간 보스 숫자, at은 연출이 시작한 뒤 숫자가 바뀌는 초
+export const countDisplay = (
+  { game, prevGame, events, animating, passed }: CountView,
+  count: (state: GameState) => number | null,
+  moments: Moments,
+) => {
+  const after = game ? count(game) : null
+  const before = prevGame ? count(prevGame) : null
+  if (!game || !prevGame || !animating || after === null || before === null)
+    return { at: [], count: after }
+
+  const at = moments(prevGame, game, events)
+  const step = Math.min(passed, Math.abs(after - before))
+  return { at, count: passed >= at.length ? after : before + Math.sign(after - before) * step }
 }

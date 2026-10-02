@@ -23,7 +23,7 @@ import {
   sinkBox,
   struggleSwamp,
 } from './testStages'
-import { durationOf, riseProgress, stepProgress } from './timeFrame'
+import { countDisplay, durationOf, riseProgress, stepProgress } from './timeFrame'
 import { createState, move } from '@/game/rules'
 import type { Stage } from '@/game/types'
 
@@ -252,5 +252,29 @@ describe('durationOf 바람', () => {
 
     expect(durationOf(blown.events)).toBeCloseTo(0.24 + 0.3)
     expect(durationOf(braced.events)).toBeCloseTo(0.24 + 0.3)
+  })
+})
+
+describe('countDisplay', () => {
+  const prevGame = createState(STAGE)
+  const { state: game, events } = move(prevGame, 'right')
+  const count = (state: typeof game) => state.moves * 2
+  const at = () => [0.1, 0.2]
+  const view = { game, prevGame, events, animating: true, passed: 0 }
+
+  it('연출 중에는 지난 순간 수만큼만 다음 숫자로 다가간다', () => {
+    expect(countDisplay(view, count, at)).toEqual({ at: [0.1, 0.2], count: 0 })
+    expect(countDisplay({ ...view, passed: 1 }, count, at).count).toBe(1)
+    expect(countDisplay({ ...view, passed: 2 }, count, at).count).toBe(2)
+  })
+
+  it('연출이 끝났거나 앞 상태가 없으면 지금 숫자다', () => {
+    expect(countDisplay({ ...view, animating: false }, count, at)).toEqual({ at: [], count: 2 })
+    expect(countDisplay({ ...view, prevGame: null }, count, at)).toEqual({ at: [], count: 2 })
+  })
+
+  it('판이 없거나 숫자가 없는 판이면 null이다', () => {
+    expect(countDisplay({ ...view, game: null }, count, at)).toEqual({ at: [], count: null })
+    expect(countDisplay(view, () => null, at)).toEqual({ at: [], count: null })
   })
 })

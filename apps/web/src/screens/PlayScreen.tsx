@@ -10,21 +10,12 @@ import {
 } from 'react'
 
 import Board from '@/components/board/Board'
-import { windDisplay } from '@/components/board/frame'
+import { capsDisplay, mudDisplay, vinesDisplay, windDisplay } from '@/components/board/frame'
 import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
 import RestartCard from '@/components/ui/RestartCard'
-import {
-  capsLeft,
-  climbsLeft,
-  dirLeft,
-  movesLeft,
-  pushesLeft,
-  ridesLeft,
-  sinkCount,
-  vinesLeft,
-} from '@/game/rules'
+import { climbsLeft, dirLeft, movesLeft, pushesLeft, ridesLeft } from '@/game/rules'
 import { useText } from '@/hooks/useText'
 import { stageTextKey } from '@/i18n'
 import { directionFromKey, directionFromSwipe, isRestartKey } from '@/platform/input'
@@ -72,6 +63,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const closeGuide = useGameStore((s) => s.closeGuide)
   const [asking, setAsking] = useState(false)
   const [gustTurn, setGustTurn] = useState(-1) // 바람이 불어 숫자가 바뀐 차례
+  const [passedAt, setPassedAt] = useState({ turn: -1, passed: 0 })
   const sectionRef = useRef<HTMLElement>(null)
   const swipeStart = useRef<{ x: number; y: number } | null>(null)
   const swiped = useRef(false)
@@ -92,9 +84,14 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const climbsOver = game ? climbsLeft(game) : null
   const ridesOver = game ? ridesLeft(game) : null
   const dirOver = game ? dirLeft(game) : null
-  const mudSinks = game ? sinkCount(game) : null
-  const caps = game ? capsLeft(game) : null
-  const vines = game ? vinesLeft(game) : null
+  const passed = passedAt.turn === turn ? passedAt.passed : 0
+  const countView = { game, prevGame, events, animating, passed }
+  const { at: mudAt, count: mudSinks } = mudDisplay(countView)
+  const { at: capsAt, count: caps } = capsDisplay(countView)
+  const { at: vinesAt, count: vines } = vinesDisplay(countView)
+  const countAt = [...mudAt, ...capsAt, ...vinesAt]
+  const nextCountAt = countAt[passed] ?? null
+  const lastCountAt = countAt[passed - 1] ?? 0
   const reduced = useReducedMotion()
   const { gustAt, wind, blew } = windDisplay({ game, prevGame, events, animating })
   const gusting = gustAt !== null && gustTurn === turn && animating
@@ -154,6 +151,13 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     swiped.current = false
     e.stopPropagation()
   }
+
+  useEffect(() => {
+    if (nextCountAt === null) return
+    const delay = (nextCountAt - lastCountAt) * 1000 * (reduced ? 0.35 : 1)
+    const timer = setTimeout(() => setPassedAt({ turn, passed: passed + 1 }), delay)
+    return () => clearTimeout(timer)
+  }, [nextCountAt, lastCountAt, passed, turn, reduced])
 
   useEffect(() => {
     if (gustAt === null) return

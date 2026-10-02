@@ -2,10 +2,18 @@ import { describe, expect, it } from 'vitest'
 
 import { movingBox } from './boxFrame'
 import { playerFrame } from './cubeFrame'
-import { boxSink, swampCollar, swampFrame, swampSink, swampTime } from './swampFrame'
+import {
+  boxSink,
+  mudDisplay,
+  sinkSeconds,
+  swampCollar,
+  swampFrame,
+  swampSink,
+  swampTime,
+} from './swampFrame'
 import { STAGE, SWAMP_STAGE, enterSwamp, leaveSwamp, sinkBox, struggleSwamp } from './testStages'
 import { durationOf } from './timeFrame'
-import { createState, move } from '@/game/rules'
+import { createState, move, sinkCount } from '@/game/rules'
 import type { Stage } from '@/game/types'
 
 // 늪에 times번 빠져 마지막 늪에 막 들어선 상태, n번째 늪의 버둥은 n+1수
@@ -202,5 +210,48 @@ describe('boxSink', () => {
 
   it('가라앉는 상자가 없으면 null이다', () => {
     expect(boxSink([{ type: 'blocked', direction: 'left' }], { lead: 0, tail: 0 }, 0.5)).toBeNull()
+  })
+})
+
+describe('sinkSeconds', () => {
+  it('늪에 빠지는 수는 큐브가 잠기기 시작하는 초다', () => {
+    const { prev, state, events } = enterSwamp()
+    const at = sinkSeconds(prev, state, events)
+    const deep = (seconds: number) =>
+      swampFrame(prev, state, events, seconds / durationOf(events, swampTime(prev, state)))!.deep
+
+    expect(at).toHaveLength(1)
+    expect(deep(at[0] - 0.01)).toBe(0)
+    expect(deep(at[0] + 0.02)).toBeGreaterThan(0)
+  })
+
+  it('버둥이나 늪에서 나오는 수는 빈 목록이다', () => {
+    const struggled = struggleSwamp()
+    const left = leaveSwamp()
+
+    expect(sinkSeconds(struggled.prev, struggled.state, struggled.events)).toEqual([])
+    expect(sinkSeconds(left.prev, left.state, left.events)).toEqual([])
+  })
+})
+
+describe('mudDisplay', () => {
+  it('깊어지는 늪은 잠기기 시작해야 빠진 횟수가 는다', () => {
+    const prev = createState({ ...SWAMP_STAGE, rules: { swampDeepen: true } })
+    const { state, events } = move(prev, 'right')
+    const view = { game: state, prevGame: prev, events, animating: true }
+
+    expect(mudDisplay({ ...view, passed: 0 })).toEqual({
+      at: sinkSeconds(prev, state, events),
+      count: sinkCount(prev),
+    })
+    expect(mudDisplay({ ...view, passed: 1 }).count).toBe(sinkCount(state))
+  })
+
+  it('깊어지는 늪이 아니면 숫자도 순간도 없다', () => {
+    const { prev, state, events } = enterSwamp()
+
+    expect(mudDisplay({ game: state, prevGame: prev, events, animating: true, passed: 0 })).toEqual(
+      { at: [], count: null },
+    )
   })
 })

@@ -4,12 +4,15 @@ import { slideChain } from './iceFrame'
 import { swampTime } from './swampFrame'
 import {
   CAP_PRESS,
+  type CountView,
   HOP,
   type PathEvent,
   type Segment,
   boxPath,
   capFrom,
   cellsOf,
+  countDisplay,
+  durationOf,
   elapsedAt,
   has,
   hopCells,
@@ -20,7 +23,7 @@ import {
   stepAt,
 } from './timeFrame'
 import { TILE } from '@/game/iso'
-import { readMushrooms, standHeight } from '@/game/rules'
+import { capsLeft, readMushrooms, standHeight } from '@/game/rules'
 import type { GameEvent, GameState, Point } from '@/game/types'
 
 // 큐브가 올라서서 눌린 채 남는 갓이 눌리는 몫, 머무름 대신 쓰는 이동의 끝자락
@@ -358,3 +361,25 @@ export const mushroomFrames = (
     }
   })
 }
+
+// 시들기 시작하는 때를 찾는 연출 진행도 간격 수
+const WITHER_SAMPLES = 200
+
+// 밟혀 시든 갓마다 시들기 시작하는 초, 이른 순서
+export const witherSeconds = (prev: GameState, game: GameState, events: GameEvent[]) => {
+  const dried = prev.mushrooms.filter((cell) => !has(game.mushrooms, cell))
+  if (dried.length === 0) return []
+
+  const duration = durationOf(events, swampTime(prev, game))
+  const starts = dried.map(() => duration)
+  for (let i = 0; i < WITHER_SAMPLES; i += 1) {
+    const frames = mushroomFrames(prev, game, events, i / WITHER_SAMPLES)
+    dried.forEach((cell, k) => {
+      const wither = frames.find((f) => same(f.cell, cell))?.wither ?? 0
+      if (wither > 0 && starts[k] === duration) starts[k] = (duration * i) / WITHER_SAMPLES
+    })
+  }
+  return starts.sort((a, b) => a - b)
+}
+
+export const capsDisplay = (view: CountView) => countDisplay(view, capsLeft, witherSeconds)
