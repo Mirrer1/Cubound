@@ -14,11 +14,11 @@ paths:
 5. 이벤트 핸들러는 return 위로 추출한다. 한 줄이면서 단순 setter이고 재사용이 없을 때만 인라인을 허용한다
 
 ```tsx
-// ❌ return 여러 개
+// 나쁜 예: return 여러 개
 if (isCleared) return <ClearScreen />
 return <Board />
 
-// ✅ return 1개
+// 좋은 예: return 1개
 return <>{isCleared ? <ClearScreen /> : <Board />}</>
 ```
 
