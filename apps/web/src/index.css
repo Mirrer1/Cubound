@@ -72,6 +72,13 @@
   --color-swamp-lump: #b6b49f;
   --color-swamp-collar: #bfbda8;
   --color-swamp-filled: color-mix(in srgb, var(--color-tool), white 14%);
+  /* 물 색, 뒤 숫자는 물 깊이 층 수 */
+  --color-water-1: #c1d9d4;
+  --color-water-2: #a9c0bc;
+  --color-water-3: #92a9a4;
+  --color-water-left: #7a8e8a;
+  --color-water-right: #92a7a2;
+  --color-water-reflect: #e5f0ed;
   /* 버섯은 7월드 전용이라 사이클을 따라 바뀌지 않는다 */
   --color-mushroom-cap-top: #d9b8a6;
   --color-mushroom-cap-left: #ae8b79;
@@ -138,6 +145,18 @@ html[data-cycle='2'] {
   --color-floor-top-alt: #e2e5da;
   --color-floor-left: #bfc1b4;
   --color-floor-right: #d2d4c8;
+}
+
+html[data-cycle='3'] {
+  --color-page-bg: #d9e7e8;
+  --color-base-bg: #e6f1f2;
+  --color-surface: #edf7f8;
+  --color-locked: #dfebec;
+  --color-hover: #deeaeb;
+  --color-floor-top: #dfedee;
+  --color-floor-top-alt: #d9e7e7;
+  --color-floor-left: #b3c3c4;
+  --color-floor-right: #c7d6d7;
 }
 
 html,
@@ -246,6 +265,12 @@ body {
   --chapter-win: #e2e6db;
   --chapter-a: #eaebe0;
   --chapter-b: #e2e5da;
+}
+
+[data-chapter='3'] {
+  --chapter-win: #d9e7e8;
+  --chapter-a: #dfedee;
+  --chapter-b: #d9e7e7;
 }
 
 @utility stage-grid {

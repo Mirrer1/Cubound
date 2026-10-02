@@ -6,6 +6,7 @@ import BoardClear from './BoardClear'
 import BoardLadder from './BoardLadder'
 import BoardSeed from './BoardSeed'
 import BoardTram from './BoardTram'
+import BoardWater from './BoardWater'
 import {
   SLIDE_DEG,
   type Tram,
@@ -38,6 +39,7 @@ import {
   railDirsOf,
   restartDrop,
   restartDuration,
+  rippleOf,
   rollingTilt,
   same,
   seedFrames,
@@ -56,7 +58,7 @@ import {
   vineLooks,
   wallHeight,
 } from './frame'
-import { rollingCubeFaces, shade } from './view'
+import { WATER, floatShownAt, rollingCubeFaces, shade, waterLook } from './view'
 import { TILE, toScreen } from '@/game/iso'
 import { fadedCells } from '@/game/occlusion'
 import { isDoorOpen, isIce, isLiftRaised } from '@/game/rules'
@@ -121,6 +123,7 @@ const Board = ({
   const box = movingBox(prevGame, game, events, t, chain)
   const sunk = swampFrame(dropping ? null : prevGame, game, events, t)
   const sinkingBox = boxSink(events, swampSeconds, t)
+  const ripple = moving ? rippleOf(events, t, swampSeconds) : null
   const pickedUp = moving ? events.find((e) => e.type === 'pickedUp') : undefined
   const placed = moving ? events.find((e) => e.type === 'placed') : undefined
 
@@ -198,6 +201,7 @@ const Board = ({
   const plantTilt = plantTiltOf(planting, cube)
   const caps = mushroomFrames(dropping ? null : prevGame, game, events, t, chain)
   const boxFrames = boxFramesOf({ box, sinkingBox, tramFrames, boxes, crackView })
+  const boxShown = box ? floatShownAt(stage, box) : null
   const guideLevel = guideCell ? Math.max(0, heights[guideCell.y][guideCell.x]) : 0
   const guideScreen = guideCell ? toScreen(guideCell, guideLevel) : null
   // 한 층보다 높이 솟는 칸 위에 선 것, 위쪽을 더 잡는 여유
@@ -225,6 +229,8 @@ const Board = ({
           (e): e is Extract<Entity, { type: 'warp' }> => e.type === 'warp' && same(e, cell.p),
         )
         const capHere = caps.find((capFrame) => same(capFrame.cell, cell.p))
+        const water = waterLook(stage, cell.p)
+        const rippleHere = ripple && same(ripple.at, cell.p) ? ripple : null
         const swampHere = (stage.swamp?.[cell.p.y]?.[cell.p.x] ?? '.') !== '.'
         // 상자가 가라앉는 동안 남는 진흙, 그 위로 드러나는 메운 자리
         const swamp = swampHere && (has(game.swamps, cell.p) || has(before.swamps, cell.p))
@@ -332,6 +338,13 @@ const Board = ({
             mushroom={capHere !== undefined}
             mushroomPress={capHere?.press ?? 0}
             mushroomWither={capHere?.wither ?? 0}
+            water={water.depth}
+            waterBankX={water.bankX}
+            waterBankY={water.bankY}
+            waterSideLeft={water.sideLeft}
+            waterSideRight={water.sideRight}
+            waterRing={rippleHere?.size ?? 0}
+            waterRingOpacity={rippleHere?.opacity ?? 0}
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
             lift={lift !== undefined}
@@ -386,12 +399,31 @@ const Board = ({
                 {tram && (
                   <BoardTram x={tram.x} y={tram.y} depth={tram.depth} dx={tram.dx} dy={tram.dy} />
                 )}
-                {drawBoxes.map((frame) => (
-                  <BoardBox key={`${frame.to.x}-${frame.to.y}`} x={frame.x} y={frame.y} />
-                ))}
+                {drawBoxes.map((frame) =>
+                  box && same(frame.to, box.to) && boxShown !== null ? (
+                    <BoardWater
+                      key={`${frame.to.x}-${frame.to.y}`}
+                      part="box"
+                      x={frame.x}
+                      y={frame.y}
+                      shown={boxShown}
+                    />
+                  ) : (
+                    <BoardBox key={`${frame.to.x}-${frame.to.y}`} x={frame.x} y={frame.y} />
+                  ),
+                )}
                 {boxDrop && (
                   <g opacity={boxDrop.opacity}>
-                    <BoardBox x={cell.x} y={cellY - TILE.layer - boxDrop.lift * TILE.layer} />
+                    {water.depth > 0 ? (
+                      <BoardWater
+                        part="box"
+                        x={cell.x}
+                        y={cellY - (water.depth + boxDrop.lift) * TILE.layer}
+                        shown={Math.min(TILE.layer, WATER.lip + boxDrop.lift * TILE.layer)}
+                      />
+                    ) : (
+                      <BoardBox x={cell.x} y={cellY - TILE.layer - boxDrop.lift * TILE.layer} />
+                    )}
                   </g>
                 )}
                 {drawCube && (

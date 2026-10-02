@@ -50,6 +50,7 @@ export {
   type MushroomPose,
 } from './mushroomFrame'
 export { type BoxFrame, boxFramesOf, movingBox } from './boxFrame'
+export { rippleOf } from './waterFrame'
 export { filledCells, fillingCellKey, type FillView, heightNow, wallHeight } from './fillFrame'
 export {
   atStage,

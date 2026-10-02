@@ -6,12 +6,14 @@ export const SECONDS = {
   moved: 0.24,
   pushed: 0.26,
   filled: 0.34, // 가라앉는 몫까지 담은 구덩이 메우는 밀기
+  floated: 0.5, // 잠겼다 떠오르는 몫까지 담은 물에 떨어뜨리는 밀기
   fell: 0.32,
   climbed: 0.3,
   blocked: 0.2,
   placed: 0.22,
   planted: 0.44,
   tram: 0.24,
+  rowed: 0.3,
 }
 
 // 상자와 큐브가 나란히 가는 칸당 같은 속도, max는 아주 긴 미끄러짐의 상한
@@ -47,7 +49,7 @@ export const SWAMP = {
 // 미끄러지면 여러 구간으로 이어지는 한 이동
 export type PathEvent = Extract<
   GameEvent,
-  { type: 'moved' | 'fell' | 'climbed' | 'slid' | 'pushed' }
+  { type: 'moved' | 'fell' | 'climbed' | 'slid' | 'pushed' | 'rowed' }
 >
 
 export const cellsOf = (event: PathEvent) =>
@@ -62,8 +64,8 @@ const secondsOf = (event: PathEvent) =>
     ? Math.min(SLIDE.max, SLIDE.perCell * cellsOf(event))
     : hopCells(event) > 0
       ? Math.min(HOP.max, HOP.perCell * hopSpan(hopCells(event)))
-      : event.type === 'pushed' && event.result === 'filled'
-        ? SECONDS.filled
+      : event.type === 'pushed' && (event.result === 'filled' || event.result === 'floated')
+        ? SECONDS[event.result]
         : SECONDS[event.type]
 
 // 기다리는 구간이 섞일 수 있어 이벤트와 따로 두는 길이
@@ -84,12 +86,14 @@ export const playerPath = (events: GameEvent[]) =>
       e.type === 'moved' ||
       e.type === 'fell' ||
       e.type === 'climbed' ||
+      e.type === 'rowed' ||
       (e.type === 'slid' && e.subject === 'player'),
   )
 
 export const boxPath = (events: GameEvent[]) =>
   events.filter(
-    (e): e is PathEvent => e.type === 'pushed' || (e.type === 'slid' && e.subject === 'box'),
+    (e): e is PathEvent =>
+      e.type === 'pushed' || e.type === 'rowed' || (e.type === 'slid' && e.subject === 'box'),
   )
 
 export { same }

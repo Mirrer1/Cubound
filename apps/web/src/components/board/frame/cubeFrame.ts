@@ -30,6 +30,7 @@ import {
   warpAt,
 } from './timeFrame'
 import { carriedBy, carryOf, frontOf, slidingCell, tramProgress } from './tramFrame'
+import { shoveDirection } from './waterFrame'
 import { windLean, windSpan } from './windFrame'
 import { TILE } from '@/game/iso'
 import { standHeight } from '@/game/rules'
@@ -184,12 +185,12 @@ const pathFrame = (
       // 튕겨 가는 이동의 끝 칸 높이는 hopLevel 몫
       level: level + (hopped ? risen : riding),
       direction: directionBetween(event.from, event.to),
-      // 구르기 제외, 얼음 위와 갓을 딛고 날아가는 동안, 갓으로 걸어 들어가는 한 칸은 예외
+      // 구르기 제외, 얼음 위와 뜬 상자로 저어 가는 동안과 갓을 딛고 날아가는 동안, 갓으로 걸어 들어가는 한 칸은 예외
       // 바람에 밀려 가는 동안은 구르지 않고 바람 쪽으로 기울었다 돌아오는 각도
       angle:
         waitAt >= 0 && index > waitAt
           ? (lean ?? 0) * TILT
-          : event.type === 'slid'
+          : event.type === 'slid' || event.type === 'rowed'
             ? 0
             : hopped
               ? hopAngle(cells, gone * cells)
@@ -215,8 +216,9 @@ const pathFrame = (
   }
 
   const blocked = events.find((e) => e.type === 'blocked')
-  if (blocked?.type === 'blocked') {
-    return { ...still, direction: blocked.direction, angle: Math.sin(Math.PI * t) * TILT }
+  const leaning = blocked?.type === 'blocked' ? blocked.direction : shoveDirection(events)
+  if (leaning) {
+    return { ...still, direction: leaning, angle: Math.sin(Math.PI * t) * TILT }
   }
 
   // 제 힘으로 가지 않은 이동은 떠나기 전 칸

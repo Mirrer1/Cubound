@@ -10,6 +10,7 @@ import BoardSeed from './BoardSeed'
 import BoardSwamp from './BoardSwamp'
 import BoardSwitch from './BoardSwitch'
 import BoardVine from './BoardVine'
+import BoardWater from './BoardWater'
 import { type VineKind, crackThickness, swampCollar, swampSink } from './frame'
 import {
   CUBE,
@@ -18,6 +19,7 @@ import {
   PIT_FLOOR,
   QUARTER,
   SHARD,
+  WATER,
   blend,
   cellFaces,
   crackQuarters,
@@ -75,6 +77,13 @@ interface BoardCellProps {
   mushroom: boolean
   mushroomPress: number // 갓이 눌린 정도, -1은 펴짐, 0은 평소, 2는 큐브가 올라선 상태
   mushroomWither: number // 시든 정도 0~1
+  water: number // 물 깊이 층 수, 0이면 물 없는 칸
+  waterBankX: boolean // 왼쪽 위 가장자리 반사 띠
+  waterBankY: boolean // 오른쪽 위 가장자리 반사 띠
+  waterSideLeft: boolean
+  waterSideRight: boolean
+  waterRing: number // 퍼지는 고리 크기, 0이면 고리 없음
+  waterRingOpacity: number
   faded: boolean
   entity: 'switch' | 'door' | null
   lift: boolean
@@ -137,6 +146,13 @@ const BoardCell = ({
   mushroom,
   mushroomPress,
   mushroomWither,
+  water,
+  waterBankX,
+  waterBankY,
+  waterSideLeft,
+  waterSideRight,
+  waterRing,
+  waterRingOpacity,
   faded,
   entity,
   lift,
@@ -296,6 +312,20 @@ const BoardCell = ({
                 right={faces.right}
               />
             )}
+            {water > 0 && (
+              <BoardWater
+                part="surface"
+                x={x}
+                y={y}
+                depth={water}
+                bankX={waterBankX}
+                bankY={waterBankY}
+                sideLeft={waterSideLeft}
+                sideRight={waterSideRight}
+                ring={waterRing}
+                ringOpacity={waterRingOpacity}
+              />
+            )}
             {seedStalk > 0 && <BoardSeed x={x} y={y} part="stalk" level={seedStalk} p={seedBud} />}
             {seedLeaves > 0 && <BoardSeed x={x} y={y} part="leaves" p={seedLeaves} />}
             {(grownVine || vine === 'root') && <BoardVine layer="top" kind={vine} {...vineProps} />}
@@ -356,7 +386,11 @@ const BoardCell = ({
       )}
       {box && (
         <g style={fade}>
-          <BoardBox x={x} y={y - TILE.layer} />
+          {water > 0 ? (
+            <BoardWater part="box" x={x} y={y - water * TILE.layer} shown={WATER.lip} />
+          ) : (
+            <BoardBox x={x} y={y - TILE.layer} />
+          )}
         </g>
       )}
       {flatLadder > 0 && (

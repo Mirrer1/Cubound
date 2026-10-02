@@ -20,6 +20,7 @@ import {
   totalSeconds,
 } from './timeFrame'
 import { carriedBy, carryOf, frontOf, slidingCell, tramProgress } from './tramFrame'
+import { floatGone, floatLevel } from './waterFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { standHeight } from '@/game/rules'
 import type { GameEvent, GameState, Point } from '@/game/types'
@@ -36,6 +37,7 @@ export interface BoxFrame {
 // 튕겨 간 상자가 마지막 갓에서 떠나 앉는 도착 칸 높이
 const boxLevelAfter = (prev: GameState, level: number, event: PathEvent) => {
   if (event.type !== 'pushed') return level
+  if (event.result === 'floated') return (prev.stage.water ?? 0) - 1
   const hopped = hopCells(event) > 0
   const dx = Math.sign(event.to.x - event.from.x)
   const dy = Math.sign(event.to.y - event.from.y)
@@ -79,16 +81,19 @@ export const movingBox = (
   const toLevel = boxLevelAfter(prev, fromLevel, event)
   const cells = cellsOf(event)
   const hopped = hopCells(event) > 0
-  const gone = hopped ? hopProgress(cells, p) : p
+  const floated = !hopped && event.type === 'pushed' && event.result === 'floated'
+  const gone = hopped ? hopProgress(cells, p) : floated ? floatGone(p) : p
   // 구덩이를 메우는 상자는 반쯤 가서부터 부드럽게 하강, 떨어지는 상자는 끝에서 가속
   // 버섯을 이어 튀는 상자는 큐브처럼 딛는 갓마다 그 칸 높이
   const filling = event.type === 'pushed' && event.result === 'filled'
   const level =
     hopped && cells > 3
       ? hopLevel(prev, event, cells, fromLevel, toLevel, gone * cells)
-      : event.type === 'slid' || p < (filling ? 0.5 : 0.6)
-        ? fromLevel
-        : lerp(fromLevel, toLevel, filling ? smooth((p - 0.5) / 0.5) : easeIn((p - 0.6) / 0.4))
+      : floated
+        ? floatLevel(fromLevel, toLevel, p)
+        : event.type === 'slid' || p < (filling ? 0.5 : 0.6)
+          ? fromLevel
+          : lerp(fromLevel, toLevel, filling ? smooth((p - 0.5) / 0.5) : easeIn((p - 0.6) / 0.4))
   // 상자가 앉을 높이는 도착 칸에 서는 높이에서 한 층을 뺀 값, 발판이 오르내린 몫 포함
   const endLevel = path.reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
   // 상자가 자리에 앉은 뒤 칸과 같이 오르는 씨앗이 솟는 몫

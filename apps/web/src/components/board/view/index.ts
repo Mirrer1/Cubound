@@ -29,3 +29,12 @@ export {
 } from './cellView'
 export { CUBE, type CubeFace, rollingCubeFaces, tiltOnTop, type TopTilt } from './cubeView'
 export { blend, checker, darken, dim, shade } from './shadeView'
+export {
+  bankPoints,
+  COLLAR,
+  floatShownAt,
+  surfaceRise,
+  WATER,
+  waterLook,
+  waterTone,
+} from './waterView'
