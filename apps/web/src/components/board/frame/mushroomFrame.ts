@@ -92,7 +92,8 @@ export const hopClear = (
     const middle = (floorOf(a) + floorOf(a + 2)) / 2
     const over =
       (state.heights[wall.y]?.[wall.x] ?? -1) < 0 ? 0 : standHeight(state, wall) - middle - 1
-    clear.push(Math.max(0, over) * TILE.layer)
+    // 9는 높은 벽 위로 여유 있게 넘어가는 몫
+    clear.push(over > 0 ? over * TILE.layer + 9 : 0)
   }
   return clear
 }

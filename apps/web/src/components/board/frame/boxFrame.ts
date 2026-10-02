@@ -101,8 +101,14 @@ export const movingBox = (
     x: lerp(event.from.x, event.to.x, gone) + shift.x,
     y: lerp(event.from.y, event.to.y, gone) + shift.y,
     level: level + riding,
+    // 구덩이를 메우는 상자의 뜀 높이 기준, 메운 뒤 윗면이 닿는 땅 높이
     lift: hopped
-      ? hopLift(cells, hopSpan(cells) * p, 0, hopClear(prev, event, cells, fromLevel, toLevel))
+      ? hopLift(
+          cells,
+          hopSpan(cells) * p,
+          0,
+          hopClear(prev, event, cells, fromLevel, filling ? toLevel + 1 : toLevel),
+        )
       : 0,
     to,
     // 잠기는 상자는 진흙에 가려지는 멈춘 자리 칸

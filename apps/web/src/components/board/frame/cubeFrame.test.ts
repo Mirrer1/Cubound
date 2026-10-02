@@ -390,7 +390,7 @@ describe('playerFrame 버섯', () => {
     expect(Math.max(...lifts)).toBeGreaterThan(TILE.layer)
   })
 
-  it('두 층 벽은 한 층 벽보다 한 층만큼 더 높이 넘고 구덩이는 한 층 벽과 같다', () => {
+  it('두 층 벽은 한 층 벽보다 한 층에 여유를 더해 높이 넘고 구덩이는 한 층 벽과 같다', () => {
     const peak = (stage: Stage) => {
       const { prev, state, events } = hop(stage)
       return Math.max(
@@ -400,7 +400,7 @@ describe('playerFrame 버섯', () => {
     const low = peak(HOP_STAGE)
 
     expect(peak({ ...HOP_STAGE, heights: [[0, 0, 2, 0, 0, 0, 0]] }) - low).toBeCloseTo(
-      TILE.layer,
+      TILE.layer + 9,
       -1,
     )
     expect(peak({ ...HOP_STAGE, heights: [[0, 0, -1, 0, 0, 0, 0]] })).toBeCloseTo(low)

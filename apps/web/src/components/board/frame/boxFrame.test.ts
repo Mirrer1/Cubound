@@ -201,6 +201,21 @@ describe('movingBox 버섯', () => {
     for (const level of onSecond) expect(level).toBeCloseTo(0)
   })
 
+  it('두 층 벽 너머 구덩이를 메우는 상자는 땅에 내리는 상자와 같은 높이로 넘는다', () => {
+    const peak = (landing: number) => {
+      const prev = createState({ ...BOX_HOP_STAGE, heights: [[0, 0, 0, 2, landing, 0, 0]] })
+      const { state, events } = move(prev, 'right')
+      return Math.max(
+        ...Array.from(
+          { length: 201 },
+          (_, i) => movingBox(prev, state, events, i / 200)?.lift ?? 0,
+        ),
+      )
+    }
+
+    expect(peak(-1)).toBeCloseTo(peak(0))
+  })
+
   it('상자가 지나간 버섯도 눌린다', () => {
     const prev = createState(BOX_HOP_STAGE)
     const { state, events } = move(prev, 'right')
