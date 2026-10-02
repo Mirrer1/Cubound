@@ -58,10 +58,10 @@ describe('movingBox 물', () => {
     expect(movingBox(prev, game, events, 0.999)!.level).toBeCloseTo(0, 2)
   })
 
-  it('물에 떨어뜨리는 밀기는 잠겼다 떠오르는 몫까지 0.5초다', () => {
+  it('물에 떨어뜨리는 밀기는 잠겼다 떠오르는 몫까지 0.6초다', () => {
     const { events } = lastMove(WATER_STAGE, ['right'])
 
-    expect(durationOf(events)).toBeCloseTo(0.5)
+    expect(durationOf(events)).toBeCloseTo(0.6)
   })
 })
 

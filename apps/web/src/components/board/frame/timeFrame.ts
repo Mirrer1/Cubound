@@ -6,7 +6,7 @@ export const SECONDS = {
   moved: 0.24,
   pushed: 0.26,
   filled: 0.34, // 가라앉는 몫까지 담은 구덩이 메우는 밀기
-  floated: 0.5, // 잠겼다 떠오르는 몫까지 담은 물에 떨어뜨리는 밀기
+  floated: 0.6, // 잠겼다 떠오르는 몫까지 담은 물에 떨어뜨리는 밀기
   fell: 0.32,
   climbed: 0.3,
   blocked: 0.2,

@@ -1,4 +1,4 @@
-import { clamp01, easeIn, easeOut, lerp, smooth } from './curveFrame'
+import { clamp01, easeOut, lerp, smooth } from './curveFrame'
 import { NO_SWAMP, type SwampTime, boxPath, elapsedAt, playerPath, segmentsOf } from './timeFrame'
 import type { Direction, GameEvent } from '@/game/types'
 
@@ -15,7 +15,7 @@ export const floatLevel = (from: number, to: number, p: number) =>
   p < FLOAT.drop
     ? from
     : p < FLOAT.rise
-      ? lerp(from, to - FLOAT.sink, easeIn((p - FLOAT.drop) / (FLOAT.rise - FLOAT.drop)))
+      ? lerp(from, to - FLOAT.sink, smooth((p - FLOAT.drop) / (FLOAT.rise - FLOAT.drop)))
       : lerp(to - FLOAT.sink, to, smooth((p - FLOAT.rise) / (1 - FLOAT.rise)))
 
 export interface Ripple {
