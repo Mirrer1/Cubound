@@ -631,3 +631,27 @@ describe('solve 바람', () => {
     expect(solve({ ...stage, rules: undefined })).toMatchObject({ status: 'solved', moves: 5 })
   })
 })
+
+describe('solve 물', () => {
+  it('상자를 띄워 타고 물길을 건너는 최소 풀이를 찾는다', () => {
+    const stage: Stage = {
+      version: 1,
+      id: 'test-water',
+      heights: [
+        [1, 1, 0, 1, 1],
+        [1, 1, 0, 1, 1],
+        [1, 1, 0, 1, 1],
+      ],
+      water: 1,
+      start: { x: 0, y: 1 },
+      goal: { x: 4, y: 1 },
+      entities: [{ type: 'box', x: 1, y: 0 }],
+    }
+
+    expect(solve(stage)).toEqual({
+      status: 'solved',
+      moves: 6,
+      path: ['up', 'right', 'right', 'right', 'right', 'down'],
+    })
+  })
+})

@@ -138,6 +138,35 @@ export const validateStage = (data: unknown): ValidateResult => {
     }
   }
 
+  if (data.water !== undefined && !(isInt(data.water) && data.water > 0)) {
+    add('water는 양의 정수여야 한다')
+  }
+  const waterLevel = isInt(data.water) ? data.water : 0
+  const isWaterCell = ({ x, y }: { x: number; y: number }) =>
+    grid[y][x] >= 0 && grid[y][x] < waterLevel
+
+  const masks = [
+    ['ice', '얼음'],
+    ['swamp', '늪'],
+    ['mushroom', '버섯'],
+    ['cracks', '무너지는 칸'],
+  ]
+  masks.forEach(([field, label]) => {
+    const mask = data[field]
+    const wet =
+      Array.isArray(mask) &&
+      mask.some(
+        (row, y) =>
+          typeof row === 'string' &&
+          y < grid.length &&
+          [...row].some((c, x) => c !== '.' && x < width && isWaterCell({ x, y })),
+      )
+    if (wet) add(`물 칸에 ${label}이 있다`)
+  })
+
+  if (isFloor(data.start) && isWaterCell(data.start)) add('start가 물 칸에 있다')
+  if (isFloor(data.goal) && isWaterCell(data.goal)) add('goal이 물 칸에 있다')
+
   if (!isFloor(data.start)) add('start가 바닥 칸이 아니다')
   if (!isFloor(data.goal)) add('goal이 바닥 칸이 아니다')
   if (isFloor(data.start) && isFloor(data.goal) && key(data.start) === key(data.goal)) {
@@ -279,6 +308,7 @@ export const validateStage = (data: unknown): ValidateResult => {
     }
     if (swampCells.has(key(entity))) add(`entities[${i}]이 늪 칸에 있다`)
     if (mushroomCells.has(key(entity))) add(`entities[${i}]이 버섯 칸에 있다`)
+    if (entity.type !== 'box' && isWaterCell(entity)) add(`entities[${i}]이 물 칸에 있다`)
     occupied.add(key(entity))
 
     if (entity.type === 'door' || entity.type === 'lift') {

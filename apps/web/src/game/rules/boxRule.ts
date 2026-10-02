@@ -1,5 +1,5 @@
 import type { Direction, GameEvent, GameState, MoveResult, Point } from '../types'
-import { hasBox, same, step } from './cellRule'
+import { hasBox, isWater, same, step } from './cellRule'
 import { isIce } from './iceRule'
 import { isMushroom, wither } from './mushroomRule'
 import { floorAt, rawHeight } from './stateRule'
@@ -53,7 +53,7 @@ const slideBox = (
   from: Point,
   direction: Direction,
   level: number,
-): { rest: Point; landed: { to: Point; result: 'fell' | 'filled' } | null } => {
+): { rest: Point; landed: { to: Point; result: 'fell' | 'filled' | 'floated' } | null } => {
   let at = from
 
   for (;;) {
@@ -63,7 +63,13 @@ const slideBox = (
     const floor = boxLanding(state, next, level)
     if (floor === null) return { rest: at, landed: null }
     if (floor < level)
-      return { rest: at, landed: { to: next, result: floor < 0 ? 'filled' : 'fell' } }
+      return {
+        rest: at,
+        landed: {
+          to: next,
+          result: isWater(state, next) ? 'floated' : floor < 0 ? 'filled' : 'fell',
+        },
+      }
     at = next
   }
 }
@@ -72,7 +78,7 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
   const boxFloor = floorAt(state, box) ?? 0
   const first = step(box, direction)
   const entry = boxLanding(state, first, boxFloor)
-  if (entry === null) return null
+  if (entry === null || (isWater(state, box) && !isWater(state, first))) return null
 
   // 버섯으로 밀린 상자는 내릴 자리가 없으면 밀기 불가
   const onMushroom = isMushroom(state, first)
@@ -92,7 +98,14 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
       type: 'pushed',
       from: box,
       to: target,
-      result: landing < 0 ? 'filled' : landing < boxFloor ? 'fell' : 'slid',
+      result:
+        isWater(state, target) && !isWater(state, box)
+          ? 'floated'
+          : landing < 0
+            ? 'filled'
+            : landing < boxFloor
+              ? 'fell'
+              : 'slid',
     },
   ]
   if (!same(rest, target)) events.push({ type: 'slid', subject: 'box', from: target, to: rest })
@@ -124,5 +137,7 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
         }
       : { ...pushing, boxes: [...others, stop] }
 
+  // 뜬 상자를 민 큐브는 물가에 제자리 유지
+  if (isWater(state, box)) return { state: { ...next, moves: next.moves + 1 }, events }
   return walk(next, box, boxFloor, direction, events)
 }

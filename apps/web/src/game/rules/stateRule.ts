@@ -1,15 +1,16 @@
 import type { Crack, Entity, GameState, Point, Stage } from '../types'
-import { hasBox, same } from './cellRule'
+import { hasBox, isWater, same } from './cellRule'
 import { isLiftRaised } from './switchRule'
 import { tramLevelAt, trams } from './tramRule'
 import { vines } from './vineRule'
 
 type Lift = Extract<Entity, { type: 'lift' }>
 
-// 필드 밖은 undefined, 바닥 없는 칸은 -1, 움직이는 발판이 선 칸은 발판 높이, 올라간 엘리베이터 발판은 한 층 위
+// 필드 밖은 undefined, 바닥 없는 칸은 -1, 물 칸은 뜬 상자 바닥 높이, 움직이는 발판이 선 칸은 발판 높이, 올라간 엘리베이터 발판은 한 층 위
 export const rawHeight = (state: GameState, p: Point): number | undefined => {
   const h = state.heights[p.y]?.[p.x]
   if (h === undefined) return undefined
+  if (isWater(state, p)) return (state.stage.water ?? 0) - 1
 
   const tramLevel = tramLevelAt(state, p)
   if (tramLevel !== null) return tramLevel
@@ -20,7 +21,7 @@ export const rawHeight = (state: GameState, p: Point): number | undefined => {
 
 export const floorAt = (state: GameState, p: Point) => {
   const h = rawHeight(state, p)
-  return h === undefined || h < 0 ? null : h
+  return h === undefined || h < 0 || (isWater(state, p) && !hasBox(state, p)) ? null : h
 }
 
 export const standHeight = (state: GameState, p: Point) =>

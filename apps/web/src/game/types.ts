@@ -44,6 +44,7 @@ export interface Stage {
   swamp?: string[] // heights와 같은 모양, '#'이 늪 칸
   mushroom?: string[] // heights와 같은 모양, '#'이 버섯 칸
   cracks?: string[] // heights와 같은 모양, 1~9는 무너지기까지 견디는 횟수
+  water?: number // 물 높이, 이보다 낮은 바닥 칸이 물 칸
   start: Point
   goal: Point
   entities: Entity[]
@@ -127,7 +128,7 @@ export type GameEvent =
   | { type: 'fell'; from: Point; to: Point; drop: number } // drop은 떨어진 층 수
   | { type: 'climbed'; from: Point; to: Point; via: 'box' | 'ladder' }
   | { type: 'slid'; subject: 'player' | 'box'; from: Point; to: Point } // 얼음 위 미끄러짐, 이웃하지 않을 수도 있는 from과 to
-  | { type: 'pushed'; from: Point; to: Point; result: 'slid' | 'fell' | 'filled' }
+  | { type: 'pushed'; from: Point; to: Point; result: 'slid' | 'fell' | 'filled' | 'floated' } // floated는 땅에서 물에 떨어져 뜬 상자
   | { type: 'cracked'; at: Point; left: number; gone: boolean } // gone은 바닥 없는 칸이 되었는지 여부
   | { type: 'struggled'; at: Point } // 늪에서 제자리에 선 수
   | { type: 'sank'; at: Point } // 늪에 밀려 들어가 가라앉는 상자
@@ -136,6 +137,7 @@ export type GameEvent =
   | { type: 'door'; id: string; open: boolean }
   | { type: 'lift'; id: string; up: boolean }
   | { type: 'warped'; from: Point; to: Point }
+  | { type: 'rowed'; from: Point; to: Point } // 뜬 상자를 탄 채 함께 간 한 칸
   | { type: 'tram'; id: string; from: Point; to: Point }
   | { type: 'grew'; id: string; at: Point } // 덩굴이 한 칸 뻗어 메운 칸
   | { type: 'planted'; at: Point; direction: Direction } // direction은 턱 쪽으로 민 방향

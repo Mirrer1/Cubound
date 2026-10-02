@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { hasBox, same, step } from './cellRule'
+import { hasBox, isWater, same, step } from './cellRule'
 import { createState } from './stateRule'
 import { BOX_STAGE } from './testStages'
 
@@ -32,5 +32,18 @@ describe('hasBox', () => {
 
     expect(hasBox(state, { x: 1, y: 1 })).toBe(true)
     expect(hasBox(state, { x: 2, y: 1 })).toBe(false)
+  })
+})
+
+describe('isWater', () => {
+  it('물 높이보다 낮은 바닥 칸만 물 칸이고 바닥 없는 칸과 물이 없는 판은 제외한다', () => {
+    const stage = { ...BOX_STAGE, heights: [[2, 1, 0, -1]], water: 1 }
+    const state = createState(stage)
+
+    expect(isWater(state, { x: 2, y: 0 })).toBe(true)
+    expect(isWater(state, { x: 1, y: 0 })).toBe(false)
+    expect(isWater(state, { x: 0, y: 0 })).toBe(false)
+    expect(isWater(state, { x: 3, y: 0 })).toBe(false)
+    expect(isWater(createState({ ...stage, water: undefined }), { x: 2, y: 0 })).toBe(false)
   })
 })
