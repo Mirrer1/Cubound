@@ -1,4 +1,4 @@
-import { useText } from '@/i18n/useText'
+import { useText } from '@/hooks/useText'
 
 interface StarsProps {
   count: number

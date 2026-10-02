@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react'
 
-import { type Route, type RouteContext, hashOf, replaceHash, resolveRoute } from './route'
+import { type Route, type RouteContext, hashOf, replaceHash, resolveRoute } from '@/routes/route'
 
 const subscribe = (onChange: () => void) => {
   window.addEventListener('hashchange', onChange)

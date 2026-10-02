@@ -2,8 +2,8 @@ import { motion } from 'motion/react'
 import { type MouseEvent, useEffect, useRef } from 'react'
 
 import Button from './Button'
-import { useFocusTrap } from './useFocusTrap'
-import { useText } from '@/i18n/useText'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { useText } from '@/hooks/useText'
 
 const stopClick = (e: MouseEvent) => e.stopPropagation()
 

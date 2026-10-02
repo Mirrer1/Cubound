@@ -1,7 +1,7 @@
 import { type AnimationPlaybackControls, animate, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
-import { type Chain, type SwampTime, durationOf } from '../frame'
+import { type Chain, type SwampTime, durationOf } from '@/components/board/frame'
 import type { GameEvent } from '@/game/types'
 
 // 기다리는 입력이 있으면 조금 빠르게 재생해 다음 입력을 일찍 받는다

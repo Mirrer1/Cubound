@@ -1,4 +1,4 @@
-import { type TextKey, text } from '.'
+import { type TextKey, text } from '@/i18n'
 import { useSettingsStore } from '@/store/settingsStore'
 
 export const useText = () => {

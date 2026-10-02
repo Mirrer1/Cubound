@@ -1,7 +1,7 @@
 import { Component, type ReactNode } from 'react'
 
 import Button from './Button'
-import { useText } from '@/i18n/useText'
+import { useText } from '@/hooks/useText'
 
 const reload = () => window.location.reload()
 

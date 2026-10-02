@@ -3,8 +3,8 @@ import { useEffect, useRef } from 'react'
 
 import Button from './Button'
 import Stars from './Stars'
-import { useFocusTrap } from './useFocusTrap'
-import { useText } from '@/i18n/useText'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
+import { useText } from '@/hooks/useText'
 
 interface ClearCardProps {
   stageNumber: number

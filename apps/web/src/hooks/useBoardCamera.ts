@@ -1,7 +1,14 @@
 import { animate } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
-import { type Box, type ViewBox, type ViewSize, cameraHeights, viewBoxFor, zoneBox } from '../view'
+import {
+  type Box,
+  type ViewBox,
+  type ViewSize,
+  cameraHeights,
+  viewBoxFor,
+  zoneBox,
+} from '@/components/board/view'
 import { zoneIndexAt } from '@/game/camera'
 import { toScreen } from '@/game/iso'
 import type { GameState, Point } from '@/game/types'

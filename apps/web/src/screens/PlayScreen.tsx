@@ -25,10 +25,10 @@ import {
   sinkCount,
   vinesLeft,
 } from '@/game/rules'
+import { useText } from '@/hooks/useText'
 import { stageTextKey } from '@/i18n'
-import { useText } from '@/i18n/useText'
 import { directionFromKey, directionFromSwipe, isRestartKey } from '@/platform/input'
-import { goTo } from '@/platform/route'
+import { goTo } from '@/routes/route'
 import { STAGES, nextStageId, parseStageId } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
 

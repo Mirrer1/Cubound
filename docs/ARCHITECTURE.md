@@ -77,24 +77,23 @@ src/
 │   ├── ja.ts              # 일본어 사전
 │   ├── zhHant.ts          # 중국어 번체 사전
 │   ├── zhHans.ts          # 중국어 간체 사전
-│   ├── es.ts              # 스페인어 사전
-│   └── useText.ts         # 고른 언어로 문구를 읽는 훅
+│   └── es.ts              # 스페인어 사전
 ├── store/
 │   ├── gameStore.ts       # Zustand (게임 상태, 연출, 입력 대기열, 진행)
 │   └── settingsStore.ts   # Zustand (고른 언어)
 ├── platform/
 │   ├── storage.ts         # 진행, 언어, 중간 상태 저장 (localStorage)
-│   ├── input.ts           # 키와 스와이프 → 방향, 터치 기기 확인
+│   └── input.ts           # 키와 스와이프 → 방향, 터치 기기 확인
+├── routes/
 │   ├── route.ts           # 주소 ↔ 화면, 주소 이동
-│   ├── title.ts           # 주소와 언어 → 탭 제목
-│   └── useRoute.ts        # 지금 주소를 화면으로 읽는 훅
+│   └── title.ts           # 주소와 언어 → 탭 제목
+├── hooks/                 # 훅 (useRoute, useText, useFocusTrap, useBoardAnimation, useBoardCamera)
 ├── components/
 │   ├── board/             # 필드 그리기 컴포넌트 (Board, BoardCell과 요소마다 Board*)
-│   │   ├── hooks/         # 연출 진행도와 카메라 훅 (useBoardAnimation, useBoardCamera)
 │   │   ├── frame/         # 시간에 따라 바뀌는 연출 계산. 요소마다 xxxFrame.ts
 │   │   └── view/          # 시간과 무관한 그림 계산 (큐브 면, 화면 범위, 색 섞기, 칸 치수)
 │   ├── guide/             # 스텝 가이드 (GuideOverlay)
-│   └── ui/                # 버튼, 별, 로고, 스테이지 카드, 클리어 카드, 언어 선택, 포커스 가두기, 오류 화면
+│   └── ui/                # 버튼, 별, 로고, 스테이지 카드, 클리어 카드, 언어 선택, 오류 화면
 ├── screens/               # TitleScreen, StageSelectScreen, PlayScreen
 ├── App.tsx                # 주소로 화면 고르기와 전환
 └── index.css              # Tailwind, 색 토큰, 전환과 스크롤 유틸리티
@@ -223,7 +222,7 @@ guideText(language, id, touch, n?) // 터치 기기면 guide.<id>.touch를 먼�
 - `useRoute`가 `hashchange`를 `useSyncExternalStore`로 구독한다. 화면 이동은 모두 `goTo(route)`로 하고 스토어에는 화면 상태를 두지 않는다
 - 화면 전환 애니메이션의 키는 주소다. 다음 스테이지로 넘어갈 때도 같은 페이드로 이어진다
 - 스테이지 화면은 주소의 스테이지 id를 받아 들어갈 때 스토어의 `enter`를 부른다. 주소가 바뀐 바로 다음 프레임에는 앞 스테이지가 남아 있어 id가 맞을 때만 판을 그린다
-- **탭 제목:** `platform/title.ts`의 `documentTitle(route, language)`가 만들고 `App.tsx`가 `html lang`과 함께 넣는다. 타이틀은 `Cubound`, 선택은 `Cubound — 스테이지 선택`, 스테이지는 `Cubound — 03 디딤돌`처럼 번호와 이름을 붙인다
+- **탭 제목:** `routes/title.ts`의 `documentTitle(route, language)`가 만들고 `App.tsx`가 `html lang`과 함께 넣는다. 타이틀은 `Cubound`, 선택은 `Cubound — 스테이지 선택`, 스테이지는 `Cubound — 03 디딤돌`처럼 번호와 이름을 붙인다
 
 ### 화면 오류 방어
 

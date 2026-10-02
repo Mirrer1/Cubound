@@ -1,5 +1,5 @@
 import { type Language, chapterTextKey, stageTextKey, text, worldTextKey } from '@/i18n'
-import type { Route } from '@/platform/route'
+import type { Route } from '@/routes/route'
 import { cycleOf, parseStageId } from '@/stages'
 
 const NAME = 'Cubound'

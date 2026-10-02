@@ -128,7 +128,9 @@ apps/web/
     game/         # 순수 로직 — 규칙 / 풀이 검사기 / 형식 검사 / 가림 처리 / 진행 / 이어하기 / 좌표 / 카메라
     stages/       # 스테이지 JSON — world-1 ~ world-10
     store/        # Zustand — 게임 상태 / 연출 / 입력 대기열 / 설정
-    platform/     # 브라우저 의존 — 저장 / 입력 / 주소 / 탭 제목
+    platform/     # 브라우저 의존 — 저장 / 입력
+    routes/       # 주소 / 탭 제목
+    hooks/        # 훅 — 주소 / 문구 / 포커스 가두기 / 필드 연출과 카메라
     components/   # board 필드와 연출 / guide 스텝 가이드 / ui 공용
     screens/      # 타이틀 / 스테이지 선택 / 게임
     i18n/         # 언어별 사전

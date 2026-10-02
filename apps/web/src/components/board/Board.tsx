@@ -50,13 +50,13 @@ import {
   vineLooks,
   wallHeight,
 } from './frame'
-import { useBoardAnimation } from './hooks/useBoardAnimation'
-import { useBoardCamera } from './hooks/useBoardCamera'
 import { rollingCubeFaces, shade } from './view'
 import { TILE, toScreen } from '@/game/iso'
 import { fadedCells } from '@/game/occlusion'
 import { isDoorOpen, isIce, isLiftRaised } from '@/game/rules'
 import type { Entity, GameEvent, GameState, Point } from '@/game/types'
+import { useBoardAnimation } from '@/hooks/useBoardAnimation'
+import { useBoardCamera } from '@/hooks/useBoardCamera'
 
 interface BoardProps {
   game: GameState

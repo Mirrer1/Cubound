@@ -6,10 +6,10 @@ import ChapterCard, { type ChapterCardState } from '@/components/ui/ChapterCard'
 import ChapterTab from '@/components/ui/ChapterTab'
 import StageCard, { type StageCardState } from '@/components/ui/StageCard'
 import { isUnlocked, isWorldUnlocked, totalStars } from '@/game/progress'
+import { useText } from '@/hooks/useText'
 import { chapterTextKey, worldNoteKey, worldTextKey } from '@/i18n'
-import { useText } from '@/i18n/useText'
-import { goTo, showingAll } from '@/platform/route'
 import { localWorldStorage } from '@/platform/storage'
+import { goTo, showingAll } from '@/routes/route'
 import {
   CHAPTERS,
   STAGES_PER_WORLD,
