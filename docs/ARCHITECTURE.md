@@ -390,7 +390,7 @@ guideText(language, id, touch, n?) // 터치 기기면 guide.<id>.touch를 먼�
 | `crack-chip`, `crack-shadow`   | `#BCB7AB`, `#C4C0B8`      | 닳은 자국과 무너진 자리 그림자   |
 | `swamp-mud`, `swamp-lump` 외   | `#A8A690`, `#B6B49F` 외   | 늪의 진흙 면, 덩이, 벽, 테두리   |
 
-**사이클마다 세계 색이 바뀐다.** `index.css`의 `html[data-cycle='2']` 블록이 위 표의 배경과 바닥 토큰을 덮어쓴다. `App.tsx`가 지금 보는 월드로 사이클을 계산해 `data-cycle`을 걸고 폰 주소창 색(`meta theme-color`)도 같이 바꾼다. **3사이클은 블록을 하나 더하면 된다.** 설치했을 때 쓰는 `manifest.webmanifest`의 `theme_color`는 앱 자체의 색이라 1사이클 값으로 고정이다.
+**챕터마다 세계 색이 바뀐다.** `index.css`의 `html[data-cycle='2']` 블록이 위 표의 배경과 바닥 토큰을 덮어쓴다. `App.tsx`가 지금 보는 월드로 챕터를 계산해 `data-cycle`을 걸고 폰 주소창 색(`meta theme-color`)도 같이 바꾼다. **3챕터는 블록을 하나 더하면 된다.** 설치했을 때 쓰는 `manifest.webmanifest`의 `theme_color`는 앱 자체의 색이라 1챕터 값으로 고정이다.
 
 **장 카드 색은 `[data-chapter='N']`에 둔다.** 카드 안의 작은 판이 그 장의 세계 색을 쓰도록 `--chapter-win`, `--chapter-a`, `--chapter-b` 셋을 장마다 정의한다.
 
