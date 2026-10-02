@@ -63,6 +63,7 @@ export const zhHant: Partial<Texts> = {
   'guide.seedGrow': '升起的種子不會停，每四步長高一層，最多三層',
   'guide.wind': '風一吹就會被推回一格，但站在牆或箱子後面就不會被推動',
   'guide.water': '浮在水上的箱子可以載你過去',
+  'guide.tether': '拴住的船只能划到繩子夠得著的地方',
 
   'chapter.1': '踏石之路',
   'chapter.2': '草木叢生之路',

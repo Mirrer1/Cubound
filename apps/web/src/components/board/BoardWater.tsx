@@ -1,4 +1,5 @@
 import BoardBlock from './BoardBlock'
+import BoardTether from './BoardTether'
 import { COLLAR, CUBE, bankPoints, shade, surfaceRise, waterTone } from './view'
 import { TILE, blockFaces } from '@/game/iso'
 
@@ -19,6 +20,7 @@ type BoardWaterProps =
       sideRight: boolean
       ring: number // 퍼지는 고리 크기, 0이면 고리 없음
       ringOpacity: number
+      range: number // 갈 수 있는 범위 칸의 큐브가 탄 정도, -1이면 범위 밖
     }
   | {
       part: 'box'
@@ -64,6 +66,7 @@ const BoardWater = (props: BoardWaterProps) => {
       />
       {props.bankX && <polygon points={bankPoints(x, surface, 'x')} style={REFLECT} />}
       {props.bankY && <polygon points={bankPoints(x, surface, 'y')} style={REFLECT} />}
+      {props.range >= 0 && <BoardTether part="range" x={x} y={surface} active={props.range} />}
       {props.ring > 0 && (
         <g opacity={props.ringOpacity}>
           <polygon

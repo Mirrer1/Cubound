@@ -9,6 +9,7 @@ import BoardPlate from './BoardPlate'
 import BoardSeed from './BoardSeed'
 import BoardSwamp from './BoardSwamp'
 import BoardSwitch from './BoardSwitch'
+import BoardTether from './BoardTether'
 import BoardVine from './BoardVine'
 import BoardWater from './BoardWater'
 import { type VineKind, crackThickness, swampCollar, swampSink } from './frame'
@@ -84,6 +85,8 @@ interface BoardCellProps {
   waterSideRight: boolean
   waterRing: number // 퍼지는 고리 크기, 0이면 고리 없음
   waterRingOpacity: number
+  moorRange: number // 갈 수 있는 범위 칸의 큐브가 탄 정도, -1이면 범위 밖
+  post: number // 말뚝 띠 수, 0이면 말뚝 없는 칸
   faded: boolean
   entity: 'switch' | 'door' | null
   lift: boolean
@@ -153,6 +156,8 @@ const BoardCell = ({
   waterSideRight,
   waterRing,
   waterRingOpacity,
+  moorRange,
+  post,
   faded,
   entity,
   lift,
@@ -324,6 +329,7 @@ const BoardCell = ({
                 sideRight={waterSideRight}
                 ring={waterRing}
                 ringOpacity={waterRingOpacity}
+                range={moorRange}
               />
             )}
             {seedStalk > 0 && <BoardSeed x={x} y={y} part="stalk" level={seedStalk} p={seedBud} />}
@@ -342,6 +348,7 @@ const BoardCell = ({
               <BoardMushroom x={x} y={y} press={mushroomPress} wither={mushroomWither} />
             )}
             {(lift || warp) && <BoardPlate x={x} y={y} warp={warp} />}
+            {post > 0 && <BoardTether part="post" x={x} y={y} bands={post} />}
             {icy && (
               <polygon
                 points={spotPoints(x, y, GLOSS_SPOTS)}

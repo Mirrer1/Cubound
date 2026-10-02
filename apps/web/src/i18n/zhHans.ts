@@ -63,6 +63,7 @@ export const zhHans: Partial<Texts> = {
   'guide.seedGrow': '升起的种子不会停，每四步长高一层，最多三层',
   'guide.wind': '风一吹就会被推回一格，但站在墙或箱子后面就不会被推动',
   'guide.water': '浮在水上的箱子可以载你过去',
+  'guide.tether': '拴住的船只能划到绳子够得着的地方',
 
   'chapter.1': '踏石之路',
   'chapter.2': '草木丛生之路',

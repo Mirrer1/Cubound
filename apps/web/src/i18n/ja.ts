@@ -63,6 +63,7 @@ export const ja: Partial<Texts> = {
   'guide.seedGrow': 'せり上がった種は止まらず、四手ごとに一段ずつ三段まで伸びます',
   'guide.wind': '風が吹くと一マス押し戻されますが、壁や箱の陰にいれば押されません',
   'guide.water': '水に浮かべた箱に乗って渡れます',
+  'guide.tether': 'つながれた舟は綱が届くところまでしか行けません',
 
   'chapter.1': '石を踏む道',
   'chapter.2': '草が茂る道',

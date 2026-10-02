@@ -5,6 +5,7 @@ import BoardCell from './BoardCell'
 import BoardClear from './BoardClear'
 import BoardLadder from './BoardLadder'
 import BoardSeed from './BoardSeed'
+import BoardTether from './BoardTether'
 import BoardTram from './BoardTram'
 import BoardWater from './BoardWater'
 import {
@@ -17,6 +18,7 @@ import {
   carriedOpacityOf,
   carriedTilt,
   clamp01,
+  coversRope,
   crackFrame,
   crackLeft,
   crackProgress,
@@ -27,6 +29,7 @@ import {
   has,
   ladderTilt,
   lerp,
+  moorLooks,
   movingBox,
   mushroomFrames,
   ownProgress,
@@ -52,13 +55,14 @@ import {
   swampTime,
   switchCells,
   switchProgress,
+  tetherFrames,
   tramFramesOf,
   tramProgress,
   vineFrames,
   vineLooks,
   wallHeight,
 } from './frame'
-import { WATER, floatShownAt, rollingCubeFaces, shade, waterLook } from './view'
+import { WATER, floatShownAt, postBands, rollingCubeFaces, shade, waterLook } from './view'
 import { TILE, toScreen } from '@/game/iso'
 import { fadedCells } from '@/game/occlusion'
 import { isDoorOpen, isIce, isLiftRaised } from '@/game/rules'
@@ -192,6 +196,7 @@ const Board = ({
   const crackView = { game, before, crackPhase }
 
   const cubeSink = standSink(crackView, cube.x, cube.y)
+  const cubeFaces = rollingCubeFaces(cube.x, cube.y, cubeLevel, cube.direction, cube.angle)
   const carriedBase = carriedBaseOf(cubeScreen, cubeSink, cube)
   const rolling = rollingTilt(cube, chain)
   const bump = carriedTilt({ events, moving, t, swampSeconds, cube, rolling })
@@ -202,6 +207,8 @@ const Board = ({
   const caps = mushroomFrames(dropping ? null : prevGame, game, events, t, chain)
   const boxFrames = boxFramesOf({ box, sinkingBox, tramFrames, boxes, crackView })
   const boxShown = box ? floatShownAt(stage, box) : null
+  const tethers = tetherFrames({ prev: moving ? prevGame : null, game, box, t, dropping })
+  const moor = moorLooks(stage, tethers)
   const guideLevel = guideCell ? Math.max(0, heights[guideCell.y][guideCell.x]) : 0
   const guideScreen = guideCell ? toScreen(guideCell, guideLevel) : null
   // 한 층보다 높이 솟는 칸 위에 선 것, 위쪽을 더 잡는 여유
@@ -345,6 +352,8 @@ const Board = ({
             waterSideRight={water.sideRight}
             waterRing={rippleHere?.size ?? 0}
             waterRingOpacity={rippleHere?.opacity ?? 0}
+            moorRange={moor.get(cell.key) ?? -1}
+            post={postBands(stage, cell.p)}
             faded={has(faded, cell.p)}
             entity={entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null}
             lift={lift !== undefined}
@@ -431,15 +440,13 @@ const Board = ({
                     opacity={(cubeDrop ? cubeDrop.opacity : 1) * cube.fade}
                     transform={`translate(0 ${cubeSink - cube.lift}) ${cubeSquash}`}
                   >
-                    {rollingCubeFaces(cube.x, cube.y, cubeLevel, cube.direction, cube.angle).map(
-                      (f) => (
-                        <polygon
-                          key={f.face}
-                          points={f.points}
-                          style={{ fill: shade('player', f.face) }}
-                        />
-                      ),
-                    )}
+                    {cubeFaces.map((f) => (
+                      <polygon
+                        key={f.face}
+                        points={f.points}
+                        style={{ fill: shade('player', f.face) }}
+                      />
+                    ))}
                   </g>
                 )}
                 {drawCube && carriedOpacity > 0 && (
@@ -465,6 +472,31 @@ const Board = ({
           </BoardCell>
         )
       })}
+      <defs>
+        <mask
+          id="rope-behind-cube"
+          maskUnits="userSpaceOnUse"
+          x="-100000"
+          y="-100000"
+          width="200000"
+          height="200000"
+        >
+          <rect x="-100000" y="-100000" width="200000" height="200000" fill="white" />
+          <g transform={`translate(0 ${cubeSink - cube.lift}) ${cubeSquash}`}>
+            {cubeFaces.map((f) => (
+              <polygon key={f.face} points={f.points} fill="black" />
+            ))}
+          </g>
+        </mask>
+      </defs>
+      {tethers.map((tether) => (
+        <g
+          key={tether.points}
+          mask={coversRope(cube, tether) ? 'url(#rope-behind-cube)' : undefined}
+        >
+          <BoardTether part="rope" points={tether.points} opacity={tether.opacity} />
+        </g>
+      ))}
       {guideScreen && (
         <rect
           data-guide="cell"

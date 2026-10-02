@@ -81,6 +81,14 @@
   --color-water-left: #7a8e8a;
   --color-water-right: #92a7a2;
   --color-water-reflect: #e5f0ed;
+  /* 묶인 배, 말뚝과 줄과 갈 수 있는 범위 */
+  --color-post-top: #9a968e;
+  --color-post-left: #6f6c66;
+  --color-post-right: #85827b;
+  --color-post-band: #f2f1ee;
+  --color-rope: #7e7a72;
+  --color-moor-range: #cadfda;
+  --color-moor-range-active: #d0e3df;
   /* 버섯은 7월드 전용이라 사이클을 따라 바뀌지 않는다 */
   --color-mushroom-cap-top: #d9b8a6;
   --color-mushroom-cap-left: #ae8b79;

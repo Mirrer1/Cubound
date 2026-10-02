@@ -68,6 +68,7 @@ export const es: Partial<Texts> = {
   'guide.wind':
     'El viento te empuja una casilla, pero si estás detrás de una pared o una caja no te mueve',
   'guide.water': 'Una caja flotante te lleva al otro lado del agua',
+  'guide.tether': 'Un bote atado solo llega hasta donde alcanza su cuerda',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',

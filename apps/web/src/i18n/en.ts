@@ -63,6 +63,7 @@ export const en = {
   'guide.wind':
     'The wind pushes you back one tile, but standing behind a wall or a box keeps you in place',
   'guide.water': 'A floating box carries you across the water',
+  'guide.tether': 'A tied boat only goes as far as its rope reaches',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',

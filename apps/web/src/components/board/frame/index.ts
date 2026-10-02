@@ -87,3 +87,4 @@ export {
   vinesDisplay,
 } from './vineFrame'
 export type { Tram } from '@/game/types'
+export { coversRope, moorLooks, type TetherFrame, tetherFrames } from './tetherFrame'

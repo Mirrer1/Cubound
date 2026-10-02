@@ -38,3 +38,13 @@ export {
   waterLook,
   waterTone,
 } from './waterView'
+export {
+  moorCells,
+  POST,
+  postBands,
+  postBlocks,
+  postsOf,
+  ROPE,
+  ropeEnds,
+  ropePoints,
+} from './tetherView'

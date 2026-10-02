@@ -63,6 +63,7 @@ export const ko: Partial<Texts> = {
   'guide.seedGrow': '솟은 씨앗은 멈추지 않고 4수마다 한 층씩 세 층까지 자라요',
   'guide.wind': '바람이 불면 한 칸 밀려나지만 벽이나 상자 뒤에 서 있으면 안 밀려요',
   'guide.water': '물에 띄운 상자는 타고 건널 수 있어요',
+  'guide.tether': '묶인 배는 줄이 닿는 데까지만 가요',
 
   'chapter.1': '돌 위의 첫걸음',
   'chapter.2': '풀이 우거진 길',
