@@ -176,6 +176,37 @@ describe('playerFrame 미끄러짐', () => {
 
     expect(playerFrame(prev, state, events, 0.6).cell).toEqual({ x: 4, y: 0 })
   })
+
+  it('앞쪽 상자에 오르는 큐브는 올라서기 전까지 상자 뒤, 같은 깊이 칸들 맨 뒤에 그린다', () => {
+    const stage: Stage = {
+      ...STAGE,
+      heights: [[0, 0, 0, 0]],
+      goal: { x: 3, y: 0 },
+      entities: [
+        { type: 'box', x: 1, y: 0 },
+        { type: 'box', x: 2, y: 0 },
+      ],
+    }
+    const prev = createState(stage)
+    const { state, events } = move(prev, 'right')
+
+    expect(events[0].type).toBe('climbed')
+    expect(playerFrame(prev, state, events, 0.1)).toMatchObject({
+      cell: { x: 0, y: 0 },
+      last: true,
+    })
+    expect(playerFrame(prev, state, events, 0.9)).toMatchObject({
+      cell: { x: 1, y: 0 },
+      last: false,
+    })
+
+    const back = move(state, 'left')
+    expect(back.events[0].type).toBe('fell')
+    const leave = playerFrame(state, back.state, back.events, 0.1)
+    const land = playerFrame(state, back.state, back.events, 0.9)
+    expect(leave).toMatchObject({ cell: { x: 1, y: 0 }, last: false })
+    expect(land).toMatchObject({ cell: { x: 0, y: 0 }, last: true })
+  })
 })
 
 describe('playerFrame 눌림', () => {
@@ -341,6 +372,26 @@ describe('playerFrame 발판에 실려 가기', () => {
 
     expect(state.player).toEqual({ x: 2, y: 0 })
     expect(playerFrame(prev, state, events, 0.5)).toMatchObject({ x: 2, y: 0.5 })
+  })
+
+  it('앞 턱에서 발판으로 떨어져 실려 가는 동안은 맨 뒤 순서를 쓰지 않는다', () => {
+    const stage: Stage = {
+      ...TRAM_STAGE,
+      heights: [
+        [0, 0, 0, 0, 0, 0],
+        [0, -1, -1, -1, 0, 0],
+        [0, 1, 0, 0, 0, 0],
+      ],
+      start: { x: 1, y: 2 },
+    }
+    const prev = createState(stage)
+    const { state, events } = move(prev, 'up')
+
+    expect(events.map((e) => e.type)).toEqual(['fell', 'tram'])
+    expect(playerFrame(prev, state, events, 0.8)).toMatchObject({
+      cell: { x: 2, y: 1 },
+      last: false,
+    })
   })
 })
 

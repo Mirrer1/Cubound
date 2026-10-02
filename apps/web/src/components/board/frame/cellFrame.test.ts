@@ -85,4 +85,16 @@ describe('cubeFirst', () => {
     expect(cubeFirst(cells, { x: 1, y: 0 })).toBe(cells)
     expect(cubeFirst(cells, { x: 5, y: 5 })).toBe(cells)
   })
+
+  it('맨 뒤 순서를 고르면 같은 깊이 칸들 맨 뒤로 옮긴다', () => {
+    const cells = [at(0, 0), at(2, 0), at(1, 1), at(0, 2), at(2, 1)]
+
+    expect(order(cubeFirst(cells, { x: 2, y: 0 }, true))).toEqual([
+      '0,0',
+      '1,1',
+      '0,2',
+      '2,0',
+      '2,1',
+    ])
+  })
 })

@@ -214,7 +214,7 @@ const Board = ({
 
   return (
     <svg ref={ref} viewBox={viewBox} className="h-full w-full">
-      {cubeFirst(cells, cube.cell).map((cell) => {
+      {cubeFirst(cells, cube.cell, cube.last).map((cell) => {
         const entity = stage.entities.find((e) => same(e, cell.p))
         const pressed = (state: GameState) => same(state.player, cell.p) || has(state.boxes, cell.p)
         const doorDepth = (state: GameState) =>

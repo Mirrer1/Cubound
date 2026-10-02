@@ -47,6 +47,7 @@ export interface CubeFrame {
   direction: Direction
   angle: number
   cell: Point // 그리기 순서를 맞출 칸
+  last?: boolean // 같은 깊이 칸들 맨 뒤 순서
   squash: number // 진행 방향으로 눌린 정도, 0이면 평소 모양
   fade: number // 진하기, 1이면 평소, 0이면 투명
   lift: number // 버섯 갓에 받쳐지거나 튕겨 떠오른 화면 거리
@@ -177,6 +178,10 @@ const pathFrame = (
         : event.type === 'climbed'
           ? lerp(fromLevel, toLevel, easeOut(Math.min(1, p / 0.6)))
           : fromLevel
+    // 앞쪽 높은 칸 높이 아래에 있는 동안은 뒤 칸의 맨 뒤 순서, 앞 칸 상자나 턱에 가리는 큐브
+    const front = frontOf(event.from, event.to)
+    const high = toLevel > fromLevel ? event.to : event.from
+    const below = !hopped && front === high && level < Math.max(fromLevel, toLevel)
 
     return {
       x: lerp(event.from.x, event.to.x, gone),
@@ -195,7 +200,15 @@ const pathFrame = (
               ? hopAngle(cells, gone * cells)
               : (Math.PI / 2) * p,
       // 솟는 수는 이동이 끝나면 들어선 칸, 그 칸의 말뚝이 큐브 앞에 남는 순서
-      cell: rises(events) && p >= 1 ? event.to : frontOf(event.from, event.to),
+      cell:
+        rises(events) && p >= 1
+          ? event.to
+          : below
+            ? front === event.to
+              ? event.from
+              : event.to
+            : front,
+      last: below,
       squash: span ? squashAt((elapsed - span.from) / (span.to - span.from)) : 0,
       fade: 1,
       lift: hopped
@@ -258,6 +271,7 @@ export const playerFrame = (
     x: frame.x + shift.x,
     y: frame.y + shift.y,
     cell: p <= 0 ? frame.cell : slidingCell(carry.from, carry.to, p),
+    last: p <= 0 ? frame.last : false,
   }
 }
 

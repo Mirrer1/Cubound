@@ -25,14 +25,16 @@ export const boardCells = (
     .filter((cell) => cell.h >= 0)
     .sort((a, b) => a.p.x + a.p.y - (b.p.x + b.p.y))
 
-// 굴러 나가는 큐브가 옆 칸 상자 앞으로 튀어나오지 않게 같은 깊이 맨 앞에 둔 큐브 칸
-export const cubeFirst = <T extends { p: Point }>(cells: T[], cube: Point) => {
+// 굴러 나가는 큐브가 옆 칸 상자 앞으로 튀어나오지 않게 같은 깊이 맨 앞에 둔 큐브 칸, last면 맨 뒤
+export const cubeFirst = <T extends { p: Point }>(cells: T[], cube: Point, last = false) => {
   const index = cells.findIndex(({ p }) => p.x === cube.x && p.y === cube.y)
   if (index < 0) return cells
   const depth = cube.x + cube.y
-  const first = cells.findIndex(({ p }) => p.x + p.y === depth)
-  if (first === index) return cells
   const moved = [...cells]
-  moved.splice(first, 0, ...moved.splice(index, 1))
+  const [cell] = moved.splice(index, 1)
+  const peers = moved.flatMap(({ p }, i) => (p.x + p.y === depth ? [i] : []))
+  const at = peers.length === 0 ? index : last ? peers[peers.length - 1] + 1 : peers[0]
+  if (at === index) return cells
+  moved.splice(at, 0, cell)
   return moved
 }
