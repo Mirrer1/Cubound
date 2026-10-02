@@ -99,7 +99,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
       name: t(chapterTextKey(n)),
       range: `${first}–${first + WORLDS_PER_CYCLE * STAGES_PER_WORLD - 1}`,
       stars: totalStars(progress, ids),
-      total: ids.length * 3,
+      total: WORLDS_PER_CYCLE * STAGES_PER_WORLD * 3,
       state,
     }
   })
@@ -156,8 +156,8 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
 
   return (
     <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
-      <section className="scroll-area flex min-h-0 flex-1 flex-col gap-6 rounded-[22px] border border-line bg-base-bg panel-pad min-[1700px]:flex-row min-[1700px]:items-center min-[1700px]:gap-12! wide:gap-8">
-        {/* 폰은 윗줄에 ←와 별과 화살표, 아랫줄 전체가 장 덩이, 차례는 order */}
+      <section className="scroll-area flex min-h-0 flex-1 flex-col gap-6 rounded-[22px] border border-line bg-base-bg panel-pad min-[1700px]:grid min-[1700px]:grid-cols-[auto_minmax(0,1fr)] min-[1700px]:content-center min-[1700px]:items-center min-[1700px]:gap-12! wide:gap-8">
+        {/* 장 카드 셋이 한 줄에 못 서는 화면은 윗줄에 ←와 별과 화살표, 아랫줄 전체가 장 덩이, 차례는 order */}
         <header className="mx-auto flex w-full max-w-content flex-wrap items-center gap-x-4 gap-y-2.5 min-[1700px]:mx-0 min-[1700px]:ml-10 min-[1700px]:w-90 min-[1700px]:max-w-none min-[1700px]:shrink-0 min-[1700px]:flex-col min-[1700px]:items-start min-[1700px]:gap-6 narrow:gap-x-3">
           <Button
             variant="icon"
@@ -174,7 +174,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
             open={chapters}
             label={t('select.chapters')}
             onClick={handleChapters}
-            className="max-w-full min-w-0 min-[1700px]:order-1 min-[1700px]:w-full! min-[1700px]:grow-0! min-[1700px]:basis-auto! short:max-w-125 short:grow short:basis-0 wide:max-w-125 wide:grow wide:basis-0 narrow:order-last narrow:w-full"
+            className="order-last w-full max-w-full min-w-0 min-[1700px]:order-1! min-[1700px]:w-full! min-[1700px]:grow-0! min-[1700px]:basis-auto! short:order-none short:w-auto short:max-w-125 short:grow short:basis-0 roomy:order-none roomy:w-auto roomy:max-w-125 roomy:grow roomy:basis-0"
           />
           <span className="ml-auto font-mono text-xs tracking-[0.15em] whitespace-nowrap text-mute min-[1700px]:order-3 min-[1700px]:ml-0 narrow:text-[11px]">
             <span className="min-[1700px]:text-[30px] min-[1700px]:text-ink">
@@ -208,9 +208,10 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
             {t(worldNoteKey(world))}
           </span>
         </header>
+        {/* 장 고르기 카드는 ← 아래 장 덩이부터 화살표까지와 같은 높이 */}
         <div
           ref={gridRef}
-          className="grid-box mx-auto min-h-0 w-full max-w-content flex-1 min-[1700px]:mx-0 min-[1700px]:mr-10 min-[1700px]:max-w-none narrow:flex-none"
+          className={`grid-box mx-auto min-h-0 w-full max-w-content flex-1 min-[1700px]:mx-0 min-[1700px]:mr-10 min-[1700px]:max-w-none narrow:flex-none ${chapters ? 'min-[1700px]:mt-19 min-[1700px]:self-stretch' : ''}`}
         >
           {/* 자리에서 바뀌는 카드, 새 카드가 바로 붙어 포커스가 따라가는 key 교체 */}
           <motion.div
