@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="cubound-iso.js?v=20261002e"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #E9E7E2; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+</style>
+</helmet>
+<div style="background:#E9E7E2;color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 90px;min-height:100vh">
+  <div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">
+      <span style="white-space:nowrap">CUBOUND · CHAPTER 3 · 101–150</span>
+      <span style="white-space:nowrap">초안 시안</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:860px">
+      <span style="font-size:34px;font-weight:400;letter-spacing:-0.01em">물이 차오르는 길</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.7;word-break:keep-all;text-wrap:pretty">3장의 세계 색과 물, 뜬 상자, 소용돌이, 얼음 돌, 수위를 한 문법으로 그렸습니다. 물은 파랑이 아니라 청록빛 회색이고, 깊을수록 어두워집니다. 수면은 둘레 땅 윗면보다 6px 낮아 둑이 남고, 마른 땅과 닿는 먼 가장자리에는 밝은 반사 띠가 섭니다. 이 띠가 정지 화면에서 "물"을 읽히게 하는 면입니다. 얼음은 수면 위로 4px 솟은 푸른 흰 판에 광택선 하나, 얼음 돌은 26px 계단꼴 흰 돌입니다.</span>
+      <span style="font-size:13px;color:#7A7771;line-height:1.6;word-break:keep-all">A의 세 안을 뺀 모든 그림은 "보통" 안으로 칠했습니다. 칸 아래 작은 그림은 칸 폭 60px 축소판입니다.</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">A</span><span style="font-size:22px;font-weight:400">세계 색 세 안</span></div>
+      <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:860px;word-break:keep-all;text-wrap:pretty">2장 확정값(C)의 아홉 값마다 oklch 명도는 그대로 두고 색상만 200(물 쪽)으로 돌렸습니다. 채도는 옅게 ×0.65, 보통 ×1, 조금 더 ×1.3입니다. 보통이 2장과 같은 채도입니다.</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));gap:16px">
+        <sc-for list="{{ variants }}" as="v" hint-placeholder-count="3">
+          <div style="background:#F2F1EE;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+              <span style="font-size:17px;font-weight:400">{{ v.name }}</span>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#3A3936">{{ v.tag }}</span>
+            </div>
+            <div style="background:{{ v.bg }};border-radius:14px;padding:14px 16px 22px;display:flex;flex-direction:column;gap:6px;aspect-ratio:16 / 10;box-sizing:border-box">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+                <div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'IBM Plex Mono', monospace;font-size:8px;letter-spacing:0.2em;color:#8A8781">STAGE 03</span><span style="font-size:13px">물을 건너는 땅</span></div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><span style="font-family:'IBM Plex Mono', monospace;font-size:8px;letter-spacing:0.2em;color:#8A8781">MOVES</span><span style="font-size:16px;font-weight:300">0</span></div>
+              </div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:0">
+                <div style="width:66%;display:block;aspect-ratio:{{ v.ar }};background-image:{{ v.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:5px 14px">
+              <sc-for list="{{ v.sw }}" as="s" hint-placeholder-count="12">
+                <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                  <span style="width:16px;height:16px;flex:none;border-radius:4px;border:1px solid rgba(58,57,54,0.1);background:{{ s.hex }}"></span>
+                  <span style="font-size:12px;color:#5F5D59;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.k }}</span>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px">{{ s.hex }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;color:#6E6C68">나란히 · 실제 게임 값 · 물 없는 같은 판</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:14px">
+        <sc-for list="{{ side }}" as="v" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:{{ v.bg }};border-radius:14px;padding:18px;aspect-ratio:16 / 10;box-sizing:border-box;display:flex;align-items:center;justify-content:center">
+              <div style="width:60%;display:block;aspect-ratio:{{ v.ar }};background-image:{{ v.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+            </div>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;color:#6E6C68">{{ v.name }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:#F2F1EE;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;max-width:900px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.18em;color:#3A3936">추천 · 보통</span>
+        <span style="font-size:14px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">2장을 C로 정한 이유가 그대로 맞습니다. 배경이 화면 절반을 넘게 덮는 크기에서 옅게는 1장과 거의 구별되지 않습니다. 보통은 2장과 채도가 같아 "채도는 비슷하게, 색상으로 가른다"를 그대로 지킵니다. 조금 더는 물(청록 회색)과 바닥의 거리가 줄어 물가가 흐려지고, 얼음 윗면과 바닥 윗면이 가까워집니다. 큐브(색상 235)와는 색상이 35 떨어져 있고 채도가 세 배라 바닥에 묻히지 않습니다.</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">B</span><span style="font-size:22px;font-weight:400">요소 상태</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:16px">
+        <sc-for list="{{ B }}" as="g" hint-placeholder-count="8">
+          <div style="background:#D9E7E8;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><span style="font-size:13px;color:#5F6566;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+              <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="2">
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <div style="width:{{ f.w }};max-width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#4F5859">{{ f.cap }}</span>
+                  <div style="width:{{ f.w60 }};display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:#F2F1EE;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;max-width:900px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.18em;color:#3A3936">수위 표시 · 따로 두지 않음</span>
+        <span style="font-size:14px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">수위는 절대값보다 "어느 땅이 물 위인가"가 중요한데, 마른 땅마다 수면 위 6px 둑이 늘 남아 그 관계가 판에서 바로 읽힙니다. 잠긴 땅은 칸 모양이 비쳐 보여 "원래 땅이었다"가 남고, 스위치 안의 작은 물웅덩이가 올라온 상태(밟힘)와 내려간 상태(안 밟힘)로 지금 수위가 높은 쪽인지 알려 줍니다. 벽에 물 자국을 늘 남기면 층마다 띠가 쌓여 높이 읽기를 방해합니다. 물 자국(젖은 띠)은 F의 보스에서 "물이 빠지는 중" 신호로만 씁니다.</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">C</span><span style="font-size:22px;font-weight:400">갈림길</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(520px, 1fr));gap:16px">
+        <sc-for list="{{ Cf }}" as="g" hint-placeholder-count="6">
+          <div style="background:#D9E7E8;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><span style="font-size:13px;color:#5F6566;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+              <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <div style="width:{{ f.w }};max-width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#4F5859">{{ f.cap }}</span>
+                  <div style="width:{{ f.w60 }};display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                </div>
+              </sc-for>
+            </div>
+            <span style="font-size:13px;color:#3A3936;line-height:1.6;word-break:keep-all;text-wrap:pretty;border-top:1px solid #C9D7D8;padding-top:10px">{{ g.pick }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">D</span><span style="font-size:22px;font-weight:400">움직임 프레임</span></div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <sc-for list="{{ D }}" as="g" hint-placeholder-count="7">
+          <div style="background:#D9E7E8;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><span style="font-size:13px;color:#5F6566;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;align-items:end">
+              <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="4">
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <div style="width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#4F5859">{{ f.cap }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">E</span><span style="font-size:22px;font-weight:400">장면</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(560px, 1fr));gap:16px">
+        <sc-for list="{{ E }}" as="g" hint-placeholder-count="6">
+          <div style="background:#D9E7E8;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><span style="font-size:13px;color:#5F6566;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:center">
+              <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="1">
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <div style="width:{{ f.w }};max-width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#4F5859">{{ f.cap }}</span>
+                  <div style="width:{{ f.w60 }};display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">F</span><span style="font-size:22px;font-weight:400">보스 후보 · 밀물과 썰물 (150번)</span></div>
+      <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:860px;word-break:keep-all;text-wrap:pretty">라벨은 TIDE를 권합니다. 들고 나는 것을 한 단어로 다 담고, WIND와 같은 네 글자라 자리가 같습니다. 후보로 FLOOD(들 때만 맞음), WAVE(물결로 읽혀 수위와 멀음)를 검토했습니다. 숫자 오른쪽의 작은 삼각형이 다음 변화의 방향입니다(▲ 밀물, ▼ 썰물).</span>
+      <div style="background:#D9E7E8;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:16px">
+        <div style="background:#E6F1F2;border-radius:14px;padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">STAGE 10</span><span style="font-size:24px;font-weight:400">밀물과 썰물</span></div>
+          <div style="display:flex;gap:28px;align-items:flex-start">
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">MOVES</span><span style="font-size:32px;font-weight:300;line-height:1">12</span></div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">TIDE</span><div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;color:#3A3936">▲</span><span style="font-size:32px;font-weight:300;line-height:1">3</span></div></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px">
+          <sc-for list="{{ tide }}" as="t" hint-placeholder-count="8">
+            <div style="background:#E6F1F2;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;box-shadow:{{ t.ring }}">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">TIDE</span>
+              <div style="display:flex;align-items:center;gap:6px"><span style="font-size:10px">{{ t.arrow }}</span><span style="font-size:26px;font-weight:300;line-height:1">{{ t.n }}</span></div>
+              <span style="font-size:11px;color:#6E6C68">{{ t.note }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(460px, 1fr));gap:16px">
+          <sc-for list="{{ F }}" as="f" hint-placeholder-count="2">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:15px">{{ f.cap }}</span>
+              <span style="font-size:13px;color:#5F6566;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ f.note }}</span>
+              <div style="width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+              <div style="width:{{ f.w60 }};display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">H</span><span style="font-size:22px;font-weight:400">11월드 보스 · 묶인 배 (110번)</span></div>
+      <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:860px;word-break:keep-all;text-wrap:pretty">뜬 상자가 물가 말뚝에 줄로 묶여, 말뚝에서 가로 칸 수와 세로 칸 수의 합이 줄 길이 이하인 물 칸까지만 갑니다. 줄 길이가 판에 보이므로 화면 위 숫자는 없습니다.</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(520px, 1fr));gap:16px">
+        <sc-for list="{{ H }}" as="g" hint-placeholder-count="4">
+          <div style="background:#D9E7E8;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><span style="font-size:13px;color:#5F6566;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+              <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <div style="width:{{ f.w }};max-width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#4F5859">{{ f.cap }}</span>
+                  <div style="width:{{ f.w60 }};display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                </div>
+              </sc-for>
+            </div>
+            <span style="font-size:13px;color:#3A3936;line-height:1.6;word-break:keep-all;text-wrap:pretty;border-top:1px solid #C9D7D8;padding-top:10px">{{ g.pick }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">G</span><span style="font-size:22px;font-weight:400">장 고르기와 월드 이름</span></div>
+      <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:860px;word-break:keep-all;text-wrap:pretty">장 들어가는 자리 v2의 확정안(3안)을 그대로 따랐습니다. 지금 보는 장이 3장이라 목록 화면 전체가 3장 세계 색이고, 카드 창은 각 장의 실제 세계 색입니다.</span>
+      <div style="background:#D9E7E8;border-radius:22px;padding:14px">
+        <div style="background:#E6F1F2;border-radius:18px;padding:24px 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+          <span style="width:48px;height:48px;flex:none;border-radius:14px;background:#DFEBEC;display:flex;align-items:center;justify-content:center;font-size:18px">←</span>
+          <div style="border-radius:18px;background:#3A3936;padding:0 5px 5px;display:flex;flex-direction:column;min-width:300px;transform:translateY(2px)">
+            <div style="height:34px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#E6F1F2;white-space:nowrap"><span>CHAPTER 3</span><span style="width:8px;height:8px;flex:none;background:#E6F1F2;transform:translateY(-2px) rotate(-135deg);clip-path:polygon(0 0,100% 0,0 100%)"></span></div>
+            <div style="border-radius:13px;background:#DFEBEC;padding:10px 16px;display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">WORLD 11</span><span style="font-size:24px;font-weight:400;line-height:1.15;white-space:nowrap">물을 건너는 땅</span></div>
+          </div>
+          <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex:none">
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.14em;color:#8A8781;white-space:nowrap">0 / 30 ◆</span>
+            <div style="display:flex;gap:8px"><span style="width:44px;height:44px;border-radius:13px;background:#DFEBEC;display:flex;align-items:center;justify-content:center;font-size:16px">‹</span><span style="width:44px;height:44px;border-radius:13px;background:#DFEBEC;display:flex;align-items:center;justify-content:center;font-size:16px">›</span></div>
+          </div>
+          <div style="flex-basis:100%;display:flex;gap:16px;flex-wrap:wrap;padding-top:12px">
+            <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="3">
+              <div style="width:290px;height:304px;box-sizing:border-box;border-radius:20px;padding:12px 12px 20px;display:flex;flex-direction:column;gap:16px;background:#EDF7F8;box-shadow:{{ c.ring }}">
+                <div style="height:148px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:{{ c.win }}">
+                  <div style="width:150px;display:block;aspect-ratio:{{ c.ar }};background-image:{{ c.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                </div>
+                <div style="padding:0 8px;display:flex;flex-direction:column;gap:8px;flex:1">
+                  <div style="display:flex;justify-content:space-between;gap:10px;font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em;color:#8A8781"><span>{{ c.label }}</span><span style="letter-spacing:0.08em">{{ c.range }}</span></div>
+                  <span style="font-size:22px;font-weight:400;white-space:nowrap">{{ c.name }}</span>
+                  <div style="margin-top:auto;display:flex;align-items:center;gap:12px">
+                    <div style="flex:1;display:grid;grid-template-columns:repeat(5, 1fr);gap:4px"><sc-for list="{{ c.segs }}" as="s" hint-placeholder-count="5"><span style="height:5px;border-radius:3px;overflow:hidden;display:block;background:#D3DEDF"><span style="display:block;height:100%;background:#3A3936;width:{{ s.w }}"></span></span></sc-for></div>
+                    <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;color:#8A8781;white-space:nowrap">{{ c.stars }}</span>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#6E6C68">데스크톱 · 덩이 누름 상태 · 카드 격자가 장 카드로 바뀐 모습</span>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="width:360px;box-sizing:border-box;background:#D9E7E8;border-radius:26px;overflow:hidden;padding-bottom:10px">
+            <div style="height:30px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px 4px;font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781"><span>9:41</span><span>●●●</span></div>
+            <div style="background:#E6F1F2;margin:6px 8px 0;border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:6px;height:44px">
+                <span style="width:44px;height:44px;flex:none;border-radius:13px;background:#DFEBEC;display:flex;align-items:center;justify-content:center;font-size:16px">←</span>
+                <span style="flex:1;min-width:0;text-align:right;padding-right:6px;font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.12em;color:#8A8781;white-space:nowrap">0 / 30 ◆</span>
+                <span style="width:40px;height:40px;flex:none;border-radius:12px;background:#DFEBEC;display:flex;align-items:center;justify-content:center;font-size:15px">‹</span>
+                <span style="width:40px;height:40px;flex:none;border-radius:12px;background:#DFEBEC;display:flex;align-items:center;justify-content:center;font-size:15px">›</span>
+              </div>
+              <div style="border-radius:16px;background:#DFEBEC;padding:0 4px 4px;display:flex;flex-direction:column">
+                <div style="height:26px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#3A3936;white-space:nowrap"><span>CHAPTER 3</span><span style="width:7px;height:7px;flex:none;background:#3A3936;transform:translateY(2px) rotate(45deg);clip-path:polygon(0 0,100% 0,0 100%)"></span></div>
+                <div style="border-radius:12px;background:#EDF7F8;padding:8px 12px;display:flex;flex-direction:column;gap:3px">
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">WORLD 11</span>
+                  <span style="font-size:18px;font-weight:400;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">물을 건너는 땅</span>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div style="height:50px;border-radius:12px;background:#EDF7F8;box-shadow:inset 0 0 0 1.5px #3A3936;padding:8px 10px;box-sizing:border-box"><span style="font-size:19px;font-weight:300">101</span></div>
+                <div style="height:50px;border-radius:12px;background:#DFEBEC;padding:8px 10px;box-sizing:border-box"><span style="font-size:19px;font-weight:300;color:#8A8781">102</span></div>
+              </div>
+            </div>
+          </div>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#6E6C68">폰 360 · 목록 헤더 · 평소</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="width:360px;box-sizing:border-box;background:#D9E7E8;border-radius:26px;padding:14px 8px 14px">
+            <div style="background:#E6F1F2;border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="3">
+                <div style="min-height:76px;box-sizing:border-box;border-radius:16px;padding:8px 14px 8px 8px;display:flex;align-items:center;gap:14px;background:#EDF7F8;box-shadow:{{ c.ring }}">
+                  <div style="width:60px;height:60px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;background:{{ c.win }}">
+                    <div style="width:50px;display:block;aspect-ratio:{{ c.ar }};background-image:{{ c.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                  </div>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+                    <div style="display:flex;justify-content:space-between;gap:8px;font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#8A8781;white-space:nowrap"><span>{{ c.label }}</span><span>{{ c.stars }}</span></div>
+                    <span style="font-size:16px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span>
+                    <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:3px"><sc-for list="{{ c.segs }}" as="s" hint-placeholder-count="5"><span style="height:3px;border-radius:2px;overflow:hidden;display:block;background:#D3DEDF"><span style="display:block;height:100%;background:#3A3936;width:{{ s.w }}"></span></span></sc-for></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#6E6C68">폰 · 장 카드 가로 줄</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">색</span><span style="font-size:22px;font-weight:400">토큰</span></div>
+      <div style="background:#F2F1EE;border-radius:16px;padding:18px 20px;overflow-x:auto">
+        <div style="display:grid;grid-template-columns:minmax(150px, 1.4fr) repeat(5, minmax(96px, 1fr));gap:8px 14px;min-width:760px;align-items:center">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781">세계 색</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781">CH1</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781">CH2</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781">CH3 옅게</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#3A3936">CH3 보통 ●</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781">CH3 조금 더</span>
+          <sc-for list="{{ wtable }}" as="row" hint-placeholder-count="18">
+            <span style="font-size:12.5px;color:#5F5D59">{{ row.k }}</span>
+            <sc-for list="{{ row.c }}" as="c" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;flex:none;border-radius:4px;border:1px solid rgba(58,57,54,0.1);background:{{ c }}"></span><span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px">{{ c }}</span></div>
+            </sc-for>
+          </sc-for>
+        </div>
+      </div>
+      <div style="background:#F2F1EE;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;font-family:'IBM Plex Mono', monospace;font-size:12px;line-height:1.85;color:#4A4845;overflow-x:auto">
+        <sc-for list="{{ css }}" as="l" hint-placeholder-count="20"><span style="white-space:pre">{{ l }}</span></sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.wait(); }
+  componentWillUnmount() { clearTimeout(this.tm); }
+  wait() { if (!window.CuboundIso || !window.CuboundIso.CH3) { this.tm = setTimeout(() => this.wait(), 40); return; } this.forceUpdate(); }
+  renderVals() {
+    const K = window.CuboundIso;
+    const empty = { H: [], variants: [], side: [], B: [], Cf: [], D: [], E: [], F: [], tide: [], chapters: [], wtable: [], css: [] };
+    if (!K || !K.CH3) return empty;
+    const C = K.C, P3 = K.CH3, ST = K.STONE, mid = P3.mid;
+    const vbw = vb => +vb.split(' ')[2];
+    const frames = (defs, caps) => {
+      const S = defs.map(d => K.scene(Object.assign({ pal: 'mid' }, d))), vb = K.fit([].concat(...S), 14), w = vbw(vb);
+      return S.map((s, i) => ({ cap: caps[i] || '', shapes: s, vb, w: w + 'px', w60: (w * 60 / 104).toFixed(1) + 'px' }));
+    };
+    const G = (title, note, defs, caps, pick) => ({ title, note, pick: pick || '', frames: frames(defs, caps || []) });
+
+    // ---------- A ----------
+    const boardA = { W: 0, base: -2, g: [[0, 0, -1, -1, -1, 0], [0, 0, -1, -2, -1, 0], [1, 0, -1, -2, -1, 0], [0, 0, -1, -1, -1, 0]],
+      objs: { '3,1': [{ t: 'fbox', rider: true }], '5,3': [{ t: 'hole' }], '0,0': [{ t: 'box' }] } };
+    const VN = [['light', '옅게', ''], ['mid', '보통', '추천'], ['more', '조금 더', '']];
+    const swk = [['bg', '화면 배경'], ['panel', '패널 배경'], ['card', '카드 면'], ['locked', '잠긴 카드'], ['hover', '호버'], ['a', '칸 윗면 A'], ['b', '칸 윗면 B'], ['l', '칸 왼쪽면'], ['r', '칸 오른쪽면'], ['d1', '물 한 층'], ['d2', '물 두 층'], ['d3', '물 세 층'], ['refl', '물가 반사'], ['iceT', '얼음 윗면']];
+    const variants = VN.map(([k, name, tag]) => {
+      const s = K.scene(Object.assign({}, boardA, { pal: k }));
+      return { name, tag, bg: P3[k].bg, shapes: s, vb: K.fit(s, 10), sw: swk.map(([kk, lab]) => ({ k: lab, hex: P3[k][kk] })) };
+    });
+    const dryB = { g: [[0, 0, 1, 1], [0, 0, 0, 1], [0, 0, 0, 0]], objs: { '1,1': [{ t: 'cube' }] } };
+    const F1 = { a: '#EDEBE6', b: '#E7E5E0', l: '#C6C3BC', r: '#D9D6D0' }, F2 = { a: '#EAEBE0', b: '#E2E5DA', l: '#BFC1B4', r: '#D2D4C8' }, F3 = { a: mid.a, b: mid.b, l: mid.l, r: mid.r };
+    const side = [['CHAPTER 1', '#E9E7E2', F1], ['CHAPTER 2', '#E2E6DB', F2], ['CHAPTER 3 · 보통', mid.bg, F3]].map(([name, bg, fl]) => {
+      const s = K.scene(Object.assign({ floor: fl }, dryB)); return { name, bg, shapes: s, vb: K.fit(s, 10) };
+    });
+
+    // ---------- B ----------
+    const B = [
+      G('물 · 깊이', '수면은 늘 같은 높이이고 바닥이 깊을수록 수면 색이 한 단계씩 어두워집니다. 뒤 땅의 둑 6px와 밝은 반사 띠가 "물보다 땅이 높다"를 보여 줍니다.',
+        [{ W: 0, base: -3, g: [[0, 0, 0], [-1, -2, -3], [0, 0, 0]], cells: { '0,1': { bed: true }, '1,1': { bed: true }, '2,1': { bed: true } } }], ['한 층 · 두 층 · 세 층']),
+      G('물가', '마른 땅과 닿는 먼 가장자리(왼쪽 위, 오른쪽 위)에만 반사 띠가 섭니다. 앞 가장자리는 앞 땅이 덮습니다.',
+        [{ W: 0, base: -2, g: [[0, 0, 1, 1], [0, -1, -1, 0], [-1, -1, -2, 0], [0, 0, 0, 0]] }], ['물가']),
+      G('잠긴 땅', '물에 잠긴 땅은 칸 모양이 수면에 비쳐 보입니다. 깊을수록 흐립니다. 원래 물이던 칸(바닥)은 비침이 없어, 같은 깊이라도 "잠긴 땅"과 "물"이 갈립니다.',
+        [{ W: 2, base: -1, g: [[2, 2, 2, 2], [1, 0, 1, 0], [2, 2, 2, 2]], cells: { '2,1': { bed: true }, '3,1': { bed: true } } }], ['잠김 1 · 잠김 2 · 물 1 · 물 2']),
+      G('뜬 상자', '상자는 24px 잠겨 수면 위로 6px만 나옵니다. 수면이 땅보다 6px 낮으니 윗면이 물가 땅과 같은 높이라, 큐브는 땅과 상자 사이를 평지처럼 오갑니다. 둘레에 반사색 물테가 생깁니다(늪의 진흙 테와 같은 문법).',
+        [{ W: 0, base: -1, g: [[0, -1, 0]], objs: { '1,0': [{ t: 'fbox' }] } }, { W: 0, base: -1, g: [[0, -1, 0]], objs: { '1,0': [{ t: 'fbox', rider: true }] } }], ['혼자', '큐브가 탐']),
+      G('소용돌이 (확정 · 깊어지는 면)', '원 넷이 가운데로 갈수록 깊은 물빛이 되고, 도는 쪽으로 조금씩 밀립니다. 원마다 반사 초승달이 도는 방향으로 감깁니다. 시계와 반시계.',
+        [{ W: 0, base: -1, g: [[0, 0, 0], [0, -1, 0]], cells: { '1,1': { t: 'whirl', dir: 'cw', style: 'bowl' } } }, { W: 0, base: -1, g: [[0, 0, 0], [0, -1, 0]], cells: { '1,1': { t: 'whirl', dir: 'ccw', style: 'bowl' } } }], ['시계', '반시계']),
+      G('얼음 돌', '상자보다 넓고 낮은 26px 계단꼴 흰 돌입니다(14 + 8 + 4). 바닥은 칸 폭의 0.64배로 칸 안에 들어와 옆 칸을 덮지 않습니다(상자는 0.58배). 서리도 칸 안(0.9배)입니다. 노란 상자(30px 정육면체)와 색도 꼴도 다릅니다. 돌이 선 칸에는 서리가 깔리고, 옆 물이 업니다.',
+        [{ W: 0, base: -1, g: [[0, 0], [0, 0]], objs: { '0,0': [{ t: 'stone', frost: true }], '1,1': [{ t: 'box' }] } }, { W: 0, base: -1, g: [[0, -1], [0, -1]], cells: { '1,0': { t: 'ice', from: 'x-' } }, objs: { '0,0': [{ t: 'stone', frost: true }] } }], ['땅 위 · 상자와 비교', '물가 · 옆 물이 언 상태']),
+      G('얼음 칸 (언 물)', '1장 얼음과 같은 계열의 푸른 흰 판이 수면 위로 4px 솟고, 광택선 하나가 섭니다. 물보다 훨씬 밝아 큐브와 상자가 또렷합니다.',
+        [{ W: 0, base: -1, g: [[0, -1, 0]], cells: { '1,0': { t: 'ice' } } }, { W: 0, base: -1, g: [[0, -1, 0]], cells: { '1,0': { t: 'ice' } }, objs: { '1,0': [{ t: 'cube' }] } }, { W: 0, base: -1, g: [[0, -1, 0]], cells: { '1,0': { t: 'ice' } }, objs: { '1,0': [{ t: 'box' }] } }], ['얼음', '큐브', '상자']),
+      G('스위치 · 지금 게임', '칸 폭 0.66배 노란 판 하나. 안 밟힘 4px, 밟힘 1px.',
+        [{ W: 0, base: -1, g: [[0]], objs: { '0,0': [{ t: 'sw' }] } }, { W: 0, base: -1, g: [[0]], objs: { '0,0': [{ t: 'sw', pressed: true }] } }], ['안 밟힘', '밟힘']),
+      G('수위 스위치 · 가 · 옆면 물빛 띠 6px', '지난 나안을 고친 것입니다. 윗면은 노란 판 그대로, 옆면 아래 6px가 물빛이고 그 위에 노란 2px. 밟히면 노란 부분이 1px로 얇아지고, 물빛 띠가 밝아지며 2px 높아져 판이 물에 떠오른 모습이 됩니다.',
+        [{ W: 0, base: -1, g: [[0]], objs: { '0,0': [{ t: 'lsw', v: 'band' }] } }, { W: 0, base: -1, g: [[0]], objs: { '0,0': [{ t: 'lsw', v: 'band', pressed: true }] } }, { W: 0, base: -1, g: [[0, 0]], objs: { '0,0': [{ t: 'sw' }], '1,0': [{ t: 'lsw', v: 'band' }] } }], ['안 밟힘', '밟힘 (수위 높음)', '일반 스위치 | 수위 스위치'], ''),
+      G('수위 스위치 · 나 · 물웅덩이에 뜬 판', '바닥에 칸 폭 0.86배 얕은 물웅덩이(3px 아래)가 있고 노란 판이 그 위에 떠 있습니다. 판 둘레로 물빛 테가 보입니다. 밟히면 웅덩이가 바닥 높이까지 차오르고 판도 같이 올라와, 수위가 높은 쪽인 것이 판에서 읽힙니다.',
+        [{ W: 0, base: -1, g: [[0]], objs: { '0,0': [{ t: 'lsw', v: 'pool' }] } }, { W: 0, base: -1, g: [[0]], objs: { '0,0': [{ t: 'lsw', v: 'pool', pressed: true }] } }, { W: 0, base: -1, g: [[0, 0]], objs: { '0,0': [{ t: 'sw' }], '1,0': [{ t: 'lsw', v: 'pool' }] } }], ['안 밟힘', '밟힘 (수위 높음)', '일반 스위치 | 수위 스위치'], ''),
+      G('수위 스위치 · 다 · 둘레 물빛 테', '판은 지금 게임 스위치와 똑같고, 바닥에 0.86배 물빛 테만 깔립니다. 밟히면 테가 2px 솟으며 반사색으로 밝아지고 판은 1px로 내려갑니다.',
+        [{ W: 0, base: -1, g: [[0]], objs: { '0,0': [{ t: 'lsw', v: 'rim' }] } }, { W: 0, base: -1, g: [[0]], objs: { '0,0': [{ t: 'lsw', v: 'rim', pressed: true }] } }, { W: 0, base: -1, g: [[0, 0]], objs: { '0,0': [{ t: 'sw' }], '1,0': [{ t: 'lsw', v: 'rim' }] } }], ['안 밟힘', '밟힘 (수위 높음)', '일반 스위치 | 수위 스위치'], ''),
+      G('수위 스위치 · 한 판에서', '문을 여는 일반 스위치 둘과 수위 스위치(추천 나) 하나가 같이 있는 판. 아래 축소판이 60px입니다.',
+        [{ W: 0, base: -1, g: [[0, 0, 0, 0], [0, -1, -1, 0], [0, 0, 0, 0]], objs: { '0,0': [{ t: 'sw' }], '2,2': [{ t: 'sw', pressed: true }], '3,1': [{ t: 'lsw', v: 'pool' }], '0,2': [{ t: 'cube' }] } }], [''],
+        '추천 · 나. 판 바깥으로 물빛이 칸 폭 0.86배까지 둘러 60px에서도 노란 판 둘레의 청록 테로 일반 스위치와 바로 갈립니다. 판 자체는 지금 게임 스위치와 같은 노란 판 하나이고, 밟히면 웅덩이가 차올라 판이 떠오르는 움직임이 "물이 오른다"를 그대로 말합니다. 가는 옆면 6px가 위에서 내려다보는 시점에서 앞 두 면에만 보여, 60px에서 3px 남짓입니다. 다는 깔끔하지만 테가 납작한 판이라 "물"보다 "바닥 무늬"로 읽힐 수 있습니다.')
+    ];
+
+    // ---------- C ----------
+    const Cf = [
+      G('1 · 땅 위의 상자가 잠길 때', '수위가 한 층 오를 때 땅에 놓인 상자.',
+        [{ W: 0, base: -1, g: [[1, 1, 1], [0, 0, -1]], objs: { '1,1': [{ t: 'box' }] } }, { W: 1, base: -1, g: [[1, 1, 1], [0, 0, -1]], objs: { '1,1': [{ t: 'fbox' }] } }, { W: 1, base: -1, g: [[1, 1, 1], [0, 0, -1]], objs: { '1,1': [{ t: 'box' }] } }],
+        ['전', '(가) 떠오름', '(나) 잠긴 채 남음'], '의견 · (가). "상자는 물에 뜬다"가 이 장의 첫 규칙이라 그대로 이어집니다. 상자 키가 한 층(30px)이라 (나)도 윗면 6px가 수면 위로 나와, 정지 그림에서는 (가)와 똑같이 보입니다. 둘은 움직임으로만 갈리므로 (나)를 고르면 "밀어도 안 미끄러진다"를 따로 보여 줘야 합니다.'),
+      G('2 · 큐브가 선 땅이 잠길 때 (가)', '큐브 키가 한 층과 같아 한 층 잠기면 윗면 6px가 수면 위로 나옵니다. 둘레에 물테가 생깁니다.',
+        [{ W: 0, base: -1, g: [[1, 1, 1], [0, 0, -1]], objs: { '1,1': [{ t: 'cube' }] } }, { W: 1, base: -1, g: [[1, 1, 1], [0, 0, -1]], objs: { '1,1': [{ t: 'cube' }] } }],
+        ['전', '(가) 잠김'], '큐브 윗면이 남아 "어디 있는지"는 놓치지 않습니다. 두 층 잠기면 완전히 들어가 물빛과 섞인 비침만 남습니다.'),
+      G('3 · 수위가 바뀔 때 얼음 칸', '수위가 한 층 오를 때.',
+        [{ W: 0, base: -1, g: [[0, 0, 0], [0, -1, 0]], cells: { '1,1': { t: 'ice' } } }, { W: 1, base: -1, g: [[1, 1, 1], [0, -1, 0]], cells: { '1,1': { t: 'ice' } } }, { W: 1, base: -1, g: [[1, 1, 1], [0, -1, 0]], cells: { '1,1': { t: 'ice', lv: 0 } } }],
+        ['전', '(가) 같이 오름', '(나) 남고 물만 오름'], '의견 · (가). 얼음은 언 수면이라 같이 오르는 쪽이 그림으로 자연스럽습니다. (나)는 물속 얼음이 비침으로만 남아 잠긴 땅과 헷갈립니다.'),
+      G('4 · 얼음 돌을 물에 밀면', '물가에서 한 칸 밀어 넣은 모습.',
+        [{ W: 0, base: -1, g: [[0, -1, -1]], cells: { '1,0': { t: 'ice', from: 'x-' } }, objs: { '0,0': [{ t: 'stone', frost: true }] } }, { W: 0, base: -1, g: [[0, -1, -1]], objs: { '1,0': [{ t: 'stone' }] } }, { W: 0, base: -1, g: [[0, -1, -1]], objs: { '1,0': [{ t: 'fstone' }] } }],
+        ['전', '(가) 가라앉음', '(나) 뜸'], '의견 · (가). 돌은 가라앉는 것이 자연스럽고, 뜬 상자와 꼴이 겹치지 않습니다. (나)는 물 위 흰 덩이가 얼음 칸과 가까워 보입니다.'),
+      G('5 · 상자 밑 얼음이 녹으면', '얼음 돌이 떠나 얼음이 녹자 상자가 그대로 뜹니다.',
+        [{ W: 0, base: -1, g: [[0, -1, 0]], cells: { '1,0': { t: 'ice', from: 'x-' } }, objs: { '0,0': [{ t: 'stone', frost: true }], '1,0': [{ t: 'box' }] } }, { W: 0, base: -1, g: [[0, -1, 0]], objs: { '1,0': [{ t: 'fbox' }] } }],
+        ['전 · 얼음 위 상자', '후 · 뜬 상자'], ''),
+      G('6 · 꺾인 쪽이 막힌 소용돌이', '왼쪽에서 들어와 시계로 꺾이면 왼쪽 아래 칸으로 나가야 하는데, 그 칸이 땅이라 뜬 상자가 소용돌이 칸에 머뭅니다. 상자가 앉으면 물테 대신 원이 칸 가장자리까지 넓어지고 초승달 셋이 모두 바깥 원으로 나와, 상자 둘레로 도는 방향이 보여 "아직 도는 칸"이 남습니다.',
+        [{ W: 0, base: -1, g: [[0, 0, 0], [-1, -1, 0], [0, 0, 0]], cells: { '1,1': { t: 'whirl', dir: 'cw' } }, objs: { '1,1': [{ t: 'fbox' }] } }],
+        ['머묾'], '')
+    ];
+
+    // ---------- D ----------
+    const pond = { W: 0, base: -1, g: [[0, 0, 0], [0, -1, -1], [0, -1, -1]] };
+    const rip = (s, o) => Object.assign({}, pond, { cells: { '1,1': { rip: { u: 0.2, v: 0.2, s, o } } } });
+    const lane = { W: 0, base: -1, g: [[0, 0, 0, 0], [0, 0, -1, -1], [0, 0, 0, 0]] };
+    const L = (objs, cells) => Object.assign({}, lane, { objs, cells: cells || {} });
+    const wl = { W: 0, base: -1, g: [[0, 0, 0, 0], [-1, -1, -1, 0], [0, 0, -1, 0], [0, 0, -1, 0]] };
+    const WLs = (objs, ph) => Object.assign({}, wl, { cells: { '2,1': { t: 'whirl', dir: 'cw', ph } }, objs });
+    const fz = { W: 0, base: -1, g: [[0, 0, -1, 0], [0, 0, -1, 0]] };
+    const FZ = (sx, p, from) => Object.assign({}, fz, { objs: { [sx + ',0']: [{ t: 'stone', frost: sx === 1 }] }, cells: p > 0 ? { '2,0': { t: 'ice', p, from } } : {} });
+    const lv = W => ({ W, base: -1, g: [[1, 1, 1, 1], [0, 0, -1, 1], [0, 0, -1, 1]], objs: { '2,1': [{ t: 'fbox' }] } });
+    const D = [
+      G('잔물결', '가만히 있을 때 몇 초에 한 번, 수면 한 점에서 옅은 고리가 퍼지며 사라집니다. 정지 그림에는 없습니다.', [rip(0.18, 0.9), rip(0.4, 0.7), rip(0.62, 0.45), rip(0.84, 0.2)], ['1', '2', '3', '4']),
+      G('상자가 밀려 들어가 뜸', '땅 높이 그대로 물 위로 밀려난 상자가 24px 내려앉아 뜨며 고리가 퍼집니다. 끝나면 윗면이 물가 땅과 같은 높이입니다.',
+        [L({ '0,1': [{ t: 'cube' }], '1,1': [{ t: 'box' }] }), L({ '1,1': [{ t: 'cube' }], '2,1': [{ t: 'fbox', u: -0.45, dip: -30 }] }), L({ '1,1': [{ t: 'cube' }], '2,1': [{ t: 'fbox', dip: -12, ring: 0.75, ro: 0.8 }] }), L({ '1,1': [{ t: 'cube' }], '2,1': [{ t: 'fbox', ring: 1.05, ro: 0.35 }] })],
+        ['1 · 밀기 전', '2 · 물 위로 밀려남 (땅 높이)', '3 · 내려앉는 중 (12px)', '4 · 24px 잠겨 뜸']),
+      G('뜬 상자에 올라타기 · 타고 한 칸', '땅과 상자 윗면이 같은 높이라 큐브는 평소처럼 한 칸 굴러 올라탑니다. 올라앉으면 상자가 3px 더 잠겼다 돌아옵니다. 저어 갈 때는 물테가 뒤따릅니다.',
+        [L({ '1,1': [{ t: 'cube' }], '2,1': [{ t: 'fbox' }] }), L({ '2,1': [{ t: 'fbox' }, { t: 'cube', air: 6, u: -0.5 }] }), L({ '2,1': [{ t: 'fbox', rider: true, dip: 3 }] }), L({ '3,1': [{ t: 'fbox', rider: true, u: -0.5 }] })],
+        ['1 · 물가', '2 · 굴러 올라탐', '3 · 앉음 (3px 잠김)', '4 · 한 칸 가는 중']),
+      G('소용돌이에서 꺾임', '오른쪽 아래로 들어온 상자가 가운데에서 시계 방향으로 꺾여 왼쪽 아래로 나갑니다. 원과 초승달도 같이 돕니다.',
+        [WLs({ '2,1': [{ t: 'fbox', u: -0.55 }] }, 0), WLs({ '2,1': [{ t: 'fbox' }] }, 40), WLs({ '2,2': [{ t: 'fbox', v: -0.5 }] }, 80), WLs({ '2,2': [{ t: 'fbox' }] }, 120)],
+        ['1 · 들어옴', '2 · 가운데', '3 · 꺾여 나감', '4 · 다음 칸']),
+      G('얼어붙음', '얼음 돌이 물가에 닿으면 돌 쪽 가장자리부터 얼음 판이 수면을 덮어 갑니다.',
+        [FZ(0, 0), FZ(1, 0.34, 'x-'), FZ(1, 0.68, 'x-'), FZ(1, 1, 'x-')], ['1', '2', '3', '4 · 얼음']),
+      G('녹음', '돌이 떠나면 먼 쪽 가장자리부터 얼음이 물러납니다.',
+        [FZ(1, 1, 'x-'), FZ(0, 0.66, 'x+'), FZ(0, 0.33, 'x+'), FZ(0, 0)], ['1', '2', '3', '4 · 물']),
+      G('수위가 한 층 오름', '수면이 오르며 앞 땅이 잠기고(비침이 생김) 뜬 상자가 같이 오릅니다.',
+        [lv(0), lv(0.34), lv(0.67), lv(1)], ['1', '2', '3', '4'])
+    ];
+
+    // ---------- E ----------
+    const E = [
+      G('뜬 상자를 타고 건너기', '물을 사이에 둔 두 땅. 가운데 두 칸이 두 층 깊이라 색이 한 단계 어둡습니다.', [boardA], ['']),
+      G('소용돌이로만 닿는 곳', '곧장 가면 오른쪽 둔덕에 막힙니다. 시계 소용돌이에서 꺾여 아래로 내려가야 집 옆 물가에 닿습니다.',
+        [{ W: 0, base: -1, g: [[0, 0, 0, 0, 0], [0, -1, -1, -1, 1], [0, 0, 0, -1, 0], [0, 0, 0, -1, 0], [0, 0, 0, -1, 0]], cells: { '3,1': { t: 'whirl', dir: 'cw' } }, objs: { '1,1': [{ t: 'fbox', rider: true }], '4,3': [{ t: 'hole' }] } }], ['']),
+      G('얼음 돌이 만든 얼음길', '물 가운데 곶에 얼음 돌이 서 있어 둘레 세 칸이 얼었습니다. 그 칸만 걸어서 건넙니다.',
+        [{ W: 0, base: -1, g: [[0, 0, 0, 0, 0], [-1, -1, 0, -1, -1], [-1, -1, -1, -1, -1], [0, 0, 0, 0, 0]], cells: { '1,1': { t: 'ice', from: 'x+' }, '3,1': { t: 'ice', from: 'x-' }, '2,2': { t: 'ice', from: 'y-' } }, objs: { '2,1': [{ t: 'stone', frost: true }], '2,2': [{ t: 'cube' }] } }], ['']),
+      G('같은 판 · 수위 낮음과 높음', '수위가 오르면 앞 줄 땅이 잠기고(비침), 뜬 상자가 한 층 올라 위 땅과 닿습니다.',
+        [{ W: 0, base: -1, g: [[2, 1, 1, 1], [1, 0, -1, 1], [0, 0, -1, 0], [0, 0, 0, 0]], objs: { '2,1': [{ t: 'fbox' }], '0,2': [{ t: 'cube' }] } },
+         { W: 1, base: -1, g: [[2, 1, 1, 1], [1, 0, -1, 1], [0, 0, -1, 0], [0, 0, 0, 0]], objs: { '2,1': [{ t: 'fbox' }], '1,0': [{ t: 'cube' }] } }], ['수위 0', '수위 1']),
+      G('한 판에 다', '큐브, 물(한 층, 두 층), 얼음, 뜬 상자, 반시계 소용돌이, 얼음 돌, 수위 스위치, 집.',
+        [{ W: 0, base: -2, g: [[0, 0, 0, 1, 1, 1], [0, -1, -1, -1, -1, 1], [0, 0, -1, -2, -1, 0], [-1, -1, -1, -2, -1, 0], [0, 0, 0, 0, 0, 0]],
+          cells: { '3,1': { t: 'whirl', dir: 'ccw' }, '1,3': { t: 'ice', from: 'y+' } }, objs: { '1,4': [{ t: 'stone', frost: true }], '2,2': [{ t: 'fbox' }], '5,2': [{ t: 'lsw' }], '4,0': [{ t: 'hole' }], '0,2': [{ t: 'cube' }] } }], ['']),
+      G('기존 장치와 함께', '물가에 놓인 사다리, 물 옆 무너지는 칸, 잠긴 땅 아래 비치는 노란 스위치(밟을 수 없음). 기존 장치 그림은 자리만 잡은 근사입니다.',
+        [{ W: 1, base: -1, g: [[2, 2, 2, 1], [1, 1, 0, 0], [1, 0, -1, -1], [1, 1, 0, 0]], cells: { '1,1': { t: 'crack' } }, objs: { '0,2': [{ t: 'ladder' }], '2,1': [{ t: 'sw' }], '0,3': [{ t: 'cube' }] } }], [''])
+    ];
+
+    // ---------- H · 묶인 배 ----------
+    const mg = [[0, 0, 0, 0, 0], [-1, -1, -1, -1, -1], [-1, -1, -1, -1, -1], [-1, -1, -1, -1, -1]];
+    const M1 = (b, extra) => Object.assign({ W: 0, base: -1, g: mg, moor: [{ p: [2, 0], L: 2, strong: extra && extra.strong }], ropes: [Object.assign({ p: [2, 0], b }, extra && extra.rope)], objs: { '2,0': [{ t: 'post' }], [b[0] + ',' + b[1]]: [Object.assign({ t: 'fbox' }, extra && extra.box)] } });
+    const tg = [[0, 0, -1, -1, -1, 0, 0], [0, 0, -1, -1, -1, 0, 0], [0, 0, -1, -1, -1, 0, 0], [0, 0, -1, -1, -1, 0, 0]];
+    const H = [
+      G('말뚝과 줄', '말뚝은 물가 땅에 박힌 18px 짙은 기둥이고, 줄은 말뚝 머리에서 상자 윗면 가장자리로 이어집니다. 범위 안에서는 7px 처지고, 범위 끝(말뚝에서 칸 수 합 = 줄 길이)에 닿으면 곧게 펴집니다. 줄 길이 2.',
+        [M1([2, 1]), M1([2, 2], { rope: { taut: true } }), M1([3, 1], { rope: { taut: true } })], ['처짐 · 1칸', '팽팽 · 끝 (아래로 2칸)', '팽팽 · 끝 (옆 1 + 아래 1)'],
+        '줄은 이 게임에서 드물게 쓰는 가는 면(두께 2.2px)입니다. 처짐과 팽팽함이 "얼마나 남았나"를 보여 주는 유일한 신호라 필요합니다.'),
+      G('갈 수 있는 범위', '말뚝을 가운데 둔 마름모 안의 물 칸이 옅게 밝아집니다(칸 폭 0.9배 판, 물빛과 반사색 사이). 큐브가 그 배에 타면 한 단계 더 밝아집니다.',
+        [M1([2, 1]), M1([2, 1], { strong: true, box: { rider: true } })], ['늘 보임', '탔을 때'],
+        '의견 · 늘 보이게. 움직이는 발판의 레일처럼 판을 읽고 계획하는 정보라, 타기 전에 보여야 갈아탈 자리를 셀 수 있습니다. 탄 배만 한 단계 밝혀 지금 쓰는 범위를 가립니다.'),
+      G('묶인 배 둘을 갈아타며 건너기', '왼쪽 말뚝(띠 하나)의 배와 오른쪽 말뚝(띠 둘)의 배, 줄 길이는 둘 다 3. 두 범위는 겹치지 않지만 가운데 두 칸이 위아래로 붙어 있어, 큐브는 왼쪽 배를 끝까지 저어 간 뒤 같은 높이의 오른쪽 배로 걸어 갈아탑니다.',
+        [{ W: 0, base: -1, g: tg, moor: [{ p: [1, 0], L: 3, strong: true }, { p: [5, 3], L: 3 }], ropes: [{ p: [1, 0], b: [3, 1], taut: true }, { p: [5, 3], b: [3, 2], taut: true }],
+           objs: { '1,0': [{ t: 'post', bands: 1 }], '5,3': [{ t: 'post', bands: 2 }], '3,1': [{ t: 'fbox', rider: true }], '3,2': [{ t: 'fbox' }], '6,1': [{ t: 'hole' }] } }], [''],
+        '어느 말뚝의 배인지는 줄이 늘 이어 줘서 바로 읽힙니다. 말뚝의 흰 띠 수(하나, 둘)는 줄이 겹치거나 길게 늘어질 때를 위한 보조 표시입니다.'),
+      G('범위 끝에서 더 저을 때', '끝 칸에서 바깥으로 저으면 상자가 4분의 1칸쯤 나갔다가 줄에 당겨 돌아오고, 작은 고리가 퍼집니다. 수는 쓰이지 않습니다.',
+        [M1([2, 2], { rope: { taut: true }, box: { rider: true } }), M1([2, 2], { rope: { taut: true, bv: 0.2, dip: 2 }, box: { rider: true, v: 0.2, dip: 2 } }), M1([2, 2], { rope: { taut: true }, box: { rider: true, ring: 0.8, ro: 0.5 } })],
+        ['1 · 끝 칸', '2 · 당겨짐', '3 · 돌아옴'], '')
+    ];
+
+    // ---------- F ----------
+    const bossG = [[2, 2, 1, 1, 1], [1, 1, 0, 0, 1], [1, 0, -1, -1, 0], [1, 0, -1, -1, 0], [1, 1, 0, 0, 1]];
+    const tops0 = []; bossG.forEach((row, y) => row.forEach((v, x) => { if (v === 0) tops0.push(x + ',' + y); }));
+    const Fb = frames([
+      { W: 0, base: -1, g: bossG, damp: { tops: tops0 }, objs: { '2,2': [{ t: 'fbox' }], '0,1': [{ t: 'cube' }] } },
+      { W: 1, base: -1, g: bossG, damp: { band: true }, objs: { '2,2': [{ t: 'fbox' }], '0,0': [{ t: 'cube' }] } }
+    ], ['밀물 차례 · ▲', '썰물 차례 · ▼']);
+    Fb[0].note = '다음에 잠길 땅(지금 수면 바로 위 높이)의 윗면이 젖은 빛으로 바뀝니다. 마지막 한 수(TIDE 1)에만 켜도 됩니다.';
+    Fb[1].note = '방금까지 물이 있던 한 층 높이의 벽면에 젖은 띠가 남습니다. "물이 빠지는 중"이고, 다음에는 이 띠 아래가 드러납니다.';
+    const tide = [['4', '▲', ''], ['3', '▲', ''], ['2', '▲', ''], ['1', '▲', '다음 수에 듦'], ['4', '▼', ''], ['3', '▼', ''], ['2', '▼', ''], ['1', '▼', '다음 수에 남']].map(([n, arrow, note], i) => ({ n, arrow, note: note || (i < 4 ? '밀물까지' : '썰물까지'), ring: n === '1' ? 'inset 0 0 0 1.5px #3A3936' : 'none' }));
+
+    // ---------- G ----------
+    const winDef = fl => ({ floor: fl, g: [[0, 0], [0, 0]], objs: { '1,1': [{ t: 'cube' }] } });
+    const seg = arr => arr.map(w => ({ w: w + '%' }));
+    const chapters = [
+      ['CHAPTER 1', '1–50', '돌 위의 첫걸음', '#E9E7E2', F1, '150 / 150 ◆', [100, 100, 100, 100, 100], 'none'],
+      ['CHAPTER 2', '51–100', '풀이 우거진 길', '#E2E6DB', F2, '150 / 150 ◆', [100, 100, 100, 100, 100], 'none'],
+      ['CHAPTER 3', '101–150', '물이 차오르는 길', mid.bg, F3, '0 / 150 ◆', [0, 0, 0, 0, 0], 'inset 0 0 0 1.5px #3A3936']
+    ].map(([label, range, name, win, fl, stars, sg, ring]) => { const s = K.scene(winDef(fl)); return { label, range, name, win, shapes: s, vb: K.fit(s, 8), stars, segs: seg(sg), ring }; });
+
+    // ---------- tokens ----------
+    const ch1 = { bg: '#E9E7E2', panel: '#F2F1EE', card: '#F7F6F4', locked: '#ECEAE6', hover: '#EBE9E5', a: '#EDEBE6', b: '#E7E5E0', l: '#C6C3BC', r: '#D9D6D0' };
+    const ch2 = { bg: '#E2E6DB', panel: '#EDF0E7', card: '#F4F6EE', locked: '#E7EAE0', hover: '#E6E9DF', a: '#EAEBE0', b: '#E2E5DA', l: '#BFC1B4', r: '#D2D4C8' };
+    const rows = [['bg', '화면 배경'], ['panel', '패널 배경'], ['card', '카드 면'], ['locked', '잠긴 카드'], ['hover', '호버'], ['a', '칸 윗면 (체크 A)'], ['b', '칸 윗면 (체크 B)'], ['l', '칸 왼쪽면'], ['r', '칸 오른쪽면']];
+    const wtable = rows.map(([k, lab]) => ({ k: lab, c: [ch1[k], ch2[k], P3.light[k], P3.mid[k], P3.more[k]] }))
+      .concat([['d1', '물 한 층'], ['d2', '물 두 층'], ['d3', '물 세 층'], ['wl', '물 왼쪽면'], ['wr', '물 오른쪽면'], ['refl', '물가 반사 · 물테 · 소용돌이 날개'], ['iceT', '얼음 윗면'], ['iceL', '얼음 왼쪽면'], ['iceR', '얼음 오른쪽면']].map(([k, lab]) => ({ k: lab, c: ['—', '—', P3.light[k], P3.mid[k], P3.more[k]] })));
+    const m = mid, mx = K.mix;
+    const css = [
+      '/* CHAPTER 3 · 보통 (추천) */',
+      ...rows.map(([k, lab]) => `--world3-${{ bg: 'bg', panel: 'panel', card: 'card', locked: 'card-locked', hover: 'hover', a: 'floor-a', b: 'floor-b', l: 'floor-left', r: 'floor-right' }[k]}: ${m[k]};`),
+      '', '/* 물 · 수면은 같은 높이 땅 윗면보다 6px 아래 */',
+      `--color-water-d1: ${m.d1};`, `--color-water-d2: ${m.d2};`, `--color-water-d3: ${m.d3};`,
+      `--color-water-left: ${m.wl};`, `--color-water-right: ${m.wr};`, `--color-water-reflect: ${m.refl};   /* 물가 띠 · 물테 · 잔물결 · 소용돌이 날개 */`,
+      `--color-water-sunk-1: ${mx(m.d1, m.a, 0.4)};   /* 잠긴 땅 비침 · 0.8 마름모 */`, `--color-water-sunk-2: ${mx(m.d2, m.a, 0.22)};`, `--color-water-sunk-3: ${mx(m.d3, m.a, 0.1)};`,
+      `--color-whirl-eye: ${m.d3};`,
+      '', '/* 얼음 (언 물) · 수면 위 4px */',
+      `--color-ice-top: ${m.iceT};`, `--color-ice-left: ${m.iceL};`, `--color-ice-right: ${m.iceR};`, `--color-ice-gloss: ${m.gloss};`,
+      `--color-ice-sunk: ${mx(m.iceT, m.d1, 0.5)};   /* 갈림길 3 (나) */`,
+      '', '/* 얼음 돌 · 14 + 8 + 4 = 26px */',
+      `--color-icestone-top: ${ST.t};`, `--color-icestone-top-2: ${ST.t2};`, `--color-icestone-top-3: #FFFFFF;`, `--color-icestone-left: ${ST.l};`, `--color-icestone-right: ${ST.r};`,
+      `--color-icestone-frost: ${mx(m.a, m.iceT, 0.55)};`,
+      '', '/* 수위 스위치 · 판은 도구 옐로 그대로 */',
+      `--color-switch: #E3CD8E;   /* 판 0.66, 안 밟힘 4px · 밟힘 1px, tone() 그대로 */`, `--color-levelswitch-pool: ${m.d2};   /* 추천 나 · 0.86, 3px 아래 */`, `--color-levelswitch-pool-inner: ${mx(m.d2, m.d1, 0.5)};   /* 0.76 */`, `--color-levelswitch-pool-full: ${m.d1};   /* 밟힘 · 바닥 높이까지 참 */`, `--color-levelswitch-pool-full-inner: ${mx(m.d1, m.refl, 0.5)};`,
+      '', '/* 묶인 배 (110번) */', '--color-post-top: #9A968E;', '--color-post-left: #6F6C66;', '--color-post-right: #85827B;', '--color-post-band: #F2F1EE;', '--color-rope: #7E7A72;   /* 두께 2.2px, 처짐 7px */', `--color-moor-range: ${mx(m.d1, m.refl, 0.25)};   /* 늘 보임 · 0.9 판 */`, `--color-moor-range-active: ${mx(m.d1, m.refl, 0.42)};   /* 탔을 때 */`,
+      '', '/* 보스 · 젖은 자국 */',
+      `--color-tide-damp-top: ${mx(m.a, m.d1, 0.45)};`, `--color-tide-damp-left: ${mx(m.l, m.wl, 0.35)};`, `--color-tide-damp-right: ${mx(m.r, m.wr, 0.35)};`,
+      '', '/* 옅게 / 조금 더 의 물·얼음 값은 위 표 */'
+    ];
+    // one <img> per drawing keeps the page light (thousands of polygons otherwise)
+    const toSrc = (shapes, vb) => encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '">' + shapes.map(p => '<polygon points="' + p.d + '" fill="' + p.f + '"' + (p.o !== 1 ? ' opacity="' + p.o + '"' : '') + '/>').join('') + '</svg>');
+    const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { if (o.shapes && o.vb) { const vbp = o.vb.split(' ');
+        o.bgi = 'url("data:image/svg+xml,' + toSrc(o.shapes, o.vb) + '")';   // no ";utf8": the template style parser splits on ";"
+        o.ar = vbp[2] + ' / ' + vbp[3]; delete o.shapes; } Object.values(o).forEach(walk); } };
+    const out = { variants, side, B, Cf, D, E, H, F: Fb, tide, chapters, wtable, css };
+    walk(out);
+    return out;
+  }
+}
+</script>
+</body>
+</html>

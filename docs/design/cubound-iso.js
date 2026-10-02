@@ -1,4 +1,4 @@
-// Shared isometric renderer for Cubound cycle-2 object sheets.
+// Shared isometric renderer for Cubound object sheets (CHAPTER 2 forest, CHAPTER 3 water).
 (function () {
   const TW = 104, TH = 52, LV = 30, TK = 16, CS = 60 / 104, D = 34;
   const C = {
@@ -50,10 +50,12 @@
   };
   const cube = (cx, cy, color, h, o, z) => { const k = tone(color); return block(cx, cy, CS, z || 0, h === undefined ? LV : h, k.t, k.l, k.r, o); };
   const iso = (x, y, lvl) => [(x - y) * TW / 2, (x + y) * TH / 2 - lvl * LV];
-  let FL = null;
+  let FL = null, FB = 0, WT = null, ROPES = {};
+  // FB = base level of the field (negative when riverbeds go below level 0)
   const land = (cx, cy, h, par, top) => {
-    if (FL && !top) return prism(cx, cy, 1, h * LV + TK, par ? FL.b : FL.a, FL.l, FL.r);
-    const t = top || (par ? C.b : C.a), s = side(t); return prism(cx, cy, 1, h * LV + TK, t, s.l, s.r);
+    const th = (h - FB) * LV + TK;
+    if (FL && !top) return prism(cx, cy, 1, th, par ? FL.b : FL.a, FL.l, FL.r);
+    const t = top || (par ? C.b : C.a), s = side(t); return prism(cx, cy, 1, th, t, s.l, s.r);
   };
   const wallDown = (a, b, top, bot, f) => sh(P([[a[0], a[1] - top], [b[0], b[1] - top], [b[0], b[1] + bot], [a[0], a[1] + bot]]), f);
 
@@ -68,7 +70,8 @@
   };
 
   const hole = (cx, cy) => [plate(cx, cy, 0.62, C.hole), plate(cx, cy + 2, 0.46, C.holeIn)];
-  const box = (cx, cy, z) => cube(cx, cy, C.yellow, LV, 1, z).concat([plate(cx, cy - (z || 0) - LV, CS * 0.5, mix(C.yellow, '#000000', 0.13))]);
+  // box as in the current game: one plain yellow cube (top, left, right only)
+  const box = (cx, cy, z) => cube(cx, cy, C.yellow, LV, 1, z);
 
   const swamp = (cx, cy, h, par, st) => {
     const out = land(cx, cy, h, par), s = 0.8, k = 5, c = corners(cx, cy, s);
@@ -261,6 +264,189 @@
     return out;
   };
 
+
+  // ---------------- CHAPTER 3 · water ----------------
+  // world palettes (light / mid / more): same oklch chroma as CHAPTER 2 (×0.65 / ×1 / ×1.3), hue 200.
+  // water hue 182 (green-teal, away from the cube at 235), ice hue 224. All faces opaque.
+  const CH3 = {"light":{"bg":"#DDE6E7","panel":"#E9F0F1","card":"#F0F6F7","locked":"#E2EAEB","hover":"#E1E9EA","a":"#E3ECEC","b":"#DCE5E6","l":"#B7C2C2","r":"#CBD5D5","d1":"#C3D8D4","d2":"#ABC0BC","d3":"#94A8A4","wl":"#7B8E8A","wr":"#93A6A2","refl":"#E5EFED","iceT":"#E3F7FF","iceL":"#ACC2CB","iceR":"#C8DDE6","gloss":"#FFFFFF"},"mid":{"bg":"#D9E7E8","panel":"#E6F1F2","card":"#EDF7F8","locked":"#DFEBEC","hover":"#DEEAEB","a":"#DFEDEE","b":"#D9E7E7","l":"#B3C3C4","r":"#C7D6D7","d1":"#C1D9D4","d2":"#A9C0BC","d3":"#92A9A4","wl":"#7A8E8A","wr":"#92A7A2","refl":"#E5F0ED","iceT":"#E2F8FF","iceL":"#AAC2CC","iceR":"#C6DEE7","gloss":"#FFFFFF"},"more":{"bg":"#D6E8E9","panel":"#E3F2F3","card":"#EBF8F9","locked":"#DCECED","hover":"#DBEBEC","a":"#DCEEEF","b":"#D5E8E8","l":"#AFC4C5","r":"#C3D7D8","d1":"#C0D9D4","d2":"#A8C1BC","d3":"#91A9A4","wl":"#798F8A","wr":"#91A7A3","refl":"#E4F0ED","iceT":"#E0F8FF","iceL":"#A8C3CD","iceR":"#C5DEE8","gloss":"#FFFFFF"}};
+  const STONE = {"t":"#EBF1F4","t2":"#F3F8FA","l":"#96A0A5","r":"#BCC6CA"};
+  const WS = 6;      // water surface sits 6px below the top of land at the same level (bank lip)
+  const DIP = 24;    // floating box sinks 24px: 6px above the surface = top level with the surrounding land
+  const uvq = (cx, cy, u0, u1, v0, v1, f, z) => sh(P([pt(cx, cy, u0, v0, z), pt(cx, cy, u1, v0, z), pt(cx, cy, u1, v1, z), pt(cx, cy, u0, v1, z)]), f);
+  const uvpoly = (cx, cy, pts, f, o) => sh(P(pts.map(p => pt(cx, cy, p[0], p[1]))), f, o);
+  const wdepth = d => d <= 1.25 ? 'd1' : d <= 2.25 ? 'd2' : 'd3';
+  const ringAt = (cx, cy, s, w, f, inner, o) => [plate(cx, cy, s, f, o), plate(cx, cy, Math.max(0.02, s - w), inner, o)];
+  // whirlpool: three comet blades spiralling in; thin tail outside, thick head inside = direction of turn
+  const circ = (r0, ou, ov, a0, a1, n) => { const o = []; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; o.push([ou + r0 * Math.cos(a), ov + r0 * Math.sin(a)]); } return o; };
+  // bowl (recommended): three nested discs deepen toward the eye, each offset along the turn, with one
+  // reflection crescent per ring wrapping in the turning direction
+  // occupied (a floating box sits on it): rings open out to the cell edge so the outer ring and crescents show around the box
+  const whirlBowl = (cx, cy, dir, ph, pal, occ) => {
+    const s = dir === 'ccw' ? -1 : 1, p0 = (ph || 0) * Math.PI / 180, out = [plate(cx, cy, 0.96, pal.d1)];
+    const rings = occ ? [[0.5, mix(pal.d1, pal.d2, 0.6)], [0.4, pal.d2], [0.2, mix(pal.d2, pal.d3, 0.6)], [0.08, pal.d3]]
+      : [[0.44, mix(pal.d1, pal.d2, 0.5)], [0.31, pal.d2], [0.18, mix(pal.d2, pal.d3, 0.6)], [0.08, pal.d3]];
+    rings.forEach(([rr, f], k) => {
+      const a = p0 + s * k * 0.9, ou = 0.035 * k * Math.cos(a), ov = 0.035 * k * Math.sin(a);
+      out.push(uvpoly(cx, cy, circ(rr, ou, ov, 0, Math.PI * 2, 28), f));
+      if (occ && k === 0) {
+        // occupied: all three crescents ride the outer ring, outside the box footprint (|u|,|v| > 0.29)
+        for (let j = 0; j < 3; j++) {
+          const a0 = p0 + j * 2.094, o = [], n = [];
+          for (let i = 0; i <= 12; i++) { const t = i / 12, aa = a0 + s * 1.5 * t, w = 0.17 * Math.pow(t, 0.75) * (t > 0.9 ? (1 - t) / 0.1 : 1);
+            o.push([rr * Math.cos(aa), rr * Math.sin(aa)]); n.unshift([(rr - w) * Math.cos(aa), (rr - w) * Math.sin(aa)]); }
+          out.push(uvpoly(cx, cy, o.concat(n), pal.refl));
+        }
+      }
+      if (k < 3 && !occ) {
+        const a0 = p0 + k * 2.1, span = 2.2, o = [], n = [];
+        for (let i = 0; i <= 12; i++) { const t = i / 12, aa = a0 + s * span * t, w = 0.115 * Math.pow(t, 0.75) * (t > 0.92 ? (1 - t) / 0.08 : 1);
+          o.push([ou + rr * Math.cos(aa), ov + rr * Math.sin(aa)]); n.unshift([ou + (rr - w) * Math.cos(aa), ov + (rr - w) * Math.sin(aa)]); }
+        out.push(uvpoly(cx, cy, o.concat(n), pal.refl));
+      }
+    });
+    return out;
+  };
+  // spiral: two reflection arms winding 1.3 turns into the eye, thick outside, thin inside
+  const whirlSpiral = (cx, cy, dir, ph, pal) => {
+    const s = dir === 'ccw' ? -1 : 1, p0 = (ph || 0) * Math.PI / 180, out = [plate(cx, cy, 0.96, pal.d2), plate(cx, cy, 0.2, pal.d3)];
+    for (let k = 0; k < 2; k++) {
+      const o = [], n = [];
+      for (let i = 0; i <= 26; i++) { const t = i / 26, a = p0 + k * Math.PI + s * t * Math.PI * 2.6, rr = 0.46 - 0.36 * t, w = 0.09 * (1 - t) + 0.015;
+        o.push([rr * Math.cos(a), rr * Math.sin(a)]); n.unshift([(rr - w) * Math.cos(a), (rr - w) * Math.sin(a)]); }
+      out.push(uvpoly(cx, cy, o.concat(n), pal.refl));
+    }
+    return out;
+  };
+  const whirl = (cx, cy, dir, ph, pal, style, occ) => style === 'comet' ? whirlComet(cx, cy, dir, ph, pal) : style === 'spiral' ? whirlSpiral(cx, cy, dir, ph, pal) : whirlBowl(cx, cy, dir, ph, pal, occ);
+  const whirlComet = (cx, cy, dir, ph, pal) => {
+    const s = dir === 'ccw' ? -1 : 1, out = [plate(cx, cy, 0.96, pal.d2), plate(cx, cy, 0.24, pal.d3)];
+    for (let k = 0; k < 3; k++) {
+      const a0 = (k * 120 + (ph || 0)) * Math.PI / 180, o = [], n = [];
+      for (let i = 0; i <= 10; i++) {
+        const t = i / 10, a = a0 + s * t * 1.5, rr = 0.44 - 0.18 * t, w = 0.15 * Math.pow(t, 0.7);
+        o.push([rr * Math.cos(a), rr * Math.sin(a)]); n.unshift([(rr - w) * Math.cos(a), (rr - w) * Math.sin(a)]);
+      }
+      out.push(uvpoly(cx, cy, o.concat(n), pal.refl));
+    }
+    return out;
+  };
+  // ice stone: wider, lower and stepped (14 + 8 + 4 = 26px) so it never reads as the 30px yellow box
+  const stone = (cx, cy, z, cut) => {
+    z = z || 0; const t1 = Math.max(2, 14 - (cut || 0));
+    return block(cx, cy, 0.64, z, t1, STONE.t, STONE.l, STONE.r)
+      .concat(block(cx, cy, 0.48, z + t1, 8, STONE.t2, STONE.l, STONE.r))
+      .concat(block(cx, cy, 0.28, z + t1 + 8, 4, '#FFFFFF', STONE.l, STONE.r));
+  };
+  const frost = (cx, cy, pal) => plate(cx, cy, 0.9, mix(FL ? FL.a : C.a, pal.iceT, 0.55));
+  // yellow switch (CHAPTER 1) and the water-level switch: same yellow plate, the level switch holds a little pool
+  // switch as in the current game: one yellow plate, 0.66 of the tile, rising from the floor
+  const sw = (cx, cy, pressed) => { const k = tone(C.yellow); return block(cx, cy, 0.66, 0, pressed ? 1 : 4, k.t, k.l, k.r); };
+  // level switch: the top stays the plain yellow plate (0.66); water is shown under / around it.
+  // 'band'  (가): water-coloured band 6px on the plate sides under 2px of yellow. pressed: yellow 1px, band rises to 6px above floor too (plate sits higher on the water)
+  // 'pool'  (나, recommended): the plate floats on a shallow pool (0.86, sunk 3px into the floor). pressed: pool fills up flush, plate rises 3px with it
+  // 'rim'   (다): a flat water-coloured rim (0.86) around the plate on the floor. pressed: rim turns light (refl) and rises 2px
+  const lsw = (cx, cy, pressed, pal, v) => {
+    const k = tone(C.yellow), out = [];
+    if (v === 'band') {
+      const wb = 6, yt = pressed ? 1 : 2, lift = pressed ? 2 : 0;
+      out.push(...block(cx, cy, 0.66, 0, wb + lift, pressed ? pal.d1 : pal.d2, pressed ? mix(pal.wl, '#FFFFFF', 0.25) : pal.wl, pressed ? mix(pal.wr, '#FFFFFF', 0.25) : pal.wr));
+      out.push(...block(cx, cy, 0.66, wb + lift, yt, k.t, k.l, k.r));
+      return out;
+    }
+    if (v === 'rim') {
+      const rz = pressed ? 2 : 0;
+      if (rz) out.push(...block(cx, cy, 0.86, 0, rz, pal.refl, pal.wl, pal.wr)); else out.push(plate(cx, cy, 0.86, pal.d2));
+      out.push(...block(cx, cy, 0.66, rz, pressed ? 1 : 4, k.t, k.l, k.r));
+      return out;
+    }
+    // pool
+    const c = corners(cx, cy, 0.86), dep = pressed ? 0 : 3;
+    if (dep) { out.push(wallDown(c.W, c.N, 0, dep, FL ? FL.r : C.b), wallDown(c.N, c.E, 0, dep, FL ? FL.l : C.b)); }
+    out.push(plate(cx, cy + dep, 0.86, pressed ? pal.d1 : pal.d2));
+    out.push(plate(cx, cy + dep, 0.76, pressed ? mix(pal.d1, pal.refl, 0.5) : mix(pal.d2, pal.d1, 0.5)));
+    out.push(...block(cx, cy + dep, 0.66, 0, pressed ? 4 : 3, k.t, k.l, k.r));
+    return out;
+  };
+  // mooring post: a small dark post with 1 or 2 light bands (tells boats apart)
+  const POST = { t: '#9A968E', l: '#6F6C66', r: '#85827B', band: '#F2F1EE', rope: '#7E7A72' };
+  const post = (cx, cy, bands) => {
+    const out = block(cx, cy, 0.16, 0, 18, POST.t, POST.l, POST.r);
+    for (let i = 0; i < (bands || 1); i++) out.push(...block(cx, cy, 0.165, 8 + i * 5, 2, POST.t, POST.band, POST.band));
+    out.push(plate(cx, cy - 18, 0.16, POST.t));
+    return out;
+  };
+  const ladderFlat = (cx, cy) => {
+    const k = tone(C.yellow), out = [];
+    [-0.16, 0.16].forEach(v => out.push(...box3(cx, cy, -0.4, 0.4, v - 0.03, v + 0.03, 3, 3, k.t, k.l, k.r)));
+    [-0.24, 0, 0.24].forEach(u => out.push(...box3(cx, cy, u - 0.03, u + 0.03, -0.13, 0.13, 4, 1, k.t, k.l, k.r)));
+    return out;
+  };
+  const crack = (cx, cy) => {
+    const f = mix(FL ? FL.l : C.a, '#000000', 0.25);
+    return [[[0.02, -0.03], [-0.02, 0.03], [-0.36, 0.12]], [[-0.03, -0.02], [0.03, 0.02], [0.14, -0.36]], [[-0.02, 0.0], [0.03, 0.02], [0.24, 0.22]]].map(q => uvpoly(cx, cy, q, f));
+  };
+  const floatBox = (X, Y, o, pal, kind) => {
+    const out = [], dip = DIP + (o.dip || 0);
+    if (o.ring) out.push(...ringAt(X, Y, o.ring, 0.07, pal.refl, o.top, o.ro));
+    if (!o.noCollar) out.push(plate(X, Y, CS * 1.3, pal.refl));
+    if (kind === 'stone') out.push(...stone(X, Y, 0, 8));
+    else out.push(...cube(X, Y, C.yellow, LV - dip));
+    if (o.rider) out.push(...cube(X, Y, C.blue, LV, 1, LV - dip + (o.hop || 0)));
+    return out;
+  };
+  // one cell under water. cy0 = screen y of level 0 at this cell.
+  const waterCell = (x, y, cx, cy0, h, par, cd, V, list) => {
+    const pal = WT.pal, Zw = WT.Z, d = WT.W - h, top = pal[wdepth(d)], cyS = cy0 - Zw, out = [];
+    out.push(...land(cx, cy0 - h * LV, h, par));
+    out.push(...prism(cx, cyS, 1, Zw - h * LV, top, pal.wl, pal.wr));
+    // sunk land: the tile shows through, fainter with depth. riverbeds (h < 0) show nothing.
+    if (h >= 0 && !(cd && cd.bed)) out.push(plate(cx, cyS, 0.8, mix(top, FL ? FL.a : C.a, d <= 1.25 ? 0.4 : d <= 2.25 ? 0.22 : 0.1)));
+    const dry = (nx, ny) => { const v = V(nx, ny); return typeof v === 'number' && v > WT.W - 0.2; };
+    // bank reflection: a light strip along every far edge that touches dry land
+    if (dry(x - 1, y)) out.push(uvq(cx, cyS, -0.5, -0.37, -0.5, 0.5, pal.refl));
+    if (dry(x, y - 1)) out.push(uvq(cx, cyS, -0.5, 0.5, -0.5, -0.37, pal.refl));
+    if (cd && cd.rip) { const q = pt(cx, cyS, cd.rip.u || 0, cd.rip.v || 0); out.push(...ringAt(q[0], q[1], cd.rip.s, 0.06, pal.refl, top, cd.rip.o)); }
+    // on a whirl cell a floating box's collar goes under the whirl (collar → whirl → box) so the rings stay visible
+    const onWhirl = cd && cd.t === 'whirl';
+    // a box centred on the whirl drops its collar; the opened rings take its place
+    const occ = onWhirl && list.some(o => (o.t === 'fbox' || o.t === 'fstone') && Math.abs(o.u || 0) < 0.2 && Math.abs(o.v || 0) < 0.2);
+    if (onWhirl) out.push(...whirl(cx, cyS, cd.dir, cd.ph, pal, cd.style, occ));
+    if (WT.range && WT.range[x + ',' + y]) out.push(plate(cx, cyS, 0.9, mix(top, pal.refl, 0.42 * WT.range[x + ',' + y])));
+    let surf = null;
+    if (cd && cd.t === 'ice') {
+      const iz = (cd.lv === undefined ? WT.W : cd.lv) * LV - WS + 4;
+      if (iz < Zw) out.push(plate(cx, cyS, 0.92, mix(pal.iceT, top, 0.5)));   // ice left below the new surface
+      else {
+        const p = cd.p === undefined ? 1 : cd.p, f = cd.from || 'x-';
+        let u0 = -0.5, u1 = 0.5, v0 = -0.5, v1 = 0.5;
+        if (f === 'x-') u1 = -0.5 + p; if (f === 'x+') u0 = 0.5 - p; if (f === 'y-') v1 = -0.5 + p; if (f === 'y+') v0 = 0.5 - p;
+        out.push(...box3(cx, cy0, u0, u1, v0, v1, iz, iz - Zw, pal.iceT, pal.iceL, pal.iceR));
+        if (p >= 1) out.push(uvq(cx, cy0, -0.34, 0.12, -0.2, -0.165, pal.gloss, iz));
+        if (p >= 0.5) surf = cy0 - iz;
+      }
+    }
+    if (ROPES[x + ',' + y]) out.push(...ROPES[x + ',' + y]);
+    for (const o of list) {
+      if (surf !== null && !o.float) { out.push(...obj(o, cx, surf)); continue; }
+      const q = pt(cx, cyS, o.u || 0, o.v || 0), X = q[0], Y = q[1] - (o.lift || 0);
+      if (o.t === 'fbox') { out.push(...floatBox(X, Y, Object.assign({ top, noCollar: onWhirl }, o), pal, 'box')); continue; }
+      if (o.t === 'fstone') { out.push(...floatBox(X, Y, Object.assign({ top, noCollar: onWhirl }, o), pal, 'stone')); continue; }
+      if (o.t === 'cube' && o.air !== undefined) { out.push(...cube(X, Y, C.blue, LV, 1, o.air)); continue; }
+      // things standing on the sunk ground: poke out above the surface, or show through as a ghost
+      const H = { box: LV, cube: LV, stone: 26, sw: 4, lsw: 4 }[o.t] || LV, col = { box: C.yellow, cube: C.blue, stone: STONE.t, sw: C.yellow, lsw: C.yellow }[o.t] || C.yellow;
+      const vis = h * LV + H - Zw;
+      if (vis > 0) { out.push(plate(X, Y, CS * 1.25, pal.refl)); out.push(...cube(X, Y, col, vis)); }
+      else out.push(plate(X, Y, o.t === 'stone' ? 0.6 : o.t === 'sw' || o.t === 'lsw' ? 0.62 : CS, mix(col, top, o.t === 'cube' ? 0.45 : 0.55)));
+    }
+    return out;
+  };
+  // damp band on dry faces right above the water (ebb: where the water just was)
+  const dampBand = (cx, cy0, h, pal) => {
+    const Zw = WT.Z, zt = Math.min(h * LV, Zw + LV); if (zt <= Zw) return [];
+    const c = corners(cx, cy0, 1), q = (a, b, f) => sh(P([[a[0], a[1] - zt], [b[0], b[1] - zt], [b[0], b[1] - Zw], [a[0], a[1] - Zw]]), f);
+    return [q(c.W, c.S, mix(FL ? FL.l : C.a, pal.wl, 0.35)), q(c.S, c.E, mix(FL ? FL.r : C.a, pal.wr, 0.35))];
+  };
+
   const obj = (o, cx, cy) => {
     switch (o.t) {
       case 'cube': { const p = pt(cx, cy, o.u || 0, o.v || 0); return cube(p[0], p[1], C.blue, LV, o.o, o.z); }
@@ -276,6 +462,12 @@
       case 'planted': return planted(cx, cy, o.n, o.rider);
       case 'stalk': return stalk(cx, cy, o.lv, o.done);
       case 'root': return root(cx, cy, o.dir);
+      case 'stone': return (o.frost && WT ? [frost(cx, cy, WT.pal)] : []).concat(stone(cx, cy, 0));
+      case 'sw': return sw(cx, cy, o.pressed);
+      case 'lsw': return lsw(cx, cy, o.pressed, (WT && WT.pal) || CH3.mid, o.v);
+      case 'post': return post(cx, cy, o.bands);
+      case 'ladder': return ladderFlat(cx, cy);
+      case 'fbox': return box(cx, cy, 0);
     }
     return [];
   };
@@ -285,10 +477,40 @@
     for (let y = 0; y < g.length; y++) for (let x = 0; x < g[y].length; x++) if (g[y][x] !== null) list.push({ x, y });
     list.sort((a, b) => (a.x + a.y) - (b.x + b.y) || a.x - b.x);
     const V = (x, y) => (g[y] && g[y][x] !== undefined) ? g[y][x] : null;
-    FL = def.floor || null;
+    FL = def.floor || null; FB = def.base || 0;
+    if (def.pal) { const pl = CH3[def.pal]; if (!FL) FL = { a: pl.a, b: pl.b, l: pl.l, r: pl.r }; }
+    WT = def.W !== undefined ? { W: def.W, Z: def.W * LV - WS, pal: CH3[def.pal || 'mid'] } : null;
+    // ropes: post head → boat. drawn inside the boat's water cell before the boat, so a rider cube covers the end.
+    // slack ropes sag 7px, taut ropes are straight.
+    ROPES = {};
+    if (WT) {
+    (def.ropes || []).forEach(rp => {
+      // posts behind the boat: draw in the boat's cell (rider covers the end). posts in front: draw last.
+      const bk = (rp.p[0] + rp.p[1]) > (rp.b[0] + rp.b[1]) ? '__last' : rp.b[0] + ',' + rp.b[1];
+      const ph = g[rp.p[1]][rp.p[0]], a0 = iso(rp.p[0], rp.p[1], ph), A = [a0[0], a0[1] - 16];
+      const b0 = iso(rp.b[0], rp.b[1], 0), bz = WT.Z + (LV - DIP) - (rp.dip || 0);
+      let B = pt(b0[0], b0[1] - bz, rp.bu || 0, rp.bv || 0);
+      const dx = A[0] - B[0], dy = A[1] - B[1], L0 = Math.hypot(dx, dy) || 1;
+      B = [B[0] + dx / L0 * 15, B[1] + dy / L0 * 9 - 2];
+      const pts = []; for (let i = 0; i <= 10; i++) { const t = i / 10; pts.push([A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t + (rp.taut ? 0 : 7 * Math.sin(Math.PI * t))]); }
+      const w = 1.1, up = pts.map(p => [p[0], p[1] - w]), dn = pts.map(p => [p[0], p[1] + w]).reverse();
+      (ROPES[bk] = ROPES[bk] || []).push(sh(P(up.concat(dn)), POST.rope));
+    });
+    }
+    if (WT && def.moor) {
+      WT.range = {};
+      def.moor.forEach(m => { if (m.show === false) return; for (let y = 0; y < g.length; y++) for (let x = 0; x < g[y].length; x++) {
+        const d = Math.abs(x - m.p[0]) + Math.abs(y - m.p[1]); if (d > 0 && d <= m.L) WT.range[x + ',' + y] = Math.min(1, (WT.range[x + ',' + y] || 0) + (m.strong ? 1 : 0.6));
+      } });
+    }
     for (const c of list) {
       const v = g[c.y][c.x], isP = v === 'p', h = isP ? 0 : v, p = iso(c.x, c.y, h), cx = p[0], cy = p[1];
       const par = (c.x + c.y) % 2, key = c.x + ',' + c.y, cd = cells[key];
+      if (WT && !isP && h < WT.W - 0.2) {
+        const p0 = iso(c.x, c.y, 0);
+        out.push(...waterCell(c.x, c.y, p0[0], p0[1], h, par, cd, V, objs[key] || []));
+        continue;
+      }
       if (isP) {
         const grown = cd && ((cd.t === 'vine' && cd.st === 'grown') || cd.t === 'filled');
         out.push(...pit(cx, cy, {
@@ -309,10 +531,14 @@
         if (!(objs[key] || []).some(o => o.t === 'planted' || o.t === 'stalk')) out.push(...seedLeaves(cx, cy));
       } else {
         out.push(...land(cx, cy, h, par));
+        if (cd && cd.t === 'crack') out.push(...crack(cx, cy));
+        if (def.damp && def.damp.tops && def.damp.tops.includes(key)) out.push(plate(cx, cy, 1, mix(par ? FL.b : FL.a, WT.pal.d1, 0.45)));
+        if (def.damp && def.damp.band && WT) out.push(...dampBand(cx, iso(c.x, c.y, 0)[1], h, WT.pal));
       }
       for (const o of (objs[key] || [])) out.push(...obj(o, cx, cy));
     }
-    FL = null;
+    if (ROPES.__last) out.push(...ROPES.__last);
+    FL = null; FB = 0; WT = null;
     return out;
   };
 
@@ -338,5 +564,5 @@
     }
   });
 
-  window.CuboundIso = { TW, TH, LV, TK, D, C, mix, tone, side, scene, fit, mixed, wither, MUSH };
+  window.CuboundIso = { TW, TH, LV, TK, D, C, mix, tone, side, scene, fit, mixed, wither, MUSH, CH3, STONE, WS, DIP };
 })();
