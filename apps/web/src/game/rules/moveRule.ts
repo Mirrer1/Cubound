@@ -12,7 +12,7 @@ import { doors, isClosedDoor, isDoorOpen, isLiftRaised, lifts } from './switchRu
 import { boardsTram, onTramPath, rideTrams, tramLevelAt } from './tramRule'
 import { growVines } from './vineRule'
 import { arrive, walk } from './walkRule'
-import { row, shove } from './waterRule'
+import { row } from './waterRule'
 import { blow } from './windRule'
 
 const moveOnce = (state: GameState, direction: Direction): MoveResult => {
@@ -41,10 +41,6 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
     return climbOrPlaceLadder(state, to, direction) ?? blocked
   }
 
-  // 같은 높이 물가에서 뜬 상자 쪽은 밀기 우선
-  if (isWater(state, to) && !isWater(state, from) && toFloor + 1 === fromHeight) {
-    return shove(state, to, direction)
-  }
   if (toFloor + 1 <= fromHeight) return walk(state, to, toFloor + 1, direction)
   if (toFloor > fromHeight) return blocked
 

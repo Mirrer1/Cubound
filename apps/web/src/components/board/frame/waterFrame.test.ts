@@ -4,7 +4,7 @@ import { movingBox } from './boxFrame'
 import { playerFrame } from './cubeFrame'
 import { lastMove } from './testStages'
 import { durationOf } from './timeFrame'
-import { FLOAT, floatGone, floatLevel, rippleOf, shoveDirection } from './waterFrame'
+import { FLOAT, floatGone, floatLevel, rippleOf } from './waterFrame'
 import type { Stage } from '@/game/types'
 
 // 물 높이 1, x 2~4가 물인 한 줄, 상자 하나는 땅에 하나는 물에
@@ -83,27 +83,6 @@ describe('rippleOf', () => {
     const { events } = lastMove({ ...WATER_STAGE, start: { x: 1, y: 0 } }, ['down'])
 
     expect(rippleOf(events, 0.9)).toBeNull()
-  })
-})
-
-describe('shoveDirection', () => {
-  it('물가에서 뜬 상자를 밀고 남은 큐브는 민 쪽으로 기운다', () => {
-    const stage: Stage = {
-      ...WATER_STAGE,
-      start: { x: 1, y: 1 },
-      entities: [{ type: 'box', x: 2, y: 1 }],
-    }
-    const { prev, game, events } = lastMove(stage, ['right'])
-
-    expect(shoveDirection(events)).toBe('right')
-    expect(playerFrame(prev, game, events, 0.5).angle).toBeGreaterThan(0)
-    expect(playerFrame(prev, game, events, 0.5).x).toBe(1)
-  })
-
-  it('큐브가 따라 들어가는 밀기는 기울지 않는다', () => {
-    const { events } = lastMove(WATER_STAGE, ['right'])
-
-    expect(shoveDirection(events)).toBeNull()
   })
 })
 

@@ -78,7 +78,7 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
   const boxFloor = floorAt(state, box) ?? 0
   const first = step(box, direction)
   const entry = boxLanding(state, first, boxFloor)
-  if (entry === null || (isWater(state, box) && !isWater(state, first))) return null
+  if (entry === null) return null
 
   // 버섯으로 밀린 상자는 내릴 자리가 없으면 밀기 불가
   const onMushroom = isMushroom(state, first)
@@ -137,7 +137,5 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
         }
       : { ...pushing, boxes: [...others, stop] }
 
-  // 뜬 상자를 민 큐브는 물가에 제자리 유지
-  if (isWater(state, box)) return { state: { ...next, moves: next.moves + 1 }, events }
   return walk(next, box, boxFloor, direction, events)
 }

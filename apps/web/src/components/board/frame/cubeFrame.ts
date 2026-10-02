@@ -30,7 +30,6 @@ import {
   warpAt,
 } from './timeFrame'
 import { carriedBy, carryOf, frontOf, slidingCell, tramProgress } from './tramFrame'
-import { shoveDirection } from './waterFrame'
 import { windLean, windSpan } from './windFrame'
 import { TILE } from '@/game/iso'
 import { standHeight } from '@/game/rules'
@@ -216,9 +215,8 @@ const pathFrame = (
   }
 
   const blocked = events.find((e) => e.type === 'blocked')
-  const leaning = blocked?.type === 'blocked' ? blocked.direction : shoveDirection(events)
-  if (leaning) {
-    return { ...still, direction: leaning, angle: Math.sin(Math.PI * t) * TILT }
+  if (blocked?.type === 'blocked') {
+    return { ...still, direction: blocked.direction, angle: Math.sin(Math.PI * t) * TILT }
   }
 
   // 제 힘으로 가지 않은 이동은 떠나기 전 칸

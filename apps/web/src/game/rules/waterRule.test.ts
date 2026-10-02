@@ -149,16 +149,14 @@ describe('move 물', () => {
 })
 
 describe('move 땅에서 뜬 상자 쪽', () => {
-  it('너머가 빈 물이면 한 칸만 밀고 큐브는 물가에 남는다', () => {
+  it('너머가 빈 물이어도 밀지 않고 올라탄다', () => {
     const { state, events } = move(createState(floating(2)), 'right')
 
-    expect(state.boxes).toEqual([{ x: 3, y: 1 }])
-    expect(state.player).toEqual({ x: 1, y: 1 })
+    expect(state.boxes).toEqual([{ x: 2, y: 1 }])
+    expect(state.player).toEqual({ x: 2, y: 1 })
     expect(state.moves).toBe(1)
-    expect(state.pushes).toBe(1)
-    expect(events).toEqual([
-      { type: 'pushed', from: { x: 2, y: 1 }, to: { x: 3, y: 1 }, result: 'slid' },
-    ])
+    expect(state.pushes).toBe(0)
+    expect(events).toEqual([{ type: 'moved', from: { x: 1, y: 1 }, to: { x: 2, y: 1 } }])
   })
 
   it('너머가 땅이면 밀지 않고 올라탄다', () => {

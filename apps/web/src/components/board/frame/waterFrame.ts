@@ -1,6 +1,6 @@
 import { clamp01, easeOut, lerp, smooth } from './curveFrame'
-import { NO_SWAMP, type SwampTime, boxPath, elapsedAt, playerPath, segmentsOf } from './timeFrame'
-import type { Direction, GameEvent } from '@/game/types'
+import { NO_SWAMP, type SwampTime, boxPath, elapsedAt, segmentsOf } from './timeFrame'
+import type { GameEvent } from '@/game/types'
 
 // 땅에서 물로 밀린 상자의 구간, reach까지 가로 이동, drop부터 잠김, rise부터 떠오름
 // sink는 제 높이보다 더 잠기는 층 수, ring은 고리가 퍼지기 시작하는 구간 진행도
@@ -47,13 +47,4 @@ export const rippleOf = (
     size: lerp(RING.from, RING.to, easeOut(r)),
     opacity: RING.opacity * (1 - r),
   }
-}
-
-// 물가에서 뜬 상자를 밀고 제자리에 남은 큐브가 기우는 쪽, 아니면 null
-export const shoveDirection = (events: GameEvent[]): Direction | null => {
-  const pushed = events.find((e) => e.type === 'pushed')
-  if (pushed?.type !== 'pushed' || playerPath(events).length > 0) return null
-
-  const { from, to } = pushed
-  return to.x > from.x ? 'right' : to.x < from.x ? 'left' : to.y > from.y ? 'down' : 'up'
 }
