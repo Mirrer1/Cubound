@@ -159,7 +159,7 @@ describe('pushesLeft', () => {
   })
 })
 
-// 상자 오른쪽 칸이 한 층 높아 상자가 밀리지 않고 큐브가 딛고 오른다
+// 상자 오른쪽 칸이 한 층 높아 상자를 못 밀고 큐브가 딛고 오르는 판
 const CLIMB_BOX_STAGE: Stage = { ...BOX_STAGE, heights: withMiddleRow([0, 0, 1, 0, 0]) }
 
 describe('move 오른 횟수', () => {

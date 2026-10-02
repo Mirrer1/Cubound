@@ -65,7 +65,7 @@ interface BoardProps {
   turn: number
   onAnimationEnd: () => void
   queued: number // 기다리는 입력 수
-  chained: boolean // 앞 이동에서 바로 이어짐
+  chained: boolean // 앞 이동에서 바로 이어지는 이동
   restarting: boolean // 처음 자리로 내려앉는 연출 중
   guideCell?: Point // 가이드가 비추는 칸
 }
@@ -73,7 +73,7 @@ interface BoardProps {
 const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y
 const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-// 천천히 시작해 천천히 멈춘다. 0~1 밖은 끝값으로 자른다
+// 천천히 시작해 천천히 멈추는 곡선, 0~1 밖은 끝값
 const smooth01 = (v: number) => {
   const p = Math.min(1, Math.max(0, v))
   return p * p * (3 - 2 * p)
@@ -95,7 +95,7 @@ const Board = ({
   guideCell,
 }: BoardProps) => {
   const restartSeconds = restarting ? restartDuration(game.boxes.length) : 0
-  // 늪에 드나드는 이동은 뽑혀 나오고 가라앉는 만큼 연출이 길다
+  // 늪에 드나드는 이동은 뽑혀 나오고 가라앉는 만큼 긴 연출
   const swampSeconds = swampTime(restarting ? null : prevGame, game)
   const { t, chain } = useBoardAnimation(
     turn,
@@ -115,10 +115,10 @@ const Board = ({
     () => stage.entities.filter((e): e is Tram => e.type === 'tram'),
     [stage.entities],
   )
-  // 재시작은 큐브가 길을 간 것이 아니라 처음 자리에 새로 내려앉는 것이라 앞 상태를 넘기지 않는다
+  // 재시작은 처음 자리에 새로 내려앉는 것이라 넘기지 않는 앞 상태
   const cube = playerFrame(dropping ? null : prevGame, game, events, t, chain)
   const cubeCell = { x: Math.round(cube.x), y: Math.round(cube.y) }
-  // 카메라는 최종 자리가 아니라 지금 그려지는 자리를 따라간다. 순간이동은 나온 뒤에 움직인다
+  // 카메라가 따라가는 지금 그려지는 자리, 순간이동은 나온 뒤
   const { ref, viewBox } = useBoardCamera(game, guideCell ?? cubeCell)
   const box = movingBox(prevGame, game, events, t, chain)
   const sunk = swampFrame(dropping ? null : prevGame, game, events, t)
@@ -132,23 +132,23 @@ const Board = ({
   )
 
   const seedFrame = seedFrames(moving ? before : null, game, events, t, swampSeconds, dropping)
-  // 솟는 씨앗 칸은 그 순간 높이로 가림을 잰다. 다 솟기 전에 앞 칸을 흐리지 않는다
+  // 솟는 씨앗 칸은 그 순간 높이로 재는 가림, 다 솟기 전 앞 칸은 흐리기 제외
   const shown = heights.map((row, y) =>
     row.map((h, x) => {
       const frame = seedFrame.get(`${x}-${y}`)
       return frame ? Math.round(frame.level) : h
     }),
   )
-  // 가림 처리도 최종 자리가 아니라 지금 그려지는 자리를 본다. 순간이동으로 가라앉는 큐브가 벽에 묻힌다
+  // 가림 처리도 지금 그려지는 자리 기준, 순간이동으로 가라앉는 큐브가 벽에 묻히는 탓
   const faded = fadedCells(shown, cubeCell, Math.round(cube.level), game, filled)
 
   const railDirs = useMemo(() => railDirsOf(trams), [trams])
 
-  // 덩굴 뿌리와 길 칸. 구덩이로 그릴 칸을 가리는 데만 쓰고 그 순간의 모습은 vineFrame이 정한다
+  // 덩굴 뿌리와 길 칸, 구덩이로 그릴 칸을 가리는 용도, 그 순간의 모습은 vineFrame 몫
   const vines = useMemo(() => vineLooks(game), [game])
   const vineFrame = vineFrames(moving ? before : null, game, events, t, swampSeconds, dropping)
 
-  // cells 메모의 의존성이라 메모한다. 안 하면 React Compiler 검사가 cells 메모를 보존하지 못한다
+  // cells 메모의 의존성이라 함께 메모, 안 하면 React Compiler 검사가 cells 메모를 못 지키는 탓
   const fillingKey = useMemo(() => fillingCellKey(box, events, vines), [box, events, vines])
 
   const cells = useMemo(
@@ -164,7 +164,7 @@ const Board = ({
   const cubeDrop = dropping ? restartDrop(t, 0, boxes.length) : null
   const cubeLevel = cube.level + (cubeDrop?.lift ?? 0)
   const cubeScreen = toScreen({ x: cube.x, y: cube.y }, cubeLevel)
-  // 큐브 가운데는 칸 윗면보다 반 층 위다
+  // 칸 윗면보다 반 층 위인 큐브 가운데
   const cubeSquash =
     cube.squash > 0
       ? squashTransform(
@@ -174,16 +174,16 @@ const Board = ({
           cube.squash,
         )
       : ''
-  // 씨앗이 솟는 수는 이동 몫이 먼저 끝나서 한 수 안에서 일어나는 변화는 이 진행도를 쓴다
+  // 한 수 안에서 일어나는 변화의 진행도, 씨앗이 솟는 수는 이동 몫이 먼저 끝나는 탓
   const stepT = moving ? stepProgress(events, t, swampSeconds) : 1
-  // 놓는 사다리는 바람이 불기 전에 다 놓인다
+  // 놓는 사다리는 바람이 불기 전에 다 놓이는 진행도
   const ownT = moving ? ownProgress(events, t, swampSeconds) : 1
-  // 사다리는 이동이 시작할 때가 아니라 큐브가 그 칸에 닿은 때부터 손으로 옮겨진다
+  // 사다리가 손으로 옮겨지기 시작하는 때, 큐브가 그 칸에 닿은 때
   const pickUpPhase = moving ? pickUpProgress(events, t, swampSeconds) : 1
   const carriedOpacity = carriedOpacityOf({ pickedUp, placed, game, pickUpPhase, ownT })
   const carried = game.carrying ?? before.carrying
   const progress = moving ? t : 1
-  // 문과 발판은 이동이 시작할 때가 아니라 스위치가 눌리거나 풀린 때부터 움직인다
+  // 문과 발판이 움직이기 시작하는 때, 스위치가 눌리거나 풀린 때
   const linkedPhase = (cells: Point[], pressed: boolean) =>
     moving ? switchProgress(events, cells, pressed, t, swampSeconds) : 1
 
@@ -202,7 +202,7 @@ const Board = ({
   const boxFrames = boxFramesOf({ box, sinkingBox, tramFrames, boxes, crackView })
   const guideLevel = guideCell ? Math.max(0, heights[guideCell.y][guideCell.x]) : 0
   const guideScreen = guideCell ? toScreen(guideCell, guideLevel) : null
-  // 칸 위에 선 것은 한 층보다 높이 솟아서 위쪽을 더 잡는다
+  // 한 층보다 높이 솟는 칸 위에 선 것, 위쪽을 더 잡는 여유
   const guideStanding =
     guideCell !== undefined &&
     (same(player, guideCell) ||
@@ -217,7 +217,7 @@ const Board = ({
         const pressed = (state: GameState) => same(state.player, cell.p) || has(state.boxes, cell.p)
         const doorDepth = (state: GameState) =>
           entity?.type === 'door' && isDoorOpen(state, entity.id) ? 7 : TILE.layer
-        // 상자가 얹힌 칸도 발판으로 찾도록 entity와 따로 본다
+        // 상자가 얹힌 칸도 찾도록 entity와 따로 보는 발판
         const lift = stage.entities.find(
           (e): e is Extract<Entity, { type: 'lift' }> => e.type === 'lift' && same(e, cell.p),
         )
@@ -228,13 +228,13 @@ const Board = ({
         )
         const capHere = caps.find((capFrame) => same(capFrame.cell, cell.p))
         const swampHere = (stage.swamp?.[cell.p.y]?.[cell.p.x] ?? '.') !== '.'
-        // 상자가 가라앉는 동안은 진흙이 남아 있고 그 위로 메운 자리가 드러난다
+        // 상자가 가라앉는 동안 남는 진흙, 그 위로 드러나는 메운 자리
         const swamp = swampHere && (has(game.swamps, cell.p) || has(before.swamps, cell.p))
         const sunkHere = sunk && same(sunk.cell, cell.p) ? sunk : null
         const sinkingHere = sinkingBox && same(sinkingBox.at, cell.p) ? sinkingBox : null
         const left = crackLeft(game, cell.p)
         const was = crackLeft(before, cell.p)
-        // 처음부터 구멍이던 칸과 무너진 뒤 메워진 칸 둘 다 상자가 만든 바닥이다
+        // 상자가 만든 바닥, 처음부터 구멍이던 칸과 무너진 뒤 메워진 칸
         const wasCrack = (stage.cracks?.[cell.p.y]?.[cell.p.x] ?? '.') !== '.'
         const isFilled =
           game.heights[cell.p.y][cell.p.x] >= 0 &&
@@ -254,7 +254,7 @@ const Board = ({
             : progress
         const raised = lerp(liftLevel(before), liftLevel(game), liftPhase)
         const crackFall = crumble.fall * TILE.layer
-        // 솟거나 재시작으로 내려가는 씨앗 칸은 그 순간 높이로 그린다
+        // 솟거나 재시작으로 내려가는 씨앗 칸은 그 순간 높이
         const seedHere = seedFrame.get(cell.key)
         const seedShift = seedHere ? cell.h - seedHere.level : 0
         const cellY =
@@ -282,13 +282,13 @@ const Board = ({
             : []),
         ].join('|')
 
-        // 상자가 먼저 메운 길 칸은 덩굴이 못 자라 싹을 그리지 않는다
+        // 상자가 먼저 메운 길 칸은 덩굴이 못 자라 싹 제외
         const vineHere = vineFrame.get(cell.key)
         const vine =
           vineHere && (cell.pit || vineHere.kind === 'grown' || vineHere.kind === 'root')
             ? vineHere
             : null
-        // 판이 차오르거나 내려가는 칸은 구덩이 벽이 드러난다
+        // 판이 차오르거나 내려가는 칸의 드러나는 구덩이 벽
         const pitShown = cell.pit || (vine?.kind === 'grown' && vine.rise < 1)
 
         const tram = tramFrames.find((frame) => same(frame.cell, cell.p)) ?? null
@@ -298,7 +298,7 @@ const Board = ({
         const goalEffect = same(cell.p, stage.goal) && game.cleared && !moving
         const droppingBox = dropping ? boxes.findIndex((b) => same(b, cell.p)) : -1
         const boxDrop = droppingBox >= 0 ? restartDrop(t, droppingBox + 1, boxes.length) : null
-        // 재시작하면 메운 칸은 제자리에서 사라지고 무너졌던 칸은 큐브와 같은 빠르기로 돌아온다
+        // 재시작하면 제자리에서 사라지는 메운 칸, 큐브와 같은 빠르기로 돌아오는 무너졌던 칸
         const restored =
           dropping && !seedHere
             ? Math.sign(before.heights[cell.p.y][cell.p.x] - heights[cell.p.y][cell.p.x])

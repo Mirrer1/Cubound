@@ -1,15 +1,14 @@
 import type { GameEvent, GameState, MoveResult, Point } from '../types'
 import { hasBox, same } from './cellRule'
 
-// 칸을 딛고 있는 것. 상자 위에 선 큐브는 칸을 딛지 않는다
+// 칸을 딛는 것, 상자 위에 선 큐브는 제외
 const restingOn = (state: GameState, p: Point) =>
   hasBox(state, p) ? 'box' : same(state.player, p) ? 'player' : null
 
-// 기대 놓은 사다리는 발을 딛고 서 있어 그 칸이 다 닳아도 무너지지 않는다. 사다리가 허공에 남지 않는다
+// 기대 놓은 사다리가 선 칸은 다 닳아도 유지, 허공에 남는 사다리 방지
 const holdsLadder = (state: GameState, p: Point) => state.leaningLadders.some((l) => same(l, p))
 
-// before에서 after로 딛고 있던 것이 바뀐 무너지는 칸의 남은 횟수를 base에서 줄인다.
-// 다 쓰고 수가 끝난 base에서도 비어 있으면 바닥 없는 칸이 된다
+// 닳는 칸은 before와 after 사이에 딛는 것이 바뀐 칸, 무너지는 칸은 다 닳고 base에서도 빈 칸
 export const crumble = (
   before: GameState,
   after: GameState,

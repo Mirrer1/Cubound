@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from 'react'
 import { type Chain, type SwampTime, durationOf } from '@/components/board/frame'
 import type { GameEvent } from '@/game/types'
 
-// 기다리는 입력이 있으면 조금 빠르게 재생해 다음 입력을 일찍 받는다
+// 기다리는 입력이 있을 때 다음 입력을 일찍 받는 재생 배속
 const CATCH_UP = [1, 1.3]
 const SPEED_RAMP = 0.15
 
 const speedFor = (queued: number) => CATCH_UP[Math.min(queued, CATCH_UP.length - 1)]
 
-// 이동 한 번의 연출 진행도 t와 앞뒤 이동과의 이어짐
+// 이동 한 번의 연출 진행도 t와 앞뒤 이동과의 이어짐 여부
 export const useBoardAnimation = (
   turn: number,
   events: GameEvent[],
@@ -49,7 +49,7 @@ export const useBoardAnimation = (
       return
     }
 
-    // 뒤쪽 절반에 들어서면 다음 입력 여부를 고정해 도중에 위치가 튀지 않게 한다
+    // 뒤쪽 절반부터 고정하는 다음 입력 여부, 도중에 위치가 튀는 일 방지
     let out = false
     const current = animate(0, 1, {
       duration,

@@ -41,9 +41,9 @@ describe('mushroomFrames', () => {
     const at = (t: number) => mushroomFrames(prev, state, events, t)[0]
 
     expect(at(0).press).toBe(0)
-    // 큐브가 걸어 들어오는 동안에는 평소 높이 그대로다
+    // 큐브가 걸어 들어오는 동안은 평소 높이
     expect(at(0.5).press).toBe(0)
-    // 끝자락에서 눌리기 시작해 올라선 채로 끝난다
+    // 끝자락에서 눌리기 시작해 올라선 채로 끝나는 갓
     expect(at(0.8).press).toBeGreaterThan(0)
     expect(at(0.8).press).toBeLessThan(2)
     expect(at(1).press).toBe(2)
@@ -58,7 +58,7 @@ describe('mushroomFrames', () => {
     expect(state.mushrooms).toEqual([])
     expect(first(0).wither).toBe(0)
     expect(second(0).wither).toBe(0)
-    // 앞선 버섯이 먼저 시든다
+    // 먼저 시드는 앞선 버섯
     expect(first(0.6).wither).toBeGreaterThan(second(0.6).wither)
     expect(first(1).wither).toBe(1)
     expect(second(1).wither).toBe(1)
@@ -95,7 +95,7 @@ describe('mushroomPose', () => {
 })
 
 describe('버섯과 다른 요소', () => {
-  // 튕겨 날아가 늪에 내린다. 버섯 칸과 늪 칸은 겹치지 않는다
+  // 튕겨 날아가 늪에 내리는 판, 겹치지 않는 버섯 칸과 늪 칸
   const SWAMP_LANDING: Stage = {
     ...HOP_STAGE,
     heights: [[0, 0, 0, 0, 0, 0, 0]],
@@ -110,7 +110,7 @@ describe('버섯과 다른 요소', () => {
 
     expect(state.player).toEqual({ x: 3, y: 0 })
     expect(swamp.tail).toBeGreaterThan(0)
-    // 가라앉는 시간이 뒤에 붙을 뿐 나는 시간은 그대로다
+    // 가라앉는 시간만 뒤에 붙는 나는 시간
     expect(durationOf(events, swamp)).toBeCloseTo(durationOf(dry.events) + swamp.tail)
     expect(playerFrame(prev, state, events, 1)).toMatchObject({ x: 3, lift: 0 })
     expect(swampFrame(prev, state, events, 1)?.deep).toBe(1)
@@ -150,13 +150,13 @@ describe('버섯 갓에 머무는 차례', () => {
     const onCap = trace().filter((f) => f.x === 1)
 
     expect(onCap.length).toBeGreaterThan(20)
-    // 올라선 첫 프레임은 갓이 아직 평소 높이다
+    // 올라선 첫 프레임의 갓은 아직 평소 높이
     expect(onCap[0].press).toBeLessThan(0.05)
     expect(onCap[0].lift).toBeCloseTo(topOf(IDLE), 0)
-    // 머무는 동안 다 눌렸다가 다 펴진다
+    // 머무는 동안 다 눌렸다가 다 펴지는 갓
     expect(Math.max(...onCap.map((f) => f.press))).toBeGreaterThan(0.99)
     expect(Math.min(...onCap.map((f) => f.press))).toBeLessThan(-0.99)
-    // 날아가기 직전에는 다 펴져 있다
+    // 날아가기 직전의 다 펴진 갓
     expect(onCap[onCap.length - 1].press).toBeLessThan(-0.9)
   })
 
@@ -179,7 +179,7 @@ describe('버섯 갓에 머무는 차례', () => {
     const onCap = trace().filter((f) => f.x === 1)
     const lifts = onCap.map((f) => f.lift)
 
-    // 평소 갓에서 눌린 갓까지 내려갔다가 펴진 갓까지 올라온다
+    // 평소 갓에서 눌린 갓까지 내려갔다가 펴진 갓까지 올라오는 높이
     expect(Math.min(...lifts)).toBeCloseTo(topOf(PRESSED), 0)
     expect(Math.max(...lifts)).toBeCloseTo(topOf(SPRUNG), 0)
     expect(lifts[0]).toBeGreaterThan(Math.min(...lifts))
@@ -189,7 +189,7 @@ describe('버섯 갓에 머무는 차례', () => {
 
 describe('hopProgress', () => {
   it('갓을 딛는 동안 간 칸 수가 멈춘다', () => {
-    // 세 칸 뜀은 머무름까지 4칸이고 갓은 1칸째다
+    // 세 칸 뜀은 머무름까지 4칸, 갓은 1칸째
     expect(hopProgress(3, 0)).toBe(0)
     expect(hopProgress(3, 1 / 4) * 3).toBeCloseTo(1)
     expect(hopProgress(3, 1.5 / 4) * 3).toBeCloseTo(1)
@@ -199,7 +199,7 @@ describe('hopProgress', () => {
   })
 
   it('연쇄는 갓마다 한 번씩 멈춘다', () => {
-    // 다섯 칸 연쇄는 머무름까지 7칸이고 갓은 1칸째와 3칸째다
+    // 다섯 칸 연쇄는 머무름까지 7칸, 갓은 1칸째와 3칸째
     const held = Array.from({ length: 701 }, (_, i) => hopProgress(5, i / 700) * 5)
     const stops = new Set(held.filter((u, i) => i > 0 && u === held[i - 1]))
 
@@ -207,7 +207,7 @@ describe('hopProgress', () => {
   })
 
   it('버섯 위에서 출발하면 눌리는 몫 없이 펴지기만 한다', () => {
-    // 두 칸 뜀은 이미 눌린 갓에서 시작해 펴지는 0.45칸만 머문다
+    // 이미 눌린 갓에서 시작하는 두 칸 뜀, 머무름은 펴지는 0.45칸
     expect(hopProgress(2, 0)).toBe(0)
     expect(hopProgress(2, 0.45 / 2.45) * 2).toBeCloseTo(0)
     expect(hopProgress(2, 1)).toBe(1)

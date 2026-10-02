@@ -19,7 +19,7 @@ const ErrorScreen = () => {
   )
 }
 
-// 렌더링 중 오류를 잡으려면 클래스여야 한다
+// 렌더링 중 오류를 잡는 데 필요한 클래스
 class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false }
 

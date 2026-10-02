@@ -54,7 +54,7 @@ describe('movingBox', () => {
 
     expect(state.boxes).toEqual([{ x: 2, y: 1 }])
     expect(movingBox(prev, state, events, 0)?.level).toBe(1)
-    // 상자가 자리에 앉기 직전에는 내려가는 발판과 같은 높이에 있다
+    // 상자가 자리에 앉기 직전의 높이, 내려가는 발판과 같은 높이
     const lift = 1 - switchProgress(events, [{ x: 0, y: 1 }], false, 0.8)
     expect(movingBox(prev, state, events, 0.8)?.level).toBeCloseTo(lift, 1)
   })
@@ -160,7 +160,7 @@ describe('movingBox 발판에서 구덩이로', () => {
   })
 })
 
-// 상자를 (2,0) 버섯 쪽으로 밀면 상자가 (4,0)까지 날아간다
+// 상자를 (2,0) 버섯 쪽으로 밀면 (4,0)까지 날아가는 판
 const BOX_HOP_STAGE: Stage = {
   ...HOP_STAGE,
   heights: [[0, 0, 0, 0, 0, 0, 0]],
@@ -183,7 +183,7 @@ describe('movingBox 버섯', () => {
   })
 
   it('높은 버섯에서 낮은 버섯으로 이어 튀는 상자는 두 번째 갓을 딛고 지나간다', () => {
-    // (2,0) 한 층 버섯에서 (4,0) 바닥 버섯을 거쳐 (6,0)에 내린다
+    // (2,0) 한 층 버섯에서 (4,0) 바닥 버섯을 거쳐 (6,0)에 내리는 판
     const stage: Stage = {
       ...BOX_HOP_STAGE,
       heights: [[1, 1, 1, 1, 0, 0, 0, 0]],

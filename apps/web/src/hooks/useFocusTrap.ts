@@ -1,6 +1,6 @@
 import { type RefObject, useEffect } from 'react'
 
-// 떠 있는 카드가 닫힐 때까지 Tab이 카드 안에서만 돌게 한다
+// 떠 있는 카드가 닫힐 때까지 카드 안에서만 도는 Tab
 export const useFocusTrap = (ref: RefObject<HTMLElement | null>) => {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {

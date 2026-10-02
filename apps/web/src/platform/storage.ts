@@ -17,19 +17,19 @@ export interface LanguageStorage {
   save: (language: Language) => void
 }
 
-// 목록에서 마지막으로 보던 월드. 시작과 스테이지 선택이 서로 다른 자리를 기억한다
+// 목록에서 마지막으로 보던 월드, 시작과 스테이지 선택이 따로 기억하는 자리
 export interface WorldStorage {
   load: (all: boolean) => number | undefined
   save: (all: boolean, world: number) => void
 }
 
 export interface SessionStorage {
-  load: () => unknown // 지금 스테이지와 맞는지는 game/session.ts의 restoreSession이 가린다
+  load: () => unknown // 지금 스테이지와 맞는지는 game/session.ts의 restoreSession 몫
   save: (session: Session) => void
   clear: () => void
 }
 
-// 저장이 막힌 브라우저에서도 게임은 계속되도록 실패를 무시한다
+// 저장이 막힌 브라우저에서도 게임이 계속되는 실패 무시
 export const localProgressStorage: ProgressStorage = {
   load: () => {
     try {
@@ -43,19 +43,19 @@ export const localProgressStorage: ProgressStorage = {
     try {
       localStorage.setItem(KEY, JSON.stringify(progress))
     } catch {
-      // 저장 실패는 이번 세션 진행에 영향 없음
+      // 이번 세션 진행과 무관한 저장 실패
     }
   },
 }
 
-// 고른 적이 없으면 기기 언어를 따른다
+// 고른 적이 없으면 기기 언어
 export const localLanguageStorage: LanguageStorage = {
   load: () => {
     try {
       const saved = localStorage.getItem(LANGUAGE_KEY)
       if (isLanguage(saved)) return saved
     } catch {
-      // 저장을 못 읽어도 기기 언어로 시작한다
+      // 저장을 못 읽어도 기기 언어로 시작
     }
     return languageFrom(navigator.languages)
   },
@@ -63,12 +63,12 @@ export const localLanguageStorage: LanguageStorage = {
     try {
       localStorage.setItem(LANGUAGE_KEY, language)
     } catch {
-      // 저장 실패는 이번 세션 진행에 영향 없음
+      // 이번 세션 진행과 무관한 저장 실패
     }
   },
 }
 
-// 두 자리를 한 칸에 담는다. 시작은 순서대로 푸는 자리, 스테이지 선택은 구경하는 자리다
+// 한 칸에 담은 두 자리, 시작은 순서대로 푸는 자리, 스테이지 선택은 구경하는 자리
 const readWorlds = (): Record<string, unknown> => {
   try {
     const saved = localStorage.getItem(WORLD_KEY)
@@ -91,12 +91,12 @@ export const localWorldStorage: WorldStorage = {
         JSON.stringify({ ...readWorlds(), [all ? 'all' : 'play']: world }),
       )
     } catch {
-      // 저장 실패는 이번 세션 진행에 영향 없음
+      // 이번 세션 진행과 무관한 저장 실패
     }
   },
 }
 
-// 진행 중인 스테이지 하나의 중간 상태. 진행 기록과 다른 키에 둔다
+// 진행 중인 스테이지 하나의 중간 상태, 진행 기록과 다른 키
 export const localSessionStorage: SessionStorage = {
   load: () => {
     try {
@@ -110,14 +110,14 @@ export const localSessionStorage: SessionStorage = {
     try {
       localStorage.setItem(SESSION_KEY, JSON.stringify(session))
     } catch {
-      // 저장 실패는 이번 세션 진행에 영향 없음
+      // 이번 세션 진행과 무관한 저장 실패
     }
   },
   clear: () => {
     try {
       localStorage.removeItem(SESSION_KEY)
     } catch {
-      // 지우지 못해도 다음 저장이 덮어쓴다
+      // 지우지 못해도 다음 저장이 덮어쓰는 값
     }
   },
 }

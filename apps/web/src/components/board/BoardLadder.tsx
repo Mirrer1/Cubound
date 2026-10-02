@@ -2,9 +2,9 @@ import { type TopTilt, darken, shade } from './view'
 import { TILE, isoDelta } from '@/game/iso'
 import type { Direction, Point } from '@/game/types'
 
-// 높은 칸 위로 살짝 솟아 가려져도 보이게 한다
+// 가려져도 보이게 높은 칸 위로 살짝 솟는 높이
 const TIP = 10
-// 바닥에 놓인 사다리는 칸 윗면에서 살짝 떠 있다
+// 바닥에 놓인 사다리가 칸 윗면에서 뜬 높이
 const LIFT = 2
 const RUNGS = [-0.3, -0.1, 0.1, 0.3]
 const LEAN_RUNGS = [0.2, 0.45, 0.7, 0.92]
@@ -64,7 +64,7 @@ const BoardLadder = ({ x, y, scale = 1, direction, tilt }: BoardLadderProps) => 
   const { rails, rungs } = direction
     ? leaningSegments({ x, y }, direction)
     : flatSegments({ x, y }, scale, tilt)
-  // 바닥에 놓인 사다리는 위에서 보아 옆대가 빛을 받고 가로대가 그 아래로 내려앉는다
+  // 바닥에 놓인 사다리의 빛을 받는 옆대와 그 아래로 내려앉는 가로대
   const railStyle = {
     stroke: direction ? shade('tool', 'left') : shade('tool', 'top'),
     strokeWidth: (direction ? 4.5 : 7) * scale,

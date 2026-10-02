@@ -7,7 +7,7 @@ const Logo = () => {
       aria-label="Cubound"
     >
       Cub
-      {/* items-center는 위로 솟는 글자까지 포함해 맞춘다. 소문자 몸통 가운데로 내려 준다 */}
+      {/* items-center는 위로 솟는 글자까지 맞추는 기준, 소문자 몸통 가운데로 내린 자리 */}
       <svg
         viewBox="0 0 60 30"
         className="mx-[0.04em] h-[0.34em] w-[0.68em] translate-y-[0.11em]"

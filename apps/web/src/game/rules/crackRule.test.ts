@@ -28,7 +28,7 @@ const leftAt = (state: GameState, p: Point) =>
   state.cracks.find((crack) => crack.x === p.x && crack.y === p.y)?.left
 
 describe('move 무너지는 칸', () => {
-  // 왼쪽 끝 무너지는 칸 옆에 얼음 길이 있어 닳아 사라진 자리로 미끄러져 들어갈 수 있다
+  // 왼쪽 끝 무너지는 칸 옆 얼음 길, 닳아 사라진 자리로 미끄러져 들어가는 판
   const CRACK_ICE_STAGE: Stage = {
     ...CRACK_STAGE,
     heights: [
@@ -155,7 +155,7 @@ describe('move 무너지는 칸', () => {
       cracks: ['....', '.1..', '....'],
       entities: [{ type: 'ladder', x: 0, y: 2 }],
     }
-    // 사다리를 주워 와 무너지는 칸에서 오른쪽 턱에 기대 놓고 오른다
+    // 사다리를 주워 와 무너지는 칸에서 오른쪽 턱에 기대 놓고 오르는 수순
     const leaned = play(stage, ['down', 'up', 'right', 'right'])
 
     expect(leaned.state.leaningLadders).toEqual([{ x: 1, y: 1, direction: 'right' }])

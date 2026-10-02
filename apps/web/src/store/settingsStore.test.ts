@@ -18,7 +18,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-// 저장소를 처음 읽는 때가 스토어를 만들 때라 테스트마다 새로 불러온다
+// 저장소를 처음 읽는 때가 스토어를 만들 때라 테스트마다 새로 불러오는 스토어
 const loadStore = async () => (await import('./settingsStore')).useSettingsStore
 
 describe('useSettingsStore', () => {

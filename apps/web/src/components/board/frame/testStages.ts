@@ -22,7 +22,7 @@ export const ICE_STAGE: Stage = {
   entities: [],
 }
 
-// 큐브가 한 층 높은 스위치에서 올라간 발판으로 옮겨 서면 발판과 함께 내려앉는다
+// 큐브가 한 층 높은 스위치에서 올라간 발판으로 옮겨 서면 발판과 함께 내려앉는 판
 export const LIFT_STAGE: Stage = {
   version: 1,
   id: 'test-lift',
@@ -39,7 +39,7 @@ export const LIFT_STAGE: Stage = {
   ],
 }
 
-// 밀린 상자가 얼음을 건너 스위치에 닿으면 큐브가 선 발판이 올라간다
+// 밀린 상자가 얼음을 건너 스위치에 닿으면 큐브가 선 발판이 올라가는 판
 export const SLIDE_SWITCH_STAGE: Stage = {
   version: 1,
   id: 'test-slide-switch',
@@ -58,7 +58,7 @@ export const SLIDE_SWITCH_STAGE: Stage = {
   ],
 }
 
-// 한 칸 걸어 들어간 짝 칸에서 저쪽 짝 칸으로 옮겨 선다
+// 한 칸 걸어 들어간 짝 칸에서 저쪽 짝 칸으로 옮겨 서는 판
 export const WARP_STAGE: Stage = {
   version: 1,
   id: 'test-warp',
@@ -140,7 +140,7 @@ export const sinkBox = () => {
   return { prev, ...move(prev, 'right') }
 }
 
-// (1,0) 버섯을 밟으면 한 층 벽인 (2,0)을 넘어 (3,0)에 내린다
+// (1,0) 버섯을 밟으면 한 층 벽인 (2,0)을 넘어 (3,0)에 내리는 판
 export const HOP_STAGE: Stage = {
   version: 1,
   id: 'test-frame-mushroom',
@@ -152,14 +152,14 @@ export const HOP_STAGE: Stage = {
   mushroom: ['.#.....'],
 }
 
-// (1,0)과 (3,0)이 이어져 한 수에 다섯 칸을 간다
+// (1,0)과 (3,0)이 이어져 한 수에 다섯 칸을 가는 판
 export const CHAIN_STAGE: Stage = {
   ...HOP_STAGE,
   heights: [[0, 0, 0, 0, 0, 0, 0]],
   mushroom: ['.#.#...'],
 }
 
-// 착지 칸이 두 층 높아 뛰지 못하고 버섯에 올라선다
+// 착지 칸이 두 층 높아 뛰지 못하고 버섯에 올라서는 판
 export const STAND_STAGE: Stage = {
   ...HOP_STAGE,
   heights: [
@@ -179,7 +179,7 @@ export const hop = (stage: Stage) => {
   return { prev, state, events }
 }
 
-// 오른쪽 (3, 1)과 (3, 2)가 한 층 높아 (2, 1)에 심는다
+// 오른쪽 (3, 1)과 (3, 2)가 한 층 높아 (2, 1)에 심는 판
 export const SEED_STAGE: Stage = {
   version: 1,
   id: 'test-seed-frame',
@@ -195,10 +195,10 @@ export const SEED_STAGE: Stage = {
 
 export const SEED_AT = { x: 2, y: 1 }
 
-// 씨앗을 주워 (2, 1)에 심는다
+// 씨앗을 주워 (2, 1)에 심는 수순
 export const PLANT: Direction[] = ['right', 'right', 'right']
 
-// 심은 뒤 옆 칸을 오가 네 번째 수에 큐브가 심은 칸으로 들어서며 솟는다
+// 심은 뒤 옆 칸을 오가 네 번째 수에 큐브가 심은 칸으로 들어서며 솟는 수순
 export const RIDE: Direction[] = [...PLANT, 'left', 'right', 'left', 'right']
 
 // 마지막 수의 앞 상태와 결과
@@ -208,7 +208,6 @@ export const lastMove = (stage: Stage, directions: Direction[], from = createSta
   return { prev, game: state, events }
 }
 
-// 바람은 왼쪽으로 불고 이동 세 번을 쓴 상태라 다음 센 수에 분다
 export const WIND_STAGE: Stage = {
   version: 1,
   id: 'test-wind',
@@ -223,6 +222,7 @@ export const WIND_STAGE: Stage = {
   rules: { wind: 'left' },
 }
 
+// 이동 세 번을 쓴 상태, 다음 센 수에 부는 바람
 export const gust = (stage: Partial<Stage> = {}, direction: Direction = 'up') => {
   const prev = { ...createState({ ...WIND_STAGE, ...stage }), moves: 3 }
   const { state: game, events } = move(prev, direction)

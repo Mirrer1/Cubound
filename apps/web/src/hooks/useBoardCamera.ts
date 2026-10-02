@@ -14,7 +14,7 @@ import { toScreen } from '@/game/iso'
 import type { GameState, Point } from '@/game/types'
 
 const ZONE_SECONDS = 0.6
-const LOOK_SECONDS = 0.26 // 구르는 큐브를 놓치지 않게 이동 연출과 비슷하게 둔다
+const LOOK_SECONDS = 0.26 // 구르는 큐브를 놓치지 않는 이동 연출과 비슷한 길이
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
@@ -24,7 +24,7 @@ interface ZoneMove {
   p: number
 }
 
-// focus가 있으면 큐브 대신 그 칸이 속한 구역을 비춘다
+// focus가 있으면 큐브 대신 비추는 그 칸의 구역
 export const useBoardCamera = (game: GameState, focus?: Point) => {
   const zones = game.stage.zones ?? []
   const [zoneIndex, setZoneIndex] = useState(0)
@@ -47,8 +47,8 @@ export const useBoardCamera = (game: GameState, focus?: Point) => {
   const ref = useRef<SVGSVGElement>(null)
   const [view, setView] = useState<ViewSize>({ width: 0, height: 0 })
 
-  // 구역이 바뀌면 보이던 화면에서 새 구역 화면으로 곧게 옮긴다.
-  // 구역 범위를 보간하면 큐브를 따라가다 가운데 놓기로 바뀌는 순간 화면이 튄다
+  // 구역이 바뀌면 보이던 화면에서 새 구역 화면으로 곧게 옮기는 보간
+  // 구역 범위 보간은 큐브 따라가기에서 가운데 놓기로 바뀌는 순간 화면이 튀는 탓에 제외
   useEffect(() => {
     const from = shown.current
     if (!from) return
@@ -66,7 +66,7 @@ export const useBoardCamera = (game: GameState, focus?: Point) => {
     return () => controls.stop()
   }, [targetKey])
 
-  // 칸을 옮길 때마다 비출 자리를 부드럽게 옮긴다
+  // 칸을 옮길 때마다 부드럽게 옮기는 비출 자리
   useEffect(() => {
     const from = currentLook.current
     const [x, y] = lookKey.split(' ').map(Number)

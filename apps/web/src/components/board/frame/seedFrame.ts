@@ -6,8 +6,8 @@ import { ownProgress } from './windFrame'
 import { TILE, isoDelta } from '@/game/iso'
 import type { GameEvent, GameState, Lifted, Point, Stage } from '@/game/types'
 
-// 심는 수의 구간. 큐브가 bump 동안 턱 쪽으로 기울었다 돌아오고 가장 기운 pop에 씨앗이 튀어 travel 동안 흙 자리로 간다.
-// hop은 떨어지며 솟는 높이 px이고 묻히는 동안 fadeFrom부터 흐려진다
+// 심는 수의 구간, bump 동안 턱 쪽으로 기우는 큐브, pop에 튀어 travel 동안 흙 자리로 가는 씨앗
+// hop은 떨어지며 솟는 높이 px, fadeFrom은 묻히며 흐려지기 시작하는 자리
 export const PLANT_SEED = {
   bump: 0.45,
   pop: 0.225,
@@ -22,7 +22,7 @@ export const PLANT_SEED = {
 export const seedLift = (events: GameEvent[], at: Point, what: Lifted) =>
   events.some((e) => e.type === 'rose' && same(e.at, at) && e.lifted.includes(what)) ? 1 : 0
 
-// 씨앗으로 솟은 칸과 층 수. 원본이 바닥이고 무너지는 칸이 아닌 칸이 원본보다 높아진 만큼이다
+// 씨앗으로 솟은 칸과 층 수, 무너지는 칸이 아닌 바닥 칸이 원본보다 높아진 만큼
 export const seedLayers = (stage: Stage, heights: number[][]): Map<string, number> => {
   const layers = new Map<string, number>()
   heights.forEach((row, y) =>
@@ -38,7 +38,7 @@ export const seedLayers = (stage: Stage, heights: number[][]): Map<string, numbe
 export interface SeedFrame {
   level: number // 그 순간 칸 윗면 높이
   land: number // 볏짚빛 층 수
-  tree: number // 사라지는 나무 단계. 남은 수이고 0이면 없음
+  tree: number // 사라지는 나무 단계, 남은 수, 0이면 나무 없는 칸
   treeNext: number // 들어서는 나무 단계
   treeP: number // tree에서 treeNext로 바뀐 정도 0~1
   stakes: number
@@ -87,10 +87,10 @@ const blendSeed = (was: SeedLook, now: SeedLook, p: number): SeedFrame => ({
   bud: lerp(was.bud, now.bud, p),
 })
 
-// 나무는 칸 오른쪽 모서리의 흙 자리에서 자라고 흙 자리는 윗면에서 이만큼 솟는다
+// 나무가 자라는 칸 오른쪽 모서리의 흙 자리, soil은 흙 자리가 윗면에서 솟는 높이
 export const SAPLING = { spot: 0.36, soil: 2 }
 
-// 심는 수는 튀어 떨어진 씨앗이 흙 자리에 닿을 즈음부터 싹과 말뚝이 드러난다
+// 심는 수에서 싹과 말뚝이 드러나기 시작하는 때, 씨앗이 흙 자리에 닿을 즈음
 const PLANT_FROM = 0.6
 
 export interface PlantingFrame {
@@ -100,7 +100,7 @@ export interface PlantingFrame {
   opacity: number
 }
 
-// 심는 수에 들고 있던 씨앗이 흙 자리로 내려가 묻힌다. 심지 않는 수는 null
+// 심는 수에 들고 있던 씨앗이 흙 자리로 내려가 묻히는 모습, 심지 않는 수는 null
 export const plantingSeed = (
   events: GameEvent[],
   t: number,
@@ -126,7 +126,7 @@ interface PlantView {
   cube: Pick<CubeFrame, 'lift'>
 }
 
-// 심는 수에 들고 있던 씨앗이 큐브 윗면에서 그 칸의 흙 자리로 내려간다
+// 심는 수에 들고 있던 씨앗이 큐브 윗면에서 흙 자리로 내려가는 화면 자리
 export const plantedSeedAt = ({ planting, cubeScreen, cubeSink, cube }: PlantView) => {
   const soilSpot = isoDelta(SAPLING.spot, -SAPLING.spot)
   return (
@@ -144,7 +144,7 @@ export const plantedSeedAt = ({ planting, cubeScreen, cubeSink, cube }: PlantVie
   )
 }
 
-// 튀어 오르기 전까지는 턱 쪽으로 기운 큐브 윗면에 얹혀 있고 떨어지는 동안 기울기를 벗는다
+// 튀어 오르기 전까지는 기운 큐브 윗면에 얹힌 씨앗, 떨어지는 동안 풀리는 기울기
 export const plantTiltOf = (
   planting: PlantingFrame | null,
   cube: Pick<CubeFrame, 'angle' | 'direction'>,
@@ -161,7 +161,7 @@ const seedKeys = (state: GameState, layers: Map<string, number>) => [
   ...state.planted.map(({ x, y }) => `${x}-${y}`),
 ]
 
-// 씨앗이 있거나 솟은 칸마다 이 순간의 모습. 심기와 자람은 한 수 전체에, 솟기는 이동 뒤에 걸친다
+// 씨앗이 있거나 솟은 칸마다 이 순간의 모습, 심기와 자람은 한 수 전체, 솟기는 이동 뒤
 export const seedFrames = (
   prev: GameState | null,
   game: GameState,

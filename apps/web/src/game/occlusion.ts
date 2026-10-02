@@ -19,7 +19,7 @@ export const occludingCells = (
       const floor = heights[y]?.[x]
       if (floor === undefined) continue
 
-      // 높은 칸에 얹힌 상자는 한 층 높인 만큼 가리고 같은 높이 상자는 옆면만 가려 세지 않는다
+      // 높은 칸에 얹힌 상자는 한 층 높인 높이, 같은 높이 상자는 옆면만 가려 제외
       const raised = floor > standHeight && boxes.some((b) => b.x === x && b.y === y)
       const h = raised ? floor + 1 : floor
       if (h >= standHeight + dx + dy) cells.push({ x, y })
@@ -41,7 +41,7 @@ export const fadedCells = (
   const { boxes, leaningLadders, player } = game
   return [
     ...occludingCells(shown, cubeCell, cubeLevel, boxes),
-    // 버섯에 날려 보낸 상자와 그것이 메운 바닥은 큐브에서 멀어 저 혼자 벽에 묻힌다
+    // 큐브에서 멀리 떨어져 저 혼자 벽에 묻히는 상자와 메운 바닥
     ...boxes.flatMap((b, i) =>
       occludingCells(
         shown,
@@ -51,7 +51,7 @@ export const fadedCells = (
       ),
     ),
     ...filled.flatMap((p) => occludingCells(shown, p, shown[p.y][p.x], boxes)),
-    // 씨앗과 심은 칸의 나무와 말뚝도 큐브에서 멀면 저 혼자 벽에 묻힌다
+    // 큐브에서 멀면 저 혼자 벽에 묻히는 씨앗과 심은 칸의 나무와 말뚝
     ...[...game.seeds, ...game.planted].flatMap((p) =>
       occludingCells(shown, p, shown[p.y][p.x], boxes),
     ),
@@ -73,7 +73,7 @@ export interface Hidden {
 const marked = (grid: string[] | undefined) =>
   (grid ?? []).flatMap((row, y) => [...row].flatMap((c, x) => (c === '#' ? [{ x, y }] : [])))
 
-// 스테이지 처음 모습에서 앞쪽 높은 칸에 가리는 물체를 겹침이 큰 순서로 모은다
+// 스테이지 처음 모습에서 앞쪽 높은 칸에 가리는 물체, 겹침이 큰 순서
 export const hiddenObjects = (stage: Stage): Hidden[] => {
   const { heights } = stage
   const targets: [HiddenKind, Point][] = [

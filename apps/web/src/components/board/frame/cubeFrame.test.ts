@@ -66,7 +66,7 @@ describe('playerFrame', () => {
     expect(playerFrame(prev, state, events, 0.5).x).toBe(0)
   })
 
-  // 재시작은 앞 상태를 넘기지 않아야 처음 자리에 내려앉는다. 넘기면 떠나기 전 칸에 서 있는 프레임이 나온다
+  // 재시작에 앞 상태를 넘기지 않는 이유, 넘기면 떠나기 전 칸에 서는 프레임
   it('앞 상태가 없으면 이동 이벤트가 없어도 새 상태의 자리에 선다', () => {
     const start = createState(STAGE)
     const moved = move(start, 'right').state
@@ -365,13 +365,13 @@ describe('playerFrame 늪', () => {
   })
 })
 
-// 한 층 위에서 떨어지며 버섯을 밟는다
+// 한 층 위에서 떨어지며 버섯을 밟는 판
 const FALL_HOP_STAGE: Stage = {
   ...HOP_STAGE,
   heights: [[1, 0, 0, 0, 0, 0, 0]],
 }
 
-// 한 층 위에서 떨어지며 버섯에 올라선다. 착지 칸이 없어 뛰지 못한다
+// 한 층 위에서 떨어지며 버섯에 올라서는 판, 착지 칸이 없어 못 뛰는 자리
 const FALL_STAND_STAGE: Stage = {
   ...HOP_STAGE,
   heights: [[1, 0, 0, -1, 0, 0, 0]],
@@ -386,7 +386,7 @@ describe('playerFrame 버섯', () => {
 
     expect(playerFrame(prev, state, events, 0).lift).toBe(0)
     expect(playerFrame(prev, state, events, 1).lift).toBe(0)
-    // 한 층(30)보다 높이 떠야 벽을 넘는 것이 보인다
+    // 벽을 넘는 것이 보이는 높이, 한 층(30) 이상
     expect(Math.max(...lifts)).toBeGreaterThan(TILE.layer)
   })
 
@@ -413,16 +413,16 @@ describe('playerFrame 버섯', () => {
     const last = angles.length - 1 - [...angles].reverse().findIndex((a) => a > 0)
 
     expect(angleAt(0)).toBe(0)
-    // 구르는 것은 처음 한 번뿐이고 갓에 올라선 뒤로는 멈춘다
+    // 구르기는 처음 한 번, 갓에 올라선 뒤로는 정지
     for (let i = 1; i <= last; i += 1) expect(angles[i]).toBeGreaterThan(angles[i - 1])
     expect(angles.slice(last + 1).every((a) => a === 0)).toBe(true)
-    // 갓에 닿기 직전에는 거의 다 돌아 있고, 그 지점은 이동의 앞부분이다
+    // 갓에 닿기 직전의 거의 다 돈 각도, 그 지점은 이동의 앞부분
     expect(angles[last]).toBeGreaterThan((Math.PI / 2) * 0.8)
     expect(last).toBeLessThan(40)
   })
 
   it('갓 위에서 출발하면 걸어 들어가는 칸이 없어 구르지 않는다', () => {
-    // 두 칸 뜀은 이미 갓에 올라선 채로 시작한다
+    // 이미 갓에 올라선 채 시작하는 두 칸 뜀
     const { prev, state, events } = hop({ ...HOP_STAGE, mushroom: ['#......'] })
 
     expect(state.player).toEqual({ x: 2, y: 0 })
@@ -432,7 +432,7 @@ describe('playerFrame 버섯', () => {
   it('한 층 위에서 떨어져 밟아도 갓에 닿을 때는 평지와 같은 자리다', () => {
     const flat = hop(HOP_STAGE)
     const fell = hop(FALL_HOP_STAGE)
-    // 갓을 딛기 전에 내려앉는다. 그러지 않으면 큐브가 한 층 떠서 갓과 벌어진다
+    // 갓을 딛기 전의 내려앉기, 안 하면 큐브가 한 층 떠서 갓과 벌어지는 탓
     const above = (r: ReturnType<typeof hop>, t: number) =>
       playerFrame(r.prev, r.state, r.events, t).level * TILE.layer +
       playerFrame(r.prev, r.state, r.events, t).lift
@@ -442,7 +442,7 @@ describe('playerFrame 버섯', () => {
   })
 
   it('착지 칸이 출발과 같은 높이여도 갓에 닿을 때는 붙는다', () => {
-    // 상자 위에서 낮은 갓을 딛고 같은 높이 칸에 내린다. 떨어지는 것이 아니라 건너가는 수다
+    // 상자 위에서 낮은 갓을 딛고 같은 높이 칸에 내리는 판, 낙하가 아닌 건너가는 수
     const same: Stage = {
       ...HOP_STAGE,
       heights: [[1, 0, 0, 0, 1, 0, 0]],
@@ -454,7 +454,7 @@ describe('playerFrame 버섯', () => {
 
     expect(prev.player).toEqual({ x: 1, y: 0 })
     expect(r.events.some((e) => e.type === 'fell')).toBe(false)
-    // 갓을 딛는 동안 큐브는 갓이 있는 칸의 높이에 내려서 있다
+    // 갓을 딛는 동안 큐브의 높이, 갓이 있는 칸의 높이
     for (let t = 0.3; t <= 0.5; t += 0.05) {
       const f = playerFrame(prev, r.state, r.events, t)
       expect(f.level).toBeCloseTo(0)
@@ -466,7 +466,7 @@ describe('playerFrame 버섯', () => {
       playerFrame(r.prev, r.state, r.events, t).level * TILE.layer +
       playerFrame(r.prev, r.state, r.events, t).lift
 
-    // 가속하며 내리면 갓에 닿기 직전까지 떠 있다가 뚝 떨어진다
+    // 가속하며 내리면 갓에 닿기 직전까지 떠 있다가 뚝 떨어지는 문제
     for (const stage of [FALL_HOP_STAGE, FALL_STAND_STAGE]) {
       const r = hop(stage)
       const path = Array.from({ length: 31 }, (_, i) => above(r, i / 100))
@@ -519,9 +519,9 @@ describe('playerFrame 버섯', () => {
     const xs = Array.from({ length: 201 }, (_, i) => playerFrame(prev, state, events, i / 200).x)
 
     for (let i = 1; i < xs.length; i += 1) expect(xs[i]).toBeGreaterThanOrEqual(xs[i - 1])
-    // 멈춰 있는 프레임은 두 갓 자리에만 있다
+    // 멈춰 있는 프레임은 두 갓 자리 한정
     const held = [...new Set(xs.filter((x, i) => i > 0 && x === xs[i - 1]))]
-    // 두 갓 자리(1, 3)뿐이고 사이 칸에서는 멈추지 않는다
+    // 두 갓 자리(1, 3) 한정, 사이 칸은 멈춤 없는 칸
     expect(held.sort((m, n) => m - n)).toEqual([1, 3])
     expect(playerFrame(prev, state, events, 1).x).toBe(5)
   })
@@ -532,7 +532,7 @@ describe('playerFrame 버섯', () => {
       .map((t) => playerFrame(prev, state, events, t))
       .reduce((best, frame) => (Math.abs(frame.x - 3) < Math.abs(best.x - 3) ? frame : best))
 
-    // 바닥에 닿지 않고 갓 높이를 스쳐 지나간다
+    // 바닥에 닿지 않고 갓 높이를 스쳐 지나가는 높이
     expect(middle.lift).toBeGreaterThan(10)
     expect(middle.lift).toBeLessThan(TILE.layer)
   })
@@ -544,9 +544,9 @@ describe('playerFrame 버섯', () => {
     expect(state.player).toEqual({ x: 1, y: 0 })
     expect(lift(0)).toBe(0)
     expect(lift(1)).toBe(MUSHROOM_STAND)
-    // 다 올라서기 전에는 평소 높이 갓을 딛는다
+    // 다 올라서기 전에는 평소 높이 갓
     expect(lift(0.5)).toBeGreaterThan(MUSHROOM_STAND)
-    // 튕겨 나갈 때처럼 갓보다 높이 떠오르지는 않는다
+    // 튕겨 나갈 때와 달리 갓보다 높이 뜨지 않는 높이
     for (let t = 0; t <= 1; t += 0.05) {
       expect(lift(t)).toBeLessThanOrEqual(CAP_TOP_IDLE)
     }
@@ -615,7 +615,7 @@ describe('playerFrame 숨기', () => {
       ],
     })
 
-    // 구르기를 마친 90도는 반듯하게 선 모습과 같다
+    // 반듯하게 선 모습과 같은 구르기를 마친 90도
     const tilt = (angle: number) => Math.abs(Math.sin(angle * 2))
     expect(tilt(playerFrame(hidden.prev, hidden.game, hidden.events, mid).angle)).toBeCloseTo(0)
     expect(

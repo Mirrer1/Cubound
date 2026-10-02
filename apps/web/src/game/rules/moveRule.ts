@@ -21,7 +21,7 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
   const fromHeight = standHeight(state, from)
   const toFloor = floorAt(state, to)
 
-  // 버섯에 올라선 큐브는 튕겨 나가는 수밖에 없다
+  // 버섯에 올라선 큐브의 유일한 수, 튕겨 나가기
   if (isMushroom(state, from)) {
     const hopped = hop(state, from, direction)
     return hopped ? spring(state, hopped, direction) : blocked
@@ -54,10 +54,9 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
   return arrive(climbing, to, direction, { type: 'climbed', from, to, via: 'box' }, pre)
 }
 
-// 이동으로 센 수마다 바람이 불고 무너지는 칸이 닳고 발판이 한 칸 가고 덩굴이 뻗고 씨앗이 자라고 문과 엘리베이터 발판이 따라 바뀐다
 const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveResult => {
   const { state: after, events: windEvents } = blow(acted)
-  // 내 이동으로 바뀐 칸과 바람에 밀려 바뀐 칸을 따로 본다. 밟고 바로 밀려 떠난 칸도 한 번 닳는다
+  // 내 이동과 바람을 따로 보는 이유, 밟고 바로 바람에 밀려 떠난 칸도 닳는 규칙
   const { state: stepped, events: stepEvents } = crumble(before, acted, after)
   const { state: crumbled, events: windCrackEvents } =
     after === acted ? { state: stepped, events: [] } : crumble(acted, after, stepped)
@@ -99,7 +98,7 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
   if (state.cleared) return { state, events: [] }
   if (movesLeft(state) === 0) return limitBlocked(state, direction, 'moves')
 
-  // 버둥은 방향이 없는 수라 방향 제한을 보지 않고 상자와 사다리도 건드리지 않는다
+  // 방향이 없는 수인 버둥, 방향 제한과 상자와 사다리는 무관
   if (struggling(state)) {
     const struggled: GameState = {
       ...state,
@@ -113,11 +112,11 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
   if (limitedDir && dirLeft(state) === 0) return limitBlocked(state, direction, 'dir')
 
   const result = moveOnce(state, direction)
-  // 타는 횟수를 다 쓰면 올라타는 이동만 막는다
+  // 타는 횟수를 다 쓴 뒤 막는 이동은 올라타기 하나
   const boarded = boardsTram(state, result.state)
   if (boarded && ridesLeft(state) === 0) return limitBlocked(state, direction, 'rides')
 
-  // 발판 위에서 막힌 이동은 타고 가겠다는 뜻이고 발판 길 쪽으로 막힌 이동은 기다리겠다는 뜻이라 제자리에 서서 이동 1회로 센다
+  // 발판 위나 발판 길 쪽으로 막힌 이동은 타거나 기다리는 수, 제자리에서 이동 1회
   const forTram =
     result.state === state &&
     (tramLevelAt(state, state.player) !== null ||
@@ -130,7 +129,7 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
       ? { ...result, state: { ...result.state, rides: result.state.rides + 1 } }
       : result
 
-  // 이동 수로 세는 수면 그 방향을 쓴 것이다
+  // 이동 수로 세는 수는 방향 사용 1회
   const spent: GameState = limitedDir
     ? { ...acted.state, dirUses: acted.state.dirUses + 1 }
     : acted.state

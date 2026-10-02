@@ -15,7 +15,7 @@ interface Shape {
   fill: string
 }
 
-// 한 번에 같이 흐려지고 같이 커지는 도형 묶음. scale은 origin을 중심으로 한다
+// 한 번에 같이 흐려지고 같이 커지는 도형 묶음, scale의 중심은 origin
 interface Layer {
   key: string
   shapes: Shape[]
@@ -53,13 +53,13 @@ const BUD: Faces = {
 
 // 남은 수마다의 나무 키 px
 const TREE_HEIGHT: Record<number, number> = { 4: 7, 3: 12, 2: 21, 1: 28 }
-// 말뚝은 앞 모서리에 한 줄로 선다. 간격은 px이다
+// 앞 모서리에 한 줄로 서는 말뚝, gap은 px
 const STAKE = { spot: 0.34, gap: 8, size: 0.04, height: 6 }
-// 기둥 줄기는 오른쪽 옆면에 붙고 잎은 층을 따라 번갈아 난다. 새 잎은 줄기가 grow px 더 내려오는 동안 드러난다
+// 오른쪽 옆면에 붙는 기둥 줄기와 층을 따라 번갈아 나는 잎, grow는 새 잎이 드러나는 줄기 길이 px
 const STALK = { half: 0.045, leafStart: 9, leafGap: 15, leafEnd: 5, grow: 6 }
-// 나타나는 것은 이 크기에서 커지고 사라지는 것은 이 크기로 줄어든다
+// 나타날 때 시작하고 사라질 때 끝나는 크기
 const SMALL = 0.6
-// 나타남과 사라짐이 겹치는 몫. 들어서는 쪽이 먼저 짙어지고 떠나는 쪽이 뒤에 옅어진다
+// 나타남과 사라짐이 겹치는 몫, 들어서는 쪽이 먼저 짙어지는 순서
 const FADE = 0.6
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
@@ -69,14 +69,14 @@ const fadeOut = (p: number) => 1 - clamp01((p - (1 - FADE)) / FADE)
 
 const pointsOf = (list: Corner[]) => list.map(([a, b]) => `${a},${b}`).join(' ')
 
-// 칸 윗면 중심 (x, y)에서 칸 단위 (u, v)만큼 가고 z px 올라간 화면 점. tilt가 있으면 기운 큐브 윗면을 따라 옮긴다
+// 칸 윗면 중심 (x, y)에서 칸 단위 (u, v)만큼 가고 z px 올라간 화면 점, tilt가 있으면 기운 큐브 윗면 기준
 const at = (x: number, y: number, u: number, v: number, z: number, tilt?: TopTilt): Corner => {
   const d = isoDelta(u, v)
   const t = tilt ? tilt(u, v, z) : { x: 0, y: 0 }
   return [x + d.x + t.x, y + d.y - z + t.y]
 }
 
-// 칸 단위 범위의 직육면체. z는 윗면 높이이고 depth만큼 아래로 옆면이 내려온다
+// 칸 단위 범위의 직육면체, z는 윗면 높이, depth는 옆면 길이
 const cuboid = (
   x: number,
   y: number,
@@ -100,7 +100,7 @@ const cuboid = (
   ]
 }
 
-// 가운데에 선 정사각 블록. size는 칸 단위 폭이고 bottom은 밑면 높이다
+// 가운데에 선 정사각 블록, size는 칸 단위 폭, bottom은 밑면 높이
 const block = (
   x: number,
   y: number,
@@ -125,7 +125,7 @@ const soilShapes = (sx: number, sy: number) => [
   ...cuboid(sx, sy, [-0.05, 0.05, -0.05, 0.05], 2 + SAPLING.soil, 2, SEED),
 ]
 
-// 남은 수가 줄수록 싹이 떡잎, 줄기, 어린 나무로 자란다
+// 남은 수가 줄수록 떡잎, 줄기, 어린 나무로 자라는 싹
 const treeShapes = (sx: number, sy: number, left: number) => {
   const g = SAPLING.soil
   const stem = (from: number, to: number) =>
@@ -160,8 +160,7 @@ const treeShapes = (sx: number, sy: number, left: number) => {
           ]
 }
 
-// 한 단계 자라는 나무는 떠나는 모습이 들어서는 키로 늘고 들어서는 모습이 떠나던 키에서 커져 한 그루로 보인다.
-// 심거나 솟아 사라지거나 보스 기둥에 새 싹이 설 때는 작은 크기에서 나타나고 작아지며 사라진다
+// 한 단계 자라는 나무는 두 모습이 서로의 키로 바뀌는 한 그루, 심기와 솟기와 보스 기둥 새 싹은 작은 크기에서 나타나고 작아지며 사라지는 모습
 const treeLayers = (x: number, y: number, tree: number, next: number, p: number): Layer[] => {
   const spot = soilSpot(x, y)
   const [sx, sy] = spot
@@ -211,7 +210,7 @@ const treeLayers = (x: number, y: number, tree: number, next: number, p: number)
   return [soil, ...leaving, ...coming]
 }
 
-// count개 말뚝을 가운데 맞춰 세운다. shift는 가운데 맞춤을 옮긴 칸 수, grow는 키 비율이다
+// 가운데 맞춘 count개 말뚝, shift는 가운데 맞춤을 옮긴 칸 수, grow는 키 비율
 const stakeRow = (
   x: number,
   y: number,
@@ -228,7 +227,7 @@ const stakeRow = (
   }).flat()
 }
 
-// 하나 줄 때는 남는 말뚝이 가운데로 모이고 끝의 하나가 낮아지며 사라진다. 그 밖에는 앞 줄이 낮아지고 새 줄이 차오른다
+// 하나 줄 때는 가운데로 모이는 남은 말뚝과 낮아지며 사라지는 끝 말뚝, 그 밖에는 낮아지는 앞 줄과 차오르는 새 줄
 const stakeLayers = (x: number, y: number, stakes: number, next: number, p: number): Layer[] => {
   const origin = at(x, y, STAKE.spot, STAKE.spot, 0)
   const layer = (key: string, shapes: Shape[], opacity: number): Layer => ({
@@ -272,7 +271,7 @@ const leafLayers = (x: number, y: number, shown: number): Layer[] => {
   ]
 }
 
-// 보스 기둥의 오른쪽 옆면을 오르는 줄기와 잎. 멈추면 꼭대기 모서리가 봉오리로 닫힌다
+// 보스 기둥의 오른쪽 옆면을 오르는 줄기와 잎, 멈추면 봉오리로 닫히는 꼭대기 모서리
 const stalkLayers = (x: number, y: number, level: number, bud: number): Layer[] => {
   const height = level * TILE.layer
   const a = at(x, y, 0.5, -SAPLING.spot + STALK.half, 0)
@@ -333,13 +332,13 @@ const stalkLayers = (x: number, y: number, level: number, bud: number): Layer[] 
 
 interface BoardSeedProps {
   x: number
-  y: number // 칸 윗면 중심. 들고 있는 씨앗은 큐브 윗면 중심
+  y: number // 칸 윗면 중심, 들고 있는 씨앗은 큐브 윗면 중심
   part: 'seed' | 'tree' | 'stakes' | 'leaves' | 'stalk'
   from?: number // 사라지는 나무 단계나 말뚝 수
   to?: number // 들어서는 나무 단계나 말뚝 수
-  p?: number // from에서 to로 바뀐 정도. 잎과 봉오리는 드러난 정도
+  p?: number // from에서 to로 바뀐 정도, 잎과 봉오리는 드러난 정도
   level?: number // 기둥 층 수
-  tilt?: TopTilt // 들고 있는 씨앗이 기운 큐브를 따라 기울 때
+  tilt?: TopTilt // 들고 있는 씨앗이 따라 기우는 큐브 윗면
 }
 
 const BoardSeed = ({ x, y, part, from = 0, to = 0, p = 1, level = 0, tilt }: BoardSeedProps) => {

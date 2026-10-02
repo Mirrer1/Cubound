@@ -18,7 +18,7 @@ const STAGE: Stage = {
   entities: [],
 }
 
-// 상자를 (1,2)로 밀면 (2,1)을 메울 수단이 없어져 목표에 갈 수 없다
+// 상자를 (1,2)로 밀면 (2,1)을 메울 수단이 없어 막히는 판
 const BOX_TRAP: Stage = {
   version: 1,
   id: 'test-dead-end',
@@ -325,7 +325,7 @@ describe('solve 늪', () => {
   })
 })
 
-// 늪을 지나는 짧은 길과 늪이 없는 먼 길이 같은 갈림목에서 만난다
+// 늪을 지나는 짧은 길과 늪이 없는 먼 길이 같은 갈림목에서 만나는 판
 const DEEP_SWAMP_STAGE: Stage = {
   version: 1,
   id: 'test-swamp-deepen-solver',
@@ -350,7 +350,7 @@ describe('deadEnds 깊어지는 늪', () => {
     expect(result.status).toBe('ok')
     if (result.status !== 'ok') return
     expect(result.depth).toBe(20)
-    // 되돌릴 수 없는 것이 없는 맵이라 구조적으로는 막히지 않고 수에만 걸린다
+    // 되돌릴 수 없는 것이 없는 맵, 구조적 막힘 없이 수에만 걸리는 판
     expect(result.dead).toBe(0)
     expect(result.beyond).toBeGreaterThan(0)
   })
@@ -397,7 +397,7 @@ const MUSHROOM_STAGE: Stage = {
   mushroom: ['......', '.#....', '......'],
 }
 
-// (2,1) 버섯을 밟아야 끝나서 구멍을 지나쳐 다녀와야 한다
+// (2,1) 버섯을 밟아야 끝나 구멍을 지나쳐 다녀오는 판
 const WITHER_STAGE: Stage = {
   ...MUSHROOM_STAGE,
   id: 'test-solver-wither',
@@ -433,7 +433,7 @@ describe('solve 버섯', () => {
   })
 })
 
-// 뿌리에 선 채 시작해 덩굴이 세 칸 다 자라야 건넌다
+// 뿌리에 선 채 시작해 덩굴이 세 칸 다 자라야 건너는 판
 const VINE_STAGE: Stage = {
   version: 1,
   id: 'test-solver-vine',
@@ -480,8 +480,8 @@ describe('solve 덩굴', () => {
   })
 })
 
-// 한 층 내려선 (2, 0)에 심고 올라선 채 솟아야 구멍에 닿는다. 나갈 길이 없고 발판은 한 층 높아 못 타서
-// 발판 길 쪽으로 밀어 제자리에서 네 수를 기다린다
+// 한 층 내려선 (2, 0)에 심고 올라선 채 솟아야 구멍에 닿는 판, 나갈 길도 탈 발판도 없는 자리
+// 발판 길 쪽으로 밀어 제자리에서 기다리는 네 수
 const SEED_STAGE: Stage = {
   version: 1,
   id: 'test-solver-seed',
@@ -540,7 +540,7 @@ describe('solve 씨앗', () => {
   })
 
   it('콩나무는 남기고 찾아 두 번 솟은 칸에서 두 층 높은 구멍으로 간다', () => {
-    // (2, 1)에 위쪽을 보고 심는다. 발판 길을 세 칸으로 늘려 솟은 칸 위에서 이어 기다릴 수 있다
+    // (2, 1)에 위쪽을 보고 심는 판, 세 칸 발판 길로 솟은 칸 위에서도 기다리는 자리
     const stage: Stage = {
       ...SEED_STAGE,
       heights: [
@@ -583,7 +583,7 @@ describe('solve 씨앗', () => {
 
 describe('solve 바람', () => {
   it('바람에 밀려 같은 칸을 다시 지나도 남은 수가 다르면 다른 상태로 본다', () => {
-    // 네 수째에 왼쪽으로 한 칸 밀려 두 수를 더 걷는다
+    // 네 수째에 왼쪽으로 한 칸 밀려 두 수를 더 걷는 판
     const stage: Stage = {
       version: 1,
       id: 'test-wind',

@@ -29,8 +29,8 @@ type Place = 'top' | 'under' | 'bottom' | 'left' | 'right'
 
 const ELEMENT_PADDING = 8
 const CARD_SPACE = 210 // 카드가 들어갈 위아래 최소 공간 px
-const NEAR_SPACE = 240 // 대상 쪽에 놓을 때 필요한 공간 px. 카드 높이와 화면 가장자리 여백
-const SIDE_SPACE = 320 // 카드가 들어갈 좌우 최소 공간 px. 카드 300과 가장자리 여백 16
+const NEAR_SPACE = 240 // 대상 쪽에 놓을 때 필요한 공간 px, 카드 높이와 화면 가장자리 여백
+const SIDE_SPACE = 320 // 카드가 들어갈 좌우 최소 공간 px, 카드 300과 가장자리 여백 16
 const UNDER_GAP = 12 // under일 때 대상과 카드 사이 px
 
 const PLACES: Record<Place, string> = {
@@ -41,8 +41,8 @@ const PLACES: Record<Place, string> = {
   right: 'inset-y-4 right-4 w-[300px]',
 }
 
-// 위아래가 좁으면 좌우로 비켜 놓아 비추는 대상을 가리지 않는다.
-// 다만 헤더에 붙은 요소는 아래 띠로 보내면 화면 반대편이 되어 대상 바로 아래에 놓는다
+// 위아래가 좁으면 대상을 가리지 않게 좌우로 비켜 놓는 자리
+// 헤더에 붙은 요소는 예외, 아래 띠가 화면 반대편이라 대상 바로 아래
 const placeFor = (hole: Hole, width: number, height: number, element: boolean): Place => {
   const above = hole.top
   const below = height - hole.top - hole.height
@@ -54,7 +54,7 @@ const placeFor = (hole: Hole, width: number, height: number, element: boolean): 
   return place === 'bottom' && element && above < NEAR_SPACE ? 'under' : place
 }
 
-// under는 가로로 띠라서 넓은 화면에서 카드가 가운데로 간다. 대상이 치우쳐 있으면 그쪽으로 붙인다
+// 가로 띠인 under의 카드 정렬, 대상이 치우쳐 있으면 그쪽
 const alignFor = (hole: Hole, width: number) => {
   const center = hole.left + hole.width / 2
   if (center > width * 0.6) return 'justify-end'
@@ -83,12 +83,12 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
 
   useFocusTrap(cardRef)
 
-  // 단계마다 넘기기 버튼에 포커스를 둬서 키보드로 이어서 넘길 수 있게 한다
+  // 키보드로 이어서 넘기는 단계마다의 넘기기 버튼 포커스
   useEffect(() => {
     nextRef.current?.focus()
   }, [step])
 
-  // 대상은 카메라 이동과 화면 크기 변화로 움직여서 매 프레임 실제 위치를 잰다
+  // 카메라 이동과 화면 크기 변화로 움직이는 대상, 매 프레임 재는 실제 위치
   useEffect(() => {
     let frame = 0
     const measure = () => {
@@ -122,7 +122,7 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
     return () => cancelAnimationFrame(frame)
   }, [containerRef, targetName])
 
-  // Enter와 Space로 다음 단계로 넘기고 Esc로 건너뛴다. 카드 안에 포커스가 있으면 버튼이 맡는다
+  // Enter와 Space는 다음 단계, Esc는 건너뛰기, 카드 안에 포커스가 있으면 버튼 몫
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {

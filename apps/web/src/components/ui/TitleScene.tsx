@@ -16,7 +16,7 @@ interface TitleSceneProps {
 }
 
 const TitleScene = ({ className, opacity }: TitleSceneProps) => {
-  // 반투명 대신 배경색을 섞어 흐리게 한다
+  // 반투명 대신 배경색을 섞은 흐린 색
   const fade = (color: string) =>
     `color-mix(in srgb, ${color}, var(--color-base-bg) ${Math.round((1 - opacity) * 100)}%)`
   const cells = HEIGHTS.flatMap((row, y) => row.map((h, x) => ({ x, y, h }))).sort(

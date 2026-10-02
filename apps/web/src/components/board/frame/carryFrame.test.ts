@@ -18,7 +18,7 @@ import { TILE } from '@/game/iso'
 import { createState, move } from '@/game/rules'
 import type { GameEvent, Stage } from '@/game/types'
 
-// 얼음을 타고 여러 칸 미끄러져 사다리가 놓인 칸에 멈춘다
+// 얼음을 타고 여러 칸 미끄러져 사다리가 놓인 칸에 멈추는 판
 const LADDER_ICE_STAGE: Stage = {
   version: 1,
   id: 'test-ladder-ice',

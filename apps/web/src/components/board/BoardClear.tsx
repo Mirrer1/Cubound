@@ -26,9 +26,9 @@ interface BoardClearProps {
 const BoardClear = ({ x, y }: BoardClearProps) => {
   const hw = TILE.width / 2
   const hh = TILE.width / 4
-  // 구멍 아래로 들어간 부분을 가린다
+  // 구멍 아래로 들어간 부분을 가리는 자르기
   const clip = `${x - 4000},${y} ${x - hw},${y} ${x},${y + hh} ${x + hw},${y} ${x + 4000},${y} ${x + 4000},${y - 4000} ${x - 4000},${y - 4000}`
-  // 고리는 제 자리에서 커져야 해서 자기 영역 한가운데를 기준으로 삼는다
+  // 고리가 제 자리에서 커지는 기준, 자기 영역 한가운데
   const origin = { transformBox: 'fill-box' as const, transformOrigin: 'center' }
 
   return (

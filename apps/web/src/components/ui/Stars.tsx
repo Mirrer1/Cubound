@@ -2,7 +2,7 @@ import { useText } from '@/hooks/useText'
 
 interface StarsProps {
   count: number
-  size?: number // 넘기지 않으면 className의 글자 크기를 따른다
+  size?: number // 넘기지 않으면 className의 글자 크기
   tone?: 'light' | 'dark'
   className?: string
 }

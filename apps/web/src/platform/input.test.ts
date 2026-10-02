@@ -75,7 +75,7 @@ describe('directionFromSwipe', () => {
     expect(directionFromSwipe(10, -10, true)).toBeNull()
   })
 
-  // 폰에서 잰 짧게 튕긴 스와이프. 24px라 무시됐다
+  // 폰에서 잰 짧게 튕긴 스와이프, 무시되던 24px
   it('손을 뗄 때는 짧게 튕긴 스와이프도 받는다', () => {
     expect(directionFromSwipe(-7, -23, true)).toBe('left')
     expect(directionFromSwipe(-7, -23)).toBeNull()
@@ -100,7 +100,7 @@ describe('directionFromSwipe', () => {
     expect(directionFromSwipe(40, 12)).toBe('right')
   })
 
-  // 폰에서 잰 왼쪽 위 스와이프. 엄지가 처지며 출발해 63px에서 가로 아래 5도였다가 손을 뗄 때 위로 8도였다
+  // 폰에서 잰 왼쪽 위 스와이프, 63px에서 가로 아래 5도, 손을 뗄 때 위로 8도
   it('처지며 출발한 얕은 스와이프는 손을 뗄 때 전체 방향으로 받는다', () => {
     expect(directionFromSwipe(-63, 5)).toBeNull()
     expect(directionFromSwipe(-97, -14, true)).toBe('left')

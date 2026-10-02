@@ -35,7 +35,7 @@ describe('스테이지 데이터', () => {
     expect(result.ok ? [] : result.errors).toEqual([])
   })
 
-  // 10월드 네 요소 판은 탐색이 5초 안팎이라 기본 제한보다 넉넉히 둔다
+  // 탐색이 5초 안팎인 10월드 네 요소 판에 맞춘 넉넉한 시간 제한
   it.each(STAGES)(
     '%s는 풀 수 있고 best가 최소 이동 수와 같다',
     (_, stage) => {

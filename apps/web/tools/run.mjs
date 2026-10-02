@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import { createServer } from 'vite'
 
-// TypeScript로 쓴 도구를 Vite로 불러 실행한다. 게임 코드를 그대로 import하기 위함
+// TypeScript 도구를 Vite로 불러 실행, 게임 코드를 그대로 import하는 방법
 const server = await createServer({
   configFile: false,
   logLevel: 'error',

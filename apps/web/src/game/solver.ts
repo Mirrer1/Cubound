@@ -15,8 +15,8 @@ const points = (list: Point[]) =>
     .sort()
     .join(' ')
 
-// 보스 제한은 빼고 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람은 남긴다.
-// 제한이 너무 작을 때도 진짜 최소 이동 수가 나오고 늪에 드는 수와 클리어 조건은 그대로다
+// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람은 유지
+// 제한이 너무 작을 때도 진짜 최소 이동 수를 얻는 방법
 const forSearch = (stage: Stage): Stage => {
   const { swampDeepen, mushroomWither, vineStop, seedGrow, wind } = stage.rules ?? {}
   return {
@@ -28,13 +28,13 @@ const forSearch = (stage: Stage): Stage => {
   }
 }
 
-// 게임 결과가 같은 상태는 같은 키. deep이 거짓이면 늪 깊이를 뺀다
+// 게임 결과가 같은 상태는 같은 키, deep이 거짓이면 늪 깊이 제외
 const stateKey = (state: GameState, deep = true) => {
   const filled = state.heights.flatMap((row, y) =>
     row.flatMap((h, x) => (h === state.stage.heights[y][x] ? [] : [{ x, y }])),
   )
   const leaning = state.leaningLadders.map((l) => `${l.x},${l.y},${l.direction}`).sort()
-  // 남은 횟수. 무너져 사라진 칸은 '-', 상자로 메운 칸은 '+'
+  // 남은 횟수, 무너져 사라진 칸은 '-', 상자로 메운 칸은 '+'
   const cracks = state.cracks.map(({ x, y, left }) =>
     left >= 0 ? left : state.heights[y][x] < 0 ? '-' : '+',
   )
@@ -47,14 +47,13 @@ const stateKey = (state: GameState, deep = true) => {
     leaning.join(' '),
     state.carrying === 'ladder',
     ...(cracks.length > 0 ? [cracks.join('')] : []),
-    // 늪에 선 같은 자리라도 버둥거린 수가 다르면 다른 상태다
+    // 늪에 선 같은 자리라도 버둥거린 수가 다르면 다른 상태
     ...(state.stage.swamp ? [`${state.struggles}`, points(state.swamps)] : []),
-    // 시드는 판에서만 버섯이 줄어 상태가 달라진다
+    // 버섯이 줄어 상태가 갈리는 것은 시드는 판 한정
     ...(state.stage.rules?.mushroomWither ? [points(state.mushrooms)] : []),
-    // 자란 길이는 메운 칸에 들어 있어 굳는 자리에서만 굳었는지를 더한다
+    // 자란 길이는 메운 칸에 들어 있어 굳는 자리에서만 더하는 굳음 여부
     ...(state.stage.rules?.vineStop ? [state.vines.map((v) => (v.stopped ? 1 : 0)).join('')] : []),
-    // 같은 칸에 여러 번 심으면 메운 칸 자리만으로는 높이가 갈리지 않는다.
-    // 심은 칸은 솟기까지 남은 수가 달라 제자리에서 기다린 수도 다른 상태다
+    // 같은 칸에 여러 번 심으면 메운 칸 자리만으로는 갈리지 않는 높이, 제자리에서 기다린 수도 다른 상태
     ...(state.stage.entities.some((e) => e.type === 'seed')
       ? [
           state.carrying === 'seed',
@@ -63,9 +62,9 @@ const stateKey = (state: GameState, deep = true) => {
           state.planted.map(({ x, y, left, rises }) => `${x},${y},${left},${rises}`).join(' '),
         ]
       : []),
-    // 바람은 센 수로 불어 같은 자리라도 다음 바람까지 남은 수가 다르면 다른 상태다
+    // 같은 자리라도 다음 바람까지 남은 수가 다르면 다른 상태
     ...(state.stage.rules?.wind ? [`${state.moves % WIND_EVERY}`] : []),
-    // 깊어지는 늪은 빠진 횟수에 따라 앞으로 드는 수가 다르다
+    // 깊어지는 늪은 빠진 횟수에 따라 달라지는 앞으로 드는 수
     ...(deep && state.stage.rules?.swampDeepen ? [`${state.sinks}`] : []),
     ...(state.trams.length > 0
       ? [state.trams.map(({ at, dir }) => `${at}${dir > 0 ? '+' : '-'}`).join(' ')]
@@ -73,7 +72,7 @@ const stateKey = (state: GameState, deep = true) => {
   ].join('|')
 }
 
-// 너비 우선 탐색으로 최소 이동 경로를 찾는다
+// 너비 우선 탐색으로 찾는 최소 이동 경로
 export const solve = (stage: Stage, { maxStates = 1_000_000 } = {}): SolveResult => {
   const start = createState(forSearch(stage))
   const seen = new Map<string, { parent: string | null; direction: Direction | null }>([
@@ -115,8 +114,8 @@ export const solve = (stage: Stage, { maxStates = 1_000_000 } = {}): SolveResult
   return { status: 'unsolvable' }
 }
 
-// 깊어지는 늪은 빠진 횟수가 상태에 남아 늪을 드나들수록 끝없이 갈라진다. 펼칠 이동 수를 막는다.
-// 보스 이동 제한이 있으면 그 너머는 어차피 못 깨는 수고 없으면 ★★ 기준까지만 본다
+// 펼칠 이동 수 상한, 깊어지는 늪은 늪을 드나들수록 상태가 끝없이 갈라지는 탓
+// 보스 이동 제한이 있으면 그 제한, 없으면 ★★ 기준
 const searchDepth = (stage: Stage): number => {
   if (!stage.rules?.swampDeepen) return Infinity
 
@@ -130,7 +129,7 @@ const searchDepth = (stage: Stage): number => {
 export type PushResult =
   { status: 'solved'; pushes: number } | { status: 'unsolvable' } | { status: 'limit' }
 
-// 미는 이동만 한 걸음으로 치는 너비 우선 탐색으로 가장 적게 미는 풀이를 찾는다
+// 미는 이동만 한 걸음으로 치는 너비 우선 탐색, 가장 적게 미는 풀이
 export const minPushes = (stage: Stage, { maxStates = 1_000_000 } = {}): PushResult => {
   const deepest = searchDepth(stage)
   const start = createState(forSearch(stage))
@@ -152,7 +151,7 @@ export const minPushes = (stage: Stage, { maxStates = 1_000_000 } = {}): PushRes
           const { state: moved } = move(state, direction)
           if (moved === state || moved.moves > deepest) continue
 
-          // 민 이동으로만 닿는 상태는 이번 걸음의 밀지 않는 길을 다 훑은 뒤에 판단한다
+          // 민 이동으로만 닿는 상태의 판단은 이번 걸음의 밀지 않는 길을 다 훑은 뒤
           if (moved.pushes > state.pushes) {
             pushedTo.push(moved)
             continue
@@ -186,11 +185,11 @@ interface Explored {
   next: Map<string, string[]>
   depth: Map<string, number>
   cleared: Set<string>
-  deepest: number // 펼친 이동 수 상한. 막은 것이 없으면 Infinity
-  plain: Map<string, string> // 늪 깊이를 뺀 키. 상한을 둔 판에서만 채운다
+  deepest: number // 펼친 이동 수 상한, 막은 것이 없으면 Infinity
+  plain: Map<string, string> // 늪 깊이를 뺀 키, 상한을 둔 판에서만 채우는 값
 }
 
-// 시작에서 닿는 모든 상태를 펼친다. 클리어한 상태와 상한에 닿은 상태는 더 두지 않는다
+// 시작에서 닿는 모든 상태, 클리어한 상태와 상한에 닿은 상태는 더 펼치기 제외
 const explore = (stage: Stage, maxStates: number): Explored | null => {
   const start = createState(forSearch(stage))
   const startKey = stateKey(start)
@@ -238,7 +237,7 @@ const explore = (stage: Stage, maxStates: number): Explored | null => {
   return found
 }
 
-// 목표에서 역방향으로 훑어 상태마다 목표까지 남은 최소 이동 수를 구한다. 갈 수 없으면 빠진다
+// 목표에서 역방향으로 훑은 상태마다 목표까지 남은 최소 이동 수, 갈 수 없는 상태는 제외
 const toGoal = (found: Explored) => {
   const back = new Map<string, string[]>()
   for (const [key, links] of found.next) {
@@ -267,7 +266,7 @@ const toGoal = (found: Explored) => {
   return left
 }
 
-// 늪 깊이를 뺀 상태로 묶어 목표에 닿을 수 있는지 본다. 깊이는 드는 수만 늘려서 길이 남았느냐와 무관하다
+// 늪 깊이를 뺀 상태로 묶어 보는 목표 도달 여부, 깊이는 드는 수만 늘리는 값
 const canReach = (found: Explored) => {
   const back = new Map<string, string[]>()
   for (const [key, links] of found.next) {
@@ -304,7 +303,7 @@ export type DeadEndResult =
       states: number
       dead: number // 목표에 아예 갈 수 없는 상태
       earliest: number | null // 가장 빨리 막히는 이동 수
-      beyond: number // 상한 안에 목표까지 못 가는 상태. dead를 포함한다
+      beyond: number // 상한 안에 목표까지 못 가는 상태, dead 포함
       beyondEarliest: number | null
       depth: number // 펼친 이동 수 상한
     }
@@ -313,14 +312,14 @@ export type DeadEndResult =
 const earliestOf = (keys: string[], found: Explored) =>
   keys.reduce<number | null>((min, key) => Math.min(min ?? Infinity, found.depth.get(key)!), null)
 
-// 목표에 갈 수 없게 된 상태를 센다. 펼칠 이동 수를 막은 판은 상한에 걸린 것도 따로 센다
+// 목표에 갈 수 없게 된 상태 수, 펼칠 이동 수를 막은 판은 상한에 걸린 것도 따로 집계
 export const deadEnds = (stage: Stage, { maxStates = 1_000_000 } = {}): DeadEndResult => {
   const found = explore(stage, maxStates)
   if (!found) return { status: 'limit' }
 
   const left = toGoal(found)
   const good = Number.isFinite(found.deepest) ? canReach(found) : null
-  // 펼치지 않은 마지막 깊이 상태는 길이 남았는지 알 수 없어 구조적 막힘으로 세지 않는다
+  // 펼치지 않은 마지막 깊이 상태는 길을 알 수 없어 구조적 막힘에서 제외
   const stuck = found.keys.filter((key) =>
     good ? found.next.has(key) && !good.has(found.plain.get(key)!) : !left.has(key),
   )
@@ -342,7 +341,7 @@ export const deadEnds = (stage: Stage, { maxStates = 1_000_000 } = {}): DeadEndR
 
 export type CountResult = { status: 'ok'; count: number } | { status: 'limit' }
 
-// 최소 이동 수와 같은 길이의 풀이가 몇 가지인지 센다
+// 최소 이동 수와 같은 길이의 풀이 가짓수
 export const solutionCount = (stage: Stage, { maxStates = 1_000_000 } = {}): CountResult => {
   const found = explore(stage, maxStates)
   if (!found) return { status: 'limit' }
@@ -366,7 +365,7 @@ export const solutionCount = (stage: Stage, { maxStates = 1_000_000 } = {}): Cou
   }
 }
 
-// maxMoves 안에 목표까지 갈 수 있는 상태를 센다. 제한이 실수를 만회할 자리를 얼마나 주는지 보는 값이다
+// maxMoves 안에 목표까지 갈 수 있는 상태 수, 제한이 실수를 만회할 자리를 얼마나 주는지 보는 값
 export const statesWithin = (
   stage: Stage,
   maxMoves: number,
@@ -385,6 +384,6 @@ export const statesWithin = (
 
 export const moveLimit = (best: number) => best + Math.ceil(best * SLACK)
 
-// ★★ 기준은 스테이지가 정한 보스 이동 제한이고 없으면 best로 계산한 여유다
+// ★★ 기준은 스테이지의 보스 이동 제한, 없으면 best로 계산한 여유
 export const stars = (moves: number, best: number, limit = moveLimit(best)) =>
   moves <= best ? 3 : moves <= limit ? 2 : 1

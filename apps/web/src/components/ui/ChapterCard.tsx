@@ -19,7 +19,7 @@ const LABELS: Record<ChapterCardState, string> = {
   now: 'NOW',
 }
 
-// 그 장의 세계 색으로 칠한 작은 아이소메트릭 조각. 칸 넷이 체크무늬로 놓인다
+// 그 장의 세계 색으로 칠한 작은 아이소메트릭 조각, 체크무늬로 놓인 칸 넷
 const PATCH = [
   [0, 0],
   [1, 0],
@@ -33,7 +33,7 @@ const diamond = (tx: number, ty: number) => {
   return `${x},${y - 13} ${x + 26},${y} ${x},${y + 13} ${x - 26},${y}`
 }
 
-// 조각 위에 올라선 큐브. 칸 색 둘이 거의 같아서 여기가 눈이 멈추는 자리가 된다
+// 조각 위에 올라선 큐브, 칸 색 둘이 거의 같아 눈이 멈추는 자리
 const CUBE = { half: 15, lift: 15 }
 const CX = 52
 const CY = 39 - CUBE.lift

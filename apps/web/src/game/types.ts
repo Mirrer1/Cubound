@@ -14,7 +14,7 @@ export type Entity = (
   | { type: 'ladder' }
   | { type: 'seed' }
   | { type: 'tram'; id: string; level: number; cells: Point[]; dir: 1 | -1 } // x, y는 cells 안의 시작 자리
-  | { type: 'vine'; id: string; cells: Point[] } // x, y는 뿌리 칸이고 cells는 자랄 순서
+  | { type: 'vine'; id: string; cells: Point[] } // x, y는 뿌리 칸, cells는 자랄 순서
 ) &
   Point
 
@@ -23,33 +23,33 @@ export type Tram = Extract<Entity, { type: 'tram' }>
 export type Limit = 'moves' | 'pushes' | 'climbs' | 'rides' | 'dir'
 
 export interface StageRules {
-  moveLimit?: number // 보스 이동 제한, 없으면 제한 없음
-  pushLimit?: number // 보스 밀기 제한, 없으면 제한 없음
-  climbLimit?: number // 보스 올라가기 제한, 없으면 제한 없음
-  rideLimit?: number // 보스 타는 횟수 제한, 없으면 제한 없음
-  dirLimit?: { dir: Direction; count: number } // 보스 방향 제한, 없으면 제한 없음
-  swampDeepen?: boolean // 늪에 빠질수록 버둥이 한 수씩 는다
-  mushroomWither?: boolean // 밟힌 버섯이 시들고 맵의 버섯을 다 밟아야 클리어된다
-  vineStop?: boolean // 큐브가 밟은 덩굴이 그 길이로 굳는다
-  seedGrow?: boolean // 솟은 씨앗 칸이 4수마다 한 층씩 세 층까지 솟는다
+  moveLimit?: number
+  pushLimit?: number
+  climbLimit?: number
+  rideLimit?: number
+  dirLimit?: { dir: Direction; count: number }
+  swampDeepen?: boolean // 늪에 빠질 때마다 한 수씩 느는 버둥
+  mushroomWither?: boolean // 밟힌 버섯이 시드는 판, 클리어 조건은 버섯 전부 밟기
+  vineStop?: boolean // 큐브가 밟은 덩굴이 그 길이로 굳는 판
+  seedGrow?: boolean // 솟은 씨앗 칸이 4수마다 한 층씩 세 층까지 솟는 판
   wind?: Direction // 4수마다 큐브가 밀려 가는 방향
 }
 
 export interface Stage {
   version: 1
   id: string
-  name?: string // 유저가 만든 맵의 이름. 공식 스테이지 이름은 사전에 둔다
-  heights: number[][] // 행(y) 먼저, -1은 바닥 없음
-  ice?: string[] // heights와 같은 모양에서 '#'이 얼음
-  swamp?: string[] // heights와 같은 모양에서 '#'이 늪
-  mushroom?: string[] // heights와 같은 모양에서 '#'이 버섯
-  cracks?: string[] // heights와 같은 모양에서 1~9가 무너지기까지 견디는 횟수
+  name?: string // 유저가 만든 맵의 이름, 공식 스테이지 이름은 사전
+  heights: number[][] // 행 먼저, -1은 바닥 없는 칸
+  ice?: string[] // heights와 같은 모양, '#'이 얼음 칸
+  swamp?: string[] // heights와 같은 모양, '#'이 늪 칸
+  mushroom?: string[] // heights와 같은 모양, '#'이 버섯 칸
+  cracks?: string[] // heights와 같은 모양, 1~9는 무너지기까지 견디는 횟수
   start: Point
   goal: Point
   entities: Entity[]
   best?: number // 풀이 검사기가 구한 최소 이동 수
-  rules?: StageRules // 보스 제약
-  guides?: Guide[] // 스텝 가이드 단계
+  rules?: StageRules
+  guides?: Guide[]
   zones?: Zone[] // 카메라 구역, 없으면 맵 전체
 }
 
@@ -58,7 +58,7 @@ export type GuideTarget =
   Point | 'restart' | 'moves' | 'pushes' | 'climbs' | 'rides' | 'dir' | 'wind'
 
 export interface Guide {
-  id: string // 문구 모음의 키
+  id: string // 문구 사전의 키
   target: GuideTarget
 }
 
@@ -72,7 +72,7 @@ export interface Zone {
 // (x, y) 칸에서 direction 쪽 높은 칸에 기대 놓인 사다리
 export type LeaningLadder = Point & { direction: Direction }
 
-// 무너지는 칸이 앞으로 견디는 횟수. -1은 이미 무너진 칸
+// 무너지는 칸이 앞으로 견디는 횟수, -1은 이미 무너진 칸
 export type Crack = Point & { left: number }
 
 export interface TramSpot {
@@ -99,52 +99,52 @@ export interface PlantedSeed extends Point {
 
 export interface GameState {
   stage: Stage
-  heights: number[][] // 상자와 덩굴로 메운 칸과 씨앗으로 솟은 칸이 반영된 높이
+  heights: number[][] // 상자와 덩굴로 메운 칸, 무너진 칸, 씨앗으로 솟은 칸이 반영된 높이
   boxes: Point[]
   cracks: Crack[]
   trams: TramSpot[]
-  swamps: Point[] // 남아 있는 늪 칸. 상자가 가라앉은 칸은 빠진다
-  mushrooms: Point[] // 남아 있는 버섯 칸. 시드는 판에서 밟힌 칸은 빠진다
+  swamps: Point[] // 남아 있는 늪 칸, 상자가 가라앉은 칸은 제외
+  mushrooms: Point[] // 남아 있는 버섯 칸, 시드는 판에서 밟힌 칸은 제외
   vines: VineSpot[]
   struggles: number // 지금 선 늪 칸에서 버둥거린 수
   sinks: number // 늪에 빠진 횟수
-  ladders: Point[] // 바닥에 놓인 사다리
+  ladders: Point[]
   leaningLadders: LeaningLadder[]
-  seeds: Point[] // 바닥에 놓인 씨앗
+  seeds: Point[]
   planted: PlantedSeed[] // 아직 솟을 차례가 남은 심은 칸
   carrying: Carried | null
   player: Point
   moves: number
-  pushes: number // 상자를 민 이동의 수
-  climbs: number // 한 층 올라선 이동의 수
+  pushes: number // 상자를 민 이동 수
+  climbs: number // 한 층 올라선 이동 수
   rides: number // 발판에 올라탄 횟수
-  dirUses: number // 제한된 방향으로 센 이동의 수
+  dirUses: number // 제한된 방향으로 센 이동 수
   cleared: boolean
 }
 
 export type GameEvent =
   | { type: 'moved'; from: Point; to: Point }
-  | { type: 'fell'; from: Point; to: Point; drop: number } // drop은 층 수
+  | { type: 'fell'; from: Point; to: Point; drop: number } // drop은 떨어진 층 수
   | { type: 'climbed'; from: Point; to: Point; via: 'box' | 'ladder' }
-  | { type: 'slid'; subject: 'player' | 'box'; from: Point; to: Point } // 얼음 위 미끄러짐이라 from과 to가 이웃하지 않을 수 있다
+  | { type: 'slid'; subject: 'player' | 'box'; from: Point; to: Point } // 얼음 위 미끄러짐, 이웃하지 않을 수도 있는 from과 to
   | { type: 'pushed'; from: Point; to: Point; result: 'slid' | 'fell' | 'filled' }
-  | { type: 'cracked'; at: Point; left: number; gone: boolean } // gone은 바닥 없는 칸이 되었는지
+  | { type: 'cracked'; at: Point; left: number; gone: boolean } // gone은 바닥 없는 칸이 되었는지 여부
   | { type: 'struggled'; at: Point } // 늪에서 제자리에 선 수
-  | { type: 'sank'; at: Point } // 늪에 밀려 들어간 상자가 가라앉음
+  | { type: 'sank'; at: Point } // 늪에 밀려 들어가 가라앉는 상자
   | { type: 'pickedUp'; at: Point; item: Carried }
   | { type: 'placed'; ladder: LeaningLadder }
   | { type: 'door'; id: string; open: boolean }
   | { type: 'lift'; id: string; up: boolean }
   | { type: 'warped'; from: Point; to: Point }
   | { type: 'tram'; id: string; from: Point; to: Point }
-  | { type: 'grew'; id: string; at: Point } // 덩굴이 한 칸 뻗어 메움
+  | { type: 'grew'; id: string; at: Point } // 덩굴이 한 칸 뻗어 메운 칸
   | { type: 'planted'; at: Point; direction: Direction } // direction은 턱 쪽으로 민 방향
-  | { type: 'seedTicked'; at: Point; left: number } // 심은 칸이 솟기까지 남은 수가 줄어듦
-  | { type: 'rose'; at: Point; height: number; lifted: Lifted[]; growing: boolean } // height는 솟은 뒤 바닥 높이이고 growing은 또 솟을 차례가 남았는지
-  | { type: 'blown'; from: Point; to: Point; direction: Direction } // 바람에 밀려 to 쪽으로 감. 그 이동의 이벤트가 뒤에 이어진다
-  | { type: 'braced'; direction: Direction; sheltered?: true } // 바람에 버팀. sheltered는 바람 오는 쪽이 막혀 숨은 것
+  | { type: 'seedTicked'; at: Point; left: number } // 심은 칸이 솟기까지 남은 수
+  | { type: 'rose'; at: Point; height: number; lifted: Lifted[]; growing: boolean } // height는 솟은 뒤 바닥 높이, growing은 또 솟을 차례가 남았는지 여부
+  | { type: 'blown'; from: Point; to: Point; direction: Direction } // 바람에 밀려 to 쪽으로 간 이동, 그 이동의 이벤트는 바로 뒤
+  | { type: 'braced'; direction: Direction; sheltered?: true } // 바람을 버틴 수, sheltered는 바람 오는 쪽이 막혀 숨은 경우
   | { type: 'blocked'; direction: Direction }
-  | { type: 'limit'; limit: Limit } // 보스 제약에 막힘
+  | { type: 'limit'; limit: Limit } // 보스 제약에 막힌 이동
   | { type: 'cleared' }
 
 export interface MoveResult {

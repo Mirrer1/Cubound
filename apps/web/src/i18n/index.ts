@@ -27,11 +27,11 @@ export const DICTIONARIES: Record<Language, Partial<Texts>> = {
   es,
 }
 
-// 어느 사전에도 없는 키는 키 이름을 그대로 쓴다. 문구 하나가 빠져도 화면은 열려야 한다
+// 어느 사전에도 없는 키는 키 이름 그대로, 문구 하나가 빠져도 열리는 화면
 const lookup = (language: Language, key: string) =>
   DICTIONARIES[language]?.[key as TextKey] ?? en[key as TextKey] ?? key
 
-// n을 넘기면 문구의 {n} 자리를 채운다
+// n을 넘기면 채우는 문구의 {n} 자리
 const fill = (value: string, n?: number) =>
   n === undefined ? value : value.replace('{n}', String(n))
 
@@ -55,14 +55,14 @@ export const isLanguage = (value: unknown): value is Language =>
 
 const TRADITIONAL_REGIONS = ['tw', 'hk', 'mo']
 
-// 중국어는 태그의 문자나 지역을 보고 번체와 간체를 가른다
+// 태그의 문자나 지역으로 가르는 중국어 번체와 간체
 const chineseFrom = (subtags: string[]): Language => {
   if (subtags.includes('hant')) return 'zh-Hant'
   if (subtags.includes('hans')) return 'zh-Hans'
   return subtags.some((subtag) => TRADITIONAL_REGIONS.includes(subtag)) ? 'zh-Hant' : 'zh-Hans'
 }
 
-// 기기가 선호하는 순서대로 보고 먼저 지원하는 언어를 고른다
+// 기기가 선호하는 순서에서 먼저 지원하는 언어
 export const languageFrom = (tags: readonly string[]): Language => {
   for (const tag of tags) {
     const subtags = tag.toLowerCase().split('-')

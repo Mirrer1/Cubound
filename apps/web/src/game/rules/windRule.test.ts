@@ -5,7 +5,7 @@ import { move } from './moveRule'
 import { createState, standHeight } from './stateRule'
 import { WIND_STAGE, play } from './testStages'
 
-// 이동 세 번을 쓴 상태라 다음 센 수에 분다
+// 이동 세 번을 쓴 상태, 다음 센 수에 부는 바람
 const gusty = (stage: Partial<Stage> = {}, state: Partial<GameState> = {}): GameState => ({
   ...createState({ ...WIND_STAGE, ...stage }),
   moves: 3,
@@ -162,7 +162,7 @@ describe('move 바람', () => {
   })
 
   it('상자 위에 서 있으면 바람 쪽에 붙은 같은 높이 상자 위로 밀려 간다', () => {
-    // (3,1) 상자 쪽으로 가면 뒤의 (2,1) 상자에 막혀 못 밀고 올라선다
+    // (3,1) 상자 쪽으로 가면 뒤의 (2,1) 상자에 막혀 못 밀고 올라서는 수
     const state = gusty(
       {
         entities: [
@@ -360,7 +360,7 @@ describe('move 바람', () => {
   })
 
   it('무너지는 칸은 바람이 옮긴 뒤의 자리를 본다', () => {
-    // 사다리를 놓아 제자리에 선 수에 바람에 밀려 떠나면 그 칸이 닳는다
+    // 사다리를 놓아 제자리에 선 수에 바람에 밀려 떠난 칸도 닳는 경우
     const state = gusty(
       {
         heights: [

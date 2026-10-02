@@ -1,6 +1,6 @@
 import { type Page, test } from '@playwright/test'
 
-// 캡처는 서로 기대지 않아 나눠 돌린다
+// 서로 기대지 않는 캡처의 병렬 실행
 test.describe.configure({ mode: 'parallel' })
 
 const KEYS = {
@@ -19,13 +19,13 @@ const LABELS = {
 interface StageShots {
   solution: string
   guide?: string[] // 가이드 단계마다 남길 장면 이름
-  shots: Record<number, string> // 이동 번호 → 장면 이름
+  shots: Record<number, string> // 이동 번호와 장면 이름
   extra?: (page: Page, prefix: string) => Promise<void> // 풀이 전에 따로 찍고 처음으로 되돌리는 장면
 }
 
-// 이동 0.24~0.32초, 구역 카메라 0.6초, 가이드 등장 0.5초가 끝나기를 기다린다
+// 이동 0.24~0.32초, 구역 카메라 0.6초, 가이드 등장 0.5초가 끝나기까지의 대기
 const SETTLE = 600
-// 클리어 카드는 1.3초 뒤에 떠서 0.4초에 걸쳐 나타난다
+// 1.3초 뒤에 떠서 0.4초에 걸쳐 나타나는 클리어 카드
 const CARD = 2200
 
 const shot = async (page: Page, name: string, settle = SETTLE) => {
@@ -44,7 +44,7 @@ const solve = async (page: Page, solution: string, onMove?: (index: number) => P
   }
 }
 
-// 스테이지 7에서 큐브가 스위치를 밟아도 문까지 닿지 못하는 것을 찍고 처음으로 되돌린다
+// 스테이지 7에서 스위치를 밟아도 문까지 닿지 못하는 장면, 찍은 뒤 처음으로 되돌리기
 const shootFarDoor = async (page: Page, prefix: string) => {
   await solve(page, 'down down down down right right right')
   await shot(page, `${prefix}-switch-pressed`)
@@ -57,7 +57,7 @@ const shootFarDoor = async (page: Page, prefix: string) => {
   await page.waitForTimeout(800)
 }
 
-// 스테이지 9에서 사다리를 타고 오르내리는 중간 프레임을 찍고 처음으로 되돌린다
+// 스테이지 9에서 사다리를 타고 오르내리는 중간 프레임, 찍은 뒤 처음으로 되돌리기
 const shootLadderMid = async (page: Page, prefix: string) => {
   await solve(page, 'left left')
 
@@ -76,7 +76,7 @@ const shootLadderMid = async (page: Page, prefix: string) => {
   await page.waitForTimeout(900)
 }
 
-// 스테이지가 늘면 코드가 아니라 이 표에만 줄을 더한다
+// 스테이지가 늘면 줄을 더하는 곳은 코드가 아닌 이 표
 const STAGES: Record<string, StageShots> = {
   '1-1': {
     solution: 'up up right right right down down left',
@@ -428,7 +428,7 @@ const STAGES: Record<string, StageShots> = {
 
 const stageNumber = (id: string) => String(Number(id.split('-')[1])).padStart(2, '0')
 
-// 해시만 바꾸면 페이지를 다시 읽지 않아 심어 둔 진행이 반영되지 않는다. 쿼리를 달아 새로 읽게 한다
+// 심어 둔 진행을 반영하는 쿼리, 해시만 바꾸면 페이지를 다시 읽지 않는 탓
 const openPlay = async (page: Page, id: string) => {
   await page.goto(`/?stage=${id}#/play/${id}`)
   await page.getByText(`STAGE ${stageNumber(id)}`).waitFor()
@@ -439,7 +439,7 @@ const order = (id: string) => {
   return world * 100 + number
 }
 
-// 앞 스테이지까지 클리어한 진행을 심는다. 그 스테이지와 월드가 열리고 가이드가 자동으로 뜬다
+// 앞 스테이지까지 클리어한 진행, 그 스테이지와 월드가 열리고 가이드가 자동으로 뜨는 상태
 const unlock = async (page: Page, id: string) => {
   const cleared = Object.keys(STAGES)
     .filter((key) => order(key) < order(id))
@@ -454,7 +454,7 @@ const tap = async (page: Page, prefix: string) => {
   else await page.mouse.click(60, 400)
 }
 
-// 가이드 단계를 차례로 찍고 시작한다
+// 차례로 찍는 가이드 단계
 const shootGuide = async (page: Page, prefix: string, names: string[] = []) => {
   if (names.length === 0) return
 
@@ -466,7 +466,7 @@ const shootGuide = async (page: Page, prefix: string, names: string[] = []) => {
   await page.getByRole('button', { name: LABELS.ko.start, exact: true }).click()
 }
 
-// 풀이를 두면서 정해둔 장면과 클리어 카드를 찍는다
+// 풀이를 두면서 찍는 정해둔 장면과 클리어 카드
 const playStage = async (page: Page, id: string, prefix: string) => {
   const { solution, shots } = STAGES[id]
   await solve(page, solution, async (i) => {
@@ -481,7 +481,7 @@ const openStage = async (page: Page, start: string) => {
   await page.getByText('STAGE 01').waitFor()
 }
 
-// 스테이지 1 가이드는 방향키가 막히는 모습과 건너뛴 뒤까지 함께 찍는다
+// 스테이지 1 가이드, 방향키가 막히는 모습과 건너뛴 뒤의 장면
 const shootFirstGuide = async (page: Page, prefix: string, skip: string) => {
   await page.getByText('GUIDE 1 / 2').waitFor()
   await shot(page, `${prefix}-guide-1-cube`)
@@ -579,7 +579,7 @@ test.describe('모바일', () => {
   })
 })
 
-// 제한을 다 쓰면 큐브가 멈추고 재시작 버튼이 진해진다
+// 제한을 다 쓰면 멈추는 큐브와 진해지는 재시작 버튼
 test('@shot 보스 이동 제한', async ({ page }) => {
   test.setTimeout(120_000)
   await unlock(page, '1-10')
@@ -602,7 +602,7 @@ test('@shot 보스 이동 제한', async ({ page }) => {
   await shot(page, 'desktop-stage-10-moves-zero-blocked')
 })
 
-// 브라우저 언어가 영어면 처음부터 영어로 시작하는지 함께 본다
+// 브라우저 언어가 영어면 처음부터 영어로 시작하는지 여부
 test.describe('영어', () => {
   test.use({ locale: 'en-US' })
 
@@ -700,7 +700,7 @@ test('@shot 키보드 포커스', async ({ page }) => {
   await shot(page, 'desktop-focus-clear-card', CARD)
 })
 
-// 스테이지마다 한 판을 두며 장면을 남긴다. 1은 데스크톱 화면 테스트가 이미 찍는다
+// 스테이지마다 한 판을 두며 남기는 장면, 1은 데스크톱 화면 테스트 몫
 for (const id of Object.keys(STAGES).filter((key) => key !== '1-1')) {
   test(`@shot-stage ${id} 데스크톱`, async ({ page }) => {
     test.setTimeout(120_000)
@@ -714,7 +714,7 @@ for (const id of Object.keys(STAGES).filter((key) => key !== '1-1')) {
   })
 }
 
-// 모바일은 맵마다 배율이 달라 시작 화면과 가이드만 본다
+// 맵마다 배율이 다른 모바일은 시작 화면과 가이드 한정
 test.describe('모바일 스테이지', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
 

@@ -429,7 +429,7 @@ const VINE_STAGE: Stage = {
   ],
 }
 
-// (3, 0)이 한 층 높아 (2, 0)에 심는다
+// (3, 0)이 한 층 높아 (2, 0)에 심는 판
 const SEED_STAGE: Stage = {
   version: 1,
   id: '9-1',

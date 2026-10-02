@@ -1,6 +1,6 @@
 import { type Page, expect, test } from '@playwright/test'
 
-// Playwright에 터치 드래그가 없어 CDP로 직접 보낸다
+// Playwright에 터치 드래그가 없어 CDP로 직접 보내는 터치
 const swipe = async (page: Page, x: number, y: number, dx: number, dy: number) => {
   const cdp = await page.context().newCDPSession(page)
   const send = (type: string, points: { x: number; y: number }[]) =>
@@ -39,7 +39,7 @@ test('타이틀에서 스테이지를 골라 가이드를 넘기고 방향키로
   await page.keyboard.press('r')
   await expect(moves).toContainText('0')
 
-  // 5수부터는 재시작 전에 물어본다. 내려앉기 연출 중에는 이동이 막혀서 끝나기를 기다린다
+  // 5수부터는 재시작 전 확인, 내려앉기 연출 중에는 막히는 이동이라 끝날 때까지 대기
   await page.waitForTimeout(600)
   for (const key of ['ArrowUp', 'ArrowUp', 'ArrowRight', 'ArrowRight', 'ArrowRight']) {
     await page.keyboard.press(key)
@@ -97,7 +97,7 @@ test('키보드만으로 타이틀에서 스테이지를 클리어하고 다음 
   await page.goto('/')
   await page.getByRole('button', { name: '시작' }).waitFor()
 
-  // 타이틀은 첫 포커스를 두지 않아 언어 버튼을 지나 시작 버튼에 닿는다
+  // 첫 포커스가 없는 타이틀, 언어 버튼을 지나 닿는 시작 버튼
   await page.keyboard.press('Tab')
   await page.keyboard.press('Tab')
   await page.keyboard.press('Enter')
@@ -111,7 +111,7 @@ test('키보드만으로 타이틀에서 스테이지를 클리어하고 다음 
   await page.keyboard.press('Enter')
   await expect(page.getByText(/GUIDE/)).toBeHidden()
 
-  // WASD로 푼다
+  // WASD로 푸는 수순
   for (const key of ['w', 'w', 'd', 'd', 'd', 's', 's', 'a']) {
     await page.keyboard.press(key)
     await page.waitForTimeout(300)
@@ -152,7 +152,7 @@ test.describe('모바일', () => {
     await page.getByRole('button', { name: '시작' }).click()
     await page.getByRole('button', { name: /01/ }).click()
     await page.getByRole('button', { name: '건너뛰기' }).click()
-    // 사라지는 중인 가이드 카드가 버튼을 덮고 있어 다 사라진 뒤에 잰다
+    // 사라지는 중인 가이드 카드가 버튼을 덮어 다 사라진 뒤에 재는 자리
     await expect(page.getByText(/GUIDE/)).toBeHidden()
 
     const moves = page.getByText('MOVES').locator('..')
@@ -165,12 +165,12 @@ test.describe('모바일', () => {
     await page.touchscreen.tap(x, y)
     await expect(moves).toContainText('0')
 
-    // 재시작 내려앉기 연출 중에는 이동이 막혀서 끝나기를 기다린다
+    // 재시작 내려앉기 연출 중에는 막히는 이동이라 끝날 때까지 대기
     await page.waitForTimeout(600)
     await swipe(page, x, y, 60, -60)
     await expect(moves).toContainText('1')
 
-    // 버튼 안에서 끝나는 짧은 드래그는 클릭이 버튼에 떨어지는데, 스와이프라 재시작이 눌리지 않는다
+    // 버튼 안에서 끝나는 짧은 드래그도 스와이프라 눌리지 않는 재시작
     await page.mouse.move(x, y)
     await page.mouse.down()
     await page.mouse.move(x + 30, y - 20, { steps: 4 })

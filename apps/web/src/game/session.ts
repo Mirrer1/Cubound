@@ -17,26 +17,26 @@ export const SESSION_VERSION = 7
 export interface Session {
   version: typeof SESSION_VERSION
   stageId: string
-  heights: number[][] // 상자로 메운 칸이 반영된 높이
+  heights: number[][] // 상자와 덩굴로 메운 칸, 무너진 칸, 씨앗으로 솟은 칸이 반영된 높이
   boxes: Point[]
   cracks: Crack[]
   trams: TramSpot[]
-  swamps?: Point[] // 전에 저장된 것에는 없다
-  mushrooms?: Point[] // 전에 저장된 것에는 없다
-  vines?: VineSpot[] // 전에 저장된 것에는 없다
-  struggles?: number // 전에 저장된 것에는 없다
-  sinks?: number // 전에 저장된 것에는 없다
+  swamps?: Point[] // 예전 저장에는 없는 값
+  mushrooms?: Point[] // 예전 저장에는 없는 값
+  vines?: VineSpot[] // 예전 저장에는 없는 값
+  struggles?: number // 예전 저장에는 없는 값
+  sinks?: number // 예전 저장에는 없는 값
   ladders: Point[]
   leaningLadders: LeaningLadder[]
-  seeds?: Point[] // 전에 저장된 것에는 없다
-  planted?: PlantedSeed[] // 전에 저장된 것에는 없다
-  carrying: Carried | null // 전에 저장된 것은 사다리를 들었는지만 참과 거짓으로 담았다
+  seeds?: Point[] // 예전 저장에는 없는 값
+  planted?: PlantedSeed[] // 예전 저장에는 없는 값
+  carrying: Carried | null // 예전 저장은 사다리를 들었는지만 담은 참과 거짓
   player: Point
   moves: number
   pushes: number
   climbs: number
-  rides?: number // 전에 저장된 것에는 없다
-  dirUses?: number // 전에 저장된 것에는 없다
+  rides?: number // 예전 저장에는 없는 값
+  dirUses?: number // 예전 저장에는 없는 값
 }
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
@@ -74,7 +74,7 @@ export const toSession = (game: GameState): Session => ({
   dirUses: game.dirUses,
 })
 
-// 스테이지 데이터가 바뀌었거나 값이 깨졌으면 처음부터 시작하도록 null을 돌려준다
+// 스테이지 데이터가 바뀌었거나 값이 깨졌으면 처음부터 시작하는 null
 export const restoreSession = (saved: unknown, stage: Stage): GameState | null => {
   if (!isObject(saved) || saved.version !== SESSION_VERSION || saved.stageId !== stage.id) {
     return null
@@ -82,7 +82,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
 
   const cracks = readCracks(stage)
   const savedCracks = saved.cracks
-  // 남은 횟수는 줄기만 하고 -1은 이미 무너진 칸이다
+  // 줄기만 하는 남은 횟수, -1은 이미 무너진 칸
   const sameCracks =
     Array.isArray(savedCracks) &&
     savedCracks.length === cracks.length &&
@@ -119,7 +119,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   const swamps = readSwamps(stage)
   const swampKeys = new Set(swamps.map(({ x, y }) => `${x},${y}`))
   const savedSwamps = saved.swamps
-  // 상자가 가라앉으면 늪 칸은 빠지기만 한다
+  // 상자가 가라앉으면 빠지기만 하는 늪 칸
   const sameSwamps =
     savedSwamps === undefined ||
     (Array.isArray(savedSwamps) &&
@@ -130,7 +130,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   const mushrooms = readMushrooms(stage)
   const mushroomKeys = new Set(mushrooms.map(({ x, y }) => `${x},${y}`))
   const savedMushrooms = saved.mushrooms
-  // 밟힌 버섯은 시들어 빠지기만 한다
+  // 시들어 빠지기만 하는 밟힌 버섯
   const sameMushrooms =
     savedMushrooms === undefined ||
     (Array.isArray(savedMushrooms) &&
@@ -158,7 +158,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
 
   const sinks = saved.sinks === undefined ? 0 : saved.sinks
   if (!isCount(sinks)) return null
-  // 깊어지는 늪에서는 빠진 횟수만큼 버둥이 는다
+  // 깊어지는 늪은 빠진 횟수만큼 느는 버둥
   const struggles = saved.struggles
   const mostStruggles = STRUGGLES + (sinks as number)
   if (struggles !== undefined && !(isCount(struggles) && (struggles as number) <= mostStruggles)) {
@@ -175,7 +175,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
       (row, y) =>
         Array.isArray(row) &&
         row.length === stage.heights[y].length &&
-        // 상자로 메운 칸과 무너진 칸과 씨앗으로 솟은 칸만 스테이지 높이와 달라질 수 있다
+        // 스테이지 높이와 달라질 수 있는 칸, 메운 칸과 무너진 칸과 씨앗으로 솟은 칸
         row.every(
           (h, x) =>
             h === stage.heights[y][x] ||
@@ -187,7 +187,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   if (!sameShape) return null
 
   const heights = rows as number[][]
-  // 발판이 선 칸은 바닥이 없어도 딛고 설 수 있다
+  // 발판이 선 칸은 바닥이 없어도 설 수 있는 칸
   const tramKeys = new Set(
     stageTrams.map((tram, i) => {
       const { x, y } = tram.cells[(savedTrams as TramSpot[])[i].at]
@@ -209,7 +209,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   const boxes = listOf<Point>(saved.boxes, onFloor, boxCount)
   const ladders = listOf<Point>(saved.ladders, onFloor, ladderCount)
   const leaningLadders = listOf<LeaningLadder>(saved.leaningLadders, isLeaning, ladderCount)
-  // 콩나무가 아니면 한 번 솟고 끝나 층이 늘 0이다
+  // 콩나무가 아니면 한 번 솟고 끝나 늘 0인 층
   const mostRises = stage.rules?.seedGrow ? 2 : 0
   const isPlanted = (value: unknown): value is PlantedSeed => {
     if (!onFloor(value)) return false
@@ -221,7 +221,6 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
       ? stage.entities.filter((e) => e.type === 'seed').map(({ x, y }) => ({ x, y }))
       : listOf<Point>(saved.seeds, onFloor, seedCount)
   const planted = saved.planted === undefined ? [] : listOf(saved.planted, isPlanted, seedCount)
-  // 예전 저장은 사다리를 들었는지만 담았다
   const carrying: unknown =
     saved.carrying === true ? 'ladder' : saved.carrying === false ? null : saved.carrying
 

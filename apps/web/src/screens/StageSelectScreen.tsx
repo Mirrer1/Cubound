@@ -29,11 +29,11 @@ import { useGameStore } from '@/store/gameStore'
 const cardsIn = (grid: HTMLDivElement | null) =>
   [...(grid?.querySelectorAll('button') ?? [])] as HTMLButtonElement[]
 
-// 한 줄에 놓인 카드 수. 화면 폭에 따라 달라져서 누를 때마다 잰다
+// 한 줄에 놓인 카드 수, 화면 폭에 따라 달라져 누를 때마다 재는 값
 const columnsOf = (cards: HTMLButtonElement[]) =>
   cards.filter((card) => card.offsetTop === cards[0].offsetTop).length
 
-// 잠긴 카드는 건너뛰고 같은 방향으로 이어서 찾는다
+// 잠긴 카드를 건너뛰고 같은 방향으로 이어서 찾는 다음 카드
 const nextFocus = (cards: HTMLButtonElement[], from: number, delta: number) => {
   const step = delta > 0 ? 1 : -1
   for (let i = from + delta; i >= 0 && i < cards.length; i += step) {
@@ -54,12 +54,12 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
   const t = useText()
 
   const chapter = cycleOf(world)
-  // 화살표는 한 장 안에서만 움직인다. 장을 넘는 길은 덩이 하나로 모은다
+  // 한 장 안에서만 움직이는 화살표, 장을 넘는 길은 덩이 하나
   const siblings = worldsOf(chapter)
   const index = siblings.indexOf(world)
   const all = showingAll()
   const unlocked = all || isWorldUnlocked(progress, worldUnlockStageId(world))
-  // 아직 열리지 않은 월드는 들어가 봐야 잠긴 카드뿐이라 이름부터 미리 보여주지 않는다
+  // 아직 열리지 않은 월드는 이름부터 숨김, 들어가 봐야 잠긴 카드뿐인 탓
   const next = siblings[index + 1]
   const nextOpen =
     next !== undefined && (all || isWorldUnlocked(progress, worldUnlockStageId(next)))
@@ -100,7 +100,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
       range: `${first}–${first + WORLDS_PER_CYCLE * STAGES_PER_WORLD - 1}`,
       stars: totalStars(progress, ids),
       total: ids.length * 3,
-      // 만들지 않은 월드도 칸을 차지해 장의 크기가 같아 보인다
+      // 장의 크기가 같아 보이게 칸을 차지하는 만들지 않은 월드
       worlds: Array.from({ length: WORLDS_PER_CYCLE }, (_, i) => {
         const w = worldsOf(n)[i]
         if (w === undefined) return 0
@@ -120,23 +120,23 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
   const handlePrevious = () => goTo({ screen: 'select', world: siblings[index - 1] })
   const handleNext = () => goTo({ screen: 'select', world: siblings[index + 1] })
   const handleChapters = () => goTo({ screen: 'select', world, chapters: !chapters })
-  // 같은 장을 다시 고르면 보던 월드로 돌아간다. 첫 월드로 튕기지 않는다
+  // 같은 장을 다시 고르면 첫 월드가 아닌 보던 월드
   const handleChapter = (n: number) =>
     goTo({ screen: 'select', world: n === chapter ? world : currentWorldOf(progress, n) })
 
-  // 타이틀로 나갔다 돌아왔을 때 보던 월드로 오도록 적어 둔다
+  // 타이틀로 나갔다 돌아왔을 때 돌아올 보던 월드 기록
   useEffect(() => {
     localWorldStorage.save(all, world)
   }, [all, world])
 
-  // 첫 포커스는 지금 자리에 둔다. 열린 카드가 없는 잠긴 월드는 월드 화살표에 둔다
+  // 첫 포커스는 지금 자리, 열린 카드가 없는 잠긴 월드는 월드 화살표
   useEffect(() => {
     const items = cardsIn(gridRef.current)
     const target = chapters ? items[nowChapter] : unlocked ? items[now] : previousRef.current
     target?.focus()
   }, [now, nowChapter, unlocked, chapters])
 
-  // 방향키로 카드 사이를 옮겨 다닌다. Esc는 장 고르기를 닫고, 닫혀 있으면 타이틀로 간다
+  // 방향키는 카드 사이 이동, Esc는 장 고르기 닫기, 닫혀 있으면 타이틀
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -164,7 +164,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
   return (
     <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
       <section className="scroll-area flex min-h-0 flex-1 flex-col gap-6 rounded-[22px] border border-line bg-base-bg panel-pad min-[1700px]:flex-row min-[1700px]:items-center min-[1700px]:gap-12! wide:gap-8">
-        {/* 폰은 윗줄에 ←·별·화살표를 몰고 아랫줄 전체를 장 덩이로 쓴다. order로 차례를 정한다 */}
+        {/* 폰은 윗줄에 ←와 별과 화살표, 아랫줄 전체가 장 덩이, 차례는 order */}
         <header className="mx-auto flex w-full max-w-content flex-wrap items-center gap-x-4 gap-y-2.5 min-[1700px]:mx-0 min-[1700px]:ml-10 min-[1700px]:w-90 min-[1700px]:max-w-none min-[1700px]:shrink-0 min-[1700px]:flex-col min-[1700px]:items-start min-[1700px]:gap-6 narrow:gap-x-3">
           <Button
             variant="icon"
@@ -189,7 +189,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
             </span>{' '}
             / {ids.length * 3} ◆
           </span>
-          {/* 월드가 하나뿐인 장에서도 자리를 비우지 않는다. 장을 넘길 때 왼쪽이 흔들리지 않게 */}
+          {/* 월드가 하나뿐인 장에서도 남기는 자리, 장을 넘길 때 왼쪽 흔들림 방지 */}
           <span className="flex items-center gap-1 min-[1700px]:order-4">
             <Button
               ref={previousRef}
@@ -219,13 +219,13 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
           ref={gridRef}
           className="grid-box mx-auto min-h-0 w-full max-w-content flex-1 min-[1700px]:mx-0 min-[1700px]:mr-10 min-[1700px]:max-w-none narrow:flex-none"
         >
-          {/* 카드가 자리에서 바뀐다. key로 갈아 끼워야 새 카드가 바로 붙어 포커스가 따라간다 */}
+          {/* 자리에서 바뀌는 카드, 새 카드가 바로 붙어 포커스가 따라가는 key 교체 */}
           <motion.div
             key={chapters ? 'chapters' : 'stages'}
             className={chapters ? 'chapter-grid' : 'stage-grid'}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            // 다른 나타남과 같은 시간과 곡선을 쓴다
+            // 다른 나타남과 같은 시간과 곡선
             transition={{ duration: 0.3, ease: 'easeOut' }}
           >
             {chapters

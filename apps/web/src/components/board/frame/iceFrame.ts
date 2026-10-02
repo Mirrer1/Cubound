@@ -10,7 +10,7 @@ import {
 } from './timeFrame'
 import type { GameEvent, Point } from '@/game/types'
 
-// 칸 하나의 자국 진하기 0~1. 겹치면 진한 쪽을 쓴다
+// 칸 하나의 자국 진하기 0~1, 겹치면 진한 쪽
 export const frostAt = (events: GameEvent[], p: Point, t: number, swamp: SwampTime = NO_SWAMP) => {
   if (!events.some((e) => e.type === 'slid')) return 0
 
@@ -24,11 +24,11 @@ export const frostAt = (events: GameEvent[], p: Point, t: number, swamp: SwampTi
     )
 }
 
-// 미끄러져 멈춘 이동은 다음 입력과 이어 붙이지 않는다
+// 미끄러져 멈춘 이동은 다음 입력과 이어 붙이기 제외
 export const slideChain = (events: GameEvent[], chain: Chain): Chain =>
   events.some((e) => e.type === 'slid') ? { in: chain.in, out: false } : chain
 
-// 미끄러짐 전체를 하나로 보고 앞에서 눌렸다가 뒤에서 풀린다. 이어진 구간 사이에서 풀리면 끊겨 보인다
+// 미끄러짐 전체를 하나로 본 눌림, 이어진 구간 사이에서 풀리면 끊겨 보이는 탓
 const SQUASH = { rise: 0.15, fall: 0.25 }
 
 export const squashAt = (q: number) =>

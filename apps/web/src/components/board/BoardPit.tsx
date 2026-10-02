@@ -8,7 +8,7 @@ import { TILE, blockFaces } from '@/game/iso'
 
 const RAIL_HALF = 0.13
 
-// 덩굴 판은 처음 이만큼 차오르는 동안 나타난다
+// 덩굴 판이 나타나는 처음 차오름 몫
 const VINE_PLATE_FADE = 0.6
 
 // 칸 가운데에서 (dx, dy) 쪽 모서리까지 가는 레일 띠
@@ -27,7 +27,7 @@ const railSpots = (dx: number, dy: number): [number, number][] =>
         [RAIL_HALF, -RAIL_HALF * dy],
       ]
 
-// 구덩이 뒤쪽 벽. 땅 높이에서 구덩이 바닥까지만 칠하고 그 위는 옆 칸이 제 면으로 그린다
+// 땅 높이에서 구덩이 바닥까지만 칠하는 뒤쪽 벽, 그 위는 옆 칸의 제 면
 const wallPoints = (x: number, y: number, side: number) => {
   const top = y
   const hw = (TILE.width / 2) * side
@@ -38,10 +38,10 @@ const wallPoints = (x: number, y: number, side: number) => {
 interface BoardPitProps {
   x: number
   y: number
-  rail: string // 이웃한 발판 길 칸 방향을 "x,y"로 이은 값, 빈 값이면 길 칸이 아님
+  rail: string // 이웃한 발판 길 칸 방향을 "x,y"로 이은 값, 빈 값이면 길이 아닌 칸
   railNext: boolean // 발판이 다음 수에 들어올 칸
-  pitWallLeft: number // 0 이상이면 위 칸 쪽에 구덩이 벽을 세우고 -1이면 벽 없음
-  pitWallRight: number // 0 이상이면 왼 칸 쪽에 구덩이 벽을 세우고 -1이면 벽 없음
+  pitWallLeft: number // 0 이상이면 위 칸 쪽에 세우는 구덩이 벽, -1이면 벽 없는 칸
+  pitWallRight: number // 0 이상이면 왼 칸 쪽에 세우는 구덩이 벽, -1이면 벽 없는 칸
   vine: VineKind | null // 덩굴 뿌리나 길 칸
   grownVine: boolean
   vineRise: number // 판이 구덩이에서 차오른 정도

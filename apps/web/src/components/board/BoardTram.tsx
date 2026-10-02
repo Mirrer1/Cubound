@@ -2,7 +2,7 @@ import BoardBlock from './BoardBlock'
 import { blend } from './view'
 import { TILE, blockFaces, isoDelta } from '@/game/iso'
 
-// 칸 크기에 대한 비율. 틀 없이 칸보다 작은 판이라 승강 발판과 구별된다
+// 칸 크기에 대한 비율, 틀 없이 칸보다 작아 승강 발판과 구별되는 판
 const DECK = { scale: 0.92, thickness: 9 }
 const SKIRT = { scale: 0.62, drop: 6 }
 const SHADOW = 0.56

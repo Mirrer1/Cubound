@@ -5,10 +5,9 @@ import { isClosedDoor } from './switchRule'
 
 export const isIce = (state: GameState, { x, y }: Point) => state.stage.ice?.[y]?.[x] === '#'
 
-// 상자 위에 올라선 큐브는 얼음 바닥을 밟지 않은 것으로 본다
+// 얼음 위 상자에 선 큐브는 미끄럼 제외
 const onIce = (state: GameState, p: Point) => isIce(state, p) && !hasBox(state, p)
 
-// 얼음에 올라선 큐브가 멈출 칸까지 같은 방향으로 이어서 간다
 export const slidePlayer = (
   state: GameState,
   from: Point,

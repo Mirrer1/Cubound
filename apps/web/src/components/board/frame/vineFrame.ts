@@ -7,13 +7,13 @@ export type VineKind = 'root' | 'grown' | 'next' | 'future' | 'spent'
 
 export interface VineLook {
   kind: VineKind
-  enter: Direction | null // 줄기가 들어오는 방향. 뿌리는 null
-  leave: Direction | null // 줄기가 나가는 방향
+  enter: Direction | null // 줄기가 들어오는 방향, 뿌리는 null
+  leave: Direction | null
   hard: boolean // 굳은 덩굴의 자란 칸
-  knot: boolean // 굳은 덩굴의 끝 칸이라 봉오리로 닫힘
+  knot: boolean // 봉오리로 닫히는 굳은 덩굴의 끝 칸
 }
 
-// 덩굴 뿌리와 길 칸마다 무엇을 그릴지. 키는 "x-y"다
+// 덩굴 뿌리와 길 칸마다 그릴 모습, 키는 "x-y"
 export const vineLooks = (state: GameState): Map<string, VineLook> => {
   const looks = new Map<string, VineLook>()
   const vines = state.stage.entities.filter((e) => e.type === 'vine')
@@ -32,7 +32,7 @@ export const vineLooks = (state: GameState): Map<string, VineLook> => {
     looks.set(`${vine.x}-${vine.y}`, look('root', null, directionBetween(line[0], line[1])))
     vine.cells.forEach((cell, k) => {
       const enter = directionBetween(line[k], cell)
-      // 끝 칸은 들어온 쪽으로 곧게 나간다
+      // 끝 칸은 들어온 쪽으로 곧게 나가는 방향
       const leave = line[k + 2] ? directionBetween(cell, line[k + 2]) : enter
       const kind = k < grown ? 'grown' : stopped ? 'spent' : k === grown ? 'next' : 'future'
       const hard = stopped && k < grown
@@ -47,37 +47,37 @@ export const vineLooks = (state: GameState): Map<string, VineLook> => {
   return looks
 }
 
-// 싹 키 px. 다음 자랄 칸이 더 크다
+// 싹 키 px, 다음 자랄 칸이 더 큰 값
 export const VINE_SPROUT = { next: 24, future: 14 }
 
-// 다음 자랄 칸으로 넘어온 혀의 길이. 칸 단위다
+// 다음 자랄 칸으로 넘어온 혀의 길이, 칸 단위
 export const VINE_TONGUE = 0.2
 
-// 줄기 끝은 한 수에 한 칸을 같은 빠르기로 간다. 혀 끝에서 출발해 이 몫에 칸 끝에 닿고 남은 몫에 다음 칸 혀가 된다
+// 한 수에 한 칸을 같은 빠르기로 가는 줄기 끝, 혀 끝에서 출발해 칸 끝에 닿는 몫
 const VINE_TIP = 1 - VINE_TONGUE
 
 // 이 수의 진행도에서 시작하는 자리와 걸리는 몫
-const VINE_RISE = { from: 0, span: 1 } // 판이 구덩이에서 차오름
+const VINE_RISE = { from: 0, span: 1 } // 판이 구덩이에서 차오르는 구간
 
-const VINE_NEXT = { from: 0, span: 1 } // 새 다음 칸의 싹이 큼
+const VINE_NEXT = { from: 0, span: 1 } // 새 다음 칸의 싹이 크는 구간
 
-const VINE_HARD = { from: 0.4, span: 0.6 } // 굳음
+const VINE_HARD = { from: 0.4, span: 0.6 } // 굳는 구간
 
 export interface VineFrame {
   kind: VineKind
   enter: Direction | null
   leave: Direction | null
-  growth: number // 줄기가 칸을 건너는 진행도 0~1. 이 수에 자라는 칸만 1보다 작다
+  growth: number // 줄기가 칸을 건너는 진행도 0~1, 1보다 작은 것은 이 수에 자라는 칸
   rise: number // 판이 구덩이에서 차오른 정도 0~1
   tongue: number // 다음 칸으로 넘어온 혀 길이 0~1
-  sprout: number // 싹 키 px. 0이면 없음
+  sprout: number // 싹 키 px, 0이면 싹 없는 칸
   sproutOpacity: number
   hard: number // 굳은 정도 0~1
   knot: number // 봉오리가 돋은 정도 0~1
-  opacity: number // 줄기와 잎의 투명도. 재시작하면 사라진다
+  opacity: number // 줄기와 잎의 투명도, 재시작하면 0
 }
 
-// 이 수에서 덩굴이 움직이는 진행도 0~1. 늪에서 뽑혀 나오는 동안은 0이다
+// 이 수에서 덩굴이 움직이는 진행도 0~1, 늪에서 뽑혀 나오는 동안은 0
 export const vineProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
   const moving = moveSeconds(events, swamp) - swamp.lead
   return moving <= 0 ? 1 : clamp01(elapsedAt(events, swamp, t) / moving)
@@ -100,7 +100,7 @@ const stillVine = (look: VineLook): VineFrame => ({
 const phase = (p: number, { from, span }: { from: number; span: number }) =>
   easeOut(clamp01((p - from) / span))
 
-// 덩굴 칸마다 이 순간의 모습. 자라기, 굳기, 재시작 되돌림을 앞뒤 모습 차이로 가른다
+// 덩굴 칸마다 이 순간의 모습, 자라기와 굳기와 재시작 되돌림은 앞뒤 모습 차이로 구분
 export const vineFrames = (
   prev: GameState | null,
   game: GameState,
@@ -122,7 +122,7 @@ export const vineFrames = (
       const was = before.get(key) ?? look
       const still = stillVine(look)
 
-      // 재시작하면 자란 칸의 판이 구덩이로 내려가고 그 자리에 싹이 다시 돋는다
+      // 재시작하면 구덩이로 내려가는 자란 칸의 판, 그 자리에 다시 돋는 싹
       if (restarting) {
         if (was.kind === 'grown' && look.kind !== 'grown') {
           return [
@@ -165,7 +165,7 @@ export const vineFrames = (
       if (was.kind === 'grown' && look.hard && !was.hard) {
         return [key, { ...still, hard, knot: look.knot ? hard : 0 }]
       }
-      // 굳은 덩굴의 남은 자리는 혀가 물러나고 싹이 사라진다
+      // 굳은 덩굴의 남은 자리, 물러나는 혀와 사라지는 싹
       if (look.kind === 'spent' && was.kind !== 'spent') {
         return [
           key,

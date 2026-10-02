@@ -6,7 +6,7 @@ import { vines } from './vineRule'
 
 type Lift = Extract<Entity, { type: 'lift' }>
 
-// 필드 밖은 undefined, 바닥 없는 칸은 -1, 올라간 발판은 한 층 높다
+// 필드 밖은 undefined, 바닥 없는 칸은 -1, 움직이는 발판이 선 칸은 발판 높이, 올라간 엘리베이터 발판은 한 층 위
 export const rawHeight = (state: GameState, p: Point): number | undefined => {
   const h = state.heights[p.y]?.[p.x]
   if (h === undefined) return undefined
@@ -23,7 +23,6 @@ export const floorAt = (state: GameState, p: Point) => {
   return h === undefined || h < 0 ? null : h
 }
 
-// 상자 위에 서 있으면 한 층 높다
 export const standHeight = (state: GameState, p: Point) =>
   (floorAt(state, p) ?? 0) + (hasBox(state, p) ? 1 : 0)
 

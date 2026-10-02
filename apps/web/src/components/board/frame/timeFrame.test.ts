@@ -32,7 +32,7 @@ const slide = (ice: string) => {
   return { prev, ...move(prev, 'right') }
 }
 
-// 서리가 다 옅어질 때까지 연출이 이어져서 durationOf로는 큐브가 언제 멈추는지 알 수 없다
+// durationOf로 알 수 없는 큐브가 멈추는 때, 서리가 다 옅어질 때까지 이어지는 연출 탓
 const slideSeconds = (ice: string) => {
   const { prev, state, events } = slide(ice)
   let lo = 0
@@ -161,7 +161,7 @@ describe('durationOf 버섯', () => {
 
     expect(one.state.player).toEqual({ x: 3, y: 0 })
     expect(two.state.player).toEqual({ x: 5, y: 0 })
-    // 세 칸 + 머무름 한 번이 4, 다섯 칸 + 머무름 두 번이 7이다
+    // 세 칸과 머무름 한 번이 4, 다섯 칸과 머무름 두 번이 7
     expect(durationOf(two.events) / durationOf(one.events)).toBeCloseTo(7 / 4)
     expect(durationOf(two.events)).toBeGreaterThan(durationOf(one.events))
   })

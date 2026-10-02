@@ -7,7 +7,7 @@ const ICONS = [
   { file: 'icon-512.png', size: 512 },
 ]
 
-// 1~3월드를 다 깬 진행. 모든 월드가 열리고 가이드가 뜨지 않는다
+// 1~3월드를 다 깬 진행, 모든 월드가 열리고 가이드가 없는 상태
 const OPENED = {
   version: 1,
   stages: Object.fromEntries(
@@ -24,7 +24,7 @@ const OG_SCENES = {
   'stage-4-3': '/#/play/4-3',
 }
 
-// 공유 카드에 쓸 장면. 사다리와 상자와 짝 칸과 무너지는 칸이 한 화면에 다 나온다
+// 공유 카드에 쓸 장면, 사다리와 상자와 짝 칸과 무너지는 칸이 한 화면에 다 나오는 판
 const OG_CHOICE: keyof typeof OG_SCENES = 'stage-3-9'
 
 test('@shot 아이콘 PNG', async ({ page }) => {

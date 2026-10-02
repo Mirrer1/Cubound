@@ -20,7 +20,7 @@ import {
 import { useGameStore } from '@/store/gameStore'
 import { useSettingsStore } from '@/store/settingsStore'
 
-// 타이틀은 월드가 없어 첫 월드로 둔다
+// 월드가 없는 타이틀은 첫 월드
 const worldOf = (route: Route) =>
   route.screen === 'play'
     ? parseStageId(route.stageId).world
@@ -31,7 +31,7 @@ const worldOf = (route: Route) =>
 const App = () => {
   const progress = useGameStore((s) => s.progress)
   const language = useSettingsStore((s) => s.language)
-  // 없는 스테이지, 잠긴 월드, 잠긴 스테이지는 주소로 들어와도 열지 않는다
+  // 주소로 들어와도 열지 않는 판, 없는 스테이지와 잠긴 월드와 잠긴 스테이지
   const canPlay = (stageId: string) => {
     const { world } = parseStageId(stageId)
     return (
@@ -56,7 +56,7 @@ const App = () => {
     document.title = documentTitle(route, language)
   }, [language, route])
 
-  // 세계 색은 지금 보는 월드가 속한 사이클을 따르고 폰 주소창 색도 같이 간다
+  // 지금 보는 월드가 속한 사이클의 세계 색, 폰 주소창 색도 같은 색
   useEffect(() => {
     const root = document.documentElement
     root.dataset.cycle = String(cycleOf(worldOf(route)))

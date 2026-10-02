@@ -8,11 +8,11 @@ import { isClosedDoor } from './switchRule'
 import { onTramPath } from './tramRule'
 import { walk } from './walkRule'
 
-// 상자가 들어갈 수 있는 칸이면 그 높이를 돌려준다. 바닥 없는 칸은 -1로 들어가 메운다
+// 바닥 없는 칸은 -1, 상자가 들어가 메울 자리
 const boxLanding = (state: GameState, p: Point, level: number): number | null => {
   const floor = rawHeight(state, p)
   if (floor === undefined || floor > level) return null
-  // 발판이 떠난 길 칸을 상자가 메우면 발판이 다시 지날 수 없다
+  // 상자가 메운 발판 길 칸은 발판 통행 불가
   if (floor < 0 && onTramPath(state.stage, p)) return null
   if (
     hasBox(state, p) ||
@@ -27,7 +27,7 @@ const boxLanding = (state: GameState, p: Point, level: number): number | null =>
   return floor
 }
 
-// 밀려 든 상자가 버섯에 튕겨 내려설 자리와 지나며 밟은 버섯들. 내릴 자리가 없으면 null
+// 버섯에 튕긴 상자가 내려설 자리와 밟고 지난 버섯들
 const hopBox = (
   state: GameState,
   from: Point,
@@ -48,7 +48,6 @@ const hopBox = (
   }
 }
 
-// 얼음에 올라선 상자가 멈출 칸까지 같은 방향으로 이어서 간다
 const slideBox = (
   state: GameState,
   from: Point,
@@ -75,7 +74,7 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
   const entry = boxLanding(state, first, boxFloor)
   if (entry === null) return null
 
-  // 버섯에 밀려 든 상자는 두 칸 날아가고 내릴 자리가 없으면 아예 안 밀린다
+  // 버섯으로 밀린 상자는 내릴 자리가 없으면 밀기 불가
   const onMushroom = isMushroom(state, first)
   const flight = onMushroom ? hopBox(state, first, direction) : null
   if (onMushroom && flight === null) return null
@@ -107,7 +106,7 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
   const filled = landing < 0 ? target : landed?.result === 'filled' ? landed.to : null
   const fillHeight = landing < 0 ? launch : landing
 
-  // 미끄러짐과 낙하까지 한 번의 밀기로 센다
+  // 미끄러짐과 낙하까지 밀기 한 번
   const pushing: GameState = {
     ...state,
     pushes: state.pushes + 1,

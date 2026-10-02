@@ -36,9 +36,9 @@ interface PlayScreenProps {
   stageId: string
 }
 
-const ASK_FROM_MOVES = 5 // 이만큼 진행했으면 재시작 전에 물어본다
+const ASK_FROM_MOVES = 5 // 재시작 전에 묻기 시작하는 이동 수
 
-// 보스 제약에 막힌 수에 숫자를 한 번 깜빡인다. hit은 막힌 수의 차례라 이어서 막혀도 다시 깜빡인다
+// 보스 제약에 막힌 수의 숫자 깜빡임, hit은 이어서 막혀도 다시 깜빡이는 막힌 수의 차례
 const LimitCount = ({ hit, children }: { hit: number | null; children: ReactNode }) => (
   <motion.span
     key={hit ?? 'idle'}
@@ -77,7 +77,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const swiped = useRef(false)
   const t = useText()
 
-  // 주소가 바뀐 바로 다음 프레임에는 앞 스테이지가 남아 있어 지금 스테이지일 때만 그린다
+  // 지금 스테이지일 때만 그리는 판, 주소가 바뀐 바로 다음 프레임에 남은 앞 스테이지 탓
   const game = loaded?.stage.id === currentId ? loaded : null
   const { world, stage: stageNumber } = parseStageId(currentId)
   const nextId = nextStageId(currentId)
@@ -106,12 +106,12 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     if (nextId) goTo({ screen: 'play', stageId: nextId })
   }
   const handleSelect = () => goTo({ screen: 'select', world })
-  // 포커스가 남으면 Enter나 Space로 가이드가 다시 열려서 버튼 포커스를 뺀다
+  // 남으면 Enter나 Space로 가이드가 다시 열리는 버튼 포커스 해제
   const handleOpenGuide = (e: MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.blur()
     openGuide()
   }
-  // 얼마 못 간 판은 다시 풀기 쉬워서 묻지 않고 바로 다시 시작한다
+  // 얼마 못 간 판은 묻지 않고 바로 재시작
   const askOrRestart = useCallback(() => {
     if (guideStep === null && (game?.moves ?? 0) >= ASK_FROM_MOVES) setAsking(true)
     else restart()
@@ -121,13 +121,13 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     setAsking(false)
     restart()
   }
-  // 가이드와 카드가 떠 있는 동안은 스와이프를 받지 않고 제스처마다 앞 판정을 지운다
+  // 가이드와 카드가 떠 있는 동안은 스와이프 무시, 제스처마다 지우는 앞 판정
   const handlePointerDown = (e: PointerEvent<HTMLElement>) => {
     swiped.current = false
     if (guideStep !== null || asking || game?.cleared) return
     swipeStart.current = { x: e.clientX, y: e.clientY }
   }
-  // 최소 거리를 넘는 순간 판정하고, 시작점을 비워 한 제스처에 한 칸만 움직인다
+  // 최소 거리를 넘는 순간의 판정, 시작점을 비워 한 제스처에 한 칸
   const handlePointerMove = (e: PointerEvent<HTMLElement>) => {
     const start = swipeStart.current
     if (!start) return
@@ -137,7 +137,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     swiped.current = true
     move(direction)
   }
-  // 축에 가까워 미는 중에 판정하지 못한 제스처는 손을 뗄 때 받는다
+  // 축에 가까워 미는 중에 판정하지 못한 제스처는 손을 뗄 때 판정
   const handlePointerEnd = (e: PointerEvent<HTMLElement>) => {
     const start = swipeStart.current
     swipeStart.current = null
@@ -148,7 +148,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     swiped.current = true
     move(direction)
   }
-  // 스와이프로 판정한 제스처는 이어지는 클릭을 버려서 버튼이 눌리지 않게 한다
+  // 스와이프로 판정한 제스처의 이어지는 클릭 버리기, 버튼 눌림 방지
   const handleClickCapture = (e: MouseEvent<HTMLElement>) => {
     if (!swiped.current) return
     swiped.current = false
@@ -161,7 +161,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     return () => clearTimeout(timer)
   }, [gustAt, turn, reduced])
 
-  // 남아 있는 중간 상태가 있으면 이어서 시작하고 없으면 처음부터 시작한다
+  // 남아 있는 중간 상태가 있으면 이어서, 없으면 처음부터 시작
   useEffect(() => {
     enter(currentId)
   }, [enter, currentId])
@@ -305,7 +305,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                   </LimitCount>
                 </div>
               </div>
-              {/* 320px에서 버튼과 긴 이름이 한 줄에 들어가도록 폰 세로에서만 버튼을 줄인다 */}
+              {/* 320px에서 버튼과 긴 이름이 한 줄에 들어가는 폰 세로 전용 작은 버튼 */}
               <div className="flex gap-2.5 narrow:gap-1.5 narrow:[&>button]:size-8.5">
                 {hasGuide && (
                   <Button variant="icon" onClick={handleOpenGuide} title={t('play.guide')}>

@@ -1,10 +1,10 @@
 export type Route =
   | { screen: 'title' }
-  // chapters는 목록 위에 장 고르기가 펼쳐진 상태다. 화면을 갈아 끼우지 않는다
+  // chapters는 목록 위에 장 고르기가 펼쳐진 상태, 같은 화면
   | { screen: 'select'; world: number; chapters?: boolean }
   | { screen: 'play'; stageId: string }
 
-// 주소에 월드 번호가 없을 수 있어 parseRoute만 월드를 비워 둔다
+// 주소에 월드 번호가 없을 수 있어 parseRoute만 비워 두는 월드
 type ParsedRoute = Route | { screen: 'select'; world?: number; chapters?: boolean }
 
 export interface RouteContext {
@@ -15,12 +15,12 @@ export interface RouteContext {
 
 const TITLE: Route = { screen: 'title' }
 
-// 잠금 없이 아무 스테이지나 열어 보는 중인지. 주소에 남겨 새로고침해도 유지된다
+// 잠금 없이 아무 스테이지나 열어 보는 중인지 여부, 새로고침해도 유지되는 주소 값
 let all: boolean | undefined
 
 export const showingAll = () => (all ??= new URLSearchParams(window.location.search).has('all'))
 
-// 경로까지 적지 않으면 지금 주소를 기준으로 읽혀서 쿼리가 그대로 남는다
+// 경로까지 적는 이유, 안 적으면 지금 주소 기준이라 그대로 남는 쿼리
 export const setShowingAll = (on: boolean) => {
   const { pathname, hash } = window.location
   all = on
@@ -30,7 +30,7 @@ export const setShowingAll = (on: boolean) => {
 const STAGES_PATH = /^\/stages\/(\d+)(\/chapters)?$/
 const PLAY_PATH = /^\/play\/(\d+-\d+)$/
 
-// 정적 배포에서 어느 주소로 새로고침해도 404가 나지 않게 화면을 해시에 둔다
+// 정적 배포에서 어느 주소로 새로고침해도 404가 없는 해시 주소
 export const parseRoute = (hash: string): ParsedRoute | null => {
   const path = hash.replace(/^#/, '')
   if (path === '' || path === '/') return TITLE
@@ -51,11 +51,11 @@ export const hashOf = (route: Route) => {
   return `#/stages/${route.world}${route.chapters ? '/chapters' : ''}`
 }
 
-// 화면을 갈아 끼우는 단위. 장 고르기는 목록 안에서 펼쳐지므로 같은 화면으로 본다
+// 화면을 갈아 끼우는 단위, 목록 안에서 펼쳐지는 장 고르기는 같은 화면
 export const screenKeyOf = (route: Route) =>
   route.screen === 'select' ? `select/${route.world}` : hashOf(route)
 
-// 모르는 주소는 타이틀로 보내고 없는 월드와 아직 열리지 않은 스테이지는 진행 중인 월드로 보낸다
+// 모르는 주소는 타이틀, 없는 월드와 아직 열리지 않은 스테이지는 진행 중인 월드
 export const resolveRoute = (
   hash: string,
   { canPlay, worlds, currentWorld }: RouteContext,
@@ -81,7 +81,7 @@ export const goTo = (route: Route) => {
   window.location.hash = hashOf(route)
 }
 
-// 뒤로 가기로 갈 수 없는 주소에 다시 오지 않게 기록을 덮어쓴다
+// 뒤로 가기로 갈 수 없는 주소에 다시 오지 않게 덮어쓰는 기록
 export const replaceHash = (hash: string) => {
   window.location.replace(hash)
 }

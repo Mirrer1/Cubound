@@ -16,7 +16,7 @@ const isObject = (value: unknown): value is Data =>
 
 const isInt = (value: unknown): value is number => Number.isInteger(value)
 
-// 공식 스테이지와 유저가 공유한 맵을 같은 기준으로 검사한다
+// 공식 스테이지와 유저가 공유한 맵의 같은 검사 기준
 export const validateStage = (data: unknown): ValidateResult => {
   if (!isObject(data)) return { ok: false, errors: ['스테이지가 객체가 아니다'] }
 
@@ -149,13 +149,13 @@ export const validateStage = (data: unknown): ValidateResult => {
 
   const occupied = new Set<string>()
   const reserved = new Set([data.start, data.goal].filter(isFloor).map(key))
-  // 스위치는 문과 발판을 같은 target으로 가리켜 id를 함께 관리한다
+  // 문과 발판을 같은 target으로 가리키는 스위치, 함께 관리하는 id
   const targetIds = new Set<string>()
   const iceRows = Array.isArray(data.ice) ? (data.ice as string[]) : []
   const warpCells = new Map<string, { x: number; y: number }[]>()
   const tramCells = new Set<string>()
 
-  // 발판 길은 다른 오브젝트보다 먼저 훑어야 id 겹침과 길 겹침을 한 번에 잡는다
+  // 발판 길을 먼저 훑는 이유, id 겹침과 길 겹침을 한 번에 잡는 순서
   entities.forEach((entity, i) => {
     if (!isObject(entity) || entity.type !== 'tram') return
 
@@ -218,7 +218,7 @@ export const validateStage = (data: unknown): ValidateResult => {
 
     if (!isFloor(entity)) add(`entities[${i}]의 뿌리가 바닥 칸이 아니다`)
     else if (crackCells.has(key(entity))) add(`entities[${i}]의 뿌리가 무너지는 칸에 있다`)
-    // 뿌리 그림이 구멍 위로 솟아 가지처럼 보인다
+    // 구멍 위의 뿌리는 가지처럼 보이는 그림이라 불가
     else if (isFloor(data.goal) && key(data.goal) === key(entity))
       add(`entities[${i}]의 뿌리에 goal이 있다`)
     else vineRoots.add(key(entity))
@@ -241,7 +241,7 @@ export const validateStage = (data: unknown): ValidateResult => {
     if (path.some(({ x, y }) => grid[y][x] >= 0)) {
       add(`entities[${i}]의 cells가 바닥 없는 칸이 아니다`)
     }
-    // 뿌리에서 시작해 한 칸씩 이어진 길이다
+    // 뿌리에서 시작해 한 칸씩 이어진 길
     const line = isInt(entity.x) && isInt(entity.y) ? [{ x: entity.x, y: entity.y }, ...path] : path
     if (line.some((cell, n) => n > 0 && distance(line[n - 1], cell) !== 1)) {
       add(`entities[${i}]의 cells가 이어져 있지 않다`)
@@ -273,7 +273,7 @@ export const validateStage = (data: unknown): ValidateResult => {
     }
     if (occupied.has(key(entity))) add(`entities[${i}]이 다른 오브젝트와 같은 칸에 있다`)
     if (reserved.has(key(entity))) add(`entities[${i}]이 시작이나 목표 칸에 있다`)
-    // 상자는 밀려 다니므로 시작 위치가 무너지는 칸이어도 된다
+    // 밀려 다니는 상자는 무너지는 칸에서 시작해도 되는 예외
     if (entity.type !== 'box' && crackCells.has(key(entity))) {
       add(`entities[${i}]이 무너지는 칸에 있다`)
     }
@@ -300,7 +300,7 @@ export const validateStage = (data: unknown): ValidateResult => {
       if (iceRows[entity.y]?.[entity.x] === '#') add(`entities[${i}]이 얼음 칸에 있다`)
     }
 
-    // 씨앗은 심을 수 있는 기본 바닥 칸에만 둔다
+    // 씨앗을 둘 수 있는 곳은 심을 수 있는 기본 바닥 칸
     if (entity.type === 'seed') {
       if (iceRows[entity.y]?.[entity.x] === '#') add(`entities[${i}]이 얼음 칸에 있다`)
       if (vineRoots.has(key(entity))) add(`entities[${i}]이 덩굴 뿌리에 있다`)

@@ -7,13 +7,13 @@ import { walk } from './walkRule'
 export const isMushroom = (state: GameState, p: Point) =>
   state.mushrooms.some((cell) => same(cell, p))
 
-// 밟혀 튕긴 버섯은 시드는 판에서만 사라진다
+// 밟혀 튕긴 버섯이 사라지는 것은 시드는 판 한정
 export const wither = (state: GameState, sprung: Point[]) =>
   state.stage.rules?.mushroomWither
     ? state.mushrooms.filter((cell) => !sprung.some((s) => same(s, cell)))
     : state.mushrooms
 
-// 밟혀 튕긴 큐브가 내려설 자리와 지나며 밟은 버섯들. 첫 칸에서 못 뛰면 null
+// 튕긴 큐브가 내려설 자리와 밟고 지난 버섯들, 첫 칸에서 못 뛰면 null
 export const hop = (
   state: GameState,
   from: Point,
@@ -24,9 +24,9 @@ export const hop = (
 
   for (;;) {
     const level = floorAt(state, at) ?? 0
-    // 못 뛰면 연쇄가 멈춘 버섯 칸에 그대로 선다
+    // 못 뛰면 연쇄가 멈춘 버섯 칸에 제자리 유지
     const stopped = sprung.length > 0 ? { to: at, height: level, sprung } : null
-    // 사이 칸은 높이를 보지 않아 벽도 구덩이도 넘는다
+    // 사이 칸은 높이 무관, 벽과 구덩이 모두 통과
     const to = step(step(at, direction), direction)
     const floor = floorAt(state, to)
     if (floor === null || isClosedDoor(state, to)) return stopped

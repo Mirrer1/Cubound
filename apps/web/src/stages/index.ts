@@ -6,7 +6,7 @@ export const WORLDS_PER_CYCLE = 5
 
 const modules = import.meta.glob<Stage>('./world-*/*.json', { eager: true, import: 'default' })
 
-// "1-3" 같은 id를 월드 번호와 스테이지 번호로 나눈다
+// "1-3" 같은 id에서 나눈 월드 번호와 스테이지 번호
 export const parseStageId = (id: string) => {
   const [world, stage] = id.split('-').map(Number)
   return { world, stage }
@@ -22,7 +22,7 @@ export const WORLDS = [...new Set(Object.keys(STAGES).map((id) => parseStageId(i
   (a, b) => a - b,
 )
 
-// 아직 만들지 않은 스테이지는 빼고 번호순으로 돌려준다
+// 아직 만들지 않은 스테이지를 뺀 번호순 목록
 export const stageIdsOf = (world: number) =>
   Array.from({ length: STAGES_PER_WORLD }, (_, i) => stageId(world, i + 1)).filter(
     (id) => id in STAGES,
@@ -30,7 +30,7 @@ export const stageIdsOf = (world: number) =>
 
 export const isBossStage = (id: string) => parseStageId(id).stage % STAGES_PER_WORLD === 0
 
-// 세계 색이 갈리는 단위. 월드 다섯이 한 사이클이고 화면에서는 CHAPTER라 부른다
+// 세계 색이 갈리는 단위, 월드 다섯이 한 사이클, 화면 이름은 CHAPTER
 export const cycleOf = (world: number) => Math.ceil(world / WORLDS_PER_CYCLE)
 
 export const CHAPTERS = [...new Set(WORLDS.map(cycleOf))].sort((a, b) => a - b)
@@ -39,7 +39,7 @@ export const worldsOf = (chapter: number) => WORLDS.filter((world) => cycleOf(wo
 
 export const chapterStageIds = (chapter: number) => worldsOf(chapter).flatMap(stageIdsOf)
 
-// 장은 그 장의 첫 월드가 열리면 열린다
+// 장이 열리는 조건, 그 장의 첫 월드가 열릴 때
 export const chapterUnlockStageId = (chapter: number) => worldUnlockStageId(worldsOf(chapter)[0])
 
 // 월드에서 마지막으로 만든 스테이지 다음은 다음 월드의 첫 스테이지
@@ -54,7 +54,7 @@ export const nextStageId = (id: string) => {
   return next === undefined ? undefined : stageIdsOf(next)[0]
 }
 
-// 목록에서 한 칸 앞 월드. 첫 월드는 앞이 없다
+// 목록에서 한 칸 앞 월드, 첫 월드는 undefined
 export const previousWorld = (world: number): number | undefined =>
   WORLDS[WORLDS.indexOf(world) - 1]
 
@@ -68,7 +68,7 @@ export const worldUnlockStageId = (world: number) => {
 export const currentWorld = (progress: Progress) =>
   WORLDS.findLast((world) => isWorldUnlocked(progress, worldUnlockStageId(world))) ?? WORLDS[0]
 
-// 그 장에서 마지막으로 열린 월드. 장을 고르면 여기로 간다
+// 그 장에서 마지막으로 열린 월드, 장을 고르면 가는 자리
 export const currentWorldOf = (progress: Progress, chapter: number) => {
   const worlds = worldsOf(chapter)
   return (

@@ -7,10 +7,10 @@ import type { Direction, GameEvent, GameState } from '@/game/types'
 import { localProgressStorage, localSessionStorage } from '@/platform/storage'
 import { STAGES } from '@/stages'
 
-// 기다리는 입력은 하나만 받는다. 더 받아 두면 손을 뗀 뒤에도 큐브가 움직여 이동 수를 까먹는다
+// 기다리는 입력 하나, 더 받으면 손을 뗀 뒤에도 큐브가 움직여 이동 수를 까먹는 탓
 const MAX_QUEUE = 1
 
-// 연출 중 들어온 입력을 넣은 대기열. 바람에 밀린 수는 어디로 밀렸는지 보기 전에 누른 입력이라 버리고 자리가 그대로인 버틴 수는 받는다
+// 연출 중 들어온 입력의 대기열, 바람에 밀린 수는 밀린 곳을 보기 전 입력이라 버림 대상, 버틴 수는 받는 입력
 export const queueInput = (queue: Direction[], direction: Direction, events: GameEvent[]) =>
   queue.length >= MAX_QUEUE || events.some((e) => e.type === 'blown')
     ? queue
@@ -58,7 +58,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   queue: [],
   chained: false,
   guideStep: null,
-  // 중간 상태가 남아 있으면 이어서 시작하고 그때는 가이드를 띄우지 않는다
+  // 중간 상태가 남아 있으면 이어서 시작, 그때는 가이드 제외
   enter: (stageId) =>
     set(({ turn, progress }) => {
       const stage = STAGES[stageId]
@@ -106,7 +106,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ animating: false, restarting: false, queue: rest })
     if (next) get().move(next, true)
   },
-  // 연출 중에 다시 눌러도 기다리지 않고 처음부터 다시 시작한다
+  // 연출 중에 다시 눌러도 기다리지 않는 즉시 재시작
   restart: () =>
     set(({ game, turn, guideStep }) => {
       if (!game || guideStep !== null) return {}

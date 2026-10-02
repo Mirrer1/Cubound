@@ -2,7 +2,7 @@ import BoardBlock from './BoardBlock'
 import { PLATE } from './view'
 import { TILE, blockFaces } from '@/game/iso'
 
-// 짝 칸은 판보다 낮은 자리에 면을 한 장 더 얹어 우묵하게 보인다
+// 판보다 낮은 자리에 한 장 더 얹어 우묵한 짝 칸의 면
 const DISH = 0.46
 
 interface BoardPlateProps {

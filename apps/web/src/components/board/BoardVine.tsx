@@ -9,7 +9,7 @@ interface Shape {
   key?: string
 }
 
-// 자라는 동안 돋고 사라지는 도형에 붙이는 이름. 순번 key가 밀려 다른 도형의 색을 다시 쓰지 않게 한다
+// 자라는 동안 돋고 사라지는 도형의 이름, 순번 key가 밀려 다른 도형 색을 다시 쓰는 일 방지
 const named = (name: string, shapes: Shape[]) =>
   shapes.map((shape, i) => ({ ...shape, key: `${name}${i}` }))
 
@@ -19,11 +19,11 @@ interface Faces {
   right: string
 }
 
-// 줄기 반폭과 높이. 길이는 칸 단위이고 높이는 px이다
+// 줄기 반폭과 높이, 길이는 칸 단위, 높이는 px
 const STEM_HALF = 0.045
 const STEM_RISE = 2
 const LEAF_RISE = 0.5
-// 칸 반쪽마다 잎 둘이 줄기 양옆으로 번갈아 붙는다. 앞 값은 줄기를 따라 잰 자리다
+// 칸 반쪽마다 줄기 양옆으로 번갈아 붙는 잎 둘, 앞 값은 줄기를 따라 잰 자리
 const LEAVES: Record<'enter' | 'leave', number[][]> = {
   enter: [
     [-0.38, 1],
@@ -35,12 +35,12 @@ const LEAVES: Record<'enter' | 'leave', number[][]> = {
   ],
 }
 const NODES = { enter: -0.26, leave: 0.22 }
-// 굳은 끝 칸의 봉오리. 줄기는 BUD_STEM에서 끝난다
+// 굳은 끝 칸의 봉오리, 줄기 끝은 BUD_STEM
 const BUD = { along: 0.27, half: 0.15, across: 0.13, height: 8 }
 const BUD_STEM = 0.14
-// 자랄 때 잎과 마디는 줄기 끝이 이만큼 더 간 뒤에 다 돋는다. 칸 단위다
+// 자랄 때 잎과 마디가 다 돋기까지 줄기 끝이 더 가는 칸 단위 거리
 const VINE_LAG = { leaf: 0.16, node: 0.08 }
-// 싹은 구덩이 바닥의 뒤쪽 모서리에 선다
+// 구덩이 바닥의 뒤쪽 모서리에 서는 싹 자리
 const SPROUT_SPOT = -0.25
 
 const STEM: Faces = {
@@ -62,7 +62,7 @@ const SPROUT_BASE: Faces = {
 
 const horizontal = (d: Direction) => d === 'left' || d === 'right'
 
-// 줄기를 따라 잰 길이와 가로지른 폭을 칸 좌표로 바꾼다. 오른쪽과 아래로 자라면 부호가 그대로다
+// 줄기를 따라 잰 길이와 가로지른 폭의 칸 좌표, 오른쪽과 아래로 자라면 부호 유지
 const toCell = (d: Direction, along: number, across: number): [number, number] => {
   const a = d === 'right' || d === 'down' ? along : -along
   return horizontal(d) ? [a, across] : [across, a]
@@ -73,7 +73,7 @@ const at = (x: number, y: number, u: number, v: number, z: number) => {
   return `${x + p.x},${y + p.y - z}`
 }
 
-// 줄기 좌표로 잰 직육면체. z는 윗면 높이이고 depth만큼 아래로 옆면이 내려온다
+// 줄기 좌표로 잰 직육면체, z는 윗면 높이, depth는 옆면 길이
 const box = (
   x: number,
   y: number,
@@ -120,7 +120,7 @@ const box = (
   ]
 }
 
-// 윗면에 눕힌 연 모양 잎. (along, across)에서 (da, db) 쪽으로 뻗는다
+// 윗면에 눕힌 연 모양 잎, (along, across)에서 (da, db) 쪽으로 뻗는 방향
 const leaf = (
   x: number,
   y: number,
@@ -147,7 +147,7 @@ const leaf = (
 const stem = (x: number, y: number, d: Direction, [a0, a1]: [number, number]) =>
   a1 > a0 ? box(x, y, d, [a0, a1], [-STEM_HALF, STEM_HALF], STEM_RISE, STEM_RISE, STEM) : []
 
-// 마디는 줄기 끝이 지나간 뒤 scale만큼 돋는다
+// 줄기 끝이 지나간 뒤 scale만큼 돋는 마디
 const node = (x: number, y: number, d: Direction, along: number, scale: number) => {
   if (scale <= 0) return []
   const half = (STEM_HALF + 0.025) * scale
@@ -156,7 +156,7 @@ const node = (x: number, y: number, d: Direction, along: number, scale: number) 
   return box(x, y, d, [along - long, along + long], [-half, half], rise, rise, NODE)
 }
 
-// 잎은 붙는 자리를 두고 scale만큼 뻗는다
+// 붙는 자리를 두고 scale만큼 뻗는 잎
 const leafAt = (
   x: number,
   y: number,
@@ -180,12 +180,12 @@ const leafAt = (
         ),
       ]
 
-// 줄기 끝이 칸 입구에서 잰 거리를 지나간 뒤 돋는 정도. 자랄 때만 1보다 작다
+// 줄기 끝이 칸 입구에서 잰 거리를 지나간 뒤 돋는 정도, 1보다 작은 것은 자랄 때 한정
 const sprung = (tip: number, distance: number, span: number) => clamp01((tip - distance) / span)
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
-// 칸 입구에서 가운데를 지나 출구까지 잰 거리. 줄기를 따라 잰 자리 along을 이 거리로 바꾼다
+// 칸 입구에서 가운데를 지나 출구까지 잰 거리, along을 바꾼 값
 const enterDistance = (along: number) => 0.5 + along
 const leaveDistance = (along: number) => 0.5 + along
 
@@ -204,7 +204,7 @@ const grownShapes = (
       : hard >= 1
         ? 'var(--color-vine-hard-leaf)'
         : blend('var(--color-vine-leaf)', 'var(--color-vine-hard-leaf)', hard)
-  // 줄기 끝은 혀 끝에서 출발해 칸 출구까지 간다
+  // 혀 끝에서 출발해 칸 출구까지 가는 줄기 끝
   const tip = VINE_TONGUE + (1 - VINE_TONGUE) * growth
   const grownAt = (distance: number) => (growth >= 1 ? 1 : sprung(tip, distance, VINE_LAG.leaf))
   const nodeAt = (distance: number) => (growth >= 1 ? 1 : sprung(tip, distance, VINE_LAG.node))
@@ -229,7 +229,7 @@ const grownShapes = (
       'out-node',
       node(x, y, leave, NODES.leave, nodeAt(leaveDistance(NODES.leave)) * (1 - knot)),
     ),
-    // 굳은 끝 칸은 줄기가 짧아지고 봉오리로 닫힌다
+    // 굳은 끝 칸의 짧아진 줄기와 봉오리
     ...named(
       'bud',
       knot > 0
@@ -248,14 +248,14 @@ const grownShapes = (
   ]
 }
 
-// 뿌리는 칸 가운데에서 자랄 쪽 가장자리로 나가는 밑동이다
+// 칸 가운데에서 자랄 쪽 가장자리로 나가는 뿌리 밑동
 const rootShapes = (x: number, y: number, leave: Direction) => [
   leaf(x, y, leave, [0.3, -STEM_HALF], [0.06, -0.18], LEAF_RISE, 0.1, 'var(--color-vine-leaf)'),
   ...stem(x, y, leave, [0.2, 0.5]),
   ...box(x, y, leave, [0.12, 0.3], [-0.12, 0.12], 6, 6, STEM),
 ]
 
-// 앞 칸 줄기 끝이 혀처럼 이 칸 가장자리로 넘어와 다음 자랄 칸을 가리킨다
+// 다음 자랄 칸을 가리키며 이 칸 가장자리로 넘어온 앞 칸 줄기 끝의 혀
 const tongueShapes = (x: number, y: number, enter: Direction, tongue: number) =>
   tongue <= 0
     ? []
@@ -273,7 +273,7 @@ const tongueShapes = (x: number, y: number, enter: Direction, tongue: number) =>
         ),
       ])
 
-// 구덩이 바닥에 선 싹. 밑동 위에 대를 세우고 끝에 잎 둘을 단다
+// 구덩이 바닥에 선 싹, 밑동 위의 대와 끝의 잎 둘
 const sproutShapes = (x: number, y: number, height: number): Shape[] => {
   const reach = lerp(
     0.22,
@@ -294,7 +294,7 @@ interface BoardVineProps {
   x: number
   y: number
   floor: number // 구덩이 바닥이 칸 윗면보다 아래인 거리
-  layer: 'pit' | 'top' // 구덩이 바닥의 싹과 윗면의 줄기. 둘 사이에 판이 차오른다
+  layer: 'pit' | 'top' // 구덩이 바닥의 싹과 윗면의 줄기, 둘 사이에 차오르는 판
   kind: VineKind
   enter: Direction | null
   leave: Direction | null

@@ -2,7 +2,7 @@ import BoardBlock from './BoardBlock'
 import { MUD, darken } from './view'
 import { TILE, blockFaces, isoDelta } from '@/game/iso'
 
-// 진흙 위에 앉은 낮은 덩이. 자리는 칸 가운데에서 잰 칸 단위 거리다
+// 진흙 위에 앉은 낮은 덩이, 자리는 칸 가운데에서 잰 칸 단위 거리
 const LUMP = { scale: 0.09, depth: 2.5 }
 const LUMP_SPOTS: [number, number][] = [
   [-0.2, 0.14],
@@ -10,7 +10,7 @@ const LUMP_SPOTS: [number, number][] = [
   [0.06, 0.22],
 ]
 
-// 늪 우묵면의 뒤쪽 두 벽. 안쪽 마름모의 뒤 모서리에서 진흙 면까지 내려온다
+// 안쪽 마름모의 뒤 모서리에서 진흙 면까지 내려오는 늪 우묵면의 뒤쪽 두 벽
 const mudWallPoints = (x: number, y: number, side: number) => {
   const hw = ((TILE.width * MUD.scale) / 2) * side
   const hh = (TILE.height * MUD.scale) / 2
@@ -21,9 +21,9 @@ interface BoardSwampProps {
   x: number
   y: number
   mudY: number
-  swamp: boolean // 늪 칸
+  swamp: boolean
   swampFilled: number // 상자가 가라앉아 메워진 정도 0~1
-  swampDeep: number // 잠긴 정도 0~1, 0이면 잠긴 것 없음
+  swampDeep: number // 잠긴 정도 0~1, 0이면 잠긴 것 없는 칸
   collar: number
 }
 

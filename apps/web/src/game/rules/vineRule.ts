@@ -5,7 +5,7 @@ type Vine = Extract<Entity, { type: 'vine' }>
 
 export const vines = (stage: Stage) => stage.entities.filter((e): e is Vine => e.type === 'vine')
 
-// 굳는 자리에서는 큐브가 딛고 선 덩굴이 굳고 나머지 덩굴은 앞 칸이 바닥 없는 칸일 때만 한 칸 뻗는다
+// 앞 칸이 바닥 없는 칸일 때만 한 칸 뻗는 덩굴, 굳는 자리에서는 큐브가 딛고 선 덩굴이 정지
 export const growVines = (state: GameState): MoveResult => {
   if (state.vines.length === 0) return { state, events: [] }
 

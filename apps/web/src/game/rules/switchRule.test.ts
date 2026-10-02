@@ -106,7 +106,7 @@ describe('move 스위치와 문', () => {
 
 const LIFT = { x: 4, y: 1 }
 
-// 스위치 칸이 한 층 높아 큐브가 올라간 발판으로 옮겨 설 수 있다
+// 스위치 칸이 한 층 높아 큐브가 올라간 발판으로 옮겨 설 수 있는 판
 const RIDE_STAGE: Stage = {
   ...LIFT_STAGE,
   heights: [

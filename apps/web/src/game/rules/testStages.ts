@@ -156,7 +156,6 @@ export const BOX_RIDE_STAGE: Stage = {
   ],
 }
 
-// 바람은 왼쪽으로 분다
 export const WIND_STAGE: Stage = {
   version: 1,
   id: 'test-wind',

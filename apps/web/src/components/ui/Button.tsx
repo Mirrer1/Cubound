@@ -15,7 +15,7 @@ const TONES = {
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: keyof typeof VARIANTS
-  strong?: boolean // 시선을 끌어야 할 때 진한 면으로
+  strong?: boolean // 시선을 끌어야 할 때 쓰는 진한 면
   ref?: Ref<HTMLButtonElement>
 }
 

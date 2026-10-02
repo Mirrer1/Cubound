@@ -10,7 +10,7 @@ export const SEED_WAIT = 4
 
 export const isPlanted = (state: GameState, p: Point) => state.planted.some((seed) => same(seed, p))
 
-// 아무것도 없는 기본 바닥 칸. 스테이지에서 구덩이였던 칸은 메워져도 제외된다
+// 아무것도 없는 기본 바닥 칸, 메워진 구덩이는 제외
 export const canPlant = (state: GameState, p: Point) => {
   const { stage } = state
   return (
@@ -31,7 +31,7 @@ export const canPlant = (state: GameState, p: Point) => {
   )
 }
 
-// 심은 씨앗은 센 수마다 남은 수가 줄고 다 되면 칸이 한 층 솟는다. 위의 큐브와 상자는 높이를 따라 같이 오른다
+// 다 자란 씨앗 칸은 한 층 상승, 위의 큐브와 상자도 함께 상승
 export const riseSeeds = (before: GameState, state: GameState): MoveResult => {
   if (state.planted.length === 0) return { state, events: [] }
 
@@ -39,7 +39,7 @@ export const riseSeeds = (before: GameState, state: GameState): MoveResult => {
   let heights = state.heights
 
   const planted = state.planted.flatMap((seed) => {
-    // 이번 수에 심은 씨앗은 세지 않는다
+    // 이번 수에 심은 씨앗은 세기 제외
     if (!isPlanted(before, seed)) return [seed]
 
     const { x, y } = seed
@@ -52,7 +52,7 @@ export const riseSeeds = (before: GameState, state: GameState): MoveResult => {
     const height = heights[y][x] + 1
     heights = heights.map((row, i) => (i === y ? row.map((h, j) => (j === x ? height : h)) : row))
     const rises = seed.rises + 1
-    // 콩나무는 세 층까지 솟는다
+    // 콩나무 최대 높이 세 층
     const growing = Boolean(state.stage.rules?.seedGrow) && rises < 3
     const lifted: Lifted[] = [
       ...(hasBox(state, seed) ? ['box' as const] : []),

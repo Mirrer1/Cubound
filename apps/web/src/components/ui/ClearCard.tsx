@@ -22,7 +22,7 @@ const ClearCard = ({ stageNumber, moves, stars, onNext, onRetry, onSelect }: Cle
 
   useFocusTrap(cardRef)
 
-  // Enter로 바로 다음 스테이지에 갈 수 있게 포커스를 옮긴다
+  // Enter로 바로 다음 스테이지에 가는 포커스 자리
   useEffect(() => {
     firstRef.current?.focus()
   }, [])

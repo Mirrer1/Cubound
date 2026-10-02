@@ -21,7 +21,7 @@ const isRecord = (value: unknown): value is StageRecord =>
   Number.isInteger((value as StageRecord).bestMoves) &&
   Number.isInteger((value as StageRecord).stars)
 
-// 저장된 값을 현재 버전으로 읽는다. 버전이 오르면 여기에 옮기는 단계를 추가한다
+// 저장된 값을 현재 버전으로 읽는 곳, 버전이 오르면 옮기는 단계를 더할 자리
 export const migrateProgress = (saved: unknown): Progress => {
   if (typeof saved !== 'object' || saved === null) return EMPTY_PROGRESS
 
@@ -36,13 +36,13 @@ export const migrateProgress = (saved: unknown): Progress => {
   }
 }
 
-// 더 좋은 기록일 때만 갱신한다
+// 더 좋은 기록일 때만 하는 갱신
 export const recordClear = (
   progress: Progress,
   stageId: string,
   moves: number,
   best: number,
-  limit?: number, // 보스 이동 제한
+  limit?: number,
 ): Progress => {
   const previous = progress.stages[stageId]
   const record = { bestMoves: moves, stars: stars(moves, best, limit) }
@@ -51,17 +51,17 @@ export const recordClear = (
   return { ...progress, stages: { ...progress.stages, [stageId]: record } }
 }
 
-// 첫 스테이지이거나 앞 스테이지를 클리어했으면 열림
+// 열리는 경우, 첫 스테이지이거나 앞 스테이지를 클리어했을 때
 export const isUnlocked = (progress: Progress, stageIds: string[], stageId: string) => {
   const index = stageIds.indexOf(stageId)
   return index === 0 || (index > 0 && stageIds[index - 1] in progress.stages)
 }
 
-// 월드는 앞 월드의 마지막 스테이지를 클리어하면 열리고 첫 월드는 조건이 없다
+// 월드가 열리는 조건은 앞 월드의 마지막 스테이지 클리어, 첫 월드는 예외
 export const isWorldUnlocked = (progress: Progress, unlockStageId?: string) =>
   unlockStageId === undefined || unlockStageId in progress.stages
 
-// 클리어 기록이 없고 가이드가 있는 스테이지만 자동으로 띄운다
+// 가이드를 자동으로 띄우는 스테이지, 클리어 기록이 없고 가이드가 있는 판
 export const shouldShowGuide = (stage: Stage, progress: Progress) =>
   (stage.guides?.length ?? 0) > 0 && !(stage.id in progress.stages)
 

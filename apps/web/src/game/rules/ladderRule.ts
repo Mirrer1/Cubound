@@ -5,7 +5,7 @@ import { SEED_WAIT, canPlant, isPlanted } from './seedRule'
 import { floorAt, standHeight } from './stateRule'
 import { arrive } from './walkRule'
 
-// 한 층 높은 칸 앞에서 기대 놓인 사다리로 오르거나 들고 있던 사다리를 놓거나 씨앗을 발밑에 심는다
+// 한 층 높은 칸 쪽으로 미는 수의 결과, 기댄 사다리로 오르기와 사다리 놓기와 발밑에 씨앗 심기
 export const climbOrPlaceLadder = (
   state: GameState,
   to: Point,
@@ -37,7 +37,7 @@ export const climbOrPlaceLadder = (
     }
   }
 
-  // 심은 칸은 솟으면 사다리 높이가 어긋나서 발치로도 기댈 칸으로도 쓰지 않는다
+  // 솟으면 사다리 높이가 어긋나는 심은 칸은 사다리 발치와 기댈 칸 모두 불가
   if (!state.carrying || isPlanted(state, from) || isPlanted(state, to)) return null
 
   const ladder = { ...from, direction }

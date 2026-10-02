@@ -8,7 +8,7 @@ import { durationOf } from './timeFrame'
 import { createState, move } from '@/game/rules'
 import type { Stage } from '@/game/types'
 
-// 늪에 times번 빠져 마지막 늪에 막 들어선 상태. n번째 늪은 버둥이 n+1수다
+// 늪에 times번 빠져 마지막 늪에 막 들어선 상태, n번째 늪의 버둥은 n+1수
 const deepSwamp = (times: number) => {
   let state = createState({ ...SWAMP_STAGE, rules: { swampDeepen: true } })
   let side: 'left' | 'right' = 'right'
@@ -23,7 +23,7 @@ const deepSwamp = (times: number) => {
   return state
 }
 
-// 늪만 없는 같은 판. 상자 밀기가 늪 때문에 달라지지 않았는지 재는 잣대다
+// 늪만 없는 같은 판, 상자 밀기가 늪 때문에 달라지지 않았는지 재는 잣대
 const PUSH_STAGE: Stage = {
   version: 1,
   id: 'test-push',

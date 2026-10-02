@@ -10,7 +10,7 @@ interface ChapterTabProps {
   onClick: () => void
 }
 
-// 월드 카드 뒤에 장 판이 한 겹 더 보인다. 겹친 모양이 "이 월드는 저 장 안에 있다"를 말한다
+// 월드 카드 뒤에 한 겹 더 보이는 장 판, "이 월드는 저 장 안"이라는 겹친 모양
 const ChapterTab = ({
   chapter,
   world,
@@ -36,7 +36,7 @@ const ChapterTab = ({
         }`}
       >
         CHAPTER {chapter}
-        {/* 색이 바뀌는 시간과 곡선을 맞춘다. transition-soft는 transform만 120ms라 따로 준다 */}
+        {/* 색이 바뀌는 시간과 곡선 맞춤, transition-soft는 transform만 120ms인 탓 */}
         <motion.span
           className="text-[9px] min-[1700px]:text-[10px]"
           animate={{ rotate: open ? 180 : 0 }}

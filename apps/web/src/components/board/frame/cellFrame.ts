@@ -1,8 +1,8 @@
 import type { VineLook } from './vineFrame'
 import { toScreen } from '@/game/iso'
 
-// x, y는 화면 좌표, p는 칸 좌표. 메운 칸이 다시 구멍이 될 때는 사라지기 전 높이로 그린다
-// 발판 길과 아직 바닥 없는 덩굴 길은 구덩이로 그린다
+// x, y는 화면 좌표, p는 칸 좌표, 다시 구멍이 되는 메운 칸은 사라지기 전 높이
+// 구덩이로 그리는 칸, 발판 길과 아직 바닥 없는 덩굴 길
 export const boardCells = (
   heights: number[][],
   beforeHeights: number[][],

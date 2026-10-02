@@ -16,7 +16,7 @@ export const toScreen = ({ x, y }: Point, h: number): Point => {
 
 const points = (list: [number, number][]) => list.map(([x, y]) => `${x},${y}`).join(' ')
 
-// 윗면 중심이 (cx, cy)이고 폭 width, 옆면 높이 depth인 블록의 세 면
+// 윗면 중심 (cx, cy), 폭 width, 옆면 높이 depth인 블록의 세 면
 export const blockFaces = (cx: number, cy: number, width: number, depth: number) => {
   const hw = width / 2
   const hh = width / 4

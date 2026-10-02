@@ -13,20 +13,20 @@ const TitleScreen = () => {
   const progress = useGameStore((s) => s.progress)
   const t = useText()
 
-  // 목록에서 보던 자리로 돌아간다. 시작과 스테이지 선택이 서로 다른 자리를 기억한다
+  // 목록에서 보던 자리, 시작과 스테이지 선택이 따로 기억하는 자리
   const lastWorld = (all: boolean, fallback: number) => {
     const saved = localWorldStorage.load(all)
     if (saved === undefined || !WORLDS.includes(saved)) return fallback
-    // 시작은 순서대로 푸는 자리라 그 사이에 잠긴 월드는 기억해도 열어주지 않는다
+    // 순서대로 푸는 시작은 기억한 월드라도 잠겼으면 제외
     return all || isWorldUnlocked(progress, worldUnlockStageId(saved)) ? saved : fallback
   }
 
-  // 앞서 모든 스테이지를 열어 뒀어도 시작으로 들어오면 다시 순서대로 푼다
+  // 앞서 모든 스테이지를 열어 뒀어도 시작으로 들어오면 다시 순서대로 푸는 진행
   const handleStart = () => {
     setShowingAll(false)
     goTo({ screen: 'select', world: lastWorld(false, currentWorld(progress)) })
   }
-  // 순서대로 깨지 않고 아무 판이나 골라 본다
+  // 순서와 상관없이 아무 판이나 골라 보는 목록
   const handleSelect = () => {
     setShowingAll(true)
     goTo({ screen: 'select', world: lastWorld(true, WORLDS[0]) })

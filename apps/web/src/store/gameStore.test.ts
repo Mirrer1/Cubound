@@ -79,7 +79,7 @@ describe('queueInput', () => {
   })
 })
 
-// 저장소는 브라우저 localStorage를 쓰므로 테스트마다 빈 것으로 바꿔 둔다
+// 브라우저 localStorage를 쓰는 저장소, 테스트마다 빈 것으로 교체
 const fakeStorage = () => {
   const items = new Map<string, string>()
   return {

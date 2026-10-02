@@ -12,7 +12,7 @@ const STAGES_DIR = 'src/stages'
 
 const ARROWS: Record<Direction, string> = { up: '↑', right: '→', down: '↓', left: '←' }
 
-// 한글은 터미널에서 두 칸을 차지한다
+// 터미널에서 두 칸을 차지하는 한글
 const width = (text: string) =>
   [...text].reduce((n, c) => n + (c.charCodeAt(0) > 0x2e7f ? 2 : 1), 0)
 
@@ -60,13 +60,13 @@ const files = (arg: string): string[] => {
   return statSync(path).isDirectory() ? jsonIn(path) : [path]
 }
 
-// 풀이를 구역 경계로 잘라 구역마다 몇 수를 쓰는지 센다. 넘어가는 수는 들어선 구역 몫이다
+// 풀이를 구역 경계로 잘라 센 구역마다의 수, 넘어가는 수는 들어선 구역 몫
 const zoneMoves = (stage: Stage, path: Direction[]) => {
   const zones = stage.zones
   if (!zones || zones.length < 2) return null
 
   const counts = zones.map(() => 0)
-  // 제한만 빼고 판을 바꾸는 규칙은 남긴다. 빼면 버섯이 안 시들거나 덩굴이 안 굳어 풀이가 다른 길로 샌다
+  // 제한만 빼고 남기는 판을 바꾸는 규칙, 빼면 버섯과 덩굴이 그대로라 다른 길로 새는 풀이
   const { swampDeepen, mushroomWither, vineStop, seedGrow, wind } = stage.rules ?? {}
   let state = createState({
     ...stage,

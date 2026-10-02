@@ -19,7 +19,7 @@ const RestartCard = ({ onKeep, onRestart }: RestartCardProps) => {
 
   useFocusTrap(cardRef)
 
-  // 빗맞아 연달아 눌러도 진행이 날아가지 않게 계속하기에 포커스를 둔다
+  // 빗맞아 연달아 눌러도 진행이 날아가지 않는 계속하기 포커스
   useEffect(() => {
     keepRef.current?.focus()
   }, [])

@@ -18,7 +18,7 @@ const VIEWS = [
   { width: 1326, height: 596 }, // 1440x800 노트북
   { width: 324, height: 612 }, // 390x844 폰
   { width: 778, height: 234 }, // 844x390 폰 가로
-  { width: 1856, height: 1284 }, // 3440x1440, 판 최대 폭이 걸린 크기
+  { width: 1856, height: 1284 }, // 3440x1440, 판 최대 폭이 걸리는 크기
   { width: 600, height: 600 },
 ]
 
@@ -37,7 +37,7 @@ const margins = ([vx, vy, vw, vh]: ViewBox, box: Box) => ({
   bottom: vy + vh - box.maxY,
 })
 
-// 구르는 도중까지 포함해 큐브가 닿는 가장 위쪽 화면 좌표
+// 구르는 도중까지 포함한 큐브가 닿는 가장 위쪽 화면 좌표
 const cubeTop = (x: number, y: number, level: number) => {
   const angles = [0, 0.2, Math.PI / 6, Math.PI / 4, Math.PI / 3, Math.PI / 2]
   const directions: Direction[] = ['up', 'right', 'down', 'left']
@@ -259,7 +259,7 @@ describe('viewBoxFor', () => {
 })
 
 describe('viewBoxFor 칸 폭 하한', () => {
-  // 10x9 구역이 가로세로 모두 담기지 않는 크기
+  // 10x9 구역이 가로세로 모두 넘치는 크기
   const TIGHT = { width: 400, height: 280 }
   const BIG = flat(10, 9, 2)
   const big = zoneBox(BIG)

@@ -5,7 +5,7 @@ import { move } from './moveRule'
 import { createState, standHeight } from './stateRule'
 import { play } from './testStages'
 
-// 오른쪽 (3, 1)과 (3, 2)가 한 층 높아 그 앞에서 심는다
+// 오른쪽 (3, 1)과 (3, 2)가 한 층 높아 그 앞에서 심는 판
 const SEED_STAGE: Stage = {
   version: 1,
   id: 'test-seed',
@@ -20,7 +20,7 @@ const SEED_STAGE: Stage = {
   entities: [{ type: 'seed', x: 1, y: 1 }],
 }
 
-// 씨앗을 주워 (2, 1)에 심는다
+// 씨앗을 주워 (2, 1)에 심는 수순
 const PLANT: Direction[] = ['right', 'right', 'right']
 
 // 씨앗을 든 채 (1, 1)에 서서 오른쪽 한 층 높은 (2, 1) 쪽으로 밀 수 있는 상태
@@ -395,7 +395,7 @@ describe('move 씨앗', () => {
 })
 
 describe('move 콩나무', () => {
-  // 심은 칸에 상자를 밀어 올린 뒤 위아래로 오가며 수를 센다
+  // 심은 칸에 상자를 밀어 올린 뒤 위아래로 오가며 수를 세는 판
   const BEAN: Stage = {
     ...SEED_STAGE,
     rules: { seedGrow: true },
@@ -469,7 +469,7 @@ describe('move 씨앗 올라타기', () => {
   })
 
   it('콩나무에서 기둥 옆에 같은 높이의 땅이 있으면 오가며 세 층까지 타고 오른다', () => {
-    // (1, 1)에 심고 아래 땅, 오른쪽 한 층, 위쪽 두 층, 왼쪽 세 층을 차례로 오간다
+    // (1, 1)에 심고 아래 땅, 오른쪽 한 층, 위쪽 두 층, 왼쪽 세 층을 차례로 오가는 판
     const stage: Stage = {
       ...SEED_STAGE,
       heights: [

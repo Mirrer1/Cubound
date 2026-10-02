@@ -14,7 +14,7 @@ import { TILE, toScreen } from '@/game/iso'
 import { nextTramSpot } from '@/game/rules'
 import type { GameEvent, GameState, Point, Tram, TramSpot } from '@/game/types'
 
-// 발판이 다음 칸으로 가는 진행도 0~1. 발판이 가지 않는 이동은 1
+// 발판이 다음 칸으로 가는 진행도 0~1, 발판이 가지 않는 이동은 1
 export const tramProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
   const at = tramStart(events)
   if (at === null) return 1
@@ -22,10 +22,10 @@ export const tramProgress = (events: GameEvent[], t: number, swamp: SwampTime = 
   return smooth(Math.min(1, Math.max(0, (elapsedAt(events, swamp, t) - at) / SECONDS.tram)))
 }
 
-// 앞쪽 칸에 그려야 뒤쪽 칸 블록에 덮이지 않는다
+// 뒤쪽 칸 블록에 덮이지 않는 앞쪽 칸
 export const frontOf = (a: Point, b: Point) => (a.x + a.y >= b.x + b.y ? a : b)
 
-// 발판과 그 위에 탄 것이 같은 칸에 그려져야 서로 덮이는 순서가 맞는다
+// 덮이는 순서가 맞게 발판과 그 위에 탄 것을 함께 그리는 칸
 export const slidingCell = (from: Point, to: Point, p: number) =>
   p <= 0 ? from : p >= 1 ? to : frontOf(from, to)
 
@@ -42,7 +42,7 @@ export const carriedBy = (carry: TramEvent, p: number) => ({
 export const tramNext = (tram: Tram, spot: TramSpot) =>
   tram.cells[nextTramSpot(tram.cells, spot).at]
 
-// 코는 다음에 갈 쪽을 가리킨다. 끝에 닿으면 오던 쪽 그대로 둔다
+// 코가 가리키는 다음에 갈 쪽, 끝에 닿으면 오던 쪽
 export const tramFacing = (tram: Tram, spot: TramSpot) => {
   const at = tram.cells[spot.at]
   const ahead = tram.cells[spot.at + spot.dir]
@@ -50,7 +50,7 @@ export const tramFacing = (tram: Tram, spot: TramSpot) => {
   return ahead ? { x: ahead.x - at.x, y: ahead.y - at.y } : { x: at.x - back.x, y: at.y - back.y }
 }
 
-// 발판 길 칸은 바닥이 없어도 구덩이로 그린다. 값은 이웃한 길 칸의 방향이다
+// 바닥이 없어도 구덩이로 그리는 발판 길 칸, 값은 이웃한 길 칸의 방향
 export const railDirsOf = (trams: Tram[]) => {
   const map = new Map<string, string>()
   for (const tram of trams)
@@ -73,7 +73,7 @@ interface TramView {
   tramPhase: number
 }
 
-// 발판은 이전 자리에서 다음 자리로 미끄러진다. 코와 밝은 레일은 도착하는 순간에 다음 쪽으로 넘어간다
+// 이전 자리에서 다음 자리로 미끄러지는 발판, 코와 밝은 레일이 넘어가는 때는 도착 순간
 export const tramFramesOf = ({ trams, before, game, tramPhase }: TramView) =>
   trams.map((tram, i) => {
     const from = tram.cells[before.trams[i].at]

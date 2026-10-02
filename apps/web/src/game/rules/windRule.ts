@@ -9,7 +9,7 @@ import { walk } from './walkRule'
 // 바람이 한 번 불기까지 세는 수
 export const WIND_EVERY = 4
 
-// 바람에 밀려 간 결과. 그 방향 키를 누른 것과 같지만 상자 밀기, 올라서기, 사다리 놓기, 씨앗 심기는 하지 않고 버틴다
+// 그 방향 키를 누른 것과 같은 이동, 상자 밀기와 올라서기와 사다리 놓기와 씨앗 심기 대신 버티기
 const windStep = (state: GameState, direction: Direction): MoveResult | null => {
   const from = state.player
   if (isMushroom(state, from)) {
@@ -20,7 +20,7 @@ const windStep = (state: GameState, direction: Direction): MoveResult | null => 
   const to = step(from, direction)
   const toFloor = floorAt(state, to)
   if (toFloor === null || isClosedDoor(state, to)) return null
-  // 상자는 기댈 자리라 그 위로 밀려 가지 않는다. 상자 위에 선 큐브만 같은 높이의 이웃 상자 윗면으로 밀려 간다
+  // 기댈 자리인 상자, 상자 위에 선 큐브만 같은 높이의 이웃 상자 윗면으로 이동
   if (hasBox(state, to)) {
     return hasBox(state, from) && toFloor + 1 === standHeight(state, from)
       ? walk(state, to, toFloor + 1, direction)
@@ -39,7 +39,7 @@ const OPPOSITE: Record<Direction, Direction> = {
   left: 'right',
 }
 
-// 바람이 오는 쪽 옆 칸이 상자 윗면까지 쳐서 선 높이보다 높으면 바람을 막아 준다
+// 바람막이 조건, 바람이 오는 쪽 옆 칸이 상자 윗면까지 쳐서 선 높이보다 높은 경우
 const sheltered = (state: GameState, direction: Direction) => {
   const upwind = step(state.player, OPPOSITE[direction])
   return (
@@ -47,7 +47,7 @@ const sheltered = (state: GameState, direction: Direction) => {
   )
 }
 
-// 센 수가 WIND_EVERY의 배수가 되면 큐브만 바람 쪽으로 한 칸 밀린다. 늪에 선 큐브와 숨은 큐브는 버틴다
+// 큐브만 미는 바람, 늪에 선 큐브와 숨은 큐브는 예외
 export const blow = (state: GameState): MoveResult => {
   const direction = state.stage.rules?.wind
   if (!direction || state.cleared || state.moves % WIND_EVERY !== 0) return { state, events: [] }
@@ -63,7 +63,7 @@ export const blow = (state: GameState): MoveResult => {
   }
 
   const from = state.player
-  // 바람에 밀린 것은 이동 수로 세지 않는다
+  // 바람에 밀린 것은 이동 수에서 제외
   return {
     state: { ...pushed.state, moves: state.moves },
     events: [{ type: 'blown', from, to: step(from, direction), direction }, ...pushed.events],
