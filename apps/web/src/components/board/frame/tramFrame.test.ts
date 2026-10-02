@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { PIT_FLOOR } from '../view'
 import { playerFrame } from './cubeFrame'
 import { board, ride } from './testStages'
 import {
@@ -106,7 +107,6 @@ describe('발판 그리기', () => {
       before: { trams: [spot(from, 1)] },
       game: { trams: [spot(to, 1)] },
       tramPhase,
-      PIT_FLOOR: 10,
     })[0]
 
   it('tramFramesOf는 진행도만큼 미끄러진 화면 자리와 발판 높이만큼 올린 깊이를 준다', () => {
@@ -115,7 +115,7 @@ describe('발판 그리기', () => {
 
     expect(half.x).toBe(screen.x)
     expect(half.y).toBe(screen.y - TILE.layer)
-    expect(half.depth).toBe(10 + TILE.layer)
+    expect(half.depth).toBe(PIT_FLOOR + TILE.layer)
   })
 
   it('가는 동안은 가는 쪽을 가리키고 앞쪽 칸에 그린다', () => {

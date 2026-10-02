@@ -1,5 +1,5 @@
 import BoardBlock from '@/components/board/BoardBlock'
-import { darken, shade } from '@/components/board/shade'
+import { darken, shade } from '@/components/board/view'
 import { TILE, toScreen } from '@/game/iso'
 
 const HEIGHTS = [

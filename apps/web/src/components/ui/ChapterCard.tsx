@@ -1,4 +1,4 @@
-import { shade } from '@/components/board/shade'
+import { shade } from '@/components/board/view'
 
 export type ChapterCardState = 'locked' | 'open' | 'now'
 

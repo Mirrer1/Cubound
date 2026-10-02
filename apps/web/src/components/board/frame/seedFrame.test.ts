@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { tiltOnTop } from '../cube'
+import { tiltOnTop } from '../view'
 import {
   type PlantingFrame,
   SAPLING,

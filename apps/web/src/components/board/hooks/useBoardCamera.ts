@@ -1,7 +1,7 @@
 import { animate } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
-import { type Box, type ViewBox, type ViewSize, cameraHeights, viewBoxFor, zoneBox } from './camera'
+import { type Box, type ViewBox, type ViewSize, cameraHeights, viewBoxFor, zoneBox } from '../view'
 import { zoneIndexAt } from '@/game/camera'
 import { toScreen } from '@/game/iso'
 import type { GameState, Point } from '@/game/types'
@@ -18,7 +18,7 @@ interface ZoneMove {
 }
 
 // focus가 있으면 큐브 대신 그 칸이 속한 구역을 비춘다
-export const useCamera = (game: GameState, focus?: Point) => {
+export const useBoardCamera = (game: GameState, focus?: Point) => {
   const zones = game.stage.zones ?? []
   const [zoneIndex, setZoneIndex] = useState(0)
   const nextIndex = zones.length > 0 ? zoneIndexAt(zones, focus ?? game.player, zoneIndex) : 0

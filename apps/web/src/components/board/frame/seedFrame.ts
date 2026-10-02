@@ -1,4 +1,4 @@
-import { type TopTilt, tiltOnTop } from '../cube'
+import { type TopTilt, tiltOnTop } from '../view'
 import type { CubeFrame } from './cubeFrame'
 import { clamp01, lerp } from './curveFrame'
 import { NO_SWAMP, type SwampTime, riseProgress, same, stepProgress } from './timeFrame'

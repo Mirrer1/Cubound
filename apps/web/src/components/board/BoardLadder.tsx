@@ -1,5 +1,4 @@
-import type { TopTilt } from './cube'
-import { darken, shade } from './shade'
+import { type TopTilt, darken, shade } from './view'
 import { TILE, isoDelta } from '@/game/iso'
 import type { Direction, Point } from '@/game/types'
 

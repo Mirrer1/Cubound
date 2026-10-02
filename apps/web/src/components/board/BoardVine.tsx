@@ -1,5 +1,5 @@
 import { VINE_SPROUT, VINE_TONGUE, type VineKind } from './frame'
-import { blend, darken } from './shade'
+import { blend, darken } from './view'
 import { isoDelta } from '@/game/iso'
 import type { Direction } from '@/game/types'
 

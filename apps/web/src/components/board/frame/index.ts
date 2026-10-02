@@ -29,7 +29,14 @@ export {
   tramNext,
   tramProgress,
 } from './tramFrame'
-export { type CubeFrame, directionBetween, playerFrame } from './cubeFrame'
+export {
+  type CubeFrame,
+  directionBetween,
+  playerFrame,
+  SLIDE_DEG,
+  squashTransform,
+} from './cubeFrame'
+export { boardCells } from './cellFrame'
 export {
   CAP_TOP_IDLE,
   hopLift,

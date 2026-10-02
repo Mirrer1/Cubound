@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { BOX_SINK } from '../view'
 import { type BoxFrame, boxFramesOf, movingBox } from './boxFrame'
 import { standSink } from './crackFrame'
 import { mushroomFrames } from './mushroomFrame'
@@ -240,7 +241,6 @@ describe('boxFramesOf', () => {
       tramFrames: [],
       boxes: [],
       crackView: NO_CRACK,
-      BOX_SINK: 20,
       ...over,
     })
   const pushed = toScreen({ x: 1.5, y: 0 }, 1)
@@ -258,7 +258,7 @@ describe('boxFramesOf', () => {
   it('늪에 가라앉는 상자는 잠긴 정도만큼 내려간다', () => {
     const sinkingBox = { at: { x: 2, y: 0 }, deep: 0.5, filled: 0 }
 
-    expect(view({ box: BOX, sinkingBox })[0].y).toBe(pushed.y - TILE.layer - 5 + 10)
+    expect(view({ box: BOX, sinkingBox })[0].y).toBe(pushed.y - TILE.layer - 5 + BOX_SINK * 0.5)
   })
 
   it('무너지는 칸 위를 지나는 상자는 내려앉은 만큼 내려간다', () => {

@@ -1,8 +1,7 @@
 import { motion } from 'motion/react'
 
 import BoardBlock from './BoardBlock'
-import { CUBE } from './cube'
-import { shade } from './shade'
+import { CUBE, shade } from './view'
 import { TILE, blockFaces } from '@/game/iso'
 
 const PARTICLE_SIZE = 15
@@ -19,12 +18,12 @@ const PARTICLES = [
   { dx: 14, rise: 92, token: 'tool' },
 ]
 
-interface ClearEffectProps {
+interface BoardClearProps {
   x: number
   y: number // 구멍 윗면 중심
 }
 
-const ClearEffect = ({ x, y }: ClearEffectProps) => {
+const BoardClear = ({ x, y }: BoardClearProps) => {
   const hw = TILE.width / 2
   const hh = TILE.width / 4
   // 구멍 아래로 들어간 부분을 가린다
@@ -75,4 +74,4 @@ const ClearEffect = ({ x, y }: ClearEffectProps) => {
   )
 }
 
-export default ClearEffect
+export default BoardClear

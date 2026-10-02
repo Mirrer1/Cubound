@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { directionBetween, playerFrame } from './cubeFrame'
+import { SLIDE_DEG, directionBetween, playerFrame, squashTransform } from './cubeFrame'
 import { CAP_TOP_IDLE, MUSHROOM_STAND } from './mushroomFrame'
 import { swampFrame } from './swampFrame'
 import { switchCells, switchProgress } from './switchFrame'
@@ -682,5 +682,23 @@ describe('directionBetween', () => {
 
   it('가로와 세로가 다 다르면 가로 방향을 먼저 본다', () => {
     expect(directionBetween({ x: 0, y: 0 }, { x: 1, y: 1 })).toBe('right')
+  })
+})
+
+describe('squashTransform', () => {
+  it('눌리지 않으면 축만 돌렸다 되돌린다', () => {
+    expect(squashTransform(10, 20, 30, 0)).toBe(
+      'translate(10 20) rotate(30) scale(1 1) rotate(-30) translate(-10 -20)',
+    )
+  })
+
+  it('다 눌리면 축 방향으로 늘고 직각 방향으로 줄어든다', () => {
+    expect(squashTransform(0, 0, SLIDE_DEG, 1)).toBe(
+      `translate(0 0) rotate(${SLIDE_DEG}) scale(1.24 0.84) rotate(${-SLIDE_DEG}) translate(0 0)`,
+    )
+  })
+
+  it('늘어나는 축은 칸 윗면의 대각선이다', () => {
+    expect(Math.tan((SLIDE_DEG * Math.PI) / 180)).toBeCloseTo(TILE.height / TILE.width)
   })
 })

@@ -31,6 +31,7 @@ import {
 } from './timeFrame'
 import { carriedBy, carryOf, frontOf, slidingCell, tramProgress } from './tramFrame'
 import { windLean, windSpan } from './windFrame'
+import { TILE } from '@/game/iso'
 import { standHeight } from '@/game/rules'
 import type { Direction, GameEvent, GameState, Point } from '@/game/types'
 
@@ -259,4 +260,16 @@ export const playerFrame = (
     y: frame.y + shift.y,
     cell: p <= 0 ? frame.cell : slidingCell(carry.from, carry.to, p),
   }
+}
+
+// 미끄러지는 큐브가 늘어나는 축. 아이소메트릭이라 화면에서는 대각선이다
+export const SLIDE_DEG = (Math.atan2(TILE.height / 2, TILE.width / 2) * 180) / Math.PI
+const SQUASH_ALONG = 0.24
+const SQUASH_ACROSS = 0.16
+
+// (cx, cy)를 고정한 채 deg 축으로 늘이고 직각 방향으로 누른다
+export const squashTransform = (cx: number, cy: number, deg: number, squash: number) => {
+  const scale = `scale(${1 + squash * SQUASH_ALONG} ${1 - squash * SQUASH_ACROSS})`
+  const pivot = `translate(${cx} ${cy})`
+  return `${pivot} rotate(${deg}) ${scale} rotate(${-deg}) translate(${-cx} ${-cy})`
 }

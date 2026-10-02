@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { CUBE, rollingCubeFaces, tiltOnTop } from './cube'
+import { CUBE, rollingCubeFaces, tiltOnTop } from './cubeView'
 import { TILE, blockFaces, toScreen } from '@/game/iso'
 
 const roundPoints = (points: string) =>

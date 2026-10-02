@@ -1,3 +1,4 @@
+import { PIT_FLOOR } from '../view'
 import { lerp, smooth } from './curveFrame'
 import {
   NO_SWAMP,
@@ -70,11 +71,10 @@ interface TramView {
   before: Pick<GameState, 'trams'>
   game: Pick<GameState, 'trams'>
   tramPhase: number
-  PIT_FLOOR: number // BoardCell의 구덩이 바닥 깊이
 }
 
 // 발판은 이전 자리에서 다음 자리로 미끄러진다. 코와 밝은 레일은 도착하는 순간에 다음 쪽으로 넘어간다
-export const tramFramesOf = ({ trams, before, game, tramPhase, PIT_FLOOR }: TramView) =>
+export const tramFramesOf = ({ trams, before, game, tramPhase }: TramView) =>
   trams.map((tram, i) => {
     const from = tram.cells[before.trams[i].at]
     const to = tram.cells[game.trams[i].at]

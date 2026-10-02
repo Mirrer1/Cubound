@@ -3,12 +3,33 @@ import { type ReactNode, memo } from 'react'
 import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
 import BoardLadder from './BoardLadder'
+import BoardMushroom from './BoardMushroom'
+import BoardPit from './BoardPit'
+import BoardPlate from './BoardPlate'
 import BoardSeed from './BoardSeed'
+import BoardSwamp from './BoardSwamp'
+import BoardSwitch from './BoardSwitch'
 import BoardVine from './BoardVine'
-import { CUBE } from './cube'
-import { type VineKind, crackThickness, mushroomPose, swampCollar, swampSink } from './frame'
-import { blend, checker, darken, dim, shade } from './shade'
-import { TILE, blockFaces, isoDelta } from '@/game/iso'
+import { type VineKind, crackThickness, swampCollar, swampSink } from './frame'
+import {
+  CUBE,
+  MUD,
+  MUD_DIP,
+  PIT_FLOOR,
+  QUARTER,
+  SHARD,
+  blend,
+  cellFaces,
+  crackQuarters,
+  crackShards,
+  crackSplit,
+  darken,
+  dim,
+  isPit,
+  leaningOf,
+  spotPoints,
+} from './view'
+import { TILE, blockFaces } from '@/game/iso'
 import type { Direction } from '@/game/types'
 
 // 왼쪽 위 모서리와 나란하게 누운 얼음 윗면의 광택 면
@@ -19,161 +40,11 @@ const GLOSS_SPOTS: [number, number][] = [
   [-0.3, 0.04],
 ]
 
-// 닳으면 칸이 네 조각으로 갈라지고 밟힌 만큼 조각이 들린다. 들리는 자리는 칸마다 어긋난다
-const QUARTERS: [number, number][] = [
-  [-0.25, -0.25],
-  [0.25, -0.25],
-  [0.25, 0.25],
-  [-0.25, 0.25],
-]
-const QUARTER = { scale: 0.485, depth: 4, rise: 4 }
-
-// 무너질 때만 네 조각으로 갈라진다. 가만히 있을 때 갈라 두면 칸이 붙었을 때 줄눈처럼 보인다
-const SHARDS: [number, number][] = [
-  [-0.25, -0.25],
-  [0.25, -0.25],
-  [0.25, 0.25],
-  [-0.25, 0.25],
-]
-const SHARD = { scale: 0.46, away: 0.72, sink: [0, 7, 3, 10], thin: 5 }
-
-const SURFACES = {
-  hole: {
-    top: 'var(--color-goal)',
-    left: 'var(--color-floor-left)',
-    right: 'var(--color-floor-right)',
-  },
-  tool: { top: shade('tool', 'top'), left: shade('tool', 'left'), right: shade('tool', 'right') },
-  ice: {
-    top: 'var(--color-ice)',
-    left: 'var(--color-ice-left)',
-    right: 'var(--color-ice-right)',
-  },
-  machine: {
-    top: 'var(--color-machine-frame-top)',
-    left: 'var(--color-machine-frame-left)',
-    right: 'var(--color-machine-frame-right)',
-  },
-  vine: {
-    top: 'var(--color-vine-top)',
-    left: 'var(--color-vine-left)',
-    right: 'var(--color-vine-right)',
-  },
-  hardVine: {
-    top: 'var(--color-vine-hard-top)',
-    left: 'var(--color-vine-hard-left)',
-    right: 'var(--color-vine-hard-right)',
-  },
-}
-
 // 미끄러져 지나간 자국. 칸보다 작게 그리면 칸 안에 뜬 액자처럼 보인다
 const FROST_OPACITY = 0.7
 
-// 승강 발판은 칸 크기의 틀 위에 얹힌 판이다. 틀과 판의 밝기 차이가 기계로 읽힌다
-const PLATE = { scale: 0.84, rise: 4, depth: 4 }
-// 짝 칸은 판보다 낮은 자리에 면을 한 장 더 얹어 우묵하게 보인다
-const DISH = 0.46
-const SWITCH_SCALE = 0.66
 // 구멍은 같은 크기 판 두 장을 어긋나게 겹쳐 두께를 낸다
 const HOLE = { scale: 0.62, wall: 7 }
-
-// 늪은 칸 안쪽만 꺼진 진흙 면이다. 칸 테두리가 땅색으로 남아 땅에 난 웅덩이로 읽힌다
-const MUD = { scale: 0.8, drop: 5 }
-// 진흙 위에 앉은 낮은 덩이. 자리는 칸 가운데에서 잰 칸 단위 거리다
-const LUMP = { scale: 0.09, depth: 2.5 }
-const LUMP_SPOTS: [number, number][] = [
-  [-0.2, 0.14],
-  [0.17, -0.12],
-  [0.06, 0.22],
-]
-// 잠긴 큐브와 상자의 밑면 앞 모서리가 진흙 면 아래로 내려가는 거리. 둘은 폭이 같다
-const MUD_DIP = (TILE.width * CUBE) / 4
-// 가라앉는 상자가 진흙 아래로 다 들어가는 거리. 상자 윗면 꼭짓점이 진흙 면 밑까지 내려간다
-export const BOX_SINK = TILE.layer + MUD.drop + (TILE.width * CUBE) / 4
-
-// 버섯은 짧은 대 위에 넓은 갓을 얹고 머리 판을 하나 더 올린 모양이다. 모습은 frame이 정한다
-const STEM_SCALE = 0.2
-const CROWN_SCALE = 0.6
-// 대 밑에 깔리는 바닥 자국
-const MUSHROOM_SHADOW = 0.4
-
-const CAP = {
-  live: {
-    stem: 'var(--color-mushroom-stem-top)',
-    top: 'var(--color-mushroom-cap-top)',
-    left: 'var(--color-mushroom-cap-left)',
-    right: 'var(--color-mushroom-cap-right)',
-    crown: 'var(--color-mushroom-crown)',
-  },
-  dry: {
-    stem: 'var(--color-mushroom-withered-stem)',
-    top: 'var(--color-mushroom-withered-top)',
-    left: 'var(--color-mushroom-withered-left)',
-    right: 'var(--color-mushroom-withered-right)',
-    crown: 'var(--color-mushroom-withered-crown)',
-  },
-}
-
-// 덩굴 판은 처음 이만큼 차오르는 동안 나타난다
-const VINE_PLATE_FADE = 0.6
-
-const vineFaces = (hard: number) =>
-  hard <= 0
-    ? SURFACES.vine
-    : hard >= 1
-      ? SURFACES.hardVine
-      : {
-          top: blend(SURFACES.vine.top, SURFACES.hardVine.top, hard),
-          left: blend(SURFACES.vine.left, SURFACES.hardVine.left, hard),
-          right: blend(SURFACES.vine.right, SURFACES.hardVine.right, hard),
-        }
-
-// 발판 길 칸은 구덩이로 그린다. 바닥은 높이 0 칸의 윗면보다 이만큼 아래다
-export const PIT_FLOOR = 11
-const RAIL_HALF = 0.13
-// 길 끝에서 방향이 뒤집히는 자리에 서는 블록
-const STOP = { offset: 0.36, scale: 0.2, depth: 9 }
-
-const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
-
-const spotPoints = (x: number, y: number, spots: [number, number][]) =>
-  spots
-    .map(([u, v]) => {
-      const d = isoDelta(u, v)
-      return `${x + d.x},${y + d.y}`
-    })
-    .join(' ')
-
-// 칸 가운데에서 (dx, dy) 쪽 모서리까지 가는 레일 띠
-const railSpots = (dx: number, dy: number): [number, number][] =>
-  dx !== 0
-    ? [
-        [-RAIL_HALF * dx, -RAIL_HALF],
-        [dx / 2, -RAIL_HALF],
-        [dx / 2, RAIL_HALF],
-        [-RAIL_HALF * dx, RAIL_HALF],
-      ]
-    : [
-        [-RAIL_HALF, -RAIL_HALF * dy],
-        [-RAIL_HALF, dy / 2],
-        [RAIL_HALF, dy / 2],
-        [RAIL_HALF, -RAIL_HALF * dy],
-      ]
-
-// 구덩이 뒤쪽 벽. 땅 높이에서 구덩이 바닥까지만 칠하고 그 위는 옆 칸이 제 면으로 그린다
-const wallPoints = (x: number, y: number, side: number) => {
-  const top = y
-  const hw = (TILE.width / 2) * side
-  const hh = TILE.height / 2
-  return `${x},${top - hh} ${x + hw},${top} ${x + hw},${y + PIT_FLOOR} ${x},${y - hh + PIT_FLOOR}`
-}
-
-// 늪 우묵면의 뒤쪽 두 벽. 안쪽 마름모의 뒤 모서리에서 진흙 면까지 내려온다
-const mudWallPoints = (x: number, y: number, side: number) => {
-  const hw = ((TILE.width * MUD.scale) / 2) * side
-  const hh = (TILE.height * MUD.scale) / 2
-  return `${x - hw},${y} ${x},${y - hh} ${x},${y - hh + MUD.drop} ${x - hw},${y + MUD.drop}`
-}
 
 // 잠긴 것의 진흙 면 아래를 가린다. 자른 자리가 밑면 앞 모서리를 따라가 아이소메트릭 면과 나란하다
 const mudClipPoints = (x: number, y: number) => {
@@ -306,36 +177,9 @@ const BoardCell = ({
 }: BoardCellProps) => {
   const icy = ice && !goal && !filled
   const grownVine = vine === 'grown'
-  // 발판 길과 아직 안 자란 덩굴 길은 구덩이로 그린다. 자라는 중인 칸은 구덩이에서 판이 차오른다
-  const pit =
-    rail !== '' ||
-    vine === 'next' ||
-    vine === 'future' ||
-    vine === 'spent' ||
-    (grownVine && vineRise < 1)
+  const pit = isPit(rail, vine, grownVine, vineRise)
   // 상자가 메운 칸, 덩굴이 자란 칸, 얼음, 발판, 짝 칸, 구멍은 바닥 대신 제 색으로 칠한다
   const surface = goal ? 'hole' : filled ? 'tool' : icy ? 'ice' : lift || warp ? 'machine' : null
-  // 닳은 단계 사이에서는 앞뒤 단계 색을 섞는다
-  const worn = Math.min(1, Math.floor(crackStage))
-  const crackFace = (face: string) =>
-    blend(
-      `var(--color-crack-${face}-${worn})`,
-      `var(--color-crack-${face}-${worn + 1})`,
-      crackStage - worn,
-    )
-  const plain = grownVine
-    ? vineFaces(vineHard)
-    : surface
-      ? SURFACES[surface]
-      : crack
-        ? { top: crackFace('top'), left: crackFace('left'), right: crackFace('right') }
-        : {
-            top: parity ? 'var(--color-floor-top-alt)' : 'var(--color-floor-top)',
-            left: 'var(--color-floor-left)',
-            right: 'var(--color-floor-right)',
-          }
-  // 바닥은 제 색 토큰이 둘이라 이미 번갈아 있고 구멍은 한 칸뿐이다. 덩굴은 마디로 칸이 세인다
-  const evenOdd = crack || (surface !== null && surface !== 'hole')
   const vineProps = {
     x,
     y,
@@ -350,127 +194,38 @@ const BoardCell = ({
     knot: vineKnot,
     opacity: vineOpacity,
   }
-  const plateSink = (1 - vineRise) * PIT_FLOOR
-  const faces = evenOdd ? { ...plain, top: checker(plain.top, parity) } : plain
+  const faces = cellFaces(surface, grownVine, vineHard, crack, crackStage, parity)
   const depth = crack ? crackThickness(crackStage) + h * TILE.layer : h * TILE.layer + TILE.lip
   // 씨앗으로 솟은 층은 원래 땅 위에 볏짚빛으로 얹혀 옆면 색이 바뀌는 자리가 경계다
   const seedRise = seedLand * TILE.layer
-  // 갈라짐은 한 번 밟은 뒤부터다. 무너지는 중에는 조각이 따로 날아간다
-  const split = crack && crackBroken === 0 ? clamp01(crackStage) : 0
-  const quarters =
-    split > 0
-      ? QUARTERS.map(([u, v], i) => {
-          const d = isoDelta(u, v)
-          const lifted = (i - crackSeed + 4) % 4 < Math.round(crackStage)
-          return {
-            key: i,
-            x: x + d.x * (1 + split * 0.025),
-            y: y + d.y * (1 + split * 0.025) - (lifted ? split * QUARTER.rise : 0),
-          }
-        })
-      : []
-  const shards =
-    crackBroken > 0
-      ? SHARDS.map(([u, v], i) => {
-          const d = isoDelta(u, v)
-          const away = 1 + crackBroken * SHARD.away
-          return {
-            key: i,
-            x: x + d.x * away,
-            y: y + d.y * away + crackBroken * SHARD.sink[i],
-            depth: Math.max(SHARD.thin, depth - crackBroken * (depth - SHARD.thin)),
-          }
-        })
-      : []
-  const ladders = leaning
-    ? leaning.split('|').map((item) => {
-        const [direction, opacity] = item.split(':')
-        return { direction: direction as Direction, opacity: Number(opacity) }
-      })
-    : []
+  const split = crackSplit(crack, crackBroken, crackStage)
+  const quarters = crackQuarters(x, y, split, crackStage, crackSeed)
+  const shards = crackShards(x, y, crackBroken, depth)
+  const ladders = leaningOf(leaning)
   // 칸 위의 상자도 큐브를 가려서 칸과 같이 흐려진다
   const fade = { opacity: faded ? 0.5 : 1, transition: 'opacity 320ms var(--ease-soft)' }
-  const neighbors = rail ? rail.split('|').map((d) => d.split(',').map(Number)) : []
-  // 길 끝 칸은 이웃이 하나라 반대쪽으로도 띠를 이어 칸을 채우고, 그 자리가 멈춤 블록 자리다
-  const stopAt = neighbors.length === 1 ? [-neighbors[0][0], -neighbors[0][1]] : null
-  const rails = stopAt ? [neighbors[0], stopAt] : neighbors
-  const stopOffset = stopAt ? isoDelta(STOP.offset * stopAt[0], STOP.offset * stopAt[1]) : null
   const mudY = y + MUD.drop
   const sunk = swampDeep > 0
   // 큐브는 단계마다 정해진 깊이까지 칸째로 내려가고 가라앉는 상자는 Board가 내려 그린다
   const sink = swampRisen >= 0 ? (MUD.drop + swampSink(swampRisen)) * swampDeep : 0
   const collar = swampRisen >= 0 ? swampCollar(swampRisen) * swampDeep : 0
-  const cap = mushroom ? mushroomPose(mushroomPress, mushroomWither) : null
-  // 시드는 동안 갓 색이 흙분홍에서 따뜻한 회색으로 빠진다
-  const capColor =
-    cap && mushroomWither > 0
-      ? {
-          stem: blend(CAP.live.stem, CAP.dry.stem, mushroomWither),
-          top: blend(CAP.live.top, CAP.dry.top, mushroomWither),
-          left: blend(CAP.live.left, CAP.dry.left, mushroomWither),
-          right: blend(CAP.live.right, CAP.dry.right, mushroomWither),
-          crown: blend(CAP.live.crown, CAP.dry.crown, mushroomWither),
-        }
-      : CAP.live
 
   return (
     <g>
       {pit && (
-        <g>
-          <polygon
-            points={blockFaces(x, y + PIT_FLOOR, TILE.width, 0).top}
-            style={{ fill: 'var(--color-pit-floor)' }}
-          />
-          {pitWallLeft >= 0 && (
-            <polygon points={wallPoints(x, y, 1)} style={{ fill: 'var(--color-pit-wall-left)' }} />
-          )}
-          {pitWallRight >= 0 && (
-            <polygon
-              points={wallPoints(x, y, -1)}
-              style={{ fill: 'var(--color-pit-wall-right)' }}
-            />
-          )}
-          {rails.map(([dx, dy]) => (
-            <polygon
-              key={`${dx},${dy}`}
-              points={spotPoints(x, y + PIT_FLOOR, railSpots(dx, dy))}
-              style={{
-                fill: railNext ? 'var(--color-tram-rail-next)' : 'var(--color-tram-rail)',
-                transition: 'fill 200ms var(--ease-soft)',
-              }}
-            />
-          ))}
-          {stopOffset && (
-            <BoardBlock
-              x={x + stopOffset.x}
-              y={y + PIT_FLOOR + stopOffset.y - STOP.depth}
-              width={TILE.width * STOP.scale}
-              depth={STOP.depth}
-              top="var(--color-tram-stop-top)"
-              left="var(--color-tram-stop-left)"
-              right="var(--color-tram-stop-right)"
-            />
-          )}
-          {vine && (
-            <>
-              <BoardVine layer="pit" kind={vine} {...vineProps} />
-              {grownVine && (
-                <g opacity={clamp01(vineRise / VINE_PLATE_FADE)}>
-                  <BoardBlock
-                    x={x}
-                    y={y + plateSink}
-                    width={TILE.width}
-                    depth={TILE.lip - plateSink}
-                    top={faces.top}
-                    left={faces.left}
-                    right={faces.right}
-                  />
-                </g>
-              )}
-              <BoardVine layer="top" kind={vine} {...vineProps} />
-            </>
-          )}
-        </g>
+        <BoardPit
+          x={x}
+          y={y}
+          rail={rail}
+          railNext={railNext}
+          pitWallLeft={pitWallLeft}
+          pitWallRight={pitWallRight}
+          vine={vine}
+          grownVine={grownVine}
+          vineRise={vineRise}
+          vineProps={vineProps}
+          faces={faces}
+        />
       )}
       {!pit && !hidden && (
         <g style={fade}>
@@ -544,109 +299,19 @@ const BoardCell = ({
             {seedStalk > 0 && <BoardSeed x={x} y={y} part="stalk" level={seedStalk} p={seedBud} />}
             {seedLeaves > 0 && <BoardSeed x={x} y={y} part="leaves" p={seedLeaves} />}
             {(grownVine || vine === 'root') && <BoardVine layer="top" kind={vine} {...vineProps} />}
-            {swamp && (
-              <g opacity={1 - swampFilled}>
-                <polygon
-                  points={mudWallPoints(x, y, 1)}
-                  style={{ fill: 'var(--color-swamp-wall-left)' }}
-                />
-                <polygon
-                  points={mudWallPoints(x, y, -1)}
-                  style={{ fill: darken('swamp-wall-left', 10) }}
-                />
-                <polygon
-                  points={blockFaces(x, mudY, TILE.width * MUD.scale, 0).top}
-                  style={{ fill: 'var(--color-swamp-mud)' }}
-                />
-                <g opacity={1 - swampDeep}>
-                  {LUMP_SPOTS.map(([u, v]) => {
-                    const d = isoDelta(u, v)
-                    return (
-                      <BoardBlock
-                        key={`${u},${v}`}
-                        x={x + d.x}
-                        y={mudY + d.y - LUMP.depth}
-                        width={TILE.width * LUMP.scale}
-                        depth={LUMP.depth}
-                        top="var(--color-swamp-lump)"
-                        left={darken('swamp-lump', 18)}
-                        right={darken('swamp-lump', 8)}
-                      />
-                    )
-                  })}
-                </g>
-                {collar > 0 && (
-                  <polygon
-                    points={blockFaces(x, mudY, TILE.width * collar, 0).top}
-                    style={{ fill: 'var(--color-swamp-collar)' }}
-                  />
-                )}
-              </g>
+            <BoardSwamp
+              x={x}
+              y={y}
+              mudY={mudY}
+              swamp={swamp}
+              swampFilled={swampFilled}
+              swampDeep={swampDeep}
+              collar={collar}
+            />
+            {mushroom && (
+              <BoardMushroom x={x} y={y} press={mushroomPress} wither={mushroomWither} />
             )}
-            {swampFilled > 0 && (
-              <g opacity={swampFilled}>
-                <polygon
-                  points={blockFaces(x, y, TILE.width * MUD.scale, 0).top}
-                  style={{ fill: 'var(--color-swamp-filled)' }}
-                />
-              </g>
-            )}
-            {cap && (
-              <>
-                <polygon
-                  points={blockFaces(x, y, TILE.width * MUSHROOM_SHADOW, 0).top}
-                  style={{ fill: 'var(--color-mushroom-shadow)' }}
-                />
-                <BoardBlock
-                  x={x}
-                  y={y - cap.stem}
-                  width={TILE.width * STEM_SCALE}
-                  depth={cap.stem}
-                  top={capColor.stem}
-                  left="var(--color-mushroom-stem-left)"
-                  right="var(--color-mushroom-stem-right)"
-                />
-                <BoardBlock
-                  x={x}
-                  y={y - cap.stem - cap.thick}
-                  width={TILE.width * cap.cap}
-                  depth={cap.thick}
-                  top={capColor.top}
-                  left={capColor.left}
-                  right={capColor.right}
-                />
-                {cap.crown > 0 && (
-                  <BoardBlock
-                    x={x}
-                    y={y - cap.stem - cap.thick - cap.crown}
-                    width={TILE.width * cap.cap * CROWN_SCALE}
-                    depth={cap.crown}
-                    top={capColor.crown}
-                    left={capColor.left}
-                    right={capColor.right}
-                  />
-                )}
-              </>
-            )}
-            {(lift || warp) && (
-              <>
-                <BoardBlock
-                  x={x}
-                  y={y - PLATE.rise}
-                  width={TILE.width * PLATE.scale}
-                  depth={PLATE.depth}
-                  top="var(--color-machine-top)"
-                  left="var(--color-machine-left)"
-                  right="var(--color-machine-right)"
-                />
-                {warp && (
-                  <polygon
-                    points={blockFaces(x, y - 1, TILE.width * DISH, 0).top}
-                    style={{ fill: 'var(--color-machine-dish)' }}
-                  />
-                )}
-              </>
-            )}
+            {(lift || warp) && <BoardPlate x={x} y={y} warp={warp} />}
             {icy && (
               <polygon
                 points={spotPoints(x, y, GLOSS_SPOTS)}
@@ -686,38 +351,8 @@ const BoardCell = ({
           </g>
         </g>
       )}
-      {entity === 'switch' && (
-        <BoardBlock
-          x={x}
-          y={y - switchDepth}
-          width={TILE.width * SWITCH_SCALE}
-          depth={switchDepth}
-          top={shade('tool', 'top')}
-          left={shade('tool', 'left')}
-          right={shade('tool', 'right')}
-        />
-      )}
-      {entity === 'door' && (
-        <>
-          <BoardBlock
-            x={x}
-            y={y - doorDepth}
-            width={TILE.width}
-            depth={doorDepth}
-            top="var(--color-machine-frame-top)"
-            left="var(--color-machine-frame-left)"
-            right="var(--color-machine-frame-right)"
-          />
-          <BoardBlock
-            x={x}
-            y={y - doorDepth - PLATE.rise}
-            width={TILE.width * PLATE.scale}
-            depth={PLATE.depth}
-            top="var(--color-machine-top)"
-            left="var(--color-machine-left)"
-            right="var(--color-machine-right)"
-          />
-        </>
+      {entity && (
+        <BoardSwitch x={x} y={y} entity={entity} switchDepth={switchDepth} doorDepth={doorDepth} />
       )}
       {box && (
         <g style={fade}>

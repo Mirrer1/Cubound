@@ -1,6 +1,5 @@
 import BoardBlock from './BoardBlock'
-import { CUBE } from './cube'
-import { shade } from './shade'
+import { CUBE, shade } from './view'
 import { TILE } from '@/game/iso'
 
 interface BoardBoxProps {

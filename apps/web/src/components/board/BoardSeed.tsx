@@ -1,6 +1,5 @@
-import type { TopTilt } from './cube'
 import { SAPLING } from './frame'
-import { darken } from './shade'
+import { type TopTilt, darken } from './view'
 import { TILE, isoDelta } from '@/game/iso'
 
 type Corner = [number, number]

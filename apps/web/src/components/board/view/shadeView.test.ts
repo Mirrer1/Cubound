@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { blend, checker, darken, dim, shade } from './shade'
+import { blend, checker, darken, dim, shade } from './shadeView'
 
 describe('shade', () => {
   it('윗면은 흰색을 14% 섞는다', () => {

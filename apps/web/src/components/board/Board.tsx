@@ -1,14 +1,15 @@
 import { useMemo } from 'react'
 
 import BoardBox from './BoardBox'
-import BoardCell, { BOX_SINK, PIT_FLOOR } from './BoardCell'
+import BoardCell from './BoardCell'
+import BoardClear from './BoardClear'
 import BoardLadder from './BoardLadder'
 import BoardSeed from './BoardSeed'
 import BoardTram from './BoardTram'
-import ClearEffect from './ClearEffect'
-import { rollingCubeFaces } from './cube'
 import {
+  SLIDE_DEG,
   type Tram,
+  boardCells,
   boxFramesOf,
   boxSink,
   carriedBaseOf,
@@ -36,6 +37,7 @@ import {
   rollingTilt,
   seedFrames,
   sinkAt,
+  squashTransform,
   standSink,
   stepProgress,
   swampFrame,
@@ -48,11 +50,11 @@ import {
   vineLooks,
   wallHeight,
 } from './frame'
-import { shade } from './shade'
-import { useBoardAnimation } from './useBoardAnimation'
-import { useCamera } from './useCamera'
+import { useBoardAnimation } from './hooks/useBoardAnimation'
+import { useBoardCamera } from './hooks/useBoardCamera'
+import { rollingCubeFaces, shade } from './view'
 import { TILE, toScreen } from '@/game/iso'
-import { occludingCells } from '@/game/occlusion'
+import { fadedCells } from '@/game/occlusion'
 import { isDoorOpen, isIce, isLiftRaised } from '@/game/rules'
 import type { Entity, GameEvent, GameState, Point } from '@/game/types'
 
@@ -80,18 +82,6 @@ const smooth01 = (v: number) => {
 const RESTORE_FADE = 0.25
 
 const GUIDE_MARGIN = 12
-
-// 미끄러지는 큐브가 늘어나는 축. 아이소메트릭이라 화면에서는 대각선이다
-const SLIDE_DEG = (Math.atan2(TILE.height / 2, TILE.width / 2) * 180) / Math.PI
-const SQUASH_ALONG = 0.24
-const SQUASH_ACROSS = 0.16
-
-// (cx, cy)를 고정한 채 deg 축으로 늘이고 직각 방향으로 누른다
-const squashTransform = (cx: number, cy: number, deg: number, squash: number) => {
-  const scale = `scale(${1 + squash * SQUASH_ALONG} ${1 - squash * SQUASH_ACROSS})`
-  const pivot = `translate(${cx} ${cy})`
-  return `${pivot} rotate(${deg}) ${scale} rotate(${-deg}) translate(${-cx} ${-cy})`
-}
 
 const Board = ({
   game,
@@ -129,7 +119,7 @@ const Board = ({
   const cube = playerFrame(dropping ? null : prevGame, game, events, t, chain)
   const cubeCell = { x: Math.round(cube.x), y: Math.round(cube.y) }
   // 카메라는 최종 자리가 아니라 지금 그려지는 자리를 따라간다. 순간이동은 나온 뒤에 움직인다
-  const { ref, viewBox } = useCamera(game, guideCell ?? cubeCell)
+  const { ref, viewBox } = useBoardCamera(game, guideCell ?? cubeCell)
   const box = movingBox(prevGame, game, events, t, chain)
   const sunk = swampFrame(dropping ? null : prevGame, game, events, t)
   const sinkingBox = boxSink(events, swampSeconds, t)
@@ -150,26 +140,7 @@ const Board = ({
     }),
   )
   // 가림 처리도 최종 자리가 아니라 지금 그려지는 자리를 본다. 순간이동으로 가라앉는 큐브가 벽에 묻힌다
-  const faded = [
-    ...occludingCells(shown, cubeCell, Math.round(cube.level), boxes),
-    // 버섯에 날려 보낸 상자와 그것이 메운 바닥은 큐브에서 멀어 저 혼자 벽에 묻힌다
-    ...boxes.flatMap((b, i) =>
-      occludingCells(
-        shown,
-        b,
-        shown[b.y][b.x] + 1,
-        boxes.filter((_, j) => j !== i),
-      ),
-    ),
-    ...filled.flatMap((p) => occludingCells(shown, p, shown[p.y][p.x], boxes)),
-    // 씨앗과 심은 칸의 나무와 말뚝도 큐브에서 멀면 저 혼자 벽에 묻힌다
-    ...[...game.seeds, ...game.planted].flatMap((p) =>
-      occludingCells(shown, p, shown[p.y][p.x], boxes),
-    ),
-    ...leaningLadders
-      .filter((l) => (l.direction === 'right' || l.direction === 'down') && same(l, player))
-      .flatMap((l) => occludingCells(shown, l, shown[l.y][l.x], boxes)),
-  ]
+  const faded = fadedCells(shown, cubeCell, Math.round(cube.level), game, filled)
 
   const railDirs = useMemo(() => railDirsOf(trams), [trams])
 
@@ -180,29 +151,14 @@ const Board = ({
   // cells 메모의 의존성이라 메모한다. 안 하면 React Compiler 검사가 cells 메모를 보존하지 못한다
   const fillingKey = useMemo(() => fillingCellKey(box, events, vines), [box, events, vines])
 
-  // x, y는 화면 좌표, p는 칸 좌표. 메운 칸이 다시 구멍이 될 때는 사라지기 전 높이로 그린다
-  // 발판 길과 아직 바닥 없는 덩굴 길은 구덩이로 그린다
   const cells = useMemo(
-    () =>
-      heights
-        .flatMap((row, y) =>
-          row.map((_, x) => {
-            const key = `${x}-${y}`
-            const rail = railDirs.get(key) ?? ''
-            const now = key === fillingKey ? before.heights[y][x] : heights[y][x]
-            const pit = rail !== '' || (vines.has(key) && now < 0)
-            const h = pit ? 0 : Math.max(now, before.heights[y][x])
-            return { ...toScreen({ x, y }, h), h, rail, pit, p: { x, y }, key }
-          }),
-        )
-        .filter((cell) => cell.h >= 0)
-        .sort((a, b) => a.p.x + a.p.y - (b.p.x + b.p.y)),
+    () => boardCells(heights, before.heights, railDirs, vines, fillingKey),
     [heights, before.heights, railDirs, vines, fillingKey],
   )
 
   const walls = { heights, before, fillingKey, vineFrame, railDirs }
   const tramPhase = moving ? tramProgress(events, t, swampSeconds) : 1
-  const tramFrames = tramFramesOf({ trams, before, game, tramPhase, PIT_FLOOR })
+  const tramFrames = tramFramesOf({ trams, before, game, tramPhase })
   const nextRails = new Set(tramFrames.map((frame) => `${frame.next.x}-${frame.next.y}`))
 
   const cubeDrop = dropping ? restartDrop(t, 0, boxes.length) : null
@@ -243,7 +199,7 @@ const Board = ({
   const plantedSeed = plantedSeedAt({ planting, cubeScreen, cubeSink, cube })
   const plantTilt = plantTiltOf(planting, cube)
   const caps = mushroomFrames(dropping ? null : prevGame, game, events, t, chain)
-  const boxFrames = boxFramesOf({ box, sinkingBox, tramFrames, boxes, crackView, BOX_SINK })
+  const boxFrames = boxFramesOf({ box, sinkingBox, tramFrames, boxes, crackView })
   const guideLevel = guideCell ? Math.max(0, heights[guideCell.y][guideCell.x]) : 0
   const guideScreen = guideCell ? toScreen(guideCell, guideLevel) : null
   // 칸 위에 선 것은 한 층보다 높이 솟아서 위쪽을 더 잡는다
@@ -473,7 +429,7 @@ const Board = ({
                     <BoardSeed x={plantedSeed.x} y={plantedSeed.y} part="seed" tilt={plantTilt} />
                   </g>
                 )}
-                {goalEffect && <ClearEffect x={cell.x} y={cell.y} />}
+                {goalEffect && <BoardClear x={cell.x} y={cell.y} />}
               </>
             ) : undefined}
           </BoardCell>

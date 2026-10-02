@@ -1,3 +1,4 @@
+import { BOX_SINK } from '../view'
 import { type CrackView, standSink } from './crackFrame'
 import { type Chain, NO_CHAIN, easeIn, lerp, smooth } from './curveFrame'
 import { slideChain } from './iceFrame'
@@ -120,18 +121,10 @@ interface BoxView {
   tramFrames: { x: number; y: number; to: Point; cell: Point }[]
   boxes: Point[]
   crackView: CrackView
-  BOX_SINK: number // BoardCell의 상자가 늪에 잠기는 깊이
 }
 
 // 밀리는 상자와 발판 위의 상자. 칸과 따로 움직여서 화면 좌표로 미리 구해 둔다
-export const boxFramesOf = ({
-  box,
-  sinkingBox,
-  tramFrames,
-  boxes,
-  crackView,
-  BOX_SINK,
-}: BoxView) => {
+export const boxFramesOf = ({ box, sinkingBox, tramFrames, boxes, crackView }: BoxView) => {
   const pushedScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
   return [
     ...(box && pushedScreen

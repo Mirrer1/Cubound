@@ -1,4 +1,4 @@
-import { darken } from '@/components/board/shade'
+import { darken } from '@/components/board/view'
 
 const Logo = () => {
   return (

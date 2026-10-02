@@ -1,5 +1,5 @@
 import BoardBlock from './BoardBlock'
-import { blend } from './shade'
+import { blend } from './view'
 import { TILE, blockFaces, isoDelta } from '@/game/iso'
 
 // 칸 크기에 대한 비율. 틀 없이 칸보다 작은 판이라 승강 발판과 구별된다

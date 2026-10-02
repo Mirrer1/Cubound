@@ -8,8 +8,8 @@ import {
   maxTile,
   viewBoxFor,
   zoneBox,
-} from './camera'
-import { rollingCubeFaces } from './cube'
+} from './cameraView'
+import { rollingCubeFaces } from './cubeView'
 import { TILE, toScreen } from '@/game/iso'
 import type { Direction } from '@/game/types'
 

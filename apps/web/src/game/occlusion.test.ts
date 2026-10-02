@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { hiddenObjects, occludingCells } from './occlusion'
+import { fadedCells, hiddenObjects, occludingCells } from './occlusion'
+import { createState } from './rules'
 import type { Stage } from './types'
 
 describe('occludingCells', () => {
@@ -150,5 +151,63 @@ describe('hiddenObjects', () => {
       ['ladder', 2, 8],
       ['ladder', 1, 4],
     ])
+  })
+})
+
+describe('fadedCells', () => {
+  const STAGE: Stage = {
+    version: 1,
+    id: 'test',
+    name: '테스트',
+    heights: [
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ],
+    start: { x: 0, y: 0 },
+    goal: { x: 3, y: 3 },
+    entities: [],
+  }
+  const raise = (cells: [number, number, number][]) =>
+    STAGE.heights.map((row, y) =>
+      row.map((h, x) => cells.find(([a, b]) => a === x && b === y)?.[2] ?? h),
+    )
+
+  it('큐브를 가리는 앞 칸을 모은다', () => {
+    const state = createState(STAGE)
+
+    expect(fadedCells(raise([[1, 0, 1]]), { x: 0, y: 0 }, 0, state, [])).toEqual([{ x: 1, y: 0 }])
+  })
+
+  it('큐브에서 먼 상자와 메운 칸과 씨앗을 가리는 앞 칸도 모은다', () => {
+    const state = {
+      ...createState(STAGE),
+      boxes: [{ x: 2, y: 0 }],
+      seeds: [{ x: 1, y: 2 }],
+    }
+    const shown = raise([
+      [3, 0, 2],
+      [0, 2, 1],
+      [1, 3, 1],
+    ])
+
+    expect(fadedCells(shown, { x: 3, y: 3 }, 0, state, [{ x: 0, y: 1 }])).toEqual([
+      { x: 3, y: 0 },
+      { x: 0, y: 2 },
+      { x: 1, y: 3 },
+    ])
+  })
+
+  it('큐브가 선 칸에서 오른쪽이나 아래로 기댄 사다리를 가리는 칸만 모은다', () => {
+    const shown = raise([[1, 0, 1]])
+    const right = {
+      ...createState(STAGE),
+      leaningLadders: [{ x: 0, y: 0, direction: 'right' as const }],
+    }
+    const up = { ...right, leaningLadders: [{ x: 0, y: 0, direction: 'up' as const }] }
+
+    expect(fadedCells(shown, { x: 3, y: 3 }, 0, right, [])).toEqual([{ x: 1, y: 0 }])
+    expect(fadedCells(shown, { x: 3, y: 3 }, 0, up, [])).toEqual([])
   })
 })
