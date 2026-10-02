@@ -67,8 +67,7 @@ export const es: Partial<Texts> = {
     'Las semillas que suben siguen creciendo un nivel cada cuatro movimientos, hasta tres',
   'guide.wind':
     'El viento te empuja una casilla, pero si estás detrás de una pared o una caja no te mueve',
-  'guide.water':
-    'No puedes entrar en el agua, pero una caja empujada flota y te lleva al otro lado',
+  'guide.water': 'Una caja flotante te lleva al otro lado del agua',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',

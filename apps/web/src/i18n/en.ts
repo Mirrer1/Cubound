@@ -62,7 +62,7 @@ export const en = {
   'guide.seedGrow': 'Risen seeds keep growing one level every four moves, up to three',
   'guide.wind':
     'The wind pushes you back one tile, but standing behind a wall or a box keeps you in place',
-  'guide.water': "You can't enter water, but a box pushed in floats and carries you across",
+  'guide.water': 'A floating box carries you across the water',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',
