@@ -36,7 +36,7 @@ export {
   SLIDE_DEG,
   squashTransform,
 } from './cubeFrame'
-export { boardCells } from './cellFrame'
+export { boardCells, cubeFirst } from './cellFrame'
 export {
   CAP_TOP_IDLE,
   hopLift,

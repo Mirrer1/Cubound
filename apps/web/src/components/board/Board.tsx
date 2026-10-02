@@ -18,6 +18,7 @@ import {
   crackFrame,
   crackLeft,
   crackProgress,
+  cubeFirst,
   filledCells,
   fillingCellKey,
   frostAt,
@@ -212,7 +213,7 @@ const Board = ({
 
   return (
     <svg ref={ref} viewBox={viewBox} className="h-full w-full">
-      {cells.map((cell) => {
+      {cubeFirst(cells, cube.cell).map((cell) => {
         const entity = stage.entities.find((e) => same(e, cell.p))
         const pressed = (state: GameState) => same(state.player, cell.p) || has(state.boxes, cell.p)
         const doorDepth = (state: GameState) =>

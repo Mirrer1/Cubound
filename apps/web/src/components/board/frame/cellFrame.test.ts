@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { boardCells } from './cellFrame'
+import { boardCells, cubeFirst } from './cellFrame'
 import type { VineLook } from './vineFrame'
 import { toScreen } from '@/game/iso'
 
@@ -51,5 +51,38 @@ describe('boardCells', () => {
 
     expect(boardCells([[0, 0]], [[0, -1]], new Map(), vines, '1-0')[1].pit).toBe(true)
     expect(boardCells([[0, 0]], [[0, -1]], new Map(), vines, null)[1].pit).toBe(false)
+  })
+})
+
+describe('cubeFirst', () => {
+  const at = (x: number, y: number) => ({ p: { x, y } })
+  const order = (cells: { p: { x: number; y: number } }[]) => cells.map(({ p }) => `${p.x},${p.y}`)
+
+  it('큐브 칸을 같은 깊이 칸들 맨 앞으로 옮긴다', () => {
+    const cells = [at(0, 0), at(1, 0), at(0, 1), at(2, 0), at(1, 1), at(0, 2)]
+
+    expect(order(cubeFirst(cells, { x: 0, y: 1 }))).toEqual([
+      '0,0',
+      '0,1',
+      '1,0',
+      '2,0',
+      '1,1',
+      '0,2',
+    ])
+    expect(order(cubeFirst(cells, { x: 0, y: 2 }))).toEqual([
+      '0,0',
+      '1,0',
+      '0,1',
+      '0,2',
+      '2,0',
+      '1,1',
+    ])
+  })
+
+  it('이미 맨 앞이거나 큐브 칸이 목록에 없으면 그대로다', () => {
+    const cells = [at(0, 0), at(1, 0), at(0, 1)]
+
+    expect(cubeFirst(cells, { x: 1, y: 0 })).toBe(cells)
+    expect(cubeFirst(cells, { x: 5, y: 5 })).toBe(cells)
   })
 })
