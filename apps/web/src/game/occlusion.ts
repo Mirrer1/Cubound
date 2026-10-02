@@ -1,4 +1,6 @@
 import { TILE } from './iso'
+import { same } from './rules'
+import { eachMove } from './solver'
 import type { GameState, Point, Stage } from './types'
 
 // 서 있는 높이 standHeight의 한 층짜리 물체를 화면에서 가리는 앞쪽 칸들
@@ -28,8 +30,6 @@ export const occludingCells = (
 
   return cells
 }
-
-const same = (a: Point, b: Point) => a.x === b.x && a.y === b.y
 
 export const fadedCells = (
   shown: number[][],
@@ -61,7 +61,7 @@ export const fadedCells = (
   ]
 }
 
-export type HiddenKind = 'mushroom' | 'swamp' | 'goal' | 'box' | 'ladder'
+export type HiddenKind = 'mushroom' | 'swamp' | 'goal' | 'box' | 'ladder' | 'fill'
 
 export interface Hidden {
   kind: HiddenKind
@@ -72,6 +72,16 @@ export interface Hidden {
 
 const marked = (grid: string[] | undefined) =>
   (grid ?? []).flatMap((row, y) => [...row].flatMap((c, x) => (c === '#' ? [{ x, y }] : [])))
+
+// 윗면 높이 oh인 o 칸을 덮는 맵 전체의 앞쪽 칸
+const covers = (heights: number[][], kind: HiddenKind, o: Point, oh: number): Hidden[] =>
+  heights.flatMap((row, y) =>
+    row.flatMap((ch, x) => {
+      if (ch < 0 || x < o.x || y < o.y || (x === o.x && y === o.y)) return []
+      const px = (ch - oh) * TILE.layer - (x + y - o.x - o.y) * (TILE.height / 2)
+      return px > 0 ? [{ kind, target: { ...o, h: oh }, cover: { x, y, h: ch }, px }] : []
+    }),
+  )
 
 // 스테이지 처음 모습에서 앞쪽 높은 칸에 가리는 물체, 겹침이 큰 순서
 export const hiddenObjects = (stage: Stage): Hidden[] => {
@@ -86,15 +96,26 @@ export const hiddenObjects = (stage: Stage): Hidden[] => {
   ]
 
   return targets
-    .flatMap(([kind, o]) => {
-      const oh = heights[o.y][o.x]
-      return heights.flatMap((row, y) =>
-        row.flatMap((ch, x) => {
-          if (ch < 0 || x < o.x || y < o.y || (x === o.x && y === o.y)) return []
-          const px = (ch - oh) * TILE.layer - (x + y - o.x - o.y) * (TILE.height / 2)
-          return px > 0 ? [{ kind, target: { ...o, h: oh }, cover: { x, y, h: ch }, px }] : []
-        }),
-      )
-    })
+    .flatMap(([kind, o]) => covers(heights, kind, o, heights[o.y][o.x]))
     .sort((a, b) => b.px - a.px)
+}
+
+// 닿을 수 있는 모든 상태에서 상자로 메운 칸이 그 순간 앞쪽 높은 칸에 가리는 경우, 한도를 넘으면 null
+export const hiddenFills = (stage: Stage, { maxStates = 1_000_000 } = {}): Hidden[] | null => {
+  const found = new Map<string, Hidden>()
+  const done = eachMove(
+    stage,
+    ({ heights }, events) => {
+      for (const e of events) {
+        if (e.type !== 'pushed' || e.result !== 'filled') continue
+        for (const hidden of covers(heights, 'fill', e.to, heights[e.to.y][e.to.x])) {
+          const key = `${e.to.x},${e.to.y},${hidden.cover.x},${hidden.cover.y}`
+          if ((found.get(key)?.px ?? 0) < hidden.px) found.set(key, hidden)
+        }
+      }
+    },
+    { maxStates },
+  )
+
+  return done ? [...found.values()].sort((a, b) => b.px - a.px) : null
 }

@@ -1,5 +1,5 @@
 import { WIND_EVERY, createState, move } from './rules'
-import type { Direction, GameState, Point, Stage } from './types'
+import type { Direction, GameEvent, GameState, Point, Stage } from './types'
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
 const SLACK = 0.2
@@ -190,7 +190,9 @@ interface Explored {
 }
 
 // 시작에서 닿는 모든 상태, 클리어한 상태와 상한에 닿은 상태는 더 펼치기 제외
-const explore = (stage: Stage, maxStates: number): Explored | null => {
+type Visit = (moved: GameState, events: GameEvent[]) => void
+
+const explore = (stage: Stage, maxStates: number, visit?: Visit): Explored | null => {
   const start = createState(forSearch(stage))
   const startKey = stateKey(start)
   const found: Explored = {
@@ -215,8 +217,9 @@ const explore = (stage: Stage, maxStates: number): Explored | null => {
       found.next.set(key, links)
 
       for (const direction of DIRECTIONS) {
-        const { state: moved } = move(state, direction)
+        const { state: moved, events } = move(state, direction)
         if (moved === state) continue
+        visit?.(moved, events)
 
         const movedKey = stateKey(moved)
         links.push(movedKey)
@@ -296,6 +299,10 @@ const canReach = (found: Explored) => {
 
   return good
 }
+
+// 시작에서 닿는 모든 이동을 하나씩 넘기는 훑기, 한도를 넘으면 false
+export const eachMove = (stage: Stage, visit: Visit, { maxStates = 1_000_000 } = {}) =>
+  explore(stage, maxStates, visit) !== null
 
 export type DeadEndResult =
   | {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { fadedCells, hiddenObjects, occludingCells } from './occlusion'
+import { fadedCells, hiddenFills, hiddenObjects, occludingCells } from './occlusion'
 import { createState } from './rules'
 import type { Stage } from './types'
 
@@ -151,6 +151,44 @@ describe('hiddenObjects', () => {
       ['ladder', 2, 8],
       ['ladder', 1, 4],
     ])
+  })
+})
+
+describe('hiddenFills', () => {
+  const PIT: Stage = {
+    version: 1,
+    id: 't',
+    heights: [
+      [0, 0, -1],
+      [0, 0, 0],
+      [0, 0, 0],
+      [0, 0, 0],
+    ],
+    start: { x: 0, y: 0 },
+    goal: { x: 0, y: 3 },
+    entities: [{ type: 'box', x: 1, y: 0 }],
+  }
+
+  it('상자로 메운 칸을 세 칸 떨어진 높은 칸이 가리면 찾는다', () => {
+    const heights = PIT.heights.map((row, y) => (y === 3 ? [0, 0, 4] : row))
+
+    expect(hiddenFills({ ...PIT, heights })).toEqual([
+      { kind: 'fill', target: { x: 2, y: 0, h: 0 }, cover: { x: 2, y: 3, h: 4 }, px: 42 },
+    ])
+  })
+
+  it('메운 칸 앞이 낮으면 가리지 않는다', () => {
+    expect(hiddenFills(PIT)).toEqual([])
+  })
+
+  it('상자로 메울 수 없는 구덩이는 보지 않는다', () => {
+    const heights = PIT.heights.map((row, y) => (y === 3 ? [0, 0, 4] : row))
+
+    expect(hiddenFills({ ...PIT, heights, entities: [] })).toEqual([])
+  })
+
+  it('탐색 한도를 넘으면 null', () => {
+    expect(hiddenFills(PIT, { maxStates: 1 })).toBeNull()
   })
 })
 

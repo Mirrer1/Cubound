@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { zoneIndexAt } from '@/game/camera'
-import { type Hidden, type HiddenKind, hiddenObjects } from '@/game/occlusion'
+import { type Hidden, type HiddenKind, hiddenFills, hiddenObjects } from '@/game/occlusion'
 import { createState, move } from '@/game/rules'
 import { deadEnds, minPushes, moveLimit, solutionCount, solve, statesWithin } from '@/game/solver'
 import type { Direction, Stage } from '@/game/types'
@@ -29,6 +29,7 @@ const KINDS: Record<HiddenKind, string> = {
   goal: '구멍',
   box: '상자',
   ladder: '사다리',
+  fill: '메움',
 }
 
 const hiddenText = (hidden: Hidden[]) => {
@@ -91,6 +92,7 @@ interface Summary {
   alternatives: string
   states: string
   hidden: string
+  fills: string
   ms: string
 }
 
@@ -108,6 +110,8 @@ const check = (file: string): Summary | null => {
 
   const hidden = hiddenObjects(stage)
   row('가림', hiddenText(hidden))
+  const fills = hiddenFills(stage)
+  row('메움 가림', fills ? hiddenText(fills) : '탐색 한도 초과')
 
   const started = Date.now()
   const solved = solve(stage)
@@ -183,6 +187,7 @@ const check = (file: string): Summary | null => {
     alternatives: `${ways}${inside === null ? '' : `가지, ${room}개`}`,
     states: stuck.status === 'ok' ? `${stuck.states}` : '?',
     hidden: hidden.length === 0 ? '0' : `${hidden.length}@${hidden[0].px}px`,
+    fills: !fills ? '?' : fills.length === 0 ? '0' : `${fills.length}@${fills[0].px}px`,
     ms: `${ms}`,
   }
 }
@@ -195,6 +200,7 @@ const COLUMNS: [keyof Summary, string, number][] = [
   ['dead', '막힘@수', 10],
   ['alternatives', '풀이/여유', 14],
   ['hidden', '가림@최대', 11],
+  ['fills', '메움@최대', 11],
   ['ms', '탐색ms', 8],
 ]
 

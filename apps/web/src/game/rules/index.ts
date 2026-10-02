@@ -18,3 +18,4 @@ export {
   windLeft,
 } from './limitRule'
 export { move } from './moveRule'
+export { same } from './cellRule'

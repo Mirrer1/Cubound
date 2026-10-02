@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import { createState, move } from './rules'
-import { deadEnds, minPushes, moveLimit, solutionCount, solve, stars, statesWithin } from './solver'
+import {
+  deadEnds,
+  eachMove,
+  minPushes,
+  moveLimit,
+  solutionCount,
+  solve,
+  stars,
+  statesWithin,
+} from './solver'
 import type { Stage } from './types'
 
 const STAGE: Stage = {
@@ -261,6 +270,27 @@ describe('statesWithin', () => {
     expect(inside.status).toBe('ok')
     if (all.status !== 'ok' || inside.status !== 'ok') return
     expect(inside.count).toBe(all.states - all.dead)
+  })
+})
+
+describe('eachMove', () => {
+  it('시작에서 닿는 모든 이동을 이벤트와 함께 넘긴다', () => {
+    const reached = new Set<string>()
+    const fills: string[] = []
+    const done = eachMove(BOX_TRAP, (moved, events) => {
+      reached.add(`${moved.player.x},${moved.player.y}`)
+      events.forEach((e) => {
+        if (e.type === 'pushed' && e.result === 'filled') fills.push(`${e.to.x},${e.to.y}`)
+      })
+    })
+
+    expect(done).toBe(true)
+    expect(reached.has('3,1')).toBe(true)
+    expect(new Set(fills)).toEqual(new Set(['2,1', '1,2']))
+  })
+
+  it('탐색 상태 수 한도를 넘으면 false를 돌려준다', () => {
+    expect(eachMove(STAGE, () => {}, { maxStates: 2 })).toBe(false)
   })
 })
 
