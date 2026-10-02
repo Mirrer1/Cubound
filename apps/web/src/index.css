@@ -168,12 +168,10 @@ body {
   overscroll-behavior: none;
 }
 
-/* 화면 뒤는 계속 보여서 사이클이 바뀔 때 색이 천천히 넘어가야 한다 */
 body {
   margin: 0;
   background: var(--color-page-bg);
   color: var(--color-ink);
-  transition: background-color 300ms var(--ease-soft);
 }
 
 :lang(ja) {
