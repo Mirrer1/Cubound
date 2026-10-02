@@ -100,13 +100,6 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
       range: `${first}–${first + WORLDS_PER_CYCLE * STAGES_PER_WORLD - 1}`,
       stars: totalStars(progress, ids),
       total: ids.length * 3,
-      // 장의 크기가 같아 보이게 칸을 차지하는 만들지 않은 월드
-      worlds: Array.from({ length: WORLDS_PER_CYCLE }, (_, i) => {
-        const w = worldsOf(n)[i]
-        if (w === undefined) return 0
-        const wid = stageIdsOf(w)
-        return wid.length === 0 ? 0 : totalStars(progress, wid) / (wid.length * 3)
-      }),
       state,
     }
   })
