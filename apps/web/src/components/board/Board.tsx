@@ -218,7 +218,7 @@ const Board = ({
         const entity = stage.entities.find((e) => same(e, cell.p))
         const pressed = (state: GameState) => same(state.player, cell.p) || has(state.boxes, cell.p)
         const doorDepth = (state: GameState) =>
-          entity?.type === 'door' && isDoorOpen(state, entity.id) ? 7 : TILE.layer
+          entity?.type === 'door' && isDoorOpen(state, entity.id) ? 0 : TILE.layer
         // 상자가 얹힌 칸도 찾도록 entity와 따로 보는 발판
         const lift = stage.entities.find(
           (e): e is Extract<Entity, { type: 'lift' }> => e.type === 'lift' && same(e, cell.p),
