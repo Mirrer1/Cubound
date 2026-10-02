@@ -70,6 +70,7 @@ export const es: Partial<Texts> = {
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',
+  'chapter.3': 'El Camino del Agua Creciente',
 
   'world.1': 'Tierra de Escalones Bajos',
   'world.1.note': 'Diez niveles para aprender a subir y bajar, una casilla cada vez.',
@@ -201,4 +202,16 @@ export const es: Partial<Texts> = {
   'stage.10-8': 'Campo Derrumbado',
   'stage.10-9': 'El Último Campo',
   'stage.10-10': 'Viento en Contra',
+  'world.11': 'Tierra del Vado',
+  'world.11.note': 'Las cajas flotan en el agua. Échalas al agua y cruza sobre ellas.',
+  'stage.11-1': 'A Flote',
+  'stage.11-2': 'La Orilla',
+  'stage.11-3': 'El Paso de la Barca',
+  'stage.11-4': 'Piedras de Paso',
+  'stage.11-5': 'La Orilla Alta',
+  'stage.11-6': 'A la Deriva',
+  'stage.11-7': 'La Compuerta',
+  'stage.11-8': 'La Otra Orilla',
+  'stage.11-9': 'Canales',
+  'stage.11-10': 'Barcas Amarradas',
 }

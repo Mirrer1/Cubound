@@ -65,6 +65,7 @@ export const zhHans: Partial<Texts> = {
 
   'chapter.1': '踏石之路',
   'chapter.2': '草木丛生之路',
+  'chapter.3': '水涨之路',
 
   'world.1': '矮阶之地',
   'world.1.note': '十个关卡，练习一格一格地上下移动。',
@@ -192,4 +193,16 @@ export const zhHans: Partial<Texts> = {
   'stage.10-8': '崩塌的田',
   'stage.10-9': '最后的原野',
   'stage.10-10': '逆风',
+  'world.11': '渡水之地',
+  'world.11.note': '箱子会浮在水上。让它浮起来，乘着它渡过去。',
+  'stage.11-1': '浮起',
+  'stage.11-2': '水边',
+  'stage.11-3': '渡口小路',
+  'stage.11-4': '踏脚石',
+  'stage.11-5': '高堤',
+  'stage.11-6': '推流',
+  'stage.11-7': '水门',
+  'stage.11-8': '对岸',
+  'stage.11-9': '水路',
+  'stage.11-10': '系泊之船',
 }

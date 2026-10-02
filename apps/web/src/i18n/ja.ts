@@ -65,6 +65,7 @@ export const ja: Partial<Texts> = {
 
   'chapter.1': '石を踏む道',
   'chapter.2': '草が茂る道',
+  'chapter.3': '水が満ちる道',
 
   'world.1': '低い段差の地',
   'world.1.note': '一マスずつ上り下りする動きを覚える十のステージです。',
@@ -192,4 +193,16 @@ export const ja: Partial<Texts> = {
   'stage.10-8': '崩れた畑',
   'stage.10-9': '最後の野',
   'stage.10-10': '向かい風',
+  'world.11': '水を渡る地',
+  'world.11.note': '箱は水に浮きます。浮かべて、乗って渡ります。',
+  'stage.11-1': '浮かべる',
+  'stage.11-2': '水辺',
+  'stage.11-3': '渡し道',
+  'stage.11-4': '飛び石',
+  'stage.11-5': '高い土手',
+  'stage.11-6': '押し流し',
+  'stage.11-7': '水門',
+  'stage.11-8': '向こう岸',
+  'stage.11-9': '水路',
+  'stage.11-10': 'つながれた舟',
 }

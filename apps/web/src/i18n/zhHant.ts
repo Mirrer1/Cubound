@@ -65,6 +65,7 @@ export const zhHant: Partial<Texts> = {
 
   'chapter.1': '踏石之路',
   'chapter.2': '草木叢生之路',
+  'chapter.3': '水漲之路',
 
   'world.1': '矮階之地',
   'world.1.note': '十個關卡，練習一格一格地上下移動。',
@@ -192,4 +193,16 @@ export const zhHant: Partial<Texts> = {
   'stage.10-8': '崩塌的田',
   'stage.10-9': '最後的原野',
   'stage.10-10': '逆風',
+  'world.11': '渡水之地',
+  'world.11.note': '箱子會浮在水上。讓它浮起來，乘著它渡過去。',
+  'stage.11-1': '浮起',
+  'stage.11-2': '水邊',
+  'stage.11-3': '渡口小路',
+  'stage.11-4': '踏腳石',
+  'stage.11-5': '高堤',
+  'stage.11-6': '推流',
+  'stage.11-7': '水門',
+  'stage.11-8': '對岸',
+  'stage.11-9': '水路',
+  'stage.11-10': '繫泊之船',
 }

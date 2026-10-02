@@ -65,6 +65,7 @@ export const ko: Partial<Texts> = {
 
   'chapter.1': '돌 위의 첫걸음',
   'chapter.2': '풀이 우거진 길',
+  'chapter.3': '물이 차오르는 길',
 
   'world.1': '낮은 계단의 땅',
   'world.1.note': '한 칸씩 오르내리는 법을 익히는 열 판입니다.',
@@ -192,4 +193,16 @@ export const ko: Partial<Texts> = {
   'stage.10-8': '무너진 밭',
   'stage.10-9': '마지막 들판',
   'stage.10-10': '맞바람',
+  'world.11': '물을 건너는 땅',
+  'world.11.note': '상자는 물에 뜹니다. 띄워서 타고 건너갑니다.',
+  'stage.11-1': '띄우기',
+  'stage.11-2': '물가',
+  'stage.11-3': '나룻길',
+  'stage.11-4': '징검다리',
+  'stage.11-5': '높은 둑',
+  'stage.11-6': '떠밀기',
+  'stage.11-7': '물문',
+  'stage.11-8': '건너편',
+  'stage.11-9': '물길',
+  'stage.11-10': '묶인 배',
 }

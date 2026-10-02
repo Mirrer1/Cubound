@@ -65,6 +65,7 @@ export const en = {
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',
+  'chapter.3': 'The Rising Water Path',
 
   'world.1': 'Land of Low Steps',
   'world.1.note': 'Ten stages to learn stepping up and down, one tile at a time.',
@@ -195,6 +196,18 @@ export const en = {
   'stage.10-8': 'Crumbled Field',
   'stage.10-9': 'The Last Field',
   'stage.10-10': 'Headwind',
+  'world.11': 'Land of Crossings',
+  'world.11.note': 'Boxes float on water. Set one afloat and ride it across.',
+  'stage.11-1': 'Afloat',
+  'stage.11-2': 'Shoreline',
+  'stage.11-3': 'Ferry Path',
+  'stage.11-4': 'Stepping Stones',
+  'stage.11-5': 'High Bank',
+  'stage.11-6': 'Adrift',
+  'stage.11-7': 'Water Gate',
+  'stage.11-8': 'Far Shore',
+  'stage.11-9': 'Waterways',
+  'stage.11-10': 'Moored Boats',
 }
 
 export type Texts = typeof en
