@@ -27,7 +27,7 @@ const stageOf = (left: number) => (left > 1 ? 0 : left === 1 ? 1 : 2)
 // 단계 사이 값은 앞뒤 단계를 섞은 값
 export const atStage = (steps: number[], stage: number) => {
   const i = Math.min(steps.length - 2, Math.max(0, Math.floor(stage)))
-  return lerp(steps[i], steps[i + 1], stage - i)
+  return lerp(steps[i], steps[i + 1], clamp01(stage - i))
 }
 
 export const crackSink = (stage: number) => atStage(CRACK_SINK, stage)

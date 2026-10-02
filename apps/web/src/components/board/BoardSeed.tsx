@@ -1,4 +1,4 @@
-import { SAPLING } from './frame'
+import { SAPLING, clamp01, lerp } from './frame'
 import { type TopTilt, darken } from './view'
 import { TILE, isoDelta } from '@/game/iso'
 
@@ -62,8 +62,6 @@ const SMALL = 0.6
 // 나타남과 사라짐이 겹치는 몫, 들어서는 쪽이 먼저 짙어지는 순서
 const FADE = 0.6
 
-const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const fadeIn = (p: number) => clamp01(p / FADE)
 const fadeOut = (p: number) => 1 - clamp01((p - (1 - FADE)) / FADE)
 

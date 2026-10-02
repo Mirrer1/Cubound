@@ -1,6 +1,7 @@
 import { animate } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
+import { lerp } from '@/components/board/frame'
 import {
   type Box,
   type ViewBox,
@@ -15,8 +16,6 @@ import type { GameState, Point } from '@/game/types'
 
 const ZONE_SECONDS = 0.6
 const LOOK_SECONDS = 0.26 // 구르는 큐브를 놓치지 않는 이동 연출과 비슷한 길이
-
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
 interface ZoneMove {
   from: ViewBox // 구역이 바뀔 때 보이던 화면

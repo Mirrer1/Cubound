@@ -125,6 +125,11 @@ describe('atStage', () => {
     expect(atStage(STEPS, 0.5)).toBe(5)
     expect(atStage(STEPS, 1.5)).toBe(20)
   })
+
+  it('범위 밖은 양 끝 단계 값에서 멈춘다', () => {
+    expect(atStage(STEPS, 3)).toBe(30)
+    expect(atStage(STEPS, -1)).toBe(0)
+  })
 })
 
 describe('crackLeft', () => {

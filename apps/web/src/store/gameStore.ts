@@ -89,7 +89,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
       if (result.state.cleared) localSessionStorage.clear()
       else localSessionStorage.save(toSession(result.state))
-      if (!result.state.cleared || game.cleared) return next
+      if (!result.state.cleared) return next
 
       const cleared = recordClear(
         progress,

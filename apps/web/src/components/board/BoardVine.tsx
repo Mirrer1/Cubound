@@ -1,4 +1,4 @@
-import { VINE_SPROUT, VINE_TONGUE, type VineKind } from './frame'
+import { VINE_SPROUT, VINE_TONGUE, type VineKind, clamp01, lerp } from './frame'
 import { blend, darken } from './view'
 import { isoDelta } from '@/game/iso'
 import type { Direction } from '@/game/types'
@@ -183,8 +183,6 @@ const leafAt = (
 // 줄기 끝이 칸 입구에서 잰 거리를 지나간 뒤 돋는 정도, 1보다 작은 것은 자랄 때 한정
 const sprung = (tip: number, distance: number, span: number) => clamp01((tip - distance) / span)
 
-const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
-
 // 칸 입구에서 가운데를 지나 출구까지 잰 거리, along을 바꾼 값
 const enterDistance = (along: number) => 0.5 + along
 const leaveDistance = (along: number) => 0.5 + along
@@ -287,8 +285,6 @@ const sproutShapes = (x: number, y: number, height: number): Shape[] => {
     leaf(x, y, 'right', [0, 0], [-reach * 0.35, reach], height, 0.11, 'var(--color-vine-sprout)'),
   ]
 }
-
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
 interface BoardVineProps {
   x: number
