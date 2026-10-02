@@ -62,6 +62,7 @@ export const ko: Partial<Texts> = {
   'guide.seedRise': '심은 칸은 4수 뒤에 위에 있는 것과 함께 한 층 솟아요',
   'guide.seedGrow': '솟은 씨앗은 멈추지 않고 4수마다 한 층씩 세 층까지 자라요',
   'guide.wind': '바람이 불면 한 칸 밀려나지만 벽이나 상자 뒤에 서 있으면 안 밀려요',
+  'guide.water': '큐브는 물에 못 들어가지만 상자를 밀어 넣으면 떠서 타고 건널 수 있어요',
 
   'chapter.1': '돌 위의 첫걸음',
   'chapter.2': '풀이 우거진 길',
