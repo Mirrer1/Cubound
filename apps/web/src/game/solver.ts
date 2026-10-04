@@ -15,15 +15,15 @@ const points = (list: Point[]) =>
     .sort()
     .join(' ')
 
-// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람은 유지
+// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개는 유지
 // 제한이 너무 작을 때도 진짜 최소 이동 수를 얻는 방법
 const forSearch = (stage: Stage): Stage => {
-  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind } = stage.rules ?? {}
+  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug } = stage.rules ?? {}
   return {
     ...stage,
     rules:
-      swampDeepen || mushroomWither || vineStop || seedGrow || wind
-        ? { swampDeepen, mushroomWither, vineStop, seedGrow, wind }
+      swampDeepen || mushroomWither || vineStop || seedGrow || wind || plug
+        ? { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug }
         : undefined,
   }
 }
@@ -68,6 +68,8 @@ const stateKey = (state: GameState, deep = true) => {
     ...(deep && state.stage.rules?.swampDeepen ? [`${state.sinks}`] : []),
     // 자리 집합만으로는 갈리지 않는 묶인 배와 자유 배의 맞바꿈
     ...(state.tethered.length > 0 ? [state.tethered.map(({ x, y }) => `${x},${y}`).join(' ')] : []),
+    // 상자가 사라져 남은 상자 자리만으로는 갈리지 않는 막은 소용돌이
+    ...(state.stage.rules?.plug ? [points(state.plugged)] : []),
     ...(state.trams.length > 0
       ? [state.trams.map(({ at, dir }) => `${at}${dir > 0 ? '+' : '-'}`).join(' ')]
       : []),

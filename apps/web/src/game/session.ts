@@ -20,6 +20,7 @@ export interface Session {
   heights: number[][] // 상자와 덩굴로 메운 칸, 무너진 칸, 씨앗으로 솟은 칸이 반영된 높이
   boxes: Point[]
   tethered?: Point[] // 예전 저장에는 없는 값
+  plugged?: Point[] // 예전 저장에는 없는 값
   cracks: Crack[]
   trams: TramSpot[]
   swamps?: Point[] // 예전 저장에는 없는 값
@@ -56,6 +57,7 @@ export const toSession = (game: GameState): Session => ({
   heights: game.heights,
   boxes: game.boxes,
   tethered: game.tethered,
+  plugged: game.plugged,
   cracks: game.cracks,
   trams: game.trams,
   swamps: game.swamps,
@@ -232,7 +234,18 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
       ? stagePosts.map(({ boat }) => ({ x: boat.x, y: boat.y }))
       : listOf<Point>(saved.tethered, onFloor, stagePosts.length)
 
-  if (!boxes || !ladders || !leaningLadders || !seeds || !planted || !tethered) return null
+  const whirlpoolKeys = new Set(
+    stage.entities.filter((e) => e.type === 'whirlpool').map(({ x, y }) => `${x},${y}`),
+  )
+  const isWhirlpool = (value: unknown): value is Point =>
+    isObject(value) && whirlpoolKeys.has(`${value.x},${value.y}`)
+  const plugged =
+    saved.plugged === undefined ? [] : listOf(saved.plugged, isWhirlpool, whirlpoolKeys.size)
+
+  if (!boxes || !ladders || !leaningLadders || !seeds || !planted || !tethered || !plugged) {
+    return null
+  }
+  if (new Set(plugged.map(({ x, y }) => `${x},${y}`)).size !== plugged.length) return null
   const tiedToBox = (boat: Point) => boxes.some(({ x, y }) => x === boat.x && y === boat.y)
   if (tethered.length !== stagePosts.length || !tethered.every(tiedToBox)) return null
   if (carrying !== null && carrying !== 'ladder' && carrying !== 'seed') return null
@@ -249,6 +262,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     heights,
     boxes: boxes.map(({ x, y }) => ({ x, y })),
     tethered: tethered.map(({ x, y }) => ({ x, y })),
+    plugged: plugged.map(({ x, y }) => ({ x, y })),
     cracks: (savedCracks as Crack[]).map(({ x, y, left }) => ({ x, y, left })),
     trams: (savedTrams as TramSpot[]).map(({ id, at, dir }) => ({ id, at, dir })),
     swamps:

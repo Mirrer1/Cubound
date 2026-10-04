@@ -16,6 +16,7 @@ export type Entity = (
   | { type: 'tram'; id: string; level: number; cells: Point[]; dir: 1 | -1 } // x, y는 cells 안의 시작 자리
   | { type: 'vine'; id: string; cells: Point[] } // x, y는 뿌리 칸, cells는 자랄 순서
   | { type: 'post'; length: number; boat: Point } // x, y는 말뚝 칸, boat는 묶인 배의 처음 자리
+  | { type: 'whirlpool' }
 ) &
   Point
 
@@ -34,6 +35,7 @@ export interface StageRules {
   vineStop?: boolean // 큐브가 밟은 덩굴이 그 길이로 굳는 판
   seedGrow?: boolean // 솟은 씨앗 칸이 4수마다 한 층씩 세 층까지 솟는 판
   wind?: Direction // 4수마다 큐브가 밀려 가는 방향
+  plug?: boolean // 땅 상자를 밀어 넣으면 소용돌이가 막히는 판
 }
 
 export interface Stage {
@@ -104,6 +106,7 @@ export interface GameState {
   heights: number[][] // 상자와 덩굴로 메운 칸, 무너진 칸, 씨앗으로 솟은 칸이 반영된 높이
   boxes: Point[]
   tethered: Point[] // 말뚝 순서대로 묶인 배의 지금 자리
+  plugged: Point[] // 상자로 막혀 보통 물 칸이 된 소용돌이
   cracks: Crack[]
   trams: TramSpot[]
   swamps: Point[] // 남아 있는 늪 칸, 상자가 가라앉은 칸은 제외
@@ -140,6 +143,8 @@ export type GameEvent =
   | { type: 'lift'; id: string; up: boolean }
   | { type: 'warped'; from: Point; to: Point }
   | { type: 'rowed'; from: Point; to: Point } // 뜬 상자를 탄 채 함께 간 한 칸
+  | { type: 'pulled'; from: Point; to: Point } // 소용돌이에 끌려 한 칸 간 빈 배
+  | { type: 'plugged'; at: Point } // 밀어 넣은 땅 상자로 막힌 소용돌이
   | { type: 'tram'; id: string; from: Point; to: Point }
   | { type: 'grew'; id: string; at: Point } // 덩굴이 한 칸 뻗어 메운 칸
   | { type: 'planted'; at: Point; direction: Direction } // direction은 턱 쪽으로 민 방향

@@ -7,6 +7,7 @@ import { isSwamp } from './swampRule'
 import { isClosedDoor } from './switchRule'
 import { onTramPath } from './tramRule'
 import { walk } from './walkRule'
+import { isWhirlpool } from './whirlpoolRule'
 
 // 바닥 없는 칸은 -1, 상자가 들어가 메울 자리
 const boxLanding = (state: GameState, p: Point, level: number): number | null => {
@@ -20,7 +21,8 @@ const boxLanding = (state: GameState, p: Point, level: number): number | null =>
     state.leaningLadders.some((l) => same(l, p)) ||
     state.seeds.some((s) => same(s, p)) ||
     same(p, state.stage.goal) ||
-    isClosedDoor(state, p)
+    isClosedDoor(state, p) ||
+    (isWhirlpool(state, p) && !state.stage.rules?.plug)
   )
     return null
 
@@ -114,6 +116,8 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
   const stop = landed?.to ?? rest
   const sank = isSwamp(state, stop)
   if (sank) events.push({ type: 'sank', at: stop })
+  const plugging = isWhirlpool(state, stop)
+  if (plugging) events.push({ type: 'plugged', at: stop })
 
   const others = state.boxes.filter((b) => !same(b, box))
   const filled = landing < 0 ? target : landed?.result === 'filled' ? landed.to : null
@@ -127,15 +131,17 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
   }
   const next: GameState = sank
     ? { ...pushing, boxes: others, swamps: state.swamps.filter((cell) => !same(cell, stop)) }
-    : filled
-      ? {
-          ...pushing,
-          boxes: others,
-          heights: state.heights.map((row, y) =>
-            y === filled.y ? row.map((h, x) => (x === filled.x ? fillHeight : h)) : row,
-          ),
-        }
-      : { ...pushing, boxes: [...others, stop] }
+    : plugging
+      ? { ...pushing, boxes: others, plugged: [...state.plugged, stop] }
+      : filled
+        ? {
+            ...pushing,
+            boxes: others,
+            heights: state.heights.map((row, y) =>
+              y === filled.y ? row.map((h, x) => (x === filled.x ? fillHeight : h)) : row,
+            ),
+          }
+        : { ...pushing, boxes: [...others, stop] }
 
   return walk(next, box, boxFloor, direction, events)
 }

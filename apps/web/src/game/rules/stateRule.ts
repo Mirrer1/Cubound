@@ -46,6 +46,7 @@ export const createState = (stage: Stage): GameState => ({
   heights: stage.heights,
   boxes: stage.entities.filter((e) => e.type === 'box').map(({ x, y }) => ({ x, y })),
   tethered: posts(stage).map(({ boat }) => ({ x: boat.x, y: boat.y })),
+  plugged: [],
   cracks: readCracks(stage),
   trams: trams(stage).map(({ id, cells, dir, x, y }) => ({
     id,

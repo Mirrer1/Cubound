@@ -14,6 +14,7 @@ import { boardsTram, onTramPath, rideTrams, tramLevelAt } from './tramRule'
 import { growVines } from './vineRule'
 import { arrive, walk } from './walkRule'
 import { row } from './waterRule'
+import { isWhirlpool, pullBoats } from './whirlpoolRule'
 import { blow } from './windRule'
 
 const moveOnce = (state: GameState, direction: Direction): MoveResult => {
@@ -30,7 +31,9 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
   }
 
   if (isWater(state, from) && isWater(state, to) && !hasBox(state, to)) {
-    return withinReach(state, from, to) ? row(state, to, direction) : blocked
+    return withinReach(state, from, to) && !isWhirlpool(state, to)
+      ? row(state, to, direction)
+      : blocked
   }
   if (toFloor === null || isClosedDoor(state, to)) return blocked
 
@@ -68,7 +71,8 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
   const crackEvents = [...stepEvents, ...windCrackEvents]
   const { state: rode, events: tramEvents } = rideTrams(crumbled)
   const { state: grown, events: vineEvents } = growVines(rode)
-  const { state: moved, events: seedEvents } = riseSeeds(before, grown)
+  const { state: seeded, events: seedEvents } = riseSeeds(before, grown)
+  const { state: moved, events: pullEvents } = pullBoats(seeded)
 
   const doorEvents: GameEvent[] = doors(before.stage)
     .map((door) => ({
@@ -92,6 +96,7 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
       ...tramEvents,
       ...vineEvents,
       ...seedEvents,
+      ...pullEvents,
       ...doorEvents,
       ...liftEvents,
       ...(moved.cleared ? [{ type: 'cleared' } as const] : []),

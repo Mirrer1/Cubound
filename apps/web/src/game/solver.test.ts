@@ -707,3 +707,53 @@ describe('solve 묶인 배', () => {
     expect(found.status === 'ok' && found.states).toBe(148)
   })
 })
+
+describe('solve 마개', () => {
+  // 물 높이 1, (1,1) 땅 상자 아래 (1,2)와 오른쪽 (2,1)에 소용돌이, 어느 쪽을 막아도 큐브는 (1,1)
+  const PLUG_STAGE: Stage = {
+    version: 1,
+    id: 'test-solver-plug',
+    heights: [
+      [1, 1, 1, 1],
+      [1, 1, 0, 1],
+      [1, 0, 1, 1],
+      [1, 1, 1, 1],
+    ],
+    water: 1,
+    start: { x: 0, y: 0 },
+    goal: { x: 3, y: 3 },
+    entities: [
+      { type: 'whirlpool', x: 1, y: 2 },
+      { type: 'whirlpool', x: 2, y: 1 },
+      { type: 'box', x: 1, y: 1 },
+    ],
+    rules: { plug: true },
+  }
+
+  it('어느 소용돌이를 막았는지가 다르면 다른 상태로 센다', () => {
+    const found = deadEnds(PLUG_STAGE)
+
+    expect(found.status === 'ok' && found.states).toBe(41)
+  })
+
+  it('막은 소용돌이 칸을 배로 지나는 길을 찾는다', () => {
+    // (2,2) 소용돌이를 (2,1) 상자로 막아야 (1,2) 배로 건너는 판, x 3의 높이 3 벽
+    const channel: Stage = {
+      ...PLUG_STAGE,
+      heights: [
+        [1, 1, 1, 3, 1],
+        [1, 1, 1, 3, 1],
+        [1, 0, 0, 0, 1],
+      ],
+      goal: { x: 4, y: 0 },
+      entities: [
+        { type: 'whirlpool', x: 2, y: 2 },
+        { type: 'box', x: 2, y: 1 },
+        { type: 'box', x: 1, y: 2 },
+      ],
+    }
+    const result = solve(channel)
+
+    expect(result.status === 'solved' && result.moves).toBe(10)
+  })
+})

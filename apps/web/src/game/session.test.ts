@@ -20,6 +20,7 @@ const MID = {
   heights: STAGE.heights,
   boxes: [{ x: 2, y: 0 }],
   tethered: [],
+  plugged: [],
   cracks: [],
   trams: [],
   swamps: [],
@@ -607,5 +608,49 @@ describe('restoreSession 묶인 배', () => {
     expect(restoreSession({ ...session, tethered: [{ x: 3, y: 1 }] }, TETHER_STAGE)).toBeNull()
     expect(restoreSession({ ...session, tethered: [] }, TETHER_STAGE)).toBeNull()
     expect(restoreSession({ ...session, tethered: undefined }, TETHER_STAGE)).toBeNull()
+  })
+})
+
+describe('restoreSession 소용돌이', () => {
+  // 물 높이 1, (1,2) 소용돌이 위 (1,1)에 마개로 밀어 넣을 땅 상자
+  const PLUG_STAGE: Stage = {
+    version: 1,
+    id: '12-10',
+    heights: [
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 0, 0, 1],
+      [1, 1, 1, 1],
+    ],
+    water: 1,
+    start: { x: 1, y: 0 },
+    goal: { x: 3, y: 3 },
+    entities: [
+      { type: 'whirlpool', x: 1, y: 2 },
+      { type: 'box', x: 1, y: 1 },
+    ],
+    rules: { plug: true },
+  }
+  const plugged = move(createState(PLUG_STAGE), 'down').state
+
+  it('막힌 소용돌이를 그대로 이어간다', () => {
+    const restored = restoreSession(toSession(plugged), PLUG_STAGE)
+
+    expect(restored).toEqual(plugged)
+    expect(restored?.plugged).toEqual([{ x: 1, y: 2 }])
+  })
+
+  it('막힌 소용돌이가 없던 때 저장한 것은 막힌 것 없이 읽는다', () => {
+    const session = { ...toSession(createState(PLUG_STAGE)), plugged: undefined }
+
+    expect(restoreSession(session, PLUG_STAGE)?.plugged).toEqual([])
+  })
+
+  it('소용돌이가 아닌 칸이나 겹친 칸이 막혔다고 하면 버린다', () => {
+    const session = toSession(plugged)
+    const at = { x: 1, y: 2 }
+
+    expect(restoreSession({ ...session, plugged: [{ x: 2, y: 2 }] }, PLUG_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, plugged: [at, at] }, PLUG_STAGE)).toBeNull()
   })
 })
