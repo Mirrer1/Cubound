@@ -370,23 +370,13 @@ body {
     opacity 200ms var(--ease-soft);
 }
 
-/* 소용돌이가 시계 방향으로 도는 것과 앞 칸에 멈춘 배가 쏠렸다 돌아오는 것, 칸을 다시 그리지 않는 반복 */
+/* 소용돌이가 도는 축과 앞 칸에 멈춘 배의 쏠림 세기, 반복 자체는 useLoop */
 @utility whirl-spin {
   transform-origin: 0 0;
-  animation: whirl-spin 6s linear infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
 }
 
 @utility whirl-lean {
-  animation: whirl-lean 1.6s ease-in-out infinite;
   transition: --lean-amp 300ms var(--ease-soft);
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
 }
 
 /* 큐브가 올라타면 쏠림이 제자리로 잦아드는 세기 */
@@ -394,21 +384,6 @@ body {
   syntax: '<number>';
   inherits: false;
   initial-value: 1;
-}
-
-@keyframes whirl-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes whirl-lean {
-  50% {
-    transform: translate(
-      calc(var(--lean-x) * var(--lean-amp)),
-      calc(var(--lean-y) * var(--lean-amp))
-    );
-  }
 }
 
 /* 스크롤바가 생겨도 레이아웃이 밀리지 않게 양쪽 자리를 미리 비워둔다 */

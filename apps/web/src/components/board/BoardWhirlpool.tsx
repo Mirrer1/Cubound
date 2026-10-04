@@ -10,8 +10,11 @@ import {
   surfaceRise,
 } from './view'
 import { TILE, blockFaces } from '@/game/iso'
+import { useLoop } from '@/hooks/useLoop'
 
 const REFLECT = { fill: 'var(--color-water-reflect)' }
+
+const SPIN: Keyframe[] = [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }]
 
 type BoardWhirlpoolProps =
   | {
@@ -32,6 +35,7 @@ type BoardWhirlpoolProps =
   | ({ part: 'boat' } & WhirlBoxFrame)
 
 const BoardWhirlpool = (props: BoardWhirlpoolProps) => {
+  const spin = useLoop(SPIN, 6000)
   const surface = props.part === 'boat' ? props.y : props.y - surfaceRise(props.depth)
   const lane = props.part === 'lane' ? lanePoints(props.x, surface, props.axis) : null
 
@@ -64,7 +68,7 @@ const BoardWhirlpool = (props: BoardWhirlpoolProps) => {
         style={{ fill: 'var(--color-water-1)' }}
       />
       <g transform={cellMatrix(props.x, surface)}>
-        <g className="whirl-spin">
+        <g ref={spin} className="whirl-spin">
           {BOWL_SHAPES.map((shape) => (
             <polygon key={shape.points} points={shape.points} style={{ fill: shape.fill }} />
           ))}

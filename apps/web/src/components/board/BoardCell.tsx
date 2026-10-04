@@ -35,6 +35,18 @@ import {
   spotPoints,
 } from './view'
 import { TILE, blockFaces } from '@/game/iso'
+import { useLoop } from '@/hooks/useLoop'
+
+// 앞 칸에 멈춘 배가 소용돌이 쪽으로 쏠렸다 돌아오는 한 번, 세기는 --lean-amp
+const LEAN_LOOP: Keyframe[] = [
+  { transform: 'translate(0, 0)', easing: 'ease-in-out' },
+  {
+    transform:
+      'translate(calc(var(--lean-x) * var(--lean-amp)), calc(var(--lean-y) * var(--lean-amp)))',
+    easing: 'ease-in-out',
+  },
+  { transform: 'translate(0, 0)' },
+]
 
 // 왼쪽 위 모서리와 나란하게 누운 얼음 윗면의 광택 면
 const GLOSS_SPOTS: [number, number][] = [
@@ -127,6 +139,7 @@ const BoardCell = ({
   const sink = swamp.risen >= 0 ? (MUD.drop + swampSink(swamp.risen)) * swamp.deep : 0
   const collar = swamp.risen >= 0 ? swampCollar(swamp.risen) * swamp.deep : 0
   const lean = whirl.lean ? leanShift(whirl.lean, whirl.leanOn) : undefined
+  const leanLoop = useLoop(LEAN_LOOP, 1600)
 
   return (
     <g>
@@ -317,7 +330,11 @@ const BoardCell = ({
       {box && (
         <g style={fade}>
           {water.depth > 0 ? (
-            <g className={lean ? 'whirl-lean' : undefined} style={lean as CSSProperties}>
+            <g
+              ref={lean ? leanLoop : undefined}
+              className={lean ? 'whirl-lean' : undefined}
+              style={lean as CSSProperties}
+            >
               <BoardWater part="box" x={x} y={y - water.depth * TILE.layer} shown={WATER.lip} />
             </g>
           ) : (
