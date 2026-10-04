@@ -308,11 +308,11 @@ describe('pullStart', () => {
     expect(durationOf(events)).toBeCloseTo(0.12 + PULL_SECONDS)
   })
 
-  it('이 수에 띄운 배는 다 뜬 뒤 출발하고 앞의 배들은 처음부터 간다', () => {
+  it('이 수에 띄운 배는 물 칸 위로 다 밀려 온 뒤 출발하고 앞의 배들은 처음부터 간다', () => {
     const { events } = lastMove({ ...WHIRL_STAGE, start: { x: 5, y: 3 } }, ['up'])
 
-    expect(pulledOf(events).map((e) => pullStart(events, e))).toEqual([0, 0, 0.6])
-    expect(durationOf(events)).toBeCloseTo(0.6 + PULL_SECONDS)
+    expect(pulledOf(events).map((e) => pullStart(events, e))).toEqual([0, 0, 0.3])
+    expect(durationOf(events)).toBeCloseTo(0.3 + PULL_SECONDS)
   })
 })
 

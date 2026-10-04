@@ -312,15 +312,22 @@ export const sinkEnd = (events: GameEvent[]) =>
     : 0
 
 // 끌린 배가 한 칸 가는 가장 짧은 시간, 이 수에 띄우거나 내린 배는 늦게 출발하는 몫
-export const PULL_SECONDS = 0.4
+export const PULL_SECONDS = 0.3
 
 type Pulled = Extract<GameEvent, { type: 'pulled' }>
 
-// 그 자리 배가 떠나도 되는 때, 이 수에 띄운 배는 다 뜬 뒤, 큐브가 내린 배는 큐브가 반쯤 굴러 나간 뒤
+// 물에 떨어뜨리는 밀기에서 상자가 물 칸 위로 다 밀려 오는 구간 진행도
+export const FLOAT_REACH = 0.5
+
+// 그 자리 배가 떠나도 되는 때, 이 수에 띄운 배는 물 칸 위로 다 밀려 온 뒤, 큐브가 내린 배는 큐브가 반쯤 굴러 나간 뒤
 const freeAt = (events: GameEvent[], from: Point) => {
   const box = segmentsOf(boxPath(events))
   const last = box.at(-1)
-  if (last && same(last.event.to, from)) return totalSeconds(box)
+  if (last && same(last.event.to, from)) {
+    const { event } = last
+    const floated = event.type === 'pushed' && event.result === 'floated'
+    return totalSeconds(box) - (floated ? last.seconds * (1 - FLOAT_REACH) : 0)
+  }
 
   let start = 0
   for (const { event, seconds, wait } of playerSegments(events)) {
