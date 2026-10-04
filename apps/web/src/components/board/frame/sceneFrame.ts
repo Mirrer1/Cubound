@@ -1,4 +1,4 @@
-import { floatShownAt, rollingCubeFaces } from '../view'
+import { type Lane, floatShownAt, rollingCubeFaces } from '../view'
 import { boxFramesOf, movingBox } from './boxFrame'
 import {
   carriedBaseOf,
@@ -20,6 +20,7 @@ import { type SwampTime, has, same, stepProgress } from './timeFrame'
 import { tramFramesOf, tramProgress } from './tramFrame'
 import { vineFrames } from './vineFrame'
 import { rippleOf } from './waterFrame'
+import { whirlFrames } from './whirlpoolFrame'
 import { ownProgress } from './windFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { fadedCells } from '@/game/occlusion'
@@ -35,6 +36,7 @@ interface SceneView {
   swampSeconds: SwampTime
   trams: Tram[]
   filled: Point[]
+  lanes: Map<string, Lane>
   guideCell?: Point
 }
 
@@ -49,6 +51,7 @@ export const sceneFrame = ({
   swampSeconds,
   trams,
   filled,
+  lanes,
   guideCell,
 }: SceneView) => {
   const moving = t < 1 && prevGame !== null
@@ -59,10 +62,12 @@ export const sceneFrame = ({
   // 재시작은 처음 자리에 새로 내려앉는 것이라 넘기지 않는 앞 상태
   const cube = playerFrame(dropping ? null : prevGame, game, events, t, chain)
   const cubeCell = { x: Math.round(cube.x), y: Math.round(cube.y) }
-  const box = movingBox(prevGame, game, events, t, chain)
+  const whirl = whirlFrames({ before, game, events, t, swamp: swampSeconds, moving, dropping })
+  // 마개 상자는 떠오르지 않고 빨려 드는 whirl 몫
+  const box = whirl.plugging ? null : movingBox(prevGame, game, events, t, chain)
   const sunk = swampFrame(dropping ? null : prevGame, game, events, t)
   const sinkingBox = boxSink(events, swampSeconds, t)
-  const ripple = moving ? rippleOf(events, t, swampSeconds) : null
+  const ripple = moving && !whirl.plugging ? rippleOf(events, t, swampSeconds) : null
   const pickedUp = moving ? events.find((e) => e.type === 'pickedUp') : undefined
   const placed = moving ? events.find((e) => e.type === 'placed') : undefined
 
@@ -168,6 +173,8 @@ export const sceneFrame = ({
     ripple,
     tethers,
     moor,
+    whirl,
+    lanes,
     crackView,
     seedFrame,
     faded,

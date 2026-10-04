@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
+import { pullLanes } from '../view'
 import { boardCells } from './cellFrame'
 import { cellLook, sameCellLook } from './cellLookFrame'
 import { NO_CHAIN, smooth } from './curveFrame'
 import { fillingCellKey } from './fillFrame'
 import { sceneFrame } from './sceneFrame'
 import { swampTime } from './swampFrame'
-import { LIFT_STAGE, TRAM_STAGE, lastMove } from './testStages'
+import { LIFT_STAGE, TRAM_STAGE, WHIRL_STAGE, lastMove } from './testStages'
 import { railDirsOf } from './tramFrame'
 import { vineLooks } from './vineFrame'
 import { createState } from '@/game/rules'
@@ -61,6 +62,7 @@ const looks = (
     swampSeconds,
     trams,
     filled: [],
+    lanes: pullLanes(game.stage),
   })
   const railDirs = railDirsOf(trams)
   const vines = vineLooks(game)
@@ -87,6 +89,7 @@ describe('cellLook', () => {
       seed: { on: 0, treeP: 1, stakeP: 1 },
       swamp: { risen: -1 },
       tether: { post: 0, range: -1 },
+      whirl: { eye: 0, ghost: 0, lane: null, laneOpacity: 0, lean: null },
       water: { depth: 0 },
       pit: { wallLeft: -1, wallRight: -1 },
       ground: { blockOpacity: 1 },
@@ -168,5 +171,25 @@ describe('sameCellLook', () => {
     const a = { ...base(), children: { type: 'g', props: {} } }
     expect(sameCellLook(a, { ...a, children: { type: 'g', props: {} } })).toBe(false)
     expect(sameCellLook(a, { ...a })).toBe(true)
+  })
+})
+
+describe('cellLook 소용돌이', () => {
+  it('끌려가는 배가 닿을 칸은 연출 중 정지 상자를 숨기고 끌린 배를 칸 위에 얹는다', () => {
+    const { prev, game, events } = lastMove(WHIRL_STAGE, ['left'])
+    const all = looks(game, prev, events, 0.5)
+
+    expect(all.get('2-1')!.look.box).toBe(false)
+    expect(all.get('3-1')!.look.box).toBe(false)
+    expect(all.get('3-1')!.over.whirlBoxes.map((frame) => frame.to)).toEqual([{ x: 2, y: 1 }])
+    expect(all.get('2-1')!.look.whirl).toMatchObject({ lane: 'x', laneOpacity: 1 })
+    expect(all.get('1-1')!.look.whirl.eye).toBe(1)
+  })
+
+  it('멈춘 판의 앞 칸 배는 소용돌이 쪽으로 쏠린다', () => {
+    const { game } = lastMove(WHIRL_STAGE, ['left', 'right'])
+
+    expect(looks(game).get('2-1')!.look.whirl.lean).toBe('left')
+    expect(looks(game).get('3-1')!.look.whirl.lean).toBeNull()
   })
 })

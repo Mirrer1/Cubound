@@ -48,3 +48,18 @@ export {
   ropeEnds,
   ropePoints,
 } from './tetherView'
+export {
+  BOWL,
+  BOWL_SHAPES,
+  cellMatrix,
+  GHOST,
+  ghostWidths,
+  LANE,
+  type Lane,
+  lanePoints,
+  LEAN,
+  leanShift,
+  pullLanes,
+  ringPath,
+  whirlpoolsOf,
+} from './whirlpoolView'

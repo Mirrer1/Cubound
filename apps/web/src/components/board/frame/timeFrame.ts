@@ -311,6 +311,50 @@ export const sinkEnd = (events: GameEvent[]) =>
     ? totalSeconds(segmentsOf(boxPath(events))) - SWAMP.lead + SWAMP.box
     : 0
 
+// 끌린 배가 한 칸 가는 가장 짧은 시간, 이 수에 띄우거나 내린 배는 늦게 출발하는 몫
+export const PULL_SECONDS = 0.4
+
+type Pulled = Extract<GameEvent, { type: 'pulled' }>
+
+// 그 자리 배가 떠나도 되는 때, 이 수에 띄운 배는 다 뜬 뒤, 큐브가 내린 배는 큐브가 반쯤 굴러 나간 뒤
+const freeAt = (events: GameEvent[], from: Point) => {
+  const box = segmentsOf(boxPath(events))
+  const last = box.at(-1)
+  if (last && same(last.event.to, from)) return totalSeconds(box)
+
+  let start = 0
+  for (const { event, seconds, wait } of playerSegments(events)) {
+    if (!wait && same(event.from, from)) return start + seconds / 2
+    start += seconds
+  }
+  return 0
+}
+
+// 끌린 배가 출발하는 때, 붙은 줄의 뒤 배는 앞 배가 출발한 뒤
+export const pullStart = (events: GameEvent[], pulled: Pulled): number => {
+  const ahead = events.find((e): e is Pulled => e.type === 'pulled' && same(e.from, pulled.to))
+  return Math.max(freeAt(events, pulled.from), ahead ? pullStart(events, ahead) : 0)
+}
+
+const pullEnd = (events: GameEvent[]) =>
+  Math.max(0, ...events.map((e) => (e.type === 'pulled' ? pullStart(events, e) + PULL_SECONDS : 0)))
+
+// 마개의 구간, 상자가 소용돌이 칸까지 밀리고 빨려 들고 소용돌이가 막히는 시간
+export const PLUG = { push: 0.3, suck: 0.36, close: 0.36 }
+
+// 소용돌이 칸으로 밀리기 시작하는 때, 이 수에 막지 않으면 null
+export const plugStart = (events: GameEvent[]) => {
+  if (!events.some((e) => e.type === 'plugged')) return null
+
+  const segments = segmentsOf(boxPath(events))
+  return totalSeconds(segments.slice(0, -1))
+}
+
+const plugEnd = (events: GameEvent[]) => {
+  const at = plugStart(events)
+  return at === null ? 0 : at + PLUG.push + PLUG.suck + PLUG.close
+}
+
 // 큐브와 상자가 다 움직인 뒤에 따로 붙는 씨앗이 솟는 시간
 const RISE_SECONDS = 0.36
 
@@ -326,6 +370,8 @@ export const moveSeconds = (events: GameEvent[], swamp: SwampTime) =>
     warpEnd(events),
     tramEnd(events),
     sinkEnd(events),
+    pullEnd(events),
+    plugEnd(events),
     ...events.map((e) =>
       e.type === 'blocked' || e.type === 'placed' || e.type === 'planted' ? SECONDS[e.type] : 0,
     ),

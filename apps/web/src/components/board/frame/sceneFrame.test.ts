@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
+import { pullLanes } from '../view'
 import { movingBox } from './boxFrame'
 import { playerFrame } from './cubeFrame'
 import { NO_CHAIN } from './curveFrame'
 import { restartDrop } from './restartFrame'
 import { sceneFrame } from './sceneFrame'
 import { swampTime } from './swampFrame'
-import { lastMove } from './testStages'
+import { PLUG_STAGE, lastMove } from './testStages'
 import { tetherFrames } from './tetherFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { createState } from '@/game/rules'
@@ -39,6 +40,7 @@ const sceneOf = (
     swampSeconds: swampTime(prevGame, game),
     trams: [],
     filled: [],
+    lanes: pullLanes(game.stage),
     guideCell: more.guideCell,
   })
 
@@ -94,5 +96,16 @@ describe('sceneFrame', () => {
     const empty = sceneOf(game, null, [], 1, { guideCell: { x: 3, y: 0 } })
     expect(empty.guideTop).toBe(0)
     expect(sceneOf(game, null, [], 1).guideScreen).toBeNull()
+  })
+})
+
+describe('sceneFrame 마개', () => {
+  it('마개 수의 상자는 떠오르는 상자 연출과 고리 대신 빨려 드는 상자로 그린다', () => {
+    const { prev, game, events } = lastMove(PLUG_STAGE, ['down'])
+    const scene = sceneOf(game, prev, events, 0.5)
+
+    expect(scene.box).toBeNull()
+    expect(scene.ripple).toBeNull()
+    expect(scene.whirl.boxes.map((frame) => frame.to)).toEqual([{ x: 1, y: 2 }])
   })
 })

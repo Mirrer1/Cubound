@@ -228,3 +228,46 @@ export const gust = (stage: Partial<Stage> = {}, direction: Direction = 'up') =>
   const { state: game, events } = move(prev, direction)
   return { prev, game, events }
 }
+
+// 물 높이 1, (1,1) 소용돌이가 오른쪽 물길 (2~5,1)을 끄는 판, 줄 위의 배 둘과 (5,2) 땅 상자
+export const WHIRL_STAGE: Stage = {
+  version: 1,
+  id: 'test-whirl',
+  name: '소용돌이',
+  heights: [
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1],
+  ],
+  water: 1,
+  start: { x: 3, y: 0 },
+  goal: { x: 6, y: 3 },
+  entities: [
+    { type: 'whirlpool', x: 1, y: 1 },
+    { type: 'box', x: 3, y: 1 },
+    { type: 'box', x: 4, y: 1 },
+    { type: 'box', x: 5, y: 2 },
+  ],
+}
+
+// 위에서 (1,1) 땅 상자를 밀어 (1,2) 소용돌이를 막는 판
+export const PLUG_STAGE: Stage = {
+  version: 1,
+  id: 'test-plug',
+  name: '마개',
+  heights: [
+    [1, 1, 1, 1],
+    [1, 1, 1, 1],
+    [1, 0, 0, 1],
+    [1, 1, 1, 1],
+  ],
+  water: 1,
+  start: { x: 1, y: 0 },
+  goal: { x: 3, y: 3 },
+  entities: [
+    { type: 'whirlpool', x: 1, y: 2 },
+    { type: 'box', x: 1, y: 1 },
+  ],
+  rules: { plug: true },
+}

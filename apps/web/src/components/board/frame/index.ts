@@ -90,3 +90,12 @@ export type { Tram } from '@/game/types'
 export { coversRope, moorLooks, type TetherFrame, tetherFrames } from './tetherFrame'
 export { sceneFrame } from './sceneFrame'
 export { type CellLook, cellLook, sameCellLook } from './cellLookFrame'
+export {
+  leanOf,
+  plugPhase,
+  PULL_DIP,
+  type WhirlBoxFrame,
+  whirlFrames,
+  type WhirlFrames,
+  whirlLook,
+} from './whirlpoolFrame'

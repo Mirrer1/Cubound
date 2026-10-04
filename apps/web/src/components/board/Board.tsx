@@ -8,6 +8,7 @@ import BoardSeed from './BoardSeed'
 import BoardTether from './BoardTether'
 import BoardTram from './BoardTram'
 import BoardWater from './BoardWater'
+import BoardWhirlpool from './BoardWhirlpool'
 import {
   type Tram,
   boardCells,
@@ -23,7 +24,7 @@ import {
   swampTime,
   vineLooks,
 } from './frame'
-import { WATER, shade } from './view'
+import { WATER, pullLanes, shade } from './view'
 import { TILE } from '@/game/iso'
 import type { GameEvent, GameState, Point } from '@/game/types'
 import { useBoardAnimation } from '@/hooks/useBoardAnimation'
@@ -78,6 +79,8 @@ const Board = ({
     [heights, stage.heights, stage.entities, game.vines],
   )
 
+  const lanes = useMemo(() => pullLanes(stage), [stage])
+
   const scene = sceneFrame({
     game,
     prevGame,
@@ -88,6 +91,7 @@ const Board = ({
     swampSeconds,
     trams,
     filled,
+    lanes,
     guideCell,
   })
   // 카메라가 따라가는 지금 그려지는 자리, 순간이동은 나온 뒤
@@ -142,6 +146,9 @@ const Board = ({
                     <BoardBox key={`${frame.to.x}-${frame.to.y}`} x={frame.x} y={frame.y} />
                   ),
                 )}
+                {over.whirlBoxes.map((frame) => (
+                  <BoardWhirlpool key={`${frame.to.x}-${frame.to.y}`} part="boat" {...frame} />
+                ))}
                 {over.boxDrop && (
                   <g opacity={over.boxDrop.opacity}>
                     {over.waterDepth > 0 ? (

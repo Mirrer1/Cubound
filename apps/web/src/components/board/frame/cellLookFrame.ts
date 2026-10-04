@@ -9,6 +9,7 @@ import type { sceneFrame } from './sceneFrame'
 import { pressProgress, switchCells, switchProgress } from './switchFrame'
 import { type SwampTime, has, same } from './timeFrame'
 import type { VineKind } from './vineFrame'
+import { leanOf, whirlLook } from './whirlpoolFrame'
 import { TILE } from '@/game/iso'
 import { isDoorOpen, isIce, isLiftRaised } from '@/game/rules'
 import type { Direction, Entity, GameEvent, GameState, Point, Stage } from '@/game/types'
@@ -64,6 +65,14 @@ export interface CellLook {
   tether: {
     post: number // 말뚝 띠 수, 0이면 말뚝 없는 칸
     range: number // 갈 수 있는 범위 칸의 큐브가 탄 정도, -1이면 범위 밖
+  }
+  whirl: {
+    eye: number // 소용돌이가 보이는 정도, 0이면 소용돌이 없는 칸
+    ghost: number // 막은 상자가 수면 아래 비치는 정도
+    lane: 'x' | 'y' | null // 지나는 물길 방향
+    laneOpacity: number
+    lean: Direction | null // 앞 칸에 멈춘 배가 쏠리는 소용돌이 쪽
+    leanOn: boolean // 큐브가 안 탄 배, 탄 배는 쏠림이 잦아듦
   }
   device: {
     entity: 'switch' | 'door' | null
@@ -221,7 +230,11 @@ export const cellLook = ({
     const tram = scene.tramFrames.find((frame) => same(frame.cell, cell.p)) ?? null
     const drawCube = same(scene.cube.cell, cell.p) && !(game.cleared && !scene.moving)
     const drawBoxes = scene.boxFrames.filter((frame) => same(frame.cell, cell.p))
-    const movedBoxHere = scene.boxFrames.some((frame) => same(frame.to, cell.p))
+    const whirlBoxes = scene.whirl.boxes.filter((frame) => same(frame.cell, cell.p))
+    const movedBoxHere =
+      scene.boxFrames.some((frame) => same(frame.to, cell.p)) ||
+      scene.whirl.boxes.some((frame) => same(frame.to, cell.p))
+    const lane = scene.lanes.get(cell.key)
     const goalEffect = same(cell.p, stage.goal) && game.cleared && !scene.moving
     const droppingBox = scene.dropping ? boxes.findIndex((b) => same(b, cell.p)) : -1
     const boxDrop = droppingBox >= 0 ? restartDrop(t, droppingBox + 1, boxes.length) : null
@@ -231,7 +244,12 @@ export const cellLook = ({
         ? Math.sign(scene.before.heights[cell.p.y][cell.p.x] - heights[cell.p.y][cell.p.x])
         : 0
     const overlay =
-      drawBoxes.length > 0 || drawCube || goalEffect || boxDrop !== null || tram !== null
+      drawBoxes.length > 0 ||
+      whirlBoxes.length > 0 ||
+      drawCube ||
+      goalEffect ||
+      boxDrop !== null ||
+      tram !== null
 
     const look: CellLook = {
       x: cell.x,
@@ -289,6 +307,11 @@ export const cellLook = ({
         post: postBands(stage, cell.p),
         range: scene.moor.get(cell.key) ?? -1,
       },
+      whirl: {
+        ...whirlLook(stage, cell.p, lane, scene.whirl),
+        lean: leanOf(lane, game, cell.p, scene.whirl),
+        leanOn: !same(game.player, cell.p),
+      },
       device: {
         entity: entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null,
         switchDepth: lerp(pressed(scene.before) ? 2 : 9, pressed(game) ? 2 : 9, switchPhase),
@@ -341,7 +364,16 @@ export const cellLook = ({
     return {
       cellY,
       look,
-      over: { tram, drawCube, drawBoxes, boxDrop, goalEffect, overlay, waterDepth: water.depth },
+      over: {
+        tram,
+        drawCube,
+        drawBoxes,
+        whirlBoxes,
+        boxDrop,
+        goalEffect,
+        overlay,
+        waterDepth: water.depth,
+      },
     }
   }
 }

@@ -1,4 +1,4 @@
-import { type ReactNode, memo } from 'react'
+import { type CSSProperties, type ReactNode, memo } from 'react'
 
 import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
@@ -12,6 +12,7 @@ import BoardSwitch from './BoardSwitch'
 import BoardTether from './BoardTether'
 import BoardVine from './BoardVine'
 import BoardWater from './BoardWater'
+import BoardWhirlpool from './BoardWhirlpool'
 import { type CellLook, crackThickness, sameCellLook, swampCollar, swampSink } from './frame'
 import {
   CUBE,
@@ -29,6 +30,7 @@ import {
   darken,
   dim,
   isPit,
+  leanShift,
   leaningOf,
   spotPoints,
 } from './view'
@@ -74,6 +76,7 @@ const BoardCell = ({
   mushroom,
   water,
   tether,
+  whirl,
   device,
   pit: pitLook,
   ladder,
@@ -123,6 +126,7 @@ const BoardCell = ({
   // 단계마다 정해진 깊이까지 칸째로 내려가는 큐브, 가라앉는 상자는 Board 몫
   const sink = swamp.risen >= 0 ? (MUD.drop + swampSink(swamp.risen)) * swamp.deep : 0
   const collar = swamp.risen >= 0 ? swampCollar(swamp.risen) * swamp.deep : 0
+  const lean = whirl.lean ? leanShift(whirl.lean, whirl.leanOn) : undefined
 
   return (
     <g>
@@ -225,6 +229,22 @@ const BoardCell = ({
                 range={tether.range}
               />
             )}
+            {whirl.lane && whirl.laneOpacity > 0 && (
+              <BoardWhirlpool
+                part="lane"
+                x={x}
+                y={y}
+                depth={water.depth}
+                axis={whirl.lane}
+                opacity={whirl.laneOpacity}
+              />
+            )}
+            {whirl.ghost > 0 && (
+              <BoardWhirlpool part="ghost" x={x} y={y} depth={water.depth} opacity={whirl.ghost} />
+            )}
+            {whirl.eye > 0 && (
+              <BoardWhirlpool part="eye" x={x} y={y} depth={water.depth} opacity={whirl.eye} />
+            )}
             {seed.stalk > 0 && (
               <BoardSeed x={x} y={y} part="stalk" level={seed.stalk} p={seed.bud} />
             )}
@@ -297,7 +317,9 @@ const BoardCell = ({
       {box && (
         <g style={fade}>
           {water.depth > 0 ? (
-            <BoardWater part="box" x={x} y={y - water.depth * TILE.layer} shown={WATER.lip} />
+            <g className={lean ? 'whirl-lean' : undefined} style={lean as CSSProperties}>
+              <BoardWater part="box" x={x} y={y - water.depth * TILE.layer} shown={WATER.lip} />
+            </g>
           ) : (
             <BoardBox x={x} y={y - TILE.layer} />
           )}

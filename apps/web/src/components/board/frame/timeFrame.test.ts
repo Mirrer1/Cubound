@@ -8,11 +8,13 @@ import {
   HOP_STAGE,
   ICE_STAGE,
   PLANT,
+  PLUG_STAGE,
   RIDE,
   SEED_STAGE,
   STAGE,
   TRAM_STAGE,
   WARP_STAGE,
+  WHIRL_STAGE,
   board,
   enterSwamp,
   gust,
@@ -23,9 +25,18 @@ import {
   sinkBox,
   struggleSwamp,
 } from './testStages'
-import { countDisplay, durationOf, riseProgress, stepProgress } from './timeFrame'
+import {
+  PLUG,
+  PULL_SECONDS,
+  countDisplay,
+  durationOf,
+  plugStart,
+  pullStart,
+  riseProgress,
+  stepProgress,
+} from './timeFrame'
 import { createState, move } from '@/game/rules'
-import type { Stage } from '@/game/types'
+import type { GameEvent, Stage } from '@/game/types'
 
 const slide = (ice: string) => {
   const prev = createState({ ...ICE_STAGE, ice: [ice] })
@@ -276,5 +287,44 @@ describe('countDisplay', () => {
   it('판이 없거나 숫자가 없는 판이면 null이다', () => {
     expect(countDisplay({ ...view, game: null }, count, at)).toEqual({ at: [], count: null })
     expect(countDisplay(view, () => null, at)).toEqual({ at: [], count: null })
+  })
+})
+
+const pulledOf = (events: GameEvent[]) =>
+  events.filter((e): e is Extract<GameEvent, { type: 'pulled' }> => e.type === 'pulled')
+
+describe('pullStart', () => {
+  it('땅 위를 걷는 수에 끌린 배는 처음부터 가고 연출 시간은 끌리는 시간이다', () => {
+    const { events } = lastMove(WHIRL_STAGE, ['left'])
+
+    expect(pulledOf(events).map((e) => pullStart(events, e))).toEqual([0, 0])
+    expect(durationOf(events)).toBeCloseTo(PULL_SECONDS)
+  })
+
+  it('큐브가 내린 배와 그 뒤에 붙은 배는 큐브가 반쯤 굴러 나간 뒤 같이 출발한다', () => {
+    const { events } = lastMove(WHIRL_STAGE, ['down', 'up'])
+
+    expect(pulledOf(events).map((e) => pullStart(events, e))).toEqual([0.12, 0.12])
+    expect(durationOf(events)).toBeCloseTo(0.12 + PULL_SECONDS)
+  })
+
+  it('이 수에 띄운 배는 다 뜬 뒤 출발하고 앞의 배들은 처음부터 간다', () => {
+    const { events } = lastMove({ ...WHIRL_STAGE, start: { x: 5, y: 3 } }, ['up'])
+
+    expect(pulledOf(events).map((e) => pullStart(events, e))).toEqual([0, 0, 0.6])
+    expect(durationOf(events)).toBeCloseTo(0.6 + PULL_SECONDS)
+  })
+})
+
+describe('plugStart', () => {
+  it('마개 수는 밀기 시작부터 막히기까지 제 시간을 더한다', () => {
+    const { events } = lastMove(PLUG_STAGE, ['down'])
+
+    expect(plugStart(events)).toBe(0)
+    expect(durationOf(events)).toBeCloseTo(PLUG.push + PLUG.suck + PLUG.close)
+  })
+
+  it('막지 않는 수는 null이다', () => {
+    expect(plugStart(lastMove(WHIRL_STAGE, ['left']).events)).toBeNull()
   })
 })
