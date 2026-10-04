@@ -64,6 +64,8 @@ export const ja: Partial<Texts> = {
   'guide.wind': '風が吹くと一マス押し戻されますが、壁や箱の陰にいれば押されません',
   'guide.water': '水に浮かべた箱に乗って渡れます',
   'guide.tether': 'つながれた舟は綱が届くところまでしか行けません',
+  'guide.whirlpool': '渦は同じ列の空の舟を一手ごとに一マスずつ引き寄せます',
+  'guide.plug': '箱を渦に押し込むとふさがって、もう引き寄せなくなります',
 
   'chapter.1': '石を踏む道',
   'chapter.2': '草が茂る道',

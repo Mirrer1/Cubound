@@ -64,6 +64,8 @@ export const ko: Partial<Texts> = {
   'guide.wind': '바람이 불면 한 칸 밀려나지만 벽이나 상자 뒤에 서 있으면 안 밀려요',
   'guide.water': '물에 띄운 상자는 타고 건널 수 있어요',
   'guide.tether': '묶인 배는 줄이 닿는 데까지만 가요',
+  'guide.whirlpool': '소용돌이는 같은 줄에 있는 빈 배를 한 수마다 한 칸씩 끌어당겨요',
+  'guide.plug': '상자를 소용돌이에 밀어 넣으면 막혀서 더는 끌어당기지 않아요',
 
   'chapter.1': '돌 위의 첫걸음',
   'chapter.2': '풀이 우거진 길',
