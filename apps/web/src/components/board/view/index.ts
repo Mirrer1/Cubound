@@ -58,6 +58,7 @@ export {
   type Lane,
   lanePoints,
   LEAN,
+  LEAN_LOOP,
   leanShift,
   pullLanes,
   ringPath,

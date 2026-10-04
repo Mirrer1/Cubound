@@ -16,6 +16,7 @@ import BoardWhirlpool from './BoardWhirlpool'
 import { type CellLook, crackThickness, sameCellLook, swampCollar, swampSink } from './frame'
 import {
   CUBE,
+  LEAN_LOOP,
   MUD,
   MUD_DIP,
   PIT_FLOOR,
@@ -36,17 +37,6 @@ import {
 } from './view'
 import { TILE, blockFaces } from '@/game/iso'
 import { useLoop } from '@/hooks/useLoop'
-
-// 앞 칸에 멈춘 배가 소용돌이 쪽으로 쏠렸다 돌아오는 한 번, 세기는 --lean-amp
-const LEAN_LOOP: Keyframe[] = [
-  { transform: 'translate(0, 0)', easing: 'ease-in-out' },
-  {
-    transform:
-      'translate(calc(var(--lean-x) * var(--lean-amp)), calc(var(--lean-y) * var(--lean-amp)))',
-    easing: 'ease-in-out',
-  },
-  { transform: 'translate(0, 0)' },
-]
 
 // 왼쪽 위 모서리와 나란하게 누운 얼음 윗면의 광택 면
 const GLOSS_SPOTS: [number, number][] = [
@@ -138,7 +128,7 @@ const BoardCell = ({
   // 단계마다 정해진 깊이까지 칸째로 내려가는 큐브, 가라앉는 상자는 Board 몫
   const sink = swamp.risen >= 0 ? (MUD.drop + swampSink(swamp.risen)) * swamp.deep : 0
   const collar = swamp.risen >= 0 ? swampCollar(swamp.risen) * swamp.deep : 0
-  const lean = whirl.lean ? leanShift(whirl.lean, whirl.leanOn) : undefined
+  const lean = whirl.lean ? leanShift(whirl.lean, 1) : undefined
   const leanLoop = useLoop(LEAN_LOOP, 1600)
 
   return (

@@ -112,15 +112,15 @@ describe('leanShift', () => {
   it('소용돌이 쪽으로 0.08칸 가고 3px 잠기는 끝 자리다', () => {
     const d = isoDelta(LEAN.reach, 0)
 
-    expect(leanShift('right', true)).toEqual({
+    expect(leanShift('right', 1)).toEqual({
       '--lean-x': `${d.x}px`,
       '--lean-y': `${d.y + 3}px`,
       '--lean-amp': 1,
     })
   })
 
-  it('큐브가 탄 배는 쏠림 세기가 0이다', () => {
-    expect(leanShift('right', false)['--lean-amp']).toBe(0)
+  it('세기는 받은 값 그대로 넘긴다', () => {
+    expect(leanShift('right', 0.4)['--lean-amp']).toBe(0.4)
   })
 })
 

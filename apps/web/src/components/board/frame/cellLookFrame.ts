@@ -72,7 +72,6 @@ export interface CellLook {
     lane: 'x' | 'y' | null // 지나는 물길 방향
     laneOpacity: number
     lean: Direction | null // 앞 칸에 멈춘 배가 쏠리는 소용돌이 쪽
-    leanOn: boolean // 큐브가 안 탄 배, 탄 배는 쏠림이 잦아듦
   }
   device: {
     entity: 'switch' | 'door' | null
@@ -310,7 +309,6 @@ export const cellLook = ({
       whirl: {
         ...whirlLook(stage, cell.p, lane, scene.whirl),
         lean: leanOf(lane, game, cell.p, scene.whirl),
-        leanOn: !same(game.player, cell.p),
       },
       device: {
         entity: entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null,

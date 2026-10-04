@@ -10,17 +10,17 @@ import {
 } from './carryFrame'
 import { crackProgress, standSink } from './crackFrame'
 import { SLIDE_DEG, playerFrame, squashTransform } from './cubeFrame'
-import type { Chain } from './curveFrame'
+import { type Chain, smooth } from './curveFrame'
 import { mushroomFrames } from './mushroomFrame'
 import { restartDrop } from './restartFrame'
 import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFrame'
 import { boxSink, swampFrame } from './swampFrame'
 import { moorLooks, tetherFrames } from './tetherFrame'
-import { type SwampTime, has, same, stepProgress } from './timeFrame'
+import { type SwampTime, elapsedAt, has, pullStart, same, stepProgress } from './timeFrame'
 import { tramFramesOf, tramProgress } from './tramFrame'
 import { vineFrames } from './vineFrame'
 import { rippleOf } from './waterFrame'
-import { whirlFrames } from './whirlpoolFrame'
+import { leanOf, pulledBeside, whirlFrames } from './whirlpoolFrame'
 import { ownProgress } from './windFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { fadedCells } from '@/game/occlusion'
@@ -64,7 +64,17 @@ export const sceneFrame = ({
   const cubeCell = { x: Math.round(cube.x), y: Math.round(cube.y) }
   const whirl = whirlFrames({ before, game, events, t, swamp: swampSeconds, moving, dropping })
   // 마개 상자는 떠오르지 않고 빨려 드는 whirl 몫
-  const box = whirl.plugging ? null : movingBox(prevGame, game, events, t, chain)
+  const moved = whirl.plugging ? null : movingBox(prevGame, game, events, t, chain)
+  // 밀어 띄운 상자가 끌려가기 시작하면 끌린 배 그림 몫
+  const handed =
+    moved !== null &&
+    events.some(
+      (e) =>
+        e.type === 'pulled' &&
+        same(e.from, moved.to) &&
+        elapsedAt(events, swampSeconds, t) >= pullStart(events, e),
+    )
+  const box = handed ? null : moved
   const sunk = swampFrame(dropping ? null : prevGame, game, events, t)
   const sinkingBox = boxSink(events, swampSeconds, t)
   const ripple = moving && !whirl.plugging ? rippleOf(events, t, swampSeconds) : null
@@ -110,6 +120,19 @@ export const sceneFrame = ({
   const carriedOpacity = carriedOpacityOf({ pickedUp, placed, game, pickUpPhase, ownT })
   const carried = game.carrying ?? before.carrying
   const progress = moving ? t : 1
+  // 소용돌이 앞 흔들리는 배에 탄 큐브의 쏠림, 오르는 수에 차오르고 저어 떠나는 수에 배와 같이 풀림
+  const leanAt = (state: GameState) =>
+    leanOf(lanes.get(`${state.player.x}-${state.player.y}`), state, state.player, whirl)
+  const riding = leanAt(game)
+  const left = moving && !same(before.player, game.player) ? leanAt(before) : null
+  const boarding = moving && riding !== null && !same(before.player, game.player)
+  const cubeLean = riding
+    ? { toward: riding, amp: boarding ? smooth(progress) : 1 }
+    : left
+      ? { toward: left, amp: 1 - smooth(progress) }
+      : null
+  const rowed = events.some((e) => e.type === 'rowed' && same(e.from, before.player))
+  const rowLean = left && rowed ? cubeLean : null
 
   const crackPhase = moving ? crackProgress(events, stepT) : 1
   const crackView = { game, before, crackPhase }
@@ -148,8 +171,11 @@ export const sceneFrame = ({
     pickUpPhase,
     crackPhase,
     tramPhase,
-    cube,
+    // 같은 깊이 옆 칸으로 끌려가는 배가 큐브 아래를 덮지 않는 순서
+    cube: pulledBeside(whirl.boxes, cube.cell) ? { ...cube, last: true } : cube,
     cubeCell,
+    cubeLean,
+    rowLean,
     cubeDrop,
     cubeLevel,
     cubeScreen,

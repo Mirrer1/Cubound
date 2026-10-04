@@ -122,11 +122,18 @@ export const lanePoints = (x: number, y: number, axis: 'x' | 'y') => {
   }
 }
 
-// 쏠림의 끝 자리와 세기, CSS 변수로 넘기는 화면 거리
-export const leanShift = (toward: Direction, on: boolean) => {
+// 쏠림의 끝 자리와 세기 0~1, CSS 변수로 넘기는 화면 거리
+export const leanShift = (toward: Direction, amp: number) => {
   const d = isoDelta(OFFSETS[toward].x * LEAN.reach, OFFSETS[toward].y * LEAN.reach)
-  return { '--lean-x': `${d.x}px`, '--lean-y': `${d.y + LEAN.dip}px`, '--lean-amp': on ? 1 : 0 }
+  return { '--lean-x': `${d.x}px`, '--lean-y': `${d.y + LEAN.dip}px`, '--lean-amp': amp }
 }
+
+// 쏠렸다 돌아오는 한 번의 진행도, 쏠린 자리는 whirl-lean 몫
+export const LEAN_LOOP: Keyframe[] = [
+  { '--lean-phase': 0, easing: 'ease-in-out' },
+  { '--lean-phase': 1, easing: 'ease-in-out' },
+  { '--lean-phase': 0 },
+]
 
 export const ghostWidths = {
   outer: TILE.width * CUBE * GHOST.outer,

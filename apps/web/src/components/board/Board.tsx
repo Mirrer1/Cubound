@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { type CSSProperties, useMemo } from 'react'
 
 import BoardBox from './BoardBox'
 import BoardCell from './BoardCell'
@@ -24,11 +24,12 @@ import {
   swampTime,
   vineLooks,
 } from './frame'
-import { WATER, pullLanes, shade } from './view'
+import { LEAN_LOOP, WATER, leanShift, pullLanes, shade } from './view'
 import { TILE } from '@/game/iso'
 import type { GameEvent, GameState, Point } from '@/game/types'
 import { useBoardAnimation } from '@/hooks/useBoardAnimation'
 import { useBoardCamera } from '@/hooks/useBoardCamera'
+import { useLoop } from '@/hooks/useLoop'
 
 interface BoardProps {
   game: GameState
@@ -96,6 +97,13 @@ const Board = ({
   })
   // 카메라가 따라가는 지금 그려지는 자리, 순간이동은 나온 뒤
   const { ref, viewBox } = useBoardCamera(game, guideCell ?? scene.cubeCell)
+  const leanLoop = useLoop(LEAN_LOOP, 1600)
+  const cubeLean = scene.cubeLean
+    ? (leanShift(scene.cubeLean.toward, scene.cubeLean.amp) as CSSProperties)
+    : undefined
+  const rowLean = scene.rowLean
+    ? (leanShift(scene.rowLean.toward, scene.rowLean.amp) as CSSProperties)
+    : undefined
 
   const railDirs = useMemo(() => railDirsOf(trams), [trams])
 
@@ -135,13 +143,14 @@ const Board = ({
                 )}
                 {over.drawBoxes.map((frame) =>
                   scene.box && same(frame.to, scene.box.to) && scene.boxShown !== null ? (
-                    <BoardWater
+                    <g
                       key={`${frame.to.x}-${frame.to.y}`}
-                      part="box"
-                      x={frame.x}
-                      y={frame.y}
-                      shown={scene.boxShown}
-                    />
+                      ref={scene.rowLean ? leanLoop : undefined}
+                      className={scene.rowLean ? 'whirl-lean' : undefined}
+                      style={rowLean}
+                    >
+                      <BoardWater part="box" x={frame.x} y={frame.y} shown={scene.boxShown} />
+                    </g>
                   ) : (
                     <BoardBox key={`${frame.to.x}-${frame.to.y}`} x={frame.x} y={frame.y} />
                   ),
@@ -166,51 +175,57 @@ const Board = ({
                     )}
                   </g>
                 )}
-                {over.drawCube && (
-                  <g
-                    opacity={(scene.cubeDrop ? scene.cubeDrop.opacity : 1) * scene.cube.fade}
-                    transform={`translate(0 ${scene.cubeSink - scene.cube.lift}) ${scene.cubeSquash}`}
-                  >
-                    {scene.cubeFaces.map((f) => (
-                      <polygon
-                        key={f.face}
-                        points={f.points}
-                        style={{ fill: shade('player', f.face) }}
-                      />
-                    ))}
-                  </g>
-                )}
-                {over.drawCube && scene.carriedOpacity > 0 && (
-                  <g opacity={scene.carriedOpacity * scene.cube.fade}>
-                    {scene.carried === 'seed' ? (
+                <g
+                  ref={cubeLean && over.drawCube ? leanLoop : undefined}
+                  className={cubeLean && over.drawCube ? 'whirl-lean' : undefined}
+                  style={over.drawCube ? cubeLean : undefined}
+                >
+                  {over.drawCube && (
+                    <g
+                      opacity={(scene.cubeDrop ? scene.cubeDrop.opacity : 1) * scene.cube.fade}
+                      transform={`translate(0 ${scene.cubeSink - scene.cube.lift}) ${scene.cubeSquash}`}
+                    >
+                      {scene.cubeFaces.map((f) => (
+                        <polygon
+                          key={f.face}
+                          points={f.points}
+                          style={{ fill: shade('player', f.face) }}
+                        />
+                      ))}
+                    </g>
+                  )}
+                  {over.drawCube && scene.carriedOpacity > 0 && (
+                    <g opacity={scene.carriedOpacity * scene.cube.fade}>
+                      {scene.carried === 'seed' ? (
+                        <BoardSeed
+                          x={scene.carriedBase.x}
+                          y={scene.carriedBase.y}
+                          part="seed"
+                          tilt={scene.bump}
+                        />
+                      ) : (
+                        <BoardLadder
+                          x={scene.carriedBase.x}
+                          y={scene.carriedBase.y - 2}
+                          tilt={scene.ladderBump}
+                        />
+                      )}
+                    </g>
+                  )}
+                  {over.drawCube && scene.plantedSeed && scene.plantedSeed.opacity > 0 && (
+                    <g
+                      opacity={scene.plantedSeed.opacity}
+                      transform={`translate(${scene.plantedSeed.x} ${scene.plantedSeed.y}) scale(${scene.plantedSeed.scale}) translate(${-scene.plantedSeed.x} ${-scene.plantedSeed.y})`}
+                    >
                       <BoardSeed
-                        x={scene.carriedBase.x}
-                        y={scene.carriedBase.y}
+                        x={scene.plantedSeed.x}
+                        y={scene.plantedSeed.y}
                         part="seed"
-                        tilt={scene.bump}
+                        tilt={scene.plantTilt}
                       />
-                    ) : (
-                      <BoardLadder
-                        x={scene.carriedBase.x}
-                        y={scene.carriedBase.y - 2}
-                        tilt={scene.ladderBump}
-                      />
-                    )}
-                  </g>
-                )}
-                {over.drawCube && scene.plantedSeed && scene.plantedSeed.opacity > 0 && (
-                  <g
-                    opacity={scene.plantedSeed.opacity}
-                    transform={`translate(${scene.plantedSeed.x} ${scene.plantedSeed.y}) scale(${scene.plantedSeed.scale}) translate(${-scene.plantedSeed.x} ${-scene.plantedSeed.y})`}
-                  >
-                    <BoardSeed
-                      x={scene.plantedSeed.x}
-                      y={scene.plantedSeed.y}
-                      part="seed"
-                      tilt={scene.plantTilt}
-                    />
-                  </g>
-                )}
+                    </g>
+                  )}
+                </g>
                 {over.goalEffect && <BoardClear x={cell.x} y={cell.y} />}
               </>
             ) : undefined}

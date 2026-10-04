@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest'
 import { pullLanes } from '../view'
 import { PLUG_STAGE, WHIRL_STAGE, lastMove } from './testStages'
 import { PLUG, same } from './timeFrame'
-import { PULL_DIP, leanOf, plugPhase, whirlFrames, whirlLook } from './whirlpoolFrame'
+import { PULL_DIP, leanOf, plugPhase, pulledBeside, whirlFrames, whirlLook } from './whirlpoolFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { createState, move } from '@/game/rules'
-import type { Direction, GameState } from '@/game/types'
+import type { Direction, GameState, Stage } from '@/game/types'
 
 const frames = (stage = WHIRL_STAGE, keys: Direction[] = ['left'], t = 0.5) => {
   const { prev, game, events } = lastMove(stage, keys)
@@ -50,7 +50,7 @@ describe('whirlFrames 끌린 배', () => {
     expect(frames(WHIRL_STAGE, ['left'], 1).boxes).toEqual([])
   })
 
-  it('밀어 띄운 상자는 다 뜰 때까지 끌린 배 그림이 투명하다', () => {
+  it('밀어 띄운 상자는 물 칸 위로 다 밀려 올 때까지 끌린 배 그림이 투명하다', () => {
     const keys: Direction[] = ['right', 'right', 'right', 'down', 'down', 'down', 'left', 'up']
     const floated = (t: number) =>
       frames({ ...WHIRL_STAGE, goal: { x: 0, y: 3 } }, keys, t).boxes.filter((frame) =>
@@ -61,10 +61,33 @@ describe('whirlFrames 끌린 배', () => {
     expect(floated(0.95).map((frame) => frame.opacity)).toEqual([1])
   })
 
-  it('큐브가 내린 배는 큐브가 반쯤 나갈 때까지 제자리다', () => {
+  it('큐브가 내린 배는 큐브가 반쯤 나갈 때까지 제자리이고 제 칸 차례에 그린다', () => {
     const [left] = frames(WHIRL_STAGE, ['down', 'up'], 0.1).boxes
 
     expect(left.x).toBeCloseTo(toScreen({ x: 3, y: 1 }, 0).x)
+    expect(left.cell).toEqual({ x: 3, y: 1 })
+  })
+
+  it('앞쪽 칸으로 끌려갈 배도 출발 전에는 제 칸 차례에 그린다', () => {
+    // 물 높이 1, (4,1) 소용돌이가 왼쪽 줄을 끌고 (1,1) 배에서 큐브가 위로 내림
+    const stage: Stage = {
+      ...WHIRL_STAGE,
+      heights: [
+        [1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1],
+      ],
+      start: { x: 1, y: 0 },
+      goal: { x: 4, y: 2 },
+      entities: [
+        { type: 'whirlpool', x: 4, y: 1 },
+        { type: 'box', x: 1, y: 1 },
+      ],
+    }
+    const [boat] = frames(stage, ['down', 'up'], 0.1).boxes
+
+    expect(boat.to).toEqual({ x: 2, y: 1 })
+    expect(boat.cell).toEqual({ x: 1, y: 1 })
   })
 })
 
@@ -149,6 +172,18 @@ describe('leanOf', () => {
 
     expect(game.player).toEqual({ x: 2, y: 1 })
     expect(leanOf(lanes.get('2-1'), game, { x: 2, y: 1 }, look(game))).toBe('left')
+  })
+})
+
+describe('pulledBeside', () => {
+  it('큐브와 같은 깊이 옆 칸에 그리는 배가 있을 때만 참이다', () => {
+    const [boat] = frames().boxes
+    const at = (cell: { x: number; y: number }) => [{ ...boat, cell }]
+    const cube = { x: 2, y: 1 }
+
+    expect(pulledBeside(at({ x: 1, y: 2 }), cube)).toBe(true)
+    expect(pulledBeside(at({ x: 1, y: 1 }), cube)).toBe(false)
+    expect(pulledBeside(at({ x: 0, y: 3 }), cube)).toBe(false)
   })
 })
 

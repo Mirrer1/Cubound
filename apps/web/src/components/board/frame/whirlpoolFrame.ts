@@ -87,7 +87,7 @@ const pulledFrame = (view: WhirlView, event: Pulled): WhirlBoxFrame => {
     shown: Math.max(0, WATER.lip - dip),
     opacity: floating && elapsed < start ? 0 : 1,
     to: event.to,
-    cell: frontOf(event.from, event.to),
+    cell: p > 0 ? frontOf(event.from, event.to) : event.from,
     wake:
       wakeOn > 0
         ? WAKE.map((w) => {
@@ -198,6 +198,10 @@ export const whirlFrames = (view: WhirlView) => {
 }
 
 export type WhirlFrames = ReturnType<typeof whirlFrames>
+
+// 큐브와 같은 깊이 옆 칸에 그리는 배, 큐브를 같은 깊이 맨 뒤에 그릴 경우
+export const pulledBeside = (boxes: WhirlBoxFrame[], cube: Point) =>
+  boxes.some(({ cell }) => cell.x + cell.y === cube.x + cube.y && Math.abs(cell.x - cube.x) === 1)
 
 // 앞 칸에 멈춘 배가 쏠리는 쪽, 열린 소용돌이 한정
 export const leanOf = (
