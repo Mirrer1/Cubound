@@ -89,4 +89,4 @@ export {
 export type { Tram } from '@/game/types'
 export { coversRope, moorLooks, type TetherFrame, tetherFrames } from './tetherFrame'
 export { sceneFrame } from './sceneFrame'
-export { cellLook } from './cellLookFrame'
+export { type CellLook, cellLook, sameCellLook } from './cellLookFrame'

@@ -109,12 +109,12 @@ const Board = ({
     [heights, scene.before.heights, railDirs, vines, fillingKey],
   )
 
-  const view = { stage, game, events, t, swampSeconds, fillingKey, railDirs, scene }
+  const lookOf = cellLook({ stage, game, events, t, swampSeconds, fillingKey, railDirs, scene })
 
   return (
     <svg ref={ref} viewBox={viewBox} className="h-full w-full">
       {cubeFirst(cells, scene.cube.cell, scene.cube.last).map((cell) => {
-        const { cellY, look, over } = cellLook(view, cell)
+        const { cellY, look, over } = lookOf(cell)
 
         return (
           <BoardCell key={cell.key} {...look}>

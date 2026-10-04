@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { boardCells } from './cellFrame'
-import { cellLook } from './cellLookFrame'
+import { cellLook, sameCellLook } from './cellLookFrame'
 import { NO_CHAIN, smooth } from './curveFrame'
 import { fillingCellKey } from './fillFrame'
 import { sceneFrame } from './sceneFrame'
@@ -66,30 +66,32 @@ const looks = (
   const vines = vineLooks(game)
   const fillingKey = fillingCellKey(scene.box, events, vines)
   const cells = boardCells(game.heights, scene.before.heights, railDirs, vines, fillingKey)
-  const view = { stage: game.stage, game, events, t, swampSeconds, fillingKey, railDirs, scene }
-  return new Map(cells.map((cell) => [cell.key, cellLook(view, cell)]))
+  const lookOf = cellLook({
+    stage: game.stage,
+    game,
+    events,
+    t,
+    swampSeconds,
+    fillingKey,
+    railDirs,
+    scene,
+  })
+  return new Map(cells.map((cell) => [cell.key, lookOf(cell)]))
 }
 
 describe('cellLook', () => {
   it('요소 없는 칸은 요소마다 없는 칸의 기본값을 받는다', () => {
     const { look, over } = looks(createState(FILL_STAGE)).get('3-0')!
     expect(look).toMatchObject({
-      vine: null,
-      vineGrowth: 1,
-      vineRise: 1,
-      vineOpacity: 1,
-      seed: 0,
-      seedTreeP: 1,
-      seedStakeP: 1,
-      swampRisen: -1,
-      moorRange: -1,
-      post: 0,
-      water: 0,
-      pitWallLeft: -1,
-      pitWallRight: -1,
-      blockOpacity: 1,
-      leaning: '',
-      entity: null,
+      vine: { kind: null, growth: 1, rise: 1, opacity: 1 },
+      seed: { on: 0, treeP: 1, stakeP: 1 },
+      swamp: { risen: -1 },
+      tether: { post: 0, range: -1 },
+      water: { depth: 0 },
+      pit: { wallLeft: -1, wallRight: -1 },
+      ground: { blockOpacity: 1 },
+      ladder: { leaning: '' },
+      device: { entity: null },
       box: false,
     })
     expect(over.overlay).toBe(false)
@@ -97,10 +99,10 @@ describe('cellLook', () => {
 
   it('밟힌 스위치는 얕게, 빈 스위치는 깊게 그린다', () => {
     const idle = looks(createState(LIFT_STAGE)).get('1-1')!
-    expect(idle.look.entity).toBe('switch')
-    expect(idle.look.switchDepth).toBe(9)
+    expect(idle.look.device.entity).toBe('switch')
+    expect(idle.look.device.switchDepth).toBe(9)
     const { game } = lastMove(LIFT_STAGE, ['down'])
-    expect(looks(game).get('1-1')!.look.switchDepth).toBe(2)
+    expect(looks(game).get('1-1')!.look.device.switchDepth).toBe(2)
   })
 
   it('옆에서 밀어 메우는 칸은 상자가 닿는 동안 숨긴다', () => {
@@ -112,13 +114,13 @@ describe('cellLook', () => {
   it('재시작으로 다시 구멍이 되는 메운 칸은 제자리에서 옅어진다', () => {
     const { game: moved } = lastMove(FILL_STAGE, ['right'])
     const { look } = looks(createState(FILL_STAGE), moved, [], 0.1, true).get('2-0')!
-    expect(look.filled).toBe(true)
-    expect(look.blockOpacity).toBeCloseTo(1 - smooth(0.4))
+    expect(look.ground.filled).toBe(true)
+    expect(look.ground.blockOpacity).toBeCloseTo(1 - smooth(0.4))
   })
 
   it('발판이 선 칸은 위에 발판을 얹어 그린다', () => {
     const { look, over } = looks(createState(TRAM_STAGE)).get('1-1')!
-    expect(look.rail).not.toBe('')
+    expect(look.pit.rail).not.toBe('')
     expect(over.tram).not.toBeNull()
     expect(over.overlay).toBe(true)
   })
@@ -132,8 +134,39 @@ describe('cellLook', () => {
 
   it('묶인 배가 갈 수 있는 물 칸에만 범위 값을 둔다', () => {
     const cells = looks(createState(TETHER_STAGE))
-    expect(cells.get('3-1')!.look.moorRange).toBe(0)
-    expect(cells.get('5-2')!.look.moorRange).toBe(-1)
-    expect(cells.get('2-0')!.look.post).toBeGreaterThan(0)
+    expect(cells.get('3-1')!.look.tether.range).toBe(0)
+    expect(cells.get('5-2')!.look.tether.range).toBe(-1)
+    expect(cells.get('2-0')!.look.tether.post).toBeGreaterThan(0)
+  })
+})
+
+describe('sameCellLook', () => {
+  const base = () => {
+    const { look } = looks(createState(LIFT_STAGE)).get('1-1')!
+    return { ...look, children: undefined }
+  }
+
+  it('묶음 객체가 새로 만들어져도 안의 값이 같으면 같다', () => {
+    const a = base()
+    const b = { ...a, crack: { ...a.crack }, device: { ...a.device } }
+    expect(b.crack).not.toBe(a.crack)
+    expect(sameCellLook(a, b)).toBe(true)
+  })
+
+  it('묶음 안 값 하나만 달라도 다르다', () => {
+    const a = base()
+    expect(sameCellLook(a, { ...a, device: { ...a.device, switchDepth: 3 } })).toBe(false)
+    expect(sameCellLook(a, { ...a, vine: { ...a.vine, opacity: 0.5 } })).toBe(false)
+  })
+
+  it('원시값 속성이 다르면 다르다', () => {
+    const a = base()
+    expect(sameCellLook(a, { ...a, y: a.y + 1 })).toBe(false)
+  })
+
+  it('children은 참조가 다르면 내용이 같아도 다르다', () => {
+    const a = { ...base(), children: { type: 'g', props: {} } }
+    expect(sameCellLook(a, { ...a, children: { type: 'g', props: {} } })).toBe(false)
+    expect(sameCellLook(a, { ...a })).toBe(true)
   })
 })
