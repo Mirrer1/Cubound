@@ -4,12 +4,12 @@ import { pullLanes } from '../view'
 import { movingBox } from './boxFrame'
 import { playerFrame } from './cubeFrame'
 import { NO_CHAIN } from './curveFrame'
+import { guideRect } from './guideFrame'
 import { restartDrop } from './restartFrame'
 import { sceneFrame } from './sceneFrame'
 import { swampTime } from './swampFrame'
 import { PLUG_STAGE, WHIRL_STAGE, lastMove } from './testStages'
 import { tetherFrames } from './tetherFrame'
-import { TILE, toScreen } from '@/game/iso'
 import { createState } from '@/game/rules'
 import type { GameEvent, GameState, Point, Stage } from '@/game/types'
 
@@ -88,14 +88,11 @@ describe('sceneFrame', () => {
     expect(scene.cubeDrop).toBeNull()
   })
 
-  it('가이드 칸에 무엇이 서 있으면 위쪽 여유를 두 층 잡는다', () => {
+  it('가이드 칸이 있으면 그 칸의 사각형, 없으면 null을 낸다', () => {
     const game = createState(BOX_STAGE)
-    const onBox = sceneOf(game, null, [], 1, { guideCell: { x: 1, y: 0 } })
-    expect(onBox.guideScreen).toEqual(toScreen({ x: 1, y: 0 }, 0))
-    expect(onBox.guideTop).toBe(TILE.layer * 2)
-    const empty = sceneOf(game, null, [], 1, { guideCell: { x: 3, y: 0 } })
-    expect(empty.guideTop).toBe(0)
-    expect(sceneOf(game, null, [], 1).guideScreen).toBeNull()
+    const scene = sceneOf(game, null, [], 1, { guideCell: { x: 1, y: 0 } })
+    expect(scene.guide).toEqual(guideRect(game, { x: 1, y: 0 }))
+    expect(sceneOf(game, null, [], 1).guide).toBeNull()
   })
 })
 

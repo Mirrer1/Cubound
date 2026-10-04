@@ -1,9 +1,7 @@
-import { type TopTilt, darken, shade } from './view'
+import { LADDER_TIP, type TopTilt, darken, shade } from './view'
 import { TILE, isoDelta } from '@/game/iso'
 import type { Direction, Point } from '@/game/types'
 
-// 가려져도 보이게 높은 칸 위로 살짝 솟는 높이
-const TIP = 10
 // 바닥에 놓인 사다리가 칸 윗면에서 뜬 높이
 const LIFT = 2
 const RUNGS = [-0.3, -0.1, 0.1, 0.3]
@@ -45,7 +43,10 @@ const flatSegments = (origin: Point, s: number, tilt?: TopTilt) => {
 const leaningSegments = (center: Point, direction: Direction) => {
   const d = DIRECTION_DELTA[direction]
   const bottom = add(center, isoDelta(d.x * 0.3, d.y * 0.3))
-  const top = add(center, add(isoDelta(d.x * 0.5, d.y * 0.5), { x: 0, y: -TILE.layer - TIP }))
+  const top = add(
+    center,
+    add(isoDelta(d.x * 0.5, d.y * 0.5), { x: 0, y: -TILE.layer - LADDER_TIP }),
+  )
   const rails = [-0.17, 0.17].map((w): Segment => {
     const offset = isoDelta(-d.y * w, d.x * w)
     return [add(bottom, offset), add(top, offset)]

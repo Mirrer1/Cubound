@@ -16,6 +16,7 @@ export {
   crackShards,
   crackSplit,
   isPit,
+  LADDER_TIP,
   leaningOf,
   MUD,
   MUD_DIP,

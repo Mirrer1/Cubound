@@ -43,8 +43,6 @@ interface BoardProps {
   guideCell?: Point // 가이드가 비추는 칸
 }
 
-const GUIDE_MARGIN = 12
-
 const Board = ({
   game,
   prevGame,
@@ -257,19 +255,13 @@ const Board = ({
           <BoardTether part="rope" points={tether.points} opacity={tether.opacity} />
         </g>
       ))}
-      {scene.guideScreen && (
+      {scene.guide && (
         <rect
           data-guide="cell"
-          x={scene.guideScreen.x - TILE.width / 2 - GUIDE_MARGIN}
-          y={scene.guideScreen.y - TILE.height / 2 - GUIDE_MARGIN - scene.guideTop}
-          width={TILE.width + GUIDE_MARGIN * 2}
-          height={
-            TILE.height +
-            TILE.lip +
-            scene.guideLevel * TILE.layer +
-            GUIDE_MARGIN * 2 +
-            scene.guideTop
-          }
+          x={scene.guide.x}
+          y={scene.guide.y}
+          width={scene.guide.width}
+          height={scene.guide.height}
           fill="none"
         />
       )}

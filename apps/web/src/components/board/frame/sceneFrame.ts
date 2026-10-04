@@ -11,12 +11,13 @@ import {
 import { crackProgress, standSink } from './crackFrame'
 import { SLIDE_DEG, playerFrame, squashTransform } from './cubeFrame'
 import { type Chain, smooth } from './curveFrame'
+import { guideRect } from './guideFrame'
 import { mushroomFrames } from './mushroomFrame'
 import { restartDrop } from './restartFrame'
 import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFrame'
 import { boxSink, swampFrame } from './swampFrame'
 import { moorLooks, tetherFrames } from './tetherFrame'
-import { type SwampTime, elapsedAt, has, pullStart, same, stepProgress } from './timeFrame'
+import { type SwampTime, elapsedAt, pullStart, same, stepProgress } from './timeFrame'
 import { tramFramesOf, tramProgress } from './tramFrame'
 import { vineFrames } from './vineFrame'
 import { rippleOf } from './waterFrame'
@@ -58,7 +59,7 @@ export const sceneFrame = ({
   const before = moving ? prevGame : game
   const dropping = restarting && t < 1
 
-  const { stage, heights, boxes, leaningLadders, player } = game
+  const { stage, heights, boxes } = game
   // 재시작은 처음 자리에 새로 내려앉는 것이라 넘기지 않는 앞 상태
   const cube = playerFrame(dropping ? null : prevGame, game, events, t, chain)
   const cubeCell = { x: Math.round(cube.x), y: Math.round(cube.y) }
@@ -151,15 +152,7 @@ export const sceneFrame = ({
   const boxShown = box ? floatShownAt(stage, box) : null
   const tethers = tetherFrames({ prev: moving ? prevGame : null, game, box, t, dropping })
   const moor = moorLooks(stage, tethers)
-  const guideLevel = guideCell ? Math.max(0, heights[guideCell.y][guideCell.x]) : 0
-  const guideScreen = guideCell ? toScreen(guideCell, guideLevel) : null
-  // 한 층보다 높이 솟는 칸 위에 선 것, 위쪽을 더 잡는 여유
-  const guideStanding =
-    guideCell !== undefined &&
-    (same(player, guideCell) ||
-      has(boxes, guideCell) ||
-      leaningLadders.some((l) => same(l, guideCell)))
-  const guideTop = guideStanding ? TILE.layer * 2 : 0
+  const guide = guideCell ? guideRect(game, guideCell) : null
 
   return {
     moving,
@@ -208,8 +201,6 @@ export const sceneFrame = ({
     tramFrames,
     nextRails,
     caps,
-    guideLevel,
-    guideScreen,
-    guideTop,
+    guide,
   }
 }

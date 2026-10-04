@@ -51,6 +51,9 @@ const SURFACES = {
   },
 }
 
+// 가려져도 보이게 높은 칸 위로 살짝 솟는 기댄 사다리 끝 높이
+export const LADDER_TIP = 10
+
 // 칸 크기의 틀 위에 얹힌 승강 발판의 판, 틀과 판의 밝기 차이로 읽히는 기계
 export const PLATE = { scale: 0.84, rise: 4, depth: 4 }
 

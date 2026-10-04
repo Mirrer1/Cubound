@@ -67,6 +67,43 @@ const sameHole = (a: Hole, b: Hole) =>
 
 const stopClick = (e: MouseEvent) => e.stopPropagation()
 
+let pen: CanvasRenderingContext2D | null = null
+
+// 테두리 없는 글자 덩이의 획이 닿는 범위, 줄 높이의 빈 자리와 끝 자간 제외
+const inkOf = (el: Element) => {
+  if (getComputedStyle(el).borderTopWidth !== '0px') return null
+  pen ??= document.createElement('canvas').getContext('2d')
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+  let ink: { left: number; top: number; right: number; bottom: number } | null = null
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const range = document.createRange()
+    range.selectNodeContents(node)
+    const box = range.getBoundingClientRect()
+    if (!pen || !node.parentElement || !node.textContent?.trim() || box.width === 0) continue
+    const style = getComputedStyle(node.parentElement)
+    pen.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+    pen.letterSpacing = style.letterSpacing
+    const m = pen.measureText(node.textContent)
+    const baseline =
+      box.top +
+      (box.height - m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2 +
+      m.fontBoundingBoxAscent
+    const left = box.left - m.actualBoundingBoxLeft
+    const right = box.left + m.actualBoundingBoxRight
+    const top = baseline - m.actualBoundingBoxAscent
+    const bottom = baseline + m.actualBoundingBoxDescent
+    ink = ink
+      ? {
+          left: Math.min(ink.left, left),
+          top: Math.min(ink.top, top),
+          right: Math.max(ink.right, right),
+          bottom: Math.max(ink.bottom, bottom),
+        }
+      : { left, top, right, bottom }
+  }
+  return ink && { ...ink, width: ink.right - ink.left, height: ink.bottom - ink.top }
+}
+
 const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: GuideOverlayProps) => {
   const [measured, setMeasured] = useState<{ hole: Hole; place: Place; align: string } | null>(null)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -95,7 +132,7 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
       const container = containerRef.current
       const found = container
         ? [...container.querySelectorAll(`[data-guide="${targetName}"]`)]
-            .map((el) => el.getBoundingClientRect())
+            .map((el) => inkOf(el) ?? el.getBoundingClientRect())
             .find((r) => r.width > 0)
         : undefined
       if (container && found) {
