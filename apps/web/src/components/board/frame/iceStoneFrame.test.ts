@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { ICE, STONE, pullLanes } from '../view'
+import { playerFrame } from './cubeFrame'
 import {
   floatBase,
   frostGround,
@@ -369,6 +370,34 @@ describe('meltDisplay', () => {
 
     expect(meltDisplay(one)).toMatchObject({ count: 1, faint: false, edge: true, holding: false })
     expect(meltDisplay(held)).toMatchObject({ count: 0, edge: true, holding: true })
+  })
+})
+
+describe('얼음 돌 뒤를 따라 미끄러지는 큐브', () => {
+  it('큐브는 밀려 미끄러지는 돌을 앞지르거나 겹치지 않고 늘 한 칸쯤 뒤에 있다', () => {
+    const stage: Stage = {
+      ...STONE_STAGE,
+      heights: [
+        [1, 1, 1, 1, 1, 1, 0],
+        [1, 1, 1, 1, 1, 1, 1],
+      ],
+      water: 1,
+      ice: ['.#####.', '.......'],
+      start: { x: 0, y: 0 },
+      goal: { x: 6, y: 1 },
+      entities: [stone(1, 0)],
+    }
+    const { prev, game, events } = lastMove(stage, ['right'])
+    const steps = Array.from({ length: 50 }, (_, i) => i / 50)
+
+    expect(game.stones).toEqual([{ x: 6, y: 0 }])
+    for (const t of steps) {
+      const stone = stoneFrames({ prev, game, events, t, swamp: NO_SWAMP })[0]
+      if (!stone) continue
+      const cube = playerFrame(prev, game, events, t)
+      const cubeX = toScreen({ x: cube.x, y: cube.y }, 0).x
+      expect(stone.x - cubeX).toBeGreaterThan((TILE.width / 2) * 0.8)
+    }
   })
 })
 

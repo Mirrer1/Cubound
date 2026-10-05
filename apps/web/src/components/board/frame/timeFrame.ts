@@ -158,6 +158,20 @@ const windSegments = (events: GameEvent[], own: GameEvent[]): Segment[] => {
   ]
 }
 
+// 밀린 얼음 돌을 뒤따라 미끄러지는 큐브의 늦춘 길, 돌이 가로로 다 간 뒤 도착
+const behindStone = (events: GameEvent[], segments: Segment[]): Segment[] => {
+  const stone = segmentsOf(stonePath(events))
+  const end = stone.at(-1)
+  const sliding = segments.some((s) => s.event.type === 'slid')
+  if (!end || !sliding) return segments
+
+  const floated = end.event.type === 'pushed' && end.event.result === 'floated'
+  const arrive = totalSeconds(stone) - (floated ? end.seconds * (1 - FLOAT_REACH) : 0)
+  const own = totalSeconds(segments)
+  const slower = own > 0 && arrive > own ? arrive / own : 1
+  return segments.map((s) => ({ ...s, seconds: s.seconds * slower }))
+}
+
 // 메우는 중인 칸에 큐브가 뜨지 않게 늦추는 다가가는 속도, 멈추면 걸리는 느낌
 export const playerSegments = (events: GameEvent[]): Segment[] => {
   const own = ownPart(events)
@@ -166,7 +180,7 @@ export const playerSegments = (events: GameEvent[]): Segment[] => {
   const path = playerPath(events)
   const landing = boxLanding(events)
   const last = path.at(-1)
-  if (!landing || !last || !same(last.to, landing.to)) return segmentsOf(path)
+  if (!landing || !last || !same(last.to, landing.to)) return behindStone(events, segmentsOf(path))
 
   const { before, tile } = lastTile(last)
   const approach = segmentsOf([...path.slice(0, -1), ...(before ? [before] : [])])
