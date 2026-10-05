@@ -214,6 +214,9 @@ export const en = {
   'stage.11-10': 'Moored Boats',
   'world.12': 'Land of Whirlpools',
   'world.12.note': 'Whirlpools pull in empty boats. Where you step off is the answer.',
+  'world.13': 'Land of Ice',
+  'world.13.note':
+    'Ice floats and freezes the water around it. The path lasts only while the ice is there.',
   'stage.12-1': 'Swept Along',
   'stage.12-2': 'Reeling In',
   'stage.12-3': 'In Line',
@@ -224,6 +227,16 @@ export const en = {
   'stage.12-8': 'Cliff Edge',
   'stage.12-9': 'Twin Whirlpools',
   'stage.12-10': 'The Plug',
+  'stage.13-1': 'Thin Ice',
+  'stage.13-2': 'Ice Road',
+  'stage.13-3': 'Frozen Boat',
+  'stage.13-4': 'Thaw',
+  'stage.13-5': 'The Slide',
+  'stage.13-6': 'Drifting Ice',
+  'stage.13-7': 'Ice Gate',
+  'stage.13-8': 'Ice From Afar',
+  'stage.13-9': 'Twin Ice',
+  'stage.13-10': 'Melting Ice',
 }
 
 export type Texts = typeof en
