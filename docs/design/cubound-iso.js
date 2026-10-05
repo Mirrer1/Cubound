@@ -331,11 +331,12 @@
     return out;
   };
   // ice stone: wider, lower and stepped (14 + 8 + 4 = 26px) so it never reads as the 30px yellow box
-  const stone = (cx, cy, z, cut) => {
-    z = z || 0; const t1 = Math.max(2, 14 - (cut || 0));
-    return block(cx, cy, 0.64, z, t1, STONE.t, STONE.l, STONE.r)
-      .concat(block(cx, cy, 0.48, z + t1, 8, STONE.t2, STONE.l, STONE.r))
-      .concat(block(cx, cy, 0.28, z + t1 + 8, 4, '#FFFFFF', STONE.l, STONE.r));
+  // k < 1 shrinks the stone (boss 130 melt)
+  const stone = (cx, cy, z, cut, k) => {
+    z = z || 0; k = k === undefined ? 1 : k; const t1 = Math.max(2, 14 - (cut || 0)) * k;
+    return block(cx, cy, 0.64 * k, z, t1, STONE.t, STONE.l, STONE.r)
+      .concat(block(cx, cy, 0.48 * k, z + t1, 8 * k, STONE.t2, STONE.l, STONE.r))
+      .concat(block(cx, cy, 0.28 * k, z + t1 + 8 * k, 4 * k, '#FFFFFF', STONE.l, STONE.r));
   };
   const frost = (cx, cy, pal) => plate(cx, cy, 0.9, mix(FL ? FL.a : C.a, pal.iceT, 0.55));
   // yellow switch (CHAPTER 1) and the water-level switch: same yellow plate, the level switch holds a little pool
@@ -408,8 +409,28 @@
   const floatBox = (X, Y, o, pal, kind) => {
     const out = [], dip = DIP + (o.dip || 0);
     if (o.ring) out.push(...ringAt(X, Y, o.ring, 0.07, pal.refl, o.top, o.ro));
-    if (!o.noCollar) out.push(plate(X, Y, CS * 1.3, pal.refl));
-    if (kind === 'stone') out.push(...stone(X, Y, 0, 8));
+    const moat = kind === 'stone' && o.sv === 'moat', iceFloor = kind === 'stone' && (o.sv === 'shadow' || o.sv === 'rim');
+    if (!o.noCollar && !moat && !iceFloor) out.push(plate(X, Y, CS * 1.3, pal.refl));
+    if (kind === 'stone') {
+      // floating ice stone. default: 18px above the surface. moat: the stone's own water cell turns one step darker.
+      // low: lower step under water (shows through), 12px above.
+      const m = o.melt || 0, k = 1 - m * 0.5, low = o.sv === 'low', cut = low ? 14 : 8 + m * 10;
+      if (moat) out.push(plate(X, Y, 0.96, pal.d2), plate(X, Y, 0.82, mix(pal.d2, pal.d3, 0.4)));
+      if (iceFloor) {
+        // the stone's own cell is ice too (4px slab, same as the frozen ring) and travels with the stone.
+        // shadow: thin darker ice line hugging the stone base. rim: darker ice band along the cell edge.
+        const fs = 1 - m * 0.6;
+        if (m < 1) {
+          if (o.sv === 'rim') { out.push(...prism(X, Y - 4, fs, 4, mix(pal.iceT, pal.iceL, 0.3), pal.iceL, pal.iceR)); out.push(plate(X, Y - 4, fs * 0.84, pal.iceT)); }
+          else { out.push(...prism(X, Y - 4, fs, 4, pal.iceT, pal.iceL, pal.iceR)); out.push(plate(X, Y - 4, 0.64 * k + 0.09, mix(pal.iceT, pal.iceL, 0.7))); }
+          out.push(...stone(X, Y, 4, cut, k));
+        }
+        return out;
+      }
+      if (low) out.push(plate(X, Y, 0.74, mix(STONE.t, o.top, 0.55)));
+      if (m < 1) out.push(...stone(X, Y, 0, cut, k));
+      if (o.ring && moat) out.push(...ringAt(X, Y, o.ring, 0.07, pal.refl, pal.d2, o.ro));
+    }
     else out.push(...cube(X, Y, C.yellow, LV - dip));
     if (o.rider) out.push(...cube(X, Y, C.blue, LV, 1, LV - dip + (o.hop || 0)));
     return out;
@@ -449,6 +470,14 @@
     }
     if (ROPES[x + ',' + y]) out.push(...ROPES[x + ',' + y]);
     for (const o of list) {
+      // boat frozen into the ice: only its top 3px shows, inside a white frost rim with a darker crack line
+      if (o.frozen && surf !== null) {
+        const q = pt(cx, surf, o.u || 0, o.v || 0);
+        out.push(plate(q[0], q[1], CS * 1.42, mix(pal.iceT, pal.iceL, 0.45)), plate(q[0], q[1], CS * 1.3, pal.gloss));
+        out.push(...cube(q[0], q[1], C.yellow, 3));
+        if (o.rider) out.push(...cube(q[0], q[1], C.blue, LV, 1, 3));
+        continue;
+      }
       if (surf !== null && !o.float) { out.push(...obj(o, cx, surf)); continue; }
       const q = pt(cx, cyS, o.u || 0, o.v || 0), X = q[0], Y = q[1] - (o.lift || 0);
       if (o.wake) { const n = o.wake; [0.28, 0.5, 0.72].forEach((d, i) => { const w = pt(cx, cyS, (o.u || 0) - n[0] * d, (o.v || 0) - n[1] * d); out.push(plate(w[0], w[1], CS * (1.2 - i * 0.22), pal.refl, 0.75 - i * 0.22)); }); }
@@ -525,7 +554,7 @@
       def.pull.forEach(pw => { if (pw.show === false) return; [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
         for (let k = 1; ; k++) {
           const x = pw.p[0] + dx * k, y = pw.p[1] + dy * k, v = V(x, y), cd = cells[x + ',' + y];
-          if (typeof v !== 'number' || v >= def.W - 0.2 || (cd && (cd.t === 'ice' || cd.t === 'whirl'))) break;
+          if (typeof v !== 'number' || v >= def.W - 0.2 || (cd && ((cd.t === 'ice' && !def.pullIce) || cd.t === 'whirl'))) break;
           WT.pull[x + ',' + y] = { ax: dx ? 'x' : 'y', sg: -(dx || dy), k, st: pw.st || 'lane', o: pw.o };
         }
       }); });
@@ -553,6 +582,11 @@
         if (cd && cd.t === 'vine') out.push(...vineCell(cx, cy, cd));
         if (cd && cd.t === 'rail') out.push(...railCell(cx, cy, cd));
         if (cd && cd.t === 'filled') { const k = tone(C.yellow); out.push(...prism(cx, cy, 1, TK, k.t, k.l, k.r)); }
+      } else if (cd && cd.t === 'iceland') {
+        // CHAPTER 1 ice floor: the whole block is ice (sides down to the base), one gloss line
+        const pl = WT ? WT.pal : CH3.mid;
+        out.push(...prism(cx, cy, 1, (h - FB) * LV + TK, pl.iceT, pl.iceL, pl.iceR));
+        out.push(uvq(cx, cy, -0.34, 0.12, -0.2, -0.165, pl.gloss));
       } else if (cd && cd.t === 'swamp') {
         out.push(...swamp(cx, cy, h, par, cd.st));
       } else if (def.grown && def.grown[key]) {

@@ -55,6 +55,7 @@ return <>{isCleared ? <ClearScreen /> : <Board />}</>
   - 12배 슬로모 캡처로 중간 프레임을 보고 확인이 끝나면 되돌린다
 - 애니메이션은 Motion으로 하고, hover와 누름 같은 단순한 전환은 `transition-soft` 유틸리티로 한다. Motion이 transform을 움직이는 요소에는 `transition-soft-colors`를 쓴다. 전환 시간과 곡선을 요소마다 따로 정하지 않는다
 - `prefers-reduced-motion`이 켜져 있으면 이동 거리와 시간을 줄인다
+- **끝없이 도는 연출(회전, 흔들림, 잔물결)은 CSS `animation`이 아니라 `hooks/useLoop`으로 한다.** CSS 애니메이션은 그리는 순서가 바뀌어 DOM에서 옮겨지면 처음부터 다시 돈다. 도중에 바뀌는 세기는 키프레임에 넣지 말고 진행도 변수 하나만 돌린 뒤 CSS `calc`로 곱한다(사파리가 키프레임 안 `var()`를 다시 읽지 않음)
 
 ## useEffect
 

@@ -48,6 +48,7 @@ Cube + bound, "어딘가로 향하는 큐브의 여행".
 | 덩굴            | 8    | 큐브가 한 번 움직일 때마다 바닥 없는 칸을 한 칸씩 메워 다리가 되고 되돌아오지 않습니다       |
 | 씨앗            | 9    | 주워 들고 다니다 한 층 높은 칸 쪽으로 밀면 발밑에 심고, 4수 뒤 위의 것과 함께 한 층 솟습니다 |
 | 물과 뜬 상자    | 11   | 큐브는 물에 못 들어가고 물에 민 상자는 떠서 큐브가 타고 한 칸씩 저어 갑니다                  |
+| 소용돌이        | 12   | 같은 가로세로 물길의 빈 배를 매 수 한 칸씩 끌어당기고 큐브가 탄 배는 끌지 않습니다           |
 
 **50판이 한 장(chapter)이고 장마다 세계 색이 다르며**, 목록 헤더의 월드 덩이를 누르면 화면을 갈아 끼우지 않고 그 자리에서 장 고르기로 바뀝니다.
 
@@ -95,7 +96,7 @@ $ pnpm stage:check src/stages/world-1/10.json
 | 상태          | Zustand                                                                                    |
 | 스타일        | Tailwind CSS v4                                                                            |
 | 영속화        | localStorage 키 `cubound:progress`, `cubound:session`, `cubound:language`, `cubound:world` |
-| 테스트        | Vitest 순수 함수 1300여 개 + Playwright 스모크와 화면 캡처                                 |
+| 테스트        | Vitest 순수 함수 1800여 개 + Playwright 스모크와 화면 캡처                                 |
 | 코드 퀄리티   | oxlint + Prettier + Husky + lint-staged                                                    |
 | 호스팅        | Vercel                                                                                     |
 
@@ -127,11 +128,11 @@ pnpm dev
 apps/web/
   src/
     game/         # 순수 로직 — 규칙 / 풀이 검사기 / 형식 검사 / 가림 처리 / 진행 / 이어하기 / 좌표 / 카메라
-    stages/       # 스테이지 JSON — world-1 ~ world-10
+    stages/       # 스테이지 JSON — world-1 ~ world-12
     store/        # Zustand — 게임 상태 / 연출 / 입력 대기열 / 설정
     platform/     # 브라우저 의존 — 저장 / 입력
     routes/       # 주소 / 탭 제목
-    hooks/        # 훅 — 주소 / 문구 / 포커스 가두기 / 필드 연출과 카메라
+    hooks/        # 훅 — 주소 / 문구 / 포커스 가두기 / 필드 연출과 카메라 / 반복 연출
     components/   # board 필드와 연출 / guide 스텝 가이드 / ui 공용
     screens/      # 타이틀 / 스테이지 선택 / 게임
     i18n/         # 언어별 사전

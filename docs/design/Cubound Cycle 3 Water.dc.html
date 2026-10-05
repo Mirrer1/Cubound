@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<script src="cubound-iso.js?v=20261002f"></script>
+<script src="cubound-iso.js?v=20261005m"></script>
 <style>
   html, body { margin: 0; padding: 0; background: #E9E7E2; }
   a { color: #3A3936; }
@@ -240,6 +240,46 @@
     </div>
 
     <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">J</span><span style="font-size:22px;font-weight:400">13월드 · 얼음 돌</span></div>
+      <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:860px;word-break:keep-all;text-wrap:pretty">갈림길 4는 (나) 뜸으로 정해졌습니다. 얼음 돌은 땅 위든 물 위든 위아래 왼쪽 오른쪽 네 칸의 물을 얼립니다. 물에 뜬 돌은 배처럼 한 칸씩 밀리고, 밀릴 때마다 옛 둘레는 녹고 새 둘레가 업니다. 큐브는 돌 바로 뒤 언 칸을 밟고 따라갑니다. 얼음 돌, 얼음 칸, 얼어붙음과 녹음의 모양과 값은 B·D 그대로입니다.</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(520px, 1fr));gap:16px">
+        <sc-for list="{{ J }}" as="g" hint-placeholder-count="9">
+          <div style="background:#D9E7E8;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><span style="font-size:13px;color:#5F6566;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+              <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <div style="width:{{ f.w }};max-width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#4F5859">{{ f.cap }}</span>
+                  <div style="width:{{ f.w60 }};display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                </div>
+              </sc-for>
+            </div>
+            <span style="font-size:13px;color:#3A3936;line-height:1.6;word-break:keep-all;text-wrap:pretty;border-top:1px solid #C9D7D8;padding-top:10px">{{ g.pick }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:#D9E7E8;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:400">보스 130 · 남은 수는 화면 위 숫자로</span><span style="font-size:13px;color:#5F6566;line-height:1.6;word-break:keep-all;text-wrap:pretty">물에 뜬 얼음 돌은 보스 판에서 늘 하나라 숫자도 하나입니다. TIDE, CAPS와 같은 자리, 같은 꼴입니다. 라벨은 MELT(녹기까지)를 권합니다. 판 위 돌에는 숫자를 달지 않습니다.</span></div>
+        <div style="background:#E6F1F2;border-radius:14px;padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:3px"><span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">STAGE 10</span><span style="font-size:24px;font-weight:400">녹는 얼음</span></div>
+          <div style="display:flex;gap:28px;align-items:flex-start">
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">MOVES</span><span style="font-size:32px;font-weight:300;line-height:1">9</span></div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">MELT</span><span style="font-size:32px;font-weight:300;line-height:1">3</span></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px">
+          <div style="background:#E6F1F2;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">MELT</span><span style="font-size:26px;font-weight:300;line-height:1">3</span><span style="font-size:11px;color:#6E6C68">녹기까지</span></div>
+          <div style="background:#E6F1F2;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">MELT</span><span style="font-size:26px;font-weight:300;line-height:1">2</span><span style="font-size:11px;color:#6E6C68">녹기까지</span></div>
+          <div style="background:#E6F1F2;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;box-shadow:inset 0 0 0 1.5px #3A3936"><span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">MELT</span><span style="font-size:26px;font-weight:300;line-height:1">1</span><span style="font-size:11px;color:#6E6C68">다음 수에 녹음</span></div>
+          <div style="background:#E6F1F2;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;box-shadow:inset 0 0 0 1.5px #3A3936"><span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">MELT</span><span style="font-size:26px;font-weight:300;line-height:1">0</span><span style="font-size:11px;color:#6E6C68">버팀 · 밝음</span></div>
+          <div style="background:#E6F1F2;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;box-shadow:inset 0 0 0 1.5px #3A3936"><span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">MELT</span><span style="font-size:26px;font-weight:300;line-height:1;opacity:0.3">0</span><span style="font-size:11px;color:#6E6C68">버팀 · 옅음</span></div>
+        </div>
+        <span style="font-size:13px;color:#3A3936;line-height:1.6;word-break:keep-all;text-wrap:pretty;border-top:1px solid #C9D7D8;padding-top:10px">0인데 큐브가 둘레 언 칸에 서 있으면 숫자 0만 옅어졌다 돌아오기를 되풀이합니다(약 0.6초 주기, 불투명도 1 ↔ 0.3). 1과 0일 때는 TIDE 1처럼 차콜 테두리를 둘러 곧 녹는다는 것을 알립니다. 큐브가 떠나면 그 수 끝에 녹습니다.</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
       <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">G</span><span style="font-size:22px;font-weight:400">장 고르기와 월드 이름</span></div>
       <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:860px;word-break:keep-all;text-wrap:pretty">장 들어가는 자리 v2의 확정안(3안)을 그대로 따랐습니다. 지금 보는 장이 3장이라 목록 화면 전체가 3장 세계 색이고, 카드 창은 각 장의 실제 세계 색입니다.</span>
       <div style="background:#D9E7E8;border-radius:22px;padding:14px">
@@ -353,7 +393,7 @@ class Component extends DCLogic {
   wait() { if (!window.CuboundIso || !window.CuboundIso.CH3) { this.tm = setTimeout(() => this.wait(), 40); return; } this.forceUpdate(); }
   renderVals() {
     const K = window.CuboundIso;
-    const empty = { H: [], variants: [], side: [], B: [], Cf: [], D: [], E: [], F: [], tide: [], chapters: [], wtable: [], css: [] };
+    const empty = { J: [], I: [], H: [], variants: [], side: [], B: [], Cf: [], D: [], E: [], F: [], tide: [], chapters: [], wtable: [], css: [] };
     if (!K || !K.CH3) return empty;
     const C = K.C, P3 = K.CH3, ST = K.STONE, mid = P3.mid;
     const vbw = vb => +vb.split(' ')[2];
@@ -420,7 +460,7 @@ class Component extends DCLogic {
         ['전', '(가) 같이 오름', '(나) 남고 물만 오름'], '의견 · (가). 얼음은 언 수면이라 같이 오르는 쪽이 그림으로 자연스럽습니다. (나)는 물속 얼음이 비침으로만 남아 잠긴 땅과 헷갈립니다.'),
       G('4 · 얼음 돌을 물에 밀면', '물가에서 한 칸 밀어 넣은 모습.',
         [{ W: 0, base: -1, g: [[0, -1, -1]], cells: { '1,0': { t: 'ice', from: 'x-' } }, objs: { '0,0': [{ t: 'stone', frost: true }] } }, { W: 0, base: -1, g: [[0, -1, -1]], objs: { '1,0': [{ t: 'stone' }] } }, { W: 0, base: -1, g: [[0, -1, -1]], objs: { '1,0': [{ t: 'fstone' }] } }],
-        ['전', '(가) 가라앉음', '(나) 뜸'], '의견 · (가). 돌은 가라앉는 것이 자연스럽고, 뜬 상자와 꼴이 겹치지 않습니다. (나)는 물 위 흰 덩이가 얼음 칸과 가까워 보입니다.'),
+        ['전', '(가) 가라앉음', '(나) 뜸 · 확정'], '확정 · (나). 물 위 흰 덩이가 얼음 칸과 붙어 보이는 걱정은 J절 1에서 돌 칸도 얼음으로 잇고 돌 밑 그림자 선으로 풀었습니다.'),
       G('5 · 상자 밑 얼음이 녹으면', '얼음 돌이 떠나 얼음이 녹자 상자가 그대로 뜹니다.',
         [{ W: 0, base: -1, g: [[0, -1, 0]], cells: { '1,0': { t: 'ice', from: 'x-' } }, objs: { '0,0': [{ t: 'stone', frost: true }], '1,0': [{ t: 'box' }] } }, { W: 0, base: -1, g: [[0, -1, 0]], objs: { '1,0': [{ t: 'fbox' }] } }],
         ['전 · 얼음 위 상자', '후 · 뜬 상자'], '')
@@ -520,6 +560,67 @@ class Component extends DCLogic {
         '의견 · 나. 판을 다시 볼 때 "여기를 막았다"가 남아 자기 수를 되짚을 수 있습니다. 비침은 잠긴 땅 비침과 같은 문법이고 노란 기운이 남아 땅과 갈립니다. 다만 배가 지나갈 때 걸림돌로 읽힐 수 있어, 게임에서 헷갈리면 가로 가겠습니다.')
     ];
 
+    // ---------- J · 얼음 돌 (13월드) ----------
+    const kk = c => c[0] + ',' + c[1];
+    const isW = (g, c) => g[c[1]] && typeof g[c[1]][c[0]] === 'number' && g[c[1]][c[0]] < 0;
+    const nb = c => [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => [c[0] + dx, c[1] + dy]);
+    const dirTo = (c, p) => p[0] > c[0] ? 'x+' : p[0] < c[0] ? 'x-' : p[1] > c[1] ? 'y+' : 'y-';
+    // ice around a stone at s0; with s1, the stone is t of the way to s1 (old ring melts, new ring freezes)
+    const ring = (g, s0, s1, t) => {
+      const out = {}, N0 = nb(s0).filter(c => isW(g, c));
+      if (!s1) { const p = t === undefined ? 1 : t; if (p > 0) N0.forEach(c => { out[kk(c)] = { t: 'ice', from: dirTo(c, s0), p }; }); return out; }
+      const N1 = nb(s1).filter(c => isW(g, c)), in0 = c => N0.some(d => kk(d) === kk(c)), in1 = c => N1.some(d => kk(d) === kk(c));
+      N0.forEach(c => { if (kk(c) === kk(s1) && t > 0) return; if (in1(c)) out[kk(c)] = { t: 'ice', from: dirTo(c, s1) }; else if (t < 1) out[kk(c)] = { t: 'ice', from: dirTo(c, s0), p: 1 - t }; });
+      N1.forEach(c => { if (!in0(c) && t > 0) out[kk(c)] = { t: 'ice', from: dirTo(c, s1), p: t }; });
+      return out;
+    };
+    const add = (o, k, v) => { (o[k] = o[k] || []).push(v); return o; };
+    const jg = [[0, 0, 0, 0, 0], [0, -1, -1, -1, 0], [0, -1, -1, -1, 0], [0, -1, -1, -1, 0], [0, 0, 0, 0, 0]];
+    const FS = (st, objs) => ({ W: 0, base: -1, g: jg, cells: ring(jg, [2, 2]), objs: add(Object.assign({}, objs || {}), '2,2', Object.assign({ t: 'fstone', float: true }, st)) });
+    const cg = [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, -1, -1, -1, -1, -1, -1, 0]];
+    const pg2 = [[0, 0, 0, 0, 0, 0], [0, -1, -1, -1, -1, 0], [0, -1, -1, -1, -1, 0], [0, -1, -1, -1, -1, 0], [0, 0, 0, 0, 0, 0]];
+    const PUSH = t => {
+      const s0 = [2, 2], s1 = [3, 2], objs = {};
+      if (t === 0) add(objs, '2,2', { t: 'fstone', float: true, sv: 'shadow' }); else add(objs, '3,2', { t: 'fstone', float: true, sv: 'shadow', u: t - 1, wake: t < 1 ? [1, 0] : undefined });
+      if (t < 0.5) add(objs, '1,2', { t: 'cube', u: t }); else add(objs, '2,2', { t: 'cube', u: t - 1 });
+      return { W: 0, base: -1, g: pg2, cells: ring(pg2, s0, s1, t), objs };
+    };
+    const bz = [[0, 0, 0], [0, -1, -1]];
+    const BZ = (box, stone) => ({ W: 0, base: -1, g: bz, cells: stone ? { '1,1': { t: 'ice', from: 'y-' } } : {}, objs: Object.assign(stone ? { '1,0': [{ t: 'stone', frost: true }] } : {}, { '1,1': [box] }) });
+    const rg = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, -1, -1, 0, 0], [0, 0, 0, 0, 0, 0, 0]];
+    const ROAD = cube => ({ W: 0, base: -1, g: rg, cells: { '0,1': { t: 'iceland' }, '1,1': { t: 'iceland' }, '2,1': { t: 'iceland' }, '3,1': { t: 'ice', from: 'y-' }, '4,1': { t: 'ice', from: 'y+' } }, objs: Object.assign({ '3,0': [{ t: 'stone', frost: true }], '4,2': [{ t: 'stone', frost: true }] }, cube) });
+    const BS = (st, p, extra) => ({ W: 0, base: -1, g: jg, cells: ring(jg, [2, 2], null, p), objs: Object.assign({ '2,2': [Object.assign({ t: 'fstone', float: true, sv: 'shadow' }, st)] }, extra || {}) });
+    const wg = [[0, 0, 0, 0, 0, 0, 0], [-1, -1, -1, -1, -1, -1, 0], [0, 0, 0, 0, 0, 0, 0]];
+    const WP = t => {
+      const s0 = [2, 1], s1 = [3, 1], objs = {};
+      if (t === 0) add(objs, '2,1', { t: 'fstone', float: true, sv: 'shadow' }); else add(objs, '3,1', { t: 'fstone', float: true, sv: 'shadow', u: t - 1, dip: t < 1 ? 4 : 0, wake: t < 1 ? [1, 0] : undefined });
+      return { W: 0, base: -1, g: wg, pullIce: true, pull: [{ p: [5, 1] }], cells: Object.assign(ring(wg, s0, s1, t), { '5,1': { t: 'whirl' } }), objs: Object.assign(objs, { '1,2': [{ t: 'cube' }] }) };
+    };
+    const mg2 = [[0, 0, 0, 0, 0, 0], [0, 0, -1, -1, -1, 0], [0, 0, -1, -1, -2, 0], [0, 0, 0, 0, 0, 0]];
+    const J = [
+      G('1 · 물에 뜬 얼음 돌 · 두 안', '돌이 선 칸도 얼음입니다. 둘레 넷과 같은 4px 얼음 판이 돌 밑에 깔려 다섯 칸이 한 판으로 이어지고, 돌은 그 위에 18px(땅 위 돌 26px의 아랫단 8px만 낮음)로 섭니다. 얼음 판은 돌과 같이 움직입니다.',
+        [FS({ sv: 'shadow' }), FS({ sv: 'rim' })], ['가 · 돌 밑 그림자 선 (추천)', '나 · 돌 칸 짙은 얼음 테'],
+        '추천 · 가. 돌 바닥을 따라 한 단계 짙은 얼음 선(돌 폭 + 0.09)이 둘러, 흰 돌과 흰 얼음은 갈리면서 얼음 판은 다섯 칸이 끊김 없이 이어집니다. 땅 위 돌이 서리 판 위에 선 것과 같은 짜임(바닥 판 + 돌)이라 같은 물건으로 읽힙니다. 나는 60px에서 더 또렷하지만 테가 돌 칸을 따로 묶어 "다른 칸"처럼 보이고, 둘레와의 연결이 약해집니다.'),
+      G('땅 위 돌 · 물에 뜬 돌 · 뜬 상자', '왼쪽부터 땅 위 얼음 돌(26px, 서리), 물에 뜬 얼음 돌(가, 얼음 판 위 18px), 뜬 상자(6px). 큐브는 언 칸 위에 있습니다.',
+        [{ W: 0, base: -1, g: cg, cells: { '2,1': { t: 'ice', from: 'x-' }, '3,1': { t: 'ice', from: 'x+' }, '5,1': { t: 'ice', from: 'x-' } }, objs: { '1,1': [{ t: 'stone', frost: true }], '4,1': [{ t: 'fstone', float: true, sv: 'shadow' }], '7,1': [{ t: 'fbox' }], '3,1': [{ t: 'cube' }] } }], [''], ''),
+      G('2 · 물에 뜬 돌을 한 칸 밀 때', '돌은 배처럼 한 칸 미끄러지고 뒤로 물테 꼬리가 남습니다. 같은 시간에 옛 둘레는 녹고(D 녹음) 새 둘레가 업니다(D 얼어붙음). 돌이 떠난 칸은 새 둘레라 바로 얼고, 큐브는 그 칸을 밟고 따라옵니다.',
+        [PUSH(0), PUSH(1 / 3), PUSH(2 / 3), PUSH(1)], ['1 · 밀기 전', '2 · 1/3', '3 · 2/3', '4 · 끝 · 큐브가 언 칸에']),
+      G('3 · 얼어붙은 배', '물 위 배 둘레가 얼면 배는 얼음 판에 박혀 윗면 3px만 나옵니다. 둘레에 흰 서리 테와 그 바깥의 한 단계 짙은 금이 생깁니다. 녹으면 다시 보통 배(6px, 물테)입니다.',
+        [BZ({ t: 'fbox' }), BZ({ t: 'fbox', rider: true }), BZ({ t: 'fbox', frozen: true }, true), BZ({ t: 'fbox', frozen: true, rider: true }, true), BZ({ t: 'box' }, true)],
+        ['보통 배', '큐브가 탄 배', '얼어붙은 배', '얼어붙은 배 · 큐브', '비교 · 얼음 위 상자'],
+        '보통 배는 물빛 물테, 얼어붙은 배는 흰 서리 테라 둘레 색으로 갈립니다. 얼음 위로 밀어 올린 상자(30px 정육면체)와는 높이로 갈립니다.'),
+      G('4 · 얼음바닥에서 언 물로', '왼쪽 세 칸이 1장 얼음바닥, 가운데 두 칸이 언 물입니다. 같은 얼음 색과 광택선이라 "미끄러운 얼음"으로 이어지고, 얼음바닥은 옆면까지 얼음빛인 땅 덩이, 언 물은 4px 판 아래로 물 옆면이 보이는 얇은 판입니다. 언 물 윗면은 땅보다 2px 낮습니다.',
+        [ROAD({ '1,1': [{ t: 'cube' }] }), ROAD({ '3,1': [{ t: 'cube', u: 0.2 }] })], ['미끄러지기 전', '언 물 위로 미끄러지는 중'], ''),
+      G('녹아 사라짐', '0이 된 수 끝에 돌이 작아지며 가라앉고, 둘레 얼음도 돌 쪽으로 물러납니다. 마지막에 작은 고리 하나가 남고 보통 물이 됩니다.',
+        [BS({}, 1), BS({ melt: 0.2 }, 0.85), BS({ melt: 0.55, ring: 0.5, ro: 0.6 }, 0.5), BS({ melt: 1, ring: 0.9, ro: 0.3 }, 0)], ['MELT 1', 'MELT 0 · 녹기 시작', '녹는 중', '물']),
+      G('6 · 소용돌이가 끄는 얼음 돌', '아무도 안 탄 뜬 돌은 배처럼 끌립니다. 언 칸들이 돌과 같이 한 칸 옮겨 갑니다. 물길 띠는 돌 둘레 얼음 아래에서도 이어진다고 보고, 얼음에서 끊지 않았습니다.',
+        [WP(0), WP(0.5), WP(1)], ['시작', '중간 (4px 더 잠김, 꼬리)', '끝'],
+        '물길 띠가 지금까지 "얼음에 닿으면 끊김"이었는데, 돌 둘레 얼음은 돌과 같이 움직이므로 끊으면 돌이 줄 밖에 있는 것처럼 보입니다. 이 경우만 이어 그렸습니다.'),
+      G('폰 축소판', '물(한 층, 두 층), 언 물, 1장 얼음바닥, 물에 뜬 얼음 돌(가), 뜬 상자, 큐브. 아래 작은 그림이 칸 폭 60px입니다.',
+        [{ W: 0, base: -2, g: mg2, cells: Object.assign(ring(mg2, [3, 1]), { '0,1': { t: 'iceland' }, '1,1': { t: 'iceland' } }), objs: { '3,1': [{ t: 'fstone', float: true, sv: 'shadow' }], '2,2': [{ t: 'fbox' }], '1,1': [{ t: 'cube' }], '5,3': [{ t: 'hole' }] } }], [''],
+        '60px에서 언 물은 물보다 훨씬 밝은 판, 얼음바닥은 옆면까지 밝은 덩이, 물에 뜬 돌은 얼음 판 위 흰 계단과 그 밑동의 짙은 선으로 갈립니다.')
+    ];
+
     // ---------- F ----------
     const bossG = [[2, 2, 1, 1, 1], [1, 1, 0, 0, 1], [1, 0, -1, -1, 0], [1, 0, -1, -1, 0], [1, 1, 0, 0, 1]];
     const tops0 = []; bossG.forEach((row, y) => row.forEach((v, x) => { if (v === 0) tops0.push(x + ',' + y); }));
@@ -561,6 +662,10 @@ class Component extends DCLogic {
       '', '/* 얼음 돌 · 14 + 8 + 4 = 26px */',
       `--color-icestone-top: ${ST.t};`, `--color-icestone-top-2: ${ST.t2};`, `--color-icestone-top-3: #FFFFFF;`, `--color-icestone-left: ${ST.l};`, `--color-icestone-right: ${ST.r};`,
       `--color-icestone-frost: ${mx(m.a, m.iceT, 0.55)};`,
+      '', '/* 13월드 · 물에 뜬 얼음 돌 (J) · 돌 칸도 4px 얼음 판, 돌은 그 위 18px */',
+      `--color-icestone-floor: ${m.iceT};   /* 돌 칸 얼음 판 · 4px, 옆면 --color-ice-left/right */`, `--color-icestone-shadow: ${mx(m.iceT, m.iceL, 0.7)};   /* 추천 가 · 돌 폭 + 0.09 */`, `--color-icestone-rim: ${mx(m.iceT, m.iceL, 0.3)};   /* 나 · 칸 바깥 0.16 */`,
+      `--color-ice-frozen-crack: ${mx(m.iceT, m.iceL, 0.45)};   /* 얼어붙은 배 바깥 테 · 상자 폭 1.42배 */`, `--color-ice-frozen-rim: ${m.gloss};   /* 서리 테 1.3배, 배 윗면은 얼음 위 3px */`,
+      '/* 1장 얼음바닥: 윗면 --color-ice-top, 옆면 --color-ice-left / -right 를 땅 덩이 전체에 */',
       '', '/* 수위 스위치 · 판은 도구 옐로 그대로 */',
       `--color-switch: #E3CD8E;   /* 판 0.66, 안 밟힘 4px · 밟힘 1px, tone() 그대로 */`, `--color-levelswitch-pool: ${m.d2};   /* 추천 나 · 0.86, 3px 아래 */`, `--color-levelswitch-pool-inner: ${mx(m.d2, m.d1, 0.5)};   /* 0.76 */`, `--color-levelswitch-pool-full: ${m.d1};   /* 밟힘 · 바닥 높이까지 참 */`, `--color-levelswitch-pool-full-inner: ${mx(m.d1, m.refl, 0.5)};`,
       '', '/* 묶인 배 (110번) */', '--color-post-top: #9A968E;', '--color-post-left: #6F6C66;', '--color-post-right: #85827B;', '--color-post-band: #F2F1EE;', '--color-rope: #7E7A72;   /* 두께 2.2px, 처짐 7px */', `--color-moor-range: ${mx(m.d1, m.refl, 0.25)};   /* 늘 보임 · 0.9 판 */`, `--color-moor-range-active: ${mx(m.d1, m.refl, 0.42)};   /* 탔을 때 */`,
@@ -569,11 +674,13 @@ class Component extends DCLogic {
       '', '/* 옅게 / 조금 더 의 물·얼음 값은 위 표 */'
     ];
     // one <img> per drawing keeps the page light (thousands of polygons otherwise)
-    const toSrc = (shapes, vb) => encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '">' + shapes.map(p => '<polygon points="' + p.d + '" fill="' + p.f + '"' + (p.o !== 1 ? ' opacity="' + p.o + '"' : '') + '/>').join('') + '</svg>');
+    const toSrc = (shapes, vb) => encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '">' + shapes.map(p => p.txt !== undefined
+      ? '<text x="' + p.d.split(',')[0] + '" y="' + p.d.split(',')[1] + '" font-size="' + p.fs + '" font-family="Jost, Helvetica, Arial, sans-serif" font-weight="500" text-anchor="middle" fill="' + p.f + '"' + (p.o !== 1 ? ' opacity="' + p.o + '"' : '') + '>' + p.txt + '</text>'
+      : '<polygon points="' + p.d + '" fill="' + p.f + '"' + (p.o !== 1 ? ' opacity="' + p.o + '"' : '') + '/>').join('') + '</svg>');
     const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { if (o.shapes && o.vb) { const vbp = o.vb.split(' ');
         o.bgi = 'url("data:image/svg+xml,' + toSrc(o.shapes, o.vb) + '")';   // no ";utf8": the template style parser splits on ";"
         o.ar = vbp[2] + ' / ' + vbp[3]; delete o.shapes; } Object.values(o).forEach(walk); } };
-    const out = { variants, side, B, Cf, D, E, H, I, F: Fb, tide, chapters, wtable, css };
+    const out = { variants, side, B, Cf, D, E, H, I, J, F: Fb, tide, chapters, wtable, css };
     walk(out);
     return out;
   }

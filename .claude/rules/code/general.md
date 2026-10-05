@@ -64,10 +64,10 @@
 - `apps/web/src/` 안의 폴더 역할은 `docs/ARCHITECTURE.md` "web 폴더 구조"를 따른다
 - 게임 규칙은 `game/`, 브라우저와 앱 환경에 의존하는 코드(저장, 입력)는 `platform/`에만 둔다
 - 훅은 `src/hooks/`, 주소와 탭 제목은 `src/routes/`에 둔다. `components/board/`에는 화면 컴포넌트만 두고 시간에 따라 바뀌는 연출 계산은 `frame/`, 시간과 무관한 그림 계산은 `view/`에 둔다
-- **새 요소는 요소마다 파일을 더한다.** 규칙은 `game/rules/<요소>Rule.ts`, 연출 계산은 `components/board/frame/<요소>Frame.ts`, 그림은 `components/board/Board<요소>.tsx`다. 있는 파일 끝에 덧붙이지 않는다
+- **새 요소는 요소마다 파일을 더한다.** 규칙은 `game/rules/<요소>Rule.ts`, 연출 계산은 `components/board/frame/<요소>Frame.ts`, 그림은 `components/board/Board<요소>.tsx`, 형식 검사는 `game/validate/<요소>Check.ts`다. 그 순간 값은 `sceneFrame`에, 칸에 넘길 값은 `cellLookFrame`의 `CellLook`에 그 요소의 묶음 하나로 더한다. 있는 파일 끝에 덧붙이지 않는다
 - 컴포넌트 안에 계산을 쓰지 않는다. 판정, 자리, 색을 정하는 계산은 `frame/`이나 `view/`의 순수 함수로 빼고 테스트를 단다
 - 폴더는 역할 하나만 맡는다. 계산 폴더는 모든 파일에 테스트가 있고 화면 폴더는 하나도 없다(`testing.md`). 둘이 섞이기 시작하면 폴더를 나눈다
-- 한 파일이 500줄을 넘으면 나눌 때가 된 신호다(정리 직후 가장 큰 파일 `Board.tsx` 453줄). 바로 나누지 말고 알린다
+- 한 파일이 500줄을 넘으면 나눌 때가 된 신호다. 바로 나누지 말고 알린다. `Board.tsx`(514줄)와 `validate.ts`(536줄)를 이렇게 나눴다(2026-10-04, 10-05). 지금 가장 큰 계산 파일은 `frame/timeFrame.ts` 477줄이다
 - 새 폴더, 새 파일 이름 규칙, 새 접미어는 만들기 전에 사용자에게 묻는다
 - 하위 폴더는 `index.ts`가 바깥에 내보내고 폴더 안끼리는 직접 가져온다. 순환 import가 생기면 아래층 파일(`cellRule`, `walkRule`처럼)로 뺀다
 - 도우미 함수(`lerp`, `clamp01`, `same` 등)는 새로 만들기 전에 이미 있는지 찾는다
