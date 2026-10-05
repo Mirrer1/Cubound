@@ -333,6 +333,9 @@ type Pulled = Extract<GameEvent, { type: 'pulled' | 'stonePulled' }>
 // 물에 떨어뜨리는 밀기에서 상자가 물 칸 위로 다 밀려 오는 구간 진행도
 export const FLOAT_REACH = 0.5
 
+// 물에 떨어뜨리는 밀기에서 가장 깊이 잠기는 진행도, 아무리 높은 데서 떨어져도 수면에 닿는 때
+export const FLOAT_RISE = 0.75
+
 // 그 자리 배가 떠나도 되는 때, 이 수에 띄운 배는 물 칸 위로 다 밀려 온 뒤, 큐브가 내린 배는 큐브가 반쯤 굴러 나간 뒤
 const freeAt = (events: GameEvent[], from: Point) => {
   for (const path of [segmentsOf(boxPath(events)), segmentsOf(stonePath(events))]) {
@@ -394,7 +397,7 @@ export const moveSeconds = (events: GameEvent[], swamp: SwampTime) =>
     totalSeconds(playerSegments(events)) + swamp.tail,
     totalSeconds(segmentsOf(boxPath(events))),
     totalSeconds(segmentsOf(stonePath(events))),
-    stonePath(events).length > 0 && thaws(events) ? FREEZE_SECONDS : 0,
+    freezeEnd(events),
     switchEnd(events),
     pickUpEnd(events),
     warpEnd(events),
@@ -417,6 +420,20 @@ export const rises = (events: GameEvent[]) => events.some((e) => e.type === 'ros
 export const FREEZE_SECONDS = 0.42
 export const thaws = (events: GameEvent[]) =>
   events.some((e) => e.type === 'froze' || e.type === 'thawed')
+
+// 돌을 민 수에 얼음이 다 덮이는 때, 물로 떨어지는 돌은 가장 늦게 수면에 닿는 때부터 얼음 덮임 시간
+export const freezeEnd = (events: GameEvent[]) => {
+  const segments = segmentsOf(stonePath(events))
+  const last = segments.at(-1)
+  if (!last || !thaws(events)) return 0
+  const to = last.event.to
+  const floated = last.event.type === 'pushed' && last.event.result === 'floated'
+  // 같은 수에 끌려가는 돌은 끌려가며 옮겨 가는 얼음 몫
+  const pulled = events.some((e) => e.type === 'stonePulled' && same(e.from, to))
+  return floated && !pulled
+    ? totalSeconds(segments) - last.seconds * (1 - FLOAT_RISE) + FREEZE_SECONDS
+    : FREEZE_SECONDS
+}
 
 // 이동이 다 끝난 뒤 얼음 돌이 녹아 사라지는 시간
 export const MELT_SECONDS = 0.42

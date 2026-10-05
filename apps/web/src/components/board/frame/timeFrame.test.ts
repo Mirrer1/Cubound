@@ -27,6 +27,7 @@ import {
   struggleSwamp,
 } from './testStages'
 import {
+  FLOAT_RISE,
   FREEZE_SECONDS,
   MELT_SECONDS,
   PLUG,
@@ -335,7 +336,7 @@ describe('plugStart', () => {
 })
 
 describe('durationOf 얼음 돌', () => {
-  it('얼음 돌을 미는 길은 상자를 미는 길과 같은 시간이고 얼음이 바뀌면 덮이는 시간까지 이어진다', () => {
+  it('얼음 돌을 미는 길은 상자를 미는 길과 같은 시간이고 얼음이 바뀌면 덮이는 시간까지, 물로 들어가면 수면에 닿은 뒤 덮이는 시간까지 이어진다', () => {
     const land = lastMove(
       { ...STONE_STAGE, start: { x: 0, y: 1 }, entities: [{ type: 'iceStone', x: 1, y: 1 }] },
       ['right'],
@@ -343,7 +344,7 @@ describe('durationOf 얼음 돌', () => {
     const floated = lastMove(STONE_STAGE, ['down'])
 
     expect(durationOf(land.events)).toBeCloseTo(Math.max(SECONDS.pushed, FREEZE_SECONDS))
-    expect(durationOf(floated.events)).toBeCloseTo(SECONDS.floated)
+    expect(durationOf(floated.events)).toBeCloseTo(SECONDS.floated * FLOAT_RISE + FREEZE_SECONDS)
   })
 
   it('녹아 사라지는 수는 이동 몫이 끝난 뒤 녹는 시간을 더한다', () => {

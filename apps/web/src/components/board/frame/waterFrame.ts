@@ -1,10 +1,18 @@
 import { clamp01, easeOut, lerp, smooth } from './curveFrame'
-import { FLOAT_REACH, NO_SWAMP, type SwampTime, boxPath, elapsedAt, segmentsOf } from './timeFrame'
+import {
+  FLOAT_REACH,
+  FLOAT_RISE,
+  NO_SWAMP,
+  type SwampTime,
+  boxPath,
+  elapsedAt,
+  segmentsOf,
+} from './timeFrame'
 import type { GameEvent } from '@/game/types'
 
 // 땅에서 물로 밀린 상자의 구간, reach까지 가로 이동, drop부터 잠김, rise부터 떠오름
 // sink는 제 높이보다 더 잠기는 층 수, ring은 고리가 퍼지기 시작하는 구간 진행도
-export const FLOAT = { reach: FLOAT_REACH, drop: 0.4, rise: 0.75, sink: 0.15, ring: 0.62 }
+export const FLOAT = { reach: FLOAT_REACH, drop: 0.4, rise: FLOAT_RISE, sink: 0.15, ring: 0.62 }
 
 // 고리 크기와 진하기, 칸 폭 배수
 const RING = { from: 0.75, to: 1.05, opacity: 0.8 }

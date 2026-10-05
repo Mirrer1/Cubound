@@ -4,6 +4,7 @@ import { crackFrame, crackLeft, sinkAt } from './crackFrame'
 import { clamp01, lerp, smooth } from './curveFrame'
 import { wallHeight } from './fillFrame'
 import { frostAt } from './iceFrame'
+import { frostGround } from './iceStoneFrame'
 import { restartDrop } from './restartFrame'
 import type { sceneFrame } from './sceneFrame'
 import { passDip, pressProgress, switchCells, switchProgress } from './switchFrame'
@@ -63,6 +64,7 @@ export interface CellLook {
   }
   iceStone: {
     stone: 'land' | 'float' | null // 멈춰 선 얼음 돌
+    frost: boolean // 땅 위 돌 밑 서리 판
     cover: number // 언 물 판이 덮은 정도, 0이면 안 언 칸
     from: Direction // 얼린 돌 쪽 가장자리
     boat: number // 얼어붙은 정도, 언 칸 위로 밀어 올린 상자는 0
@@ -365,6 +367,7 @@ export const cellLook = ({
       },
       iceStone: {
         stone: stoneHere ? (water.depth > 0 ? 'float' : 'land') : null,
+        frost: stoneHere && frostGround(game, cell.p),
         cover: ice?.cover ?? 0,
         from: ice?.from ?? 'up',
         boat: boxHere && !has(game.iced, cell.p) ? (ice?.cover ?? 0) : 0,

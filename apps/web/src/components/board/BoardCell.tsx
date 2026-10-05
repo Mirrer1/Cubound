@@ -369,7 +369,7 @@ const BoardCell = ({
             scale={1}
             cut={iceStone.stone === 'float' ? STONE.floatCut : 0}
             slab={iceStone.stone === 'float' ? 1 : 0}
-            frost={iceStone.stone === 'float' ? 0 : 1}
+            frost={iceStone.frost ? 1 : 0}
             opacity={1}
             wake={[]}
             ring={null}

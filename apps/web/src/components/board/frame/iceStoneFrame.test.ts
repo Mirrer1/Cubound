@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { ICE, STONE, pullLanes } from '../view'
 import {
   floatBase,
+  frostGround,
   frozenCells,
   iceCovers,
   iceCoversAt,
@@ -98,10 +99,10 @@ describe('iceCoversAt', () => {
 })
 
 describe('iceCoversAt 물에 들어가는 돌', () => {
-  it('돌이 물로 내려앉기 시작할 때부터 둘레가 얼고 그 전에는 안 언다', () => {
+  it('돌이 수면에 닿을 때부터 둘레가 얼고 그 전에는 안 언다', () => {
     const { prev, game, events } = lastMove(STONE_STAGE, ['down'])
     const early = iceCoversAt(prev, game, events, at(events, 0.1), NO_SWAMP)
-    const late = iceCoversAt(prev, game, events, at(events, 0.55), NO_SWAMP)
+    const late = iceCoversAt(prev, game, events, at(events, 0.7), NO_SWAMP)
 
     expect(early.get('3-2')?.cover).toBe(0)
     expect(late.get('3-2')?.cover).toBeGreaterThan(0.5)
@@ -126,6 +127,23 @@ describe('iceCoversAt 물에 들어가는 돌', () => {
 
     expect(game.stones).toEqual([{ x: 4, y: 2 }])
     expect(sliding.get('4-3')?.cover).toBe(0)
+  })
+
+  it('높은 칸에서 떨어지는 돌은 수면에 닿은 뒤에 둘레가 얼기 시작해 얼음 덮임 시간 동안 다 언다', () => {
+    const heights = STONE_STAGE.heights.map((row, y) => (y < 2 ? row.map(() => 3) : row))
+    const { prev, game, events } = lastMove(withEntities([stone(2, 1)], { heights }), ['down'])
+    const surface = toScreen({ x: 2, y: 2 }, floatBase(1)).y
+    const steps = Array.from({ length: 100 }, (_, i) => i / 100)
+    const touch = steps.find(
+      (t) => stoneFrames({ prev, game, events, t, swamp: NO_SWAMP })[0].y >= surface - 1,
+    )!
+    const cover = (t: number) => iceCoversAt(prev, game, events, t, NO_SWAMP).get('3-2')!.cover
+    const seconds = durationOf(events)
+
+    for (const t of steps.filter((s) => s < touch)) expect(cover(t)).toBe(0)
+    expect(cover(Math.min(touch + FREEZE_SECONDS / seconds / 2, 0.99))).toBeLessThan(0.9)
+    expect(cover(0.999)).toBeGreaterThan(0.99)
+    expect((1 - touch) * seconds).toBeGreaterThan(FREEZE_SECONDS * 0.9)
   })
 })
 
@@ -166,13 +184,30 @@ describe('stoneFrames', () => {
   it('물로 밀린 돌은 내려앉아 얼음 판 위에 서고 다 앉으면 칸 그림 몫이다', () => {
     const { prev, game, events } = lastMove(STONE_STAGE, ['down'])
     const start = stoneFrames({ prev, game, events, t: 0, swamp: NO_SWAMP })[0]
-    const end = stoneFrames({ prev, game, events, t: 0.999, swamp: NO_SWAMP })[0]
+    const end = stoneFrames({ prev, game, events, t: at(events, 0.599), swamp: NO_SWAMP })[0]
 
     expect(start.y).toBeCloseTo(toScreen({ x: 2, y: 1 }, 1).y)
     expect(start.cut).toBe(0)
     expect(end.y).toBeCloseTo(toScreen({ x: 2, y: 2 }, floatBase(1)).y, 0)
     expect(end.cut).toBeCloseTo(STONE.floatCut, 0)
     expect(stoneFrames({ prev, game, events, t: 1, swamp: NO_SWAMP })).toEqual([])
+  })
+
+  it('높은 칸에서 물로 떨어지는 돌은 수면에 닿기 전까지 밑에 얼음 판이 없고 서리 판도 다시 생기지 않는다', () => {
+    const heights = STONE_STAGE.heights.map((row, y) => (y < 2 ? row.map(() => 3) : row))
+    const { prev, game, events } = lastMove(withEntities([stone(2, 1)], { heights }), ['down'])
+    const surface = toScreen({ x: 2, y: 2 }, floatBase(1)).y
+    const frames = Array.from({ length: 50 }, (_, i) =>
+      stoneFrames({ prev, game, events, t: i / 50, swamp: NO_SWAMP }),
+    ).flatMap((f) => f.slice(0, 1))
+    const above = frames.filter((frame) => frame.to.y === 2 && frame.y < surface - 1)
+
+    expect(game.stones).toEqual([{ x: 2, y: 2 }])
+    expect(above.length).toBeGreaterThan(0)
+    for (const frame of above) expect(frame.slab).toBe(0)
+    const frost = frames.map((frame) => frame.frost)
+    frost.slice(1).forEach((f, i) => expect(f).toBeLessThanOrEqual(frost[i]))
+    expect(frames.at(-1)!.slab).toBeGreaterThan(0.9)
   })
 
   it('물에 밀자마자 끌리는 돌은 밀려 가는 동안에도 끌려갈 칸을 맡아 그 칸에 멈춘 돌을 따로 그리지 않는다', () => {
@@ -184,6 +219,49 @@ describe('stoneFrames', () => {
       const frames = stoneFrames({ prev, game, events, t, swamp: NO_SWAMP })
       expect(frames).toHaveLength(1)
       expect(frames[0].to).toEqual({ x: 3, y: 2 })
+    }
+  })
+
+  it('얼음바닥에서는 서리 판 없이 미끄러지고 땅 칸에 내려서며 다시 생긴다', () => {
+    const stage = withEntities([stone(1, 1)], {
+      start: { x: 0, y: 1 },
+      ice: ['......', '..###.', '......', '......', '......'],
+    })
+    const { prev, game, events } = lastMove(stage, ['right'])
+    const frostAt = (seconds: number) =>
+      stoneFrames({ prev, game, events, t: at(events, seconds), swamp: NO_SWAMP })[0].frost
+
+    expect(game.stones).toEqual([{ x: 5, y: 1 }])
+    expect(frostAt(0)).toBe(1)
+    expect(frostAt(0.1)).toBeLessThan(0.05)
+    expect(frostAt(0.33)).toBe(0)
+    expect(frostAt(0.47)).toBe(0)
+    expect(frostAt(0.67)).toBeGreaterThan(0.9)
+  })
+
+  it('낮은 칸으로 떨어지는 돌은 서리 판이 높은 칸 위에서 사라지고 내려앉으며 다시 생긴다', () => {
+    const heights = STONE_STAGE.heights.map((row, y) =>
+      y === 1 ? row.map((h, x) => (x < 2 ? 2 : h)) : row,
+    )
+    const stage = withEntities([stone(1, 1)], { heights, start: { x: 0, y: 1 } })
+    const { prev, game, events } = lastMove(stage, ['right'])
+    const frostAt = (seconds: number) =>
+      stoneFrames({ prev, game, events, t: at(events, seconds), swamp: NO_SWAMP })[0].frost
+
+    expect(game.stones).toEqual([{ x: 2, y: 1 }])
+    expect(frostAt(0)).toBe(1)
+    expect(frostAt(0.1)).toBeLessThan(0.05)
+    expect(frostAt(0.25)).toBeGreaterThan(0.9)
+  })
+
+  it('같은 높이 땅으로 미는 돌은 서리 판이 그대로 따라간다', () => {
+    const { prev, game, events } = lastMove(
+      withEntities([stone(1, 1)], { start: { x: 0, y: 1 } }),
+      ['right'],
+    )
+    for (const seconds of [0, 0.08, 0.16, 0.24]) {
+      const t = at(events, seconds)
+      expect(stoneFrames({ prev, game, events, t, swamp: NO_SWAMP })[0].frost).toBe(1)
     }
   })
 
@@ -294,6 +372,27 @@ describe('meltDisplay', () => {
   })
 })
 
+describe('frostGround', () => {
+  it('표시 없는 땅에만 서리 판을 깔고 물, 얼음바닥, 무너지는 칸, 스위치, 짝 칸은 뺀다', () => {
+    const stage = withEntities(
+      [
+        { type: 'switch', x: 3, y: 0, target: 'a' },
+        { type: 'warp', id: 'w', x: 4, y: 0 },
+        { type: 'warp', id: 'w', x: 5, y: 0 },
+      ],
+      {
+        ice: ['.#....', '......', '......', '......', '......'],
+        cracks: ['..2...', '......', '......', '......', '......'],
+      },
+    )
+    const game = createState(stage)
+    const ground = [0, 1, 2, 3, 4].map((x) => frostGround(game, { x, y: 0 }))
+
+    expect(ground).toEqual([true, false, false, false, false])
+    expect(frostGround(game, { x: 2, y: 2 })).toBe(false)
+  })
+})
+
 describe('restartStones', () => {
   it('재시작하면 얼음 돌도 상자처럼 처음 자리 위에서 내려앉는다', () => {
     const game = createState(withEntities([stone(2, 1), stone(4, 3)]))
@@ -309,5 +408,15 @@ describe('restartStones', () => {
     expect(end[1].y).toBeCloseTo(toScreen({ x: 4, y: 3 }, floatBase(1)).y)
     expect(end[1].slab).toBe(1)
     expect(end[0].opacity).toBe(1)
+  })
+
+  it('땅 위 돌만 서리 판을 깔고 얼음바닥 위 돌은 깔지 않는다', () => {
+    const stage = withEntities([stone(1, 1), stone(3, 1)], {
+      ice: ['......', '...#..', '......', '......', '......'],
+    })
+    const [land, ice] = restartStones(createState(stage), 1)
+
+    expect(land.frost).toBe(1)
+    expect(ice.frost).toBe(0)
   })
 })
