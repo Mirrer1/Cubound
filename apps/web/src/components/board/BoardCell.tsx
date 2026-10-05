@@ -229,6 +229,8 @@ const BoardCell = ({
                 sideRight={water.sideRight}
                 ring={water.ring}
                 ringOpacity={water.ringOpacity}
+                idle={water.idle}
+                idleCycle={water.idleCycle}
                 range={tether.range}
               />
             )}

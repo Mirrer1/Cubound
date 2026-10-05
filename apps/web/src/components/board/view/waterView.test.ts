@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  IDLE_RIPPLE,
   WATER,
   bankPoints,
   floatShown,
   floatShownAt,
+  idleRipples,
+  rippleCycle,
+  rippleLoop,
   surfaceRise,
   waterDepth,
   waterLook,
@@ -106,5 +110,49 @@ describe('floatShownAt', () => {
   it('물 칸 위 상자만 보이는 높이를 돌려준다', () => {
     expect(floatShownAt(STAGE, { x: 1.2, y: 1, level: 1 })).toBe(WATER.lip)
     expect(floatShownAt(STAGE, { x: 0, y: 0, level: 2 })).toBeNull()
+  })
+})
+
+describe('rippleCycle', () => {
+  it('칸 수만큼 gap씩 어긋나고 짧아도 고리 두 개 길이는 된다', () => {
+    expect(rippleCycle(12)).toBe(12 * IDLE_RIPPLE.gap)
+    expect(rippleCycle(1)).toBe(IDLE_RIPPLE.life * 2)
+  })
+})
+
+describe('rippleLoop', () => {
+  it('한 바퀴 중 처음 life 동안만 보이고 안쪽 판은 테 폭만큼 작게 시작한다', () => {
+    const [start, end] = rippleLoop(10000, false)
+    const [inset] = rippleLoop(10000, true)
+    const { from, to, width } = IDLE_RIPPLE
+
+    expect(start.opacity).toBe(0.9)
+    expect(end.offset).toBeCloseTo(IDLE_RIPPLE.life / 10000)
+    expect(end.opacity).toBe(0)
+    expect(start.transform).toBe(`scale(${from / to})`)
+    expect(inset.transform).toBe(`scale(${(from - width) / (to - width)})`)
+  })
+})
+
+describe('idleRipples', () => {
+  const pond = (w: number, h: number): Stage => ({
+    ...STAGE,
+    heights: Array.from({ length: h }, () => Array.from({ length: w }, () => 0)),
+    water: 1,
+  })
+
+  it('물 칸마다 겹치지 않는 차례를 매기고 물이 없으면 없다', () => {
+    const slots = [...idleRipples(pond(4, 3)).values()].sort((a, b) => a - b)
+
+    expect(slots).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+    expect(idleRipples(STAGE).size).toBe(2)
+    expect(idleRipples({ ...STAGE, water: undefined }).size).toBe(0)
+  })
+
+  it('소용돌이 칸은 고르지 않고 같은 판은 늘 같은 칸을 고른다', () => {
+    const stage: Stage = { ...pond(2, 1), entities: [{ type: 'whirlpool', x: 0, y: 0 }] }
+
+    expect([...idleRipples(stage).keys()]).toEqual(['1-0'])
+    expect([...idleRipples(pond(4, 3))]).toEqual([...idleRipples(pond(4, 3))])
   })
 })

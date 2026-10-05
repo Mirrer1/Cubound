@@ -37,6 +37,10 @@ export {
   surfaceRise,
   WATER,
   waterLook,
+  IDLE_RIPPLE,
+  idleRipples,
+  rippleCycle,
+  rippleLoop,
   waterTone,
 } from './waterView'
 export {

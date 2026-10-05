@@ -67,3 +67,43 @@ export const floatShownAt = (stage: Stage, box: { x: number; y: number; level: n
   waterDepth(stage, { x: Math.round(box.x), y: Math.round(box.y) }) > 0
     ? floatShown(box.level, stage.water ?? 0)
     : null
+
+// 가만히 있을 때 수면에 퍼지는 고리, 판 어딘가에 고리가 이는 간격 ms와 한 고리가 사는 ms, 칸 폭 배수 크기와 테 폭, 칸 안 자리
+export const IDLE_RIPPLE = {
+  gap: 2200,
+  life: 1600,
+  from: 0.18,
+  to: 0.84,
+  width: 0.06,
+  at: { u: 0, v: 0 },
+}
+
+// 잔물결이 이는 물 칸과 그 차례, 칸마다 흩어진 순서, 소용돌이 칸 제외
+export const idleRipples = (stage: Stage) => {
+  const whirls = new Set(
+    stage.entities.filter((e) => e.type === 'whirlpool').map((e) => `${e.x}-${e.y}`),
+  )
+  const cells = stage.heights.flatMap((row, y) =>
+    row.flatMap((_, x) =>
+      waterDepth(stage, { x, y }) > 0 && !whirls.has(`${x}-${y}`) ? [{ x, y }] : [],
+    ),
+  )
+  const spread = ({ x, y }: Point) => ((x * 73856093) ^ (y * 19349663)) >>> 0
+  return new Map(cells.sort((a, b) => spread(a) - spread(b)).map((p, i) => [`${p.x}-${p.y}`, i]))
+}
+
+// 한 칸의 잔물결 한 바퀴 ms, 칸마다 gap씩 어긋나 판 전체로는 gap마다 하나, 고리가 겹치지 않는 최소 길이
+export const rippleCycle = (cells: number) =>
+  Math.max(cells * IDLE_RIPPLE.gap, IDLE_RIPPLE.life * 2)
+
+// 잔물결 한 바퀴, 처음 life 동안만 퍼지며 옅어지는 판, inset은 테 폭만큼 작은 안쪽 판
+// 바깥과 안쪽이 같은 크기만큼 자라 테 폭이 늘 같은 고리, 작을 때는 거의 꽉 찬 면
+export const rippleLoop = (cycle: number, inset: boolean): Keyframe[] => {
+  const { from, to, width } = IDLE_RIPPLE
+  const start = inset ? (from - width) / (to - width) : from / to
+  return [
+    { opacity: 0.9, transform: `scale(${start})`, easing: 'ease-out' },
+    { offset: IDLE_RIPPLE.life / cycle, opacity: 0, transform: 'scale(1)' },
+    { opacity: 0, transform: 'scale(1)' },
+  ]
+}

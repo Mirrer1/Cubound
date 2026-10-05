@@ -1,4 +1,4 @@
-import { postBands, waterLook } from '../view'
+import { idleRipples, postBands, rippleCycle, waterLook } from '../view'
 import type { boardCells } from './cellFrame'
 import { crackFrame, crackLeft, sinkAt } from './crackFrame'
 import { clamp01, lerp, smooth } from './curveFrame'
@@ -61,6 +61,8 @@ export interface CellLook {
     sideRight: boolean
     ring: number // 퍼지는 고리 크기, 0이면 고리 없음
     ringOpacity: number
+    idle: number // 가만히 있을 때 잔물결이 이는 차례, -1이면 안 이는 칸
+    idleCycle: number // 한 칸의 잔물결 한 바퀴 ms
   }
   tether: {
     post: number // 말뚝 띠 수, 0이면 말뚝 없는 칸
@@ -145,6 +147,8 @@ export const cellLook = ({
   // 문과 발판이 움직이기 시작하는 때, 스위치가 눌리거나 풀린 때
   const linkedPhase = (cells: Point[], pressed: boolean) =>
     scene.moving ? switchProgress(events, cells, pressed, t, swampSeconds) : 1
+  const ripples = idleRipples(stage)
+  const cycle = rippleCycle(ripples.size)
 
   return (cell: ReturnType<typeof boardCells>[number]) => {
     const entity = stage.entities.find((e) => same(e, cell.p))
@@ -301,6 +305,8 @@ export const cellLook = ({
         sideRight: water.sideRight,
         ring: rippleHere?.size ?? 0,
         ringOpacity: rippleHere?.opacity ?? 0,
+        idle: ripples.get(cell.key) ?? -1,
+        idleCycle: cycle,
       },
       tether: {
         post: postBands(stage, cell.p),
