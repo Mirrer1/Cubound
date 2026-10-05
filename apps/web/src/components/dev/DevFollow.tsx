@@ -16,16 +16,27 @@ import {
   tracePath,
 } from '@/dev/follow'
 import { loadCollapsed, loadShown, saveCollapsed } from '@/dev/followStorage'
+import { backTarget, controlsOf, nextMove, playStops, stateAt } from '@/dev/playback'
 import SolveWorker from '@/dev/solveWorker?worker'
+import { toSession } from '@/game/session'
 import type { SolveResult } from '@/game/solver'
 import type { Direction, GameState } from '@/game/types'
+import { directionFromKey } from '@/platform/input'
+import { localSessionStorage } from '@/platform/storage'
+import { useGameStore } from '@/store/gameStore'
 
 interface DevFollowProps {
   game: GameState
 }
 
+// 한 수 연출이 끝난 뒤 재생이 다음 수를 누르기까지 쉬는 ms
+const PAUSE = 300
+
 // 글자마다 폭이 다른 화살표의 같은 칸 폭, 묶음이 바뀌어도 띠 폭 고정
 const ARROW = 'w-[1.05em] shrink-0 text-center'
+
+const BUTTON =
+  'pointer-events-auto flex size-8 shrink-0 @max-[21rem]:size-7 cursor-pointer items-center justify-center rounded-[9px] text-mute transition-soft hover:bg-hover disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent'
 
 const MARK_CLASS: Record<FollowMark, string> = {
   done: 'text-faint',
@@ -43,6 +54,12 @@ const DevFollow = ({ game }: DevFollowProps) => {
   })
   const [shown] = useState(loadShown)
   const [collapsed, setCollapsed] = useState(loadCollapsed)
+  const [play, setPlay] = useState<number | null>(null)
+  const [tapPaused, setTapPaused] = useState(false)
+  const animating = useGameStore((s) => s.animating)
+  const restarting = useGameStore((s) => s.restarting)
+  const guideOpen = useGameStore((s) => s.guideStep !== null)
+  const move = useGameStore((s) => s.move)
 
   // 수가 바뀔 때마다 렌더 중에 한 번 맞춰 보는 따라가기, 벗어난 자리를 기억하는 상태
   const key = sessionKey(game)
@@ -59,12 +76,72 @@ const DevFollow = ({ game }: DevFollowProps) => {
   const status = result ? followStatus(result, follow) : ''
   const note = collapsed ? null : followNote(follow)
   const off = follow?.kind === 'off'
+  const controls = controlsOf(path, follow)
+  const stops =
+    play !== null &&
+    playStops({
+      follow,
+      length: path.length,
+      expect: play,
+      moves: game.moves,
+      restarting,
+      guideOpen,
+      cleared: game.cleared,
+      collapsed,
+    })
+  if (stops) setPlay(null)
+  const playing = play !== null && !stops
+  const next = playing && !animating && !restarting ? nextMove(path, follow) : null
 
   const toggle = () =>
     setCollapsed((c) => {
       saveCollapsed(!c)
       return !c
     })
+  const step = (direction: Direction) => {
+    setPlay(useGameStore.getState().game!.moves + 1)
+    move(direction)
+  }
+  const handlePlay = () => {
+    const direction = nextMove(path, follow)
+    setTapPaused(false)
+    if (playing) setPlay(null)
+    else if (direction) step(direction)
+  }
+  const handleForward = () => {
+    const direction = nextMove(path, follow)
+    if (direction) move(direction)
+  }
+  // 되돌리기가 없는 게임이라 처음부터 풀이를 다시 적용해 만든 한 수 전 상태
+  const handleBack = () => {
+    const target = backTarget(follow)
+    if (target === null) return
+    const state = stateAt(game.stage, path, target)
+    useGameStore.setState(({ turn }) => ({
+      game: state,
+      prevGame: null,
+      events: [],
+      turn: turn + 1,
+      animating: false,
+      restarting: false,
+      queue: [],
+      chained: false,
+    }))
+    if (target > 0) localSessionStorage.save(toSession(state))
+    else localSessionStorage.clear()
+    setSeen({ key: sessionKey(state), follow: { kind: 'on', at: target } })
+    setPlay(null)
+    setTapPaused(false)
+  }
+
+  useEffect(() => {
+    if (!next) return
+    const timer = setTimeout(() => {
+      setPlay(useGameStore.getState().game!.moves + 1)
+      move(next)
+    }, PAUSE)
+    return () => clearTimeout(timer)
+  }, [next, game.moves, move])
 
   useEffect(() => {
     if (!shown) return
@@ -80,10 +157,31 @@ const DevFollow = ({ game }: DevFollowProps) => {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Backquote') toggle()
+      if (directionFromKey(e.key)) {
+        setPlay(null)
+        setTapPaused(false)
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
+
+  // 화면 탭으로 재생 정지와 다시 재생, 탭으로 멈춘 재생만 다시 켬
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if ((e.target as Element).closest('button, a')) return
+      const direction = nextMove(path, follow)
+      if (playing) {
+        setPlay(null)
+        setTapPaused(true)
+      } else if (tapPaused) {
+        setTapPaused(false)
+        if (direction) step(direction)
+      }
+    }
+    window.addEventListener('click', onClick)
+    return () => window.removeEventListener('click', onClick)
+  })
 
   return (
     shown && (
@@ -91,20 +189,15 @@ const DevFollow = ({ game }: DevFollowProps) => {
         data-dev-follow
         className="@container pointer-events-none flex min-w-0 flex-1 justify-center self-center narrow:order-[10000] narrow:w-full narrow:flex-none"
       >
-        <div className="relative flex min-w-0 items-center gap-x-2.5 rounded-[13px] border border-line bg-surface/85 py-1 pr-3 pl-1 font-mono text-[13px] text-mute wide:text-sm">
+        <div className="relative flex min-w-0 items-center gap-x-2.5 rounded-[13px] border border-line bg-surface/85 py-1 pr-1.5 pl-1 font-mono text-[13px] text-mute @max-[21rem]:gap-x-2 @max-[21rem]:pr-1 wide:text-sm">
           <span className="flex min-w-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={toggle}
-              title="풀이 띠 접기 (`)"
-              className="pointer-events-auto flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-[9px] text-mute transition-soft hover:bg-hover"
-            >
+            <button type="button" onClick={toggle} title="풀이 띠 접기 (`)" className={BUTTON}>
               {collapsed ? '▸' : '▾'}
             </button>
             {!collapsed &&
               (result ? (
                 groups.length > 0 && (
-                  <span className="flex min-w-0 items-center gap-x-3 text-[20px] leading-none wide:text-2xl">
+                  <span className="flex min-w-0 items-center gap-x-3 text-[20px] leading-none @max-[21rem]:text-[18px]! wide:text-2xl">
                     <span className="flex">
                       {current.map((cell, i) => (
                         <span
@@ -115,7 +208,7 @@ const DevFollow = ({ game }: DevFollowProps) => {
                         </span>
                       ))}
                     </span>
-                    <span className="hidden text-mute @min-[24rem]:flex">
+                    <span className="hidden text-mute @min-[32rem]:flex">
                       {upcoming.map((cell, i) => (
                         <span key={i} className={ARROW}>
                           {cell?.arrow}
@@ -129,7 +222,40 @@ const DevFollow = ({ game }: DevFollowProps) => {
                 <span className="size-4 animate-spin rounded-full border-2 border-line-strong border-t-ink" />
               ))}
           </span>
-          {!collapsed && result && <span className="whitespace-pre tabular-nums">{status}</span>}
+          {!collapsed && result && (
+            <span className="whitespace-pre tabular-nums @max-[18.5rem]:hidden">{status}</span>
+          )}
+          {!collapsed && path.length > 0 && (
+            <span className="flex items-center border-l border-line pl-1 @min-[24rem]:ml-2 @min-[24rem]:pl-3">
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={!controls.back}
+                title="뒤로"
+                className={BUTTON}
+              >
+                ◀◀
+              </button>
+              <button
+                type="button"
+                onClick={handlePlay}
+                disabled={!playing && !controls.play}
+                title={playing ? '정지' : '재생'}
+                className={BUTTON}
+              >
+                {playing ? '❚❚' : '▶'}
+              </button>
+              <button
+                type="button"
+                onClick={handleForward}
+                disabled={!controls.forward}
+                title="앞으로"
+                className={BUTTON}
+              >
+                ▶▶
+              </button>
+            </span>
+          )}
           {/* 띠 높이를 바꾸지 않는 아래쪽 안내, 방향키 자리 고정 */}
           <AnimatePresence>
             {note && (
