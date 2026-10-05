@@ -27,14 +27,23 @@ import { restartDrop } from './restartFrame'
 import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFrame'
 import { boxSink, swampFrame } from './swampFrame'
 import { moorLooks, tetherFrames } from './tetherFrame'
-import { type SwampTime, elapsedAt, has, pullStart, same, stepProgress } from './timeFrame'
+import {
+  type SwampTime,
+  cellsOf,
+  elapsedAt,
+  has,
+  playerPath,
+  pullStart,
+  same,
+  stepProgress,
+} from './timeFrame'
 import { tramFramesOf, tramProgress } from './tramFrame'
 import { vineFrames } from './vineFrame'
 import { rippleOf } from './waterFrame'
 import { leanOf, pulledBeside, whirlFrames } from './whirlpoolFrame'
 import { ownProgress } from './windFrame'
 import { TILE, toScreen } from '@/game/iso'
-import { fadedCells } from '@/game/occlusion'
+import { fadedCells, occludingCells } from '@/game/occlusion'
 import type { GameEvent, GameState, Point, Tram } from '@/game/types'
 
 interface SceneView {
@@ -101,7 +110,24 @@ export const sceneFrame = ({
     }),
   )
   // 가림 처리도 지금 그려지는 자리 기준, 순간이동으로 가라앉는 큐브가 벽에 묻히는 탓
-  const faded = fadedCells(shown, cubeCell, Math.round(cube.level), game, filled)
+  // 미끄러지는 수는 큐브보다 두 칸 앞까지 미리, 지나온 칸은 수가 끝날 때까지 흐린 앞 칸
+  // 한 칸 미끄러지는 0.14초가 흐려지는 0.32초보다 짧은 탓
+  const slid = moving
+    ? playerPath(events)
+        .filter((e) => e.type === 'slid')
+        .flatMap((e) => {
+          const dx = Math.sign(e.to.x - e.from.x)
+          const dy = Math.sign(e.to.y - e.from.y)
+          const gone = (cube.x - e.from.x) * dx + (cube.y - e.from.y) * dy
+          return Array.from({ length: cellsOf(e) + 1 }, (_, i) => i)
+            .filter((i) => i <= gone + 2)
+            .map((i) => ({ x: e.from.x + dx * i, y: e.from.y + dy * i }))
+        })
+    : []
+  const faded = [
+    ...fadedCells(shown, cubeCell, Math.round(cube.level), game, filled),
+    ...slid.flatMap((p) => occludingCells(shown, p, Math.round(cube.level), boxes)),
+  ]
 
   const vineFrame = vineFrames(moving ? before : null, game, events, t, swampSeconds, dropping)
 

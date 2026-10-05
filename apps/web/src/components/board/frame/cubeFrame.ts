@@ -56,6 +56,14 @@ export interface CubeFrame {
 const levelAfter = (level: number, event: PathEvent) =>
   event.type === 'fell' ? level - event.drop : event.type === 'climbed' ? level + 1 : level
 
+// 출발 칸에서 k칸 미끄러진 자리가 걸친 두 칸 중 앞 칸
+const slideFront = (event: PathEvent, k: number) => {
+  const dx = Math.sign(event.to.x - event.from.x)
+  const dy = Math.sign(event.to.y - event.from.y)
+  const at = (n: number) => ({ x: event.from.x + dx * n, y: event.from.y + dy * n })
+  return frontOf(at(Math.floor(k)), at(Math.ceil(k)))
+}
+
 // 큐브가 제 힘으로 간 몫만 그린 프레임, 발판에 실린 몫은 playerFrame 몫
 const pathFrame = (
   prev: GameState | null,
@@ -179,7 +187,11 @@ const pathFrame = (
           ? lerp(fromLevel, toLevel, easeOut(Math.min(1, p / 0.6)))
           : fromLevel
     // 앞쪽 높은 칸 높이 아래에 있는 동안은 뒤 칸의 맨 뒤 순서, 앞 칸 상자나 턱에 가리는 큐브
-    const front = frontOf(event.from, event.to)
+    // 여러 칸 미끄러짐은 지금 걸친 두 칸 중 앞 칸 기준
+    const front =
+      event.type === 'slid' && cells > 1
+        ? slideFront(event, gone * cells)
+        : frontOf(event.from, event.to)
     const high = toLevel > fromLevel ? event.to : event.from
     const below = !hopped && front === high && level < Math.max(fromLevel, toLevel)
 

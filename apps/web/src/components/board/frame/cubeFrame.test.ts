@@ -33,6 +33,29 @@ import { createState, move } from '@/game/rules'
 import type { GameState, Stage } from '@/game/types'
 
 describe('playerFrame', () => {
+  it('여러 칸을 미끄러지는 큐브는 지금 걸친 두 칸 중 앞 칸의 순서로 그린다', () => {
+    const stage: Stage = {
+      ...STAGE,
+      heights: [
+        [1, 1, 1],
+        [2, 1, 1],
+        [2, 1, 1],
+        [2, 1, 1],
+        [2, 1, 1],
+      ],
+      ice: ['...', '.#.', '.#.', '.#.', '...'],
+      start: { x: 1, y: 4 },
+      goal: { x: 2, y: 0 },
+      entities: [],
+    }
+    const { prev, game, events } = lastMove(stage, ['up'])
+    const mid = playerFrame(prev, game, events, 0.6)
+
+    expect(game.player).toEqual({ x: 1, y: 0 })
+    expect(mid.y).toBeLessThan(3)
+    expect(mid.cell.y).toBeLessThanOrEqual(Math.ceil(mid.y))
+  })
+
   it('중간 시점에는 두 칸 사이에서 굴러가는 중이다', () => {
     const prev = createState(STAGE)
     const { state, events } = move(prev, 'right')
@@ -170,11 +193,14 @@ describe('playerFrame 미끄러짐', () => {
     expect(playerFrame(prev, state, events, 1)).toMatchObject({ x: 4, y: 0, level: 0 })
   })
 
-  it('큐브가 지나는 칸보다 앞쪽 칸에 그린다', () => {
+  it('미끄러지는 큐브는 지금 걸친 두 칸 중 앞 칸에 그려 지나는 바닥에 덮이지 않는다', () => {
     const prev = createState(ICE_STAGE)
     const { state, events } = move(prev, 'right')
 
-    expect(playerFrame(prev, state, events, 0.6).cell).toEqual({ x: 4, y: 0 })
+    const frame = playerFrame(prev, state, events, 0.6)
+
+    expect(frame.cell).toEqual({ x: Math.ceil(frame.x), y: 0 })
+    expect(frame.x).toBeLessThan(4)
   })
 
   it('앞쪽 상자에 오르는 큐브는 올라서기 전까지 상자 뒤, 같은 깊이 칸들 맨 뒤에 그린다', () => {
