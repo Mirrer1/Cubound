@@ -135,6 +135,16 @@ describe('guideRect', () => {
     expect(spanOf(game, { x: 2, y: 1 }).above).toBe(flat.above + reach)
   })
 
+  it('얼음 돌은 돌 가운데를 사각형 가운데에 두고 윗면까지 감싼다', () => {
+    const stage = { ...FLAT, entities: [{ type: 'iceStone' as const, ...MID }] }
+    const rect = guideRect(createState(stage), MID)
+    const center = toScreen(MID, 0).y
+    const tip = center - 26 - (TILE.width * 0.28) / 4
+    const foot = center + (TILE.width * 0.64) / 4
+    expect(rect.y + rect.height / 2).toBeCloseTo((tip + foot) / 2)
+    expect(rect.y + rect.height).toBeCloseTo(center + TILE.height / 2 + 12)
+  })
+
   it('닫힌 문은 솟은 높이를 넣고 열린 문은 넣지 않는다', () => {
     const stage: Stage = {
       ...FLAT,

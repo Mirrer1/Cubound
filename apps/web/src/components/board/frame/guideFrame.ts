@@ -1,4 +1,14 @@
-import { CUBE, LADDER_TIP, PIT_FLOOR, PLATE, WATER, surfaceRise, waterLook } from '../view'
+import {
+  CUBE,
+  LADDER_TIP,
+  PIT_FLOOR,
+  PLATE,
+  STONE,
+  WATER,
+  stoneSteps,
+  surfaceRise,
+  waterLook,
+} from '../view'
 import { MUSHROOM_STAND, mushroomPose } from './mushroomFrame'
 import { has, same } from './timeFrame'
 import { TILE, toScreen } from '@/game/iso'
@@ -36,6 +46,10 @@ const reachOf = (game: GameState, p: Point, floating: boolean) => {
     const pose = mushroomPose(player ? 2 : 0, has(game.mushrooms, p) ? 0 : 1)
     reaches.push(pose.stem + pose.thick + halfTop(TILE.width * pose.cap))
   }
+  if (has(game.stones, p)) {
+    const peak = stoneSteps(0, 0, floating ? STONE.floatCut : 0, 1)[2]
+    reaches.push(-peak.y + halfTop(peak.width))
+  }
   if (player) reaches.push((boxed ? boxTop : mushroom ? MUSHROOM_STAND : 0) + TILE.layer + cube)
   if (entity?.type === 'door' && !isDoorOpen(game, entity.id)) {
     reaches.push(TILE.layer + PLATE.rise + halfTop(TILE.width * PLATE.scale))
@@ -70,15 +84,21 @@ export const guideRect = (game: GameState, p: Point) => {
   const floating = waterLook(game.stage, p).depth > 0
   const center = toScreen(p, 0)
   const y = center.y - (surface ?? 0)
-  const top = y - reachOf(game, p, floating) - GUIDE_MARGIN
+  const reach = reachOf(game, p, floating)
+  const x = center.x - TILE.width / 2 - GUIDE_MARGIN
+  const width = TILE.width + GUIDE_MARGIN * 2
+
+  // 얼음 돌 칸은 돌을 가운데에 두고 윗면까지만, 옆면 제외
+  if (has(game.stones, p)) {
+    const mid = y + (halfTop(TILE.width * STONE.steps[0].width) - reach) / 2
+    const half = Math.max(mid - (y - reach), y + TILE.height / 2 - mid) + GUIDE_MARGIN
+    return { x, y: mid - half, width, height: half * 2 }
+  }
+
+  const top = y - reach - GUIDE_MARGIN
   const drop =
     surface === null ? dropOf(game, p, 0, PIT_FLOOR) : dropOf(game, p, surface, surface + TILE.lip)
   const bottom = y + TILE.height / 2 + drop + GUIDE_MARGIN
 
-  return {
-    x: center.x - TILE.width / 2 - GUIDE_MARGIN,
-    y: top,
-    width: TILE.width + GUIDE_MARGIN * 2,
-    height: bottom - top,
-  }
+  return { x, y: top, width, height: bottom - top }
 }
