@@ -256,6 +256,7 @@ describe('boxFramesOf', () => {
       tramFrames: [],
       boxes: [],
       crackView: NO_CRACK,
+      iceDrop: 0,
       ...over,
     })
   const pushed = toScreen({ x: 1.5, y: 0 }, 1)

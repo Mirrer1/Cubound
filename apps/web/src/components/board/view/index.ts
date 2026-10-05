@@ -69,3 +69,4 @@ export {
   ringPath,
   whirlpoolsOf,
 } from './whirlpoolView'
+export { ICE, icePlate, LOCKED, STONE, stoneSteps, type StoneTone } from './iceStoneView'

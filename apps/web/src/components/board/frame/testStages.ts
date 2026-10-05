@@ -271,3 +271,22 @@ export const PLUG_STAGE: Stage = {
   ],
   rules: { plug: true },
 }
+
+// 물 높이 1, x 2~4와 y 2~3이 물 칸, (2,1) 땅 위 얼음 돌을 아래로 밀면 뜨는 판
+// (4,1)은 소용돌이 판에서 끌릴 자리, (0,1)은 땅 위로만 밀리는 돌
+export const STONE_STAGE: Stage = {
+  version: 1,
+  id: 'test-stone',
+  name: '얼음 돌',
+  heights: [
+    [1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1],
+    [1, 1, 0, 0, 0, 1],
+    [1, 1, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1],
+  ],
+  water: 1,
+  start: { x: 2, y: 0 },
+  goal: { x: 5, y: 4 },
+  entities: [{ type: 'iceStone', x: 2, y: 1 }],
+}

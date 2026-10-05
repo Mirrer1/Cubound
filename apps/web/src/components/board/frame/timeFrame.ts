@@ -96,6 +96,20 @@ export const boxPath = (events: GameEvent[]) =>
       e.type === 'pushed' || e.type === 'rowed' || (e.type === 'slid' && e.subject === 'box'),
   )
 
+// 상자와 같은 시간 몫인 얼음 돌이 밀려 가는 길, 물에 뜬 채 한 칸은 저어 가기 몫
+export const stonePath = (events: GameEvent[]) =>
+  events.flatMap((e): PathEvent[] =>
+    e.type === 'stonePushed'
+      ? [
+          e.result === 'rowed'
+            ? { ...e, type: 'rowed' }
+            : { ...e, type: 'pushed', result: e.result },
+        ]
+      : e.type === 'slid' && e.subject === 'stone'
+        ? [e]
+        : [],
+  )
+
 export { same }
 
 export const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
@@ -314,19 +328,18 @@ export const sinkEnd = (events: GameEvent[]) =>
 // 끌린 배가 한 칸 가는 가장 짧은 시간, 이 수에 띄우거나 내린 배는 늦게 출발하는 몫
 export const PULL_SECONDS = 0.3
 
-type Pulled = Extract<GameEvent, { type: 'pulled' }>
+type Pulled = Extract<GameEvent, { type: 'pulled' | 'stonePulled' }>
 
 // 물에 떨어뜨리는 밀기에서 상자가 물 칸 위로 다 밀려 오는 구간 진행도
 export const FLOAT_REACH = 0.5
 
 // 그 자리 배가 떠나도 되는 때, 이 수에 띄운 배는 물 칸 위로 다 밀려 온 뒤, 큐브가 내린 배는 큐브가 반쯤 굴러 나간 뒤
 const freeAt = (events: GameEvent[], from: Point) => {
-  const box = segmentsOf(boxPath(events))
-  const last = box.at(-1)
-  if (last && same(last.event.to, from)) {
-    const { event } = last
-    const floated = event.type === 'pushed' && event.result === 'floated'
-    return totalSeconds(box) - (floated ? last.seconds * (1 - FLOAT_REACH) : 0)
+  for (const path of [segmentsOf(boxPath(events)), segmentsOf(stonePath(events))]) {
+    const last = path.at(-1)
+    if (!last || !same(last.event.to, from)) continue
+    const floated = last.event.type === 'pushed' && last.event.result === 'floated'
+    return totalSeconds(path) - (floated ? last.seconds * (1 - FLOAT_REACH) : 0)
   }
 
   let start = 0
@@ -339,12 +352,20 @@ const freeAt = (events: GameEvent[], from: Point) => {
 
 // 끌린 배가 출발하는 때, 붙은 줄의 뒤 배는 앞 배가 출발한 뒤
 export const pullStart = (events: GameEvent[], pulled: Pulled): number => {
-  const ahead = events.find((e): e is Pulled => e.type === 'pulled' && same(e.from, pulled.to))
+  const ahead = events.find(
+    (e): e is Pulled =>
+      (e.type === 'pulled' || e.type === 'stonePulled') && same(e.from, pulled.to),
+  )
   return Math.max(freeAt(events, pulled.from), ahead ? pullStart(events, ahead) : 0)
 }
 
 const pullEnd = (events: GameEvent[]) =>
-  Math.max(0, ...events.map((e) => (e.type === 'pulled' ? pullStart(events, e) + PULL_SECONDS : 0)))
+  Math.max(
+    0,
+    ...events.map((e) =>
+      e.type === 'pulled' || e.type === 'stonePulled' ? pullStart(events, e) + PULL_SECONDS : 0,
+    ),
+  )
 
 // 마개의 구간, 상자가 소용돌이 칸까지 밀리고 빨려 들고 소용돌이가 막히는 시간
 export const PLUG = { push: 0.3, suck: 0.36, close: 0.36 }
@@ -372,6 +393,8 @@ export const moveSeconds = (events: GameEvent[], swamp: SwampTime) =>
     0,
     totalSeconds(playerSegments(events)) + swamp.tail,
     totalSeconds(segmentsOf(boxPath(events))),
+    totalSeconds(segmentsOf(stonePath(events))),
+    stonePath(events).length > 0 && thaws(events) ? FREEZE_SECONDS : 0,
     switchEnd(events),
     pickUpEnd(events),
     warpEnd(events),
@@ -390,8 +413,18 @@ export const moveSeconds = (events: GameEvent[], swamp: SwampTime) =>
 
 export const rises = (events: GameEvent[]) => events.some((e) => e.type === 'rose')
 
+// 돌을 민 수에 얼음이 덮이고 물러나는 시간, 돌이 먼저 멈춰도 이어지는 몫
+export const FREEZE_SECONDS = 0.42
+export const thaws = (events: GameEvent[]) =>
+  events.some((e) => e.type === 'froze' || e.type === 'thawed')
+
+// 이동이 다 끝난 뒤 얼음 돌이 녹아 사라지는 시간
+export const MELT_SECONDS = 0.42
+
 export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
-  moveSeconds(events, swamp) + (rises(events) ? RISE_SECONDS : 0)
+  moveSeconds(events, swamp) +
+  (rises(events) ? RISE_SECONDS : 0) +
+  (events.some((e) => e.type === 'melted') ? MELT_SECONDS : 0)
 
 // 이동 몫의 진행도, 씨앗이 솟는 수는 솟기 전에 1
 export const stepProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {

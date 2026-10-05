@@ -56,6 +56,12 @@
   --color-ice-left: #b8d2dd;
   --color-ice-right: #cce3eb;
   --color-ice-gloss: #f5fbfd;
+  /* 얼음 돌, 아래 두 단의 윗면과 꼭대기, 세 단이 같이 쓰는 옆면 */
+  --color-ice-stone-top: #ebf1f4;
+  --color-ice-stone-mid: #f3f8fa;
+  --color-ice-stone-peak: #ffffff;
+  --color-ice-stone-left: #96a0a5;
+  --color-ice-stone-right: #bcc6ca;
   /* 무너지는 칸은 닳은 단계 0에서 2까지를 뒤 숫자로 둔다 */
   --color-crack-top-0: #e4e0d7;
   --color-crack-top-1: #c4bdab;

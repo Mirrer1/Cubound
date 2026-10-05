@@ -12,12 +12,22 @@ import { crackProgress, standSink } from './crackFrame'
 import { SLIDE_DEG, playerFrame, squashTransform } from './cubeFrame'
 import { type Chain, smooth } from './curveFrame'
 import { guideRect } from './guideFrame'
+import {
+  iceCovers,
+  iceCoversAt,
+  icePhase,
+  iceSink,
+  laneShown,
+  restartStones,
+  stoneFrames,
+  thawingBoxes,
+} from './iceStoneFrame'
 import { mushroomFrames } from './mushroomFrame'
 import { restartDrop } from './restartFrame'
 import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFrame'
 import { boxSink, swampFrame } from './swampFrame'
 import { moorLooks, tetherFrames } from './tetherFrame'
-import { type SwampTime, elapsedAt, pullStart, same, stepProgress } from './timeFrame'
+import { type SwampTime, elapsedAt, has, pullStart, same, stepProgress } from './timeFrame'
 import { tramFramesOf, tramProgress } from './tramFrame'
 import { vineFrames } from './vineFrame'
 import { rippleOf } from './waterFrame'
@@ -95,11 +105,11 @@ export const sceneFrame = ({
 
   const vineFrame = vineFrames(moving ? before : null, game, events, t, swampSeconds, dropping)
 
+  const cubeDrop = dropping ? restartDrop(t, 0, boxes.length, game.stones.length) : null
   const tramPhase = moving ? tramProgress(events, t, swampSeconds) : 1
-  const tramFrames = tramFramesOf({ trams, before, game, tramPhase })
+  const tramFrames = tramFramesOf({ trams, before, game, tramPhase, fade: cubeDrop?.opacity ?? 1 })
   const nextRails = new Set(tramFrames.map((frame) => `${frame.next.x}-${frame.next.y}`))
 
-  const cubeDrop = dropping ? restartDrop(t, 0, boxes.length) : null
   const cubeLevel = cube.level + (cubeDrop?.lift ?? 0)
   const cubeScreen = toScreen({ x: cube.x, y: cube.y }, cubeLevel)
   // 칸 윗면보다 반 층 위인 큐브 가운데
@@ -138,7 +148,21 @@ export const sceneFrame = ({
   const crackPhase = moving ? crackProgress(events, stepT) : 1
   const crackView = { game, before, crackPhase }
 
-  const cubeSink = standSink(crackView, cube.x, cube.y)
+  // 돌이 밀리고 끌리고 녹는 동안 얼고 녹는 칸, 그 위에 선 큐브가 얼음 판 높이로 내려앉는 거리
+  const iceT = moving ? icePhase(events, t, swampSeconds) : 1
+  const covers = moving
+    ? iceCoversAt(before, game, events, t, swampSeconds)
+    : iceCovers(game, game, 1)
+  const iceStone = {
+    covers,
+    stones: dropping
+      ? restartStones(game, t)
+      : stoneFrames({ prev: prevGame, game, events, t, swamp: swampSeconds }),
+    thawing: moving ? thawingBoxes(before, game, iceT) : [],
+    lanes: laneShown(lanes, before, game, iceT),
+  }
+
+  const cubeSink = standSink(crackView, cube.x, cube.y) + iceSink(covers, game, cube.x, cube.y)
   const cubeFaces = rollingCubeFaces(cube.x, cube.y, cubeLevel, cube.direction, cube.angle)
   const carriedBase = carriedBaseOf(cubeScreen, cubeSink, cube)
   const rolling = rollingTilt(cube, chain)
@@ -147,8 +171,14 @@ export const sceneFrame = ({
   const planting = moving ? plantingSeed(events, t, swampSeconds) : null
   const plantedSeed = plantedSeedAt({ planting, cubeScreen, cubeSink, cube })
   const plantTilt = plantTiltOf(planting, cube)
-  const caps = mushroomFrames(dropping ? null : prevGame, game, events, t, chain)
-  const boxFrames = boxFramesOf({ box, sinkingBox, tramFrames, boxes, crackView })
+  const caps = mushroomFrames(dropping ? null : prevGame, game, events, t, chain).map((cap) =>
+    // 재시작하며 다시 펴는 시든 버섯
+    dropping && prevGame && !has(prevGame.mushrooms, cap.cell) && has(game.mushrooms, cap.cell)
+      ? { ...cap, wither: 1 - smooth(t) }
+      : cap,
+  )
+  const iceDrop = box ? iceSink(covers, game, box.x, box.y) : 0
+  const boxFrames = boxFramesOf({ box, sinkingBox, tramFrames, boxes, crackView, iceDrop })
   const boxShown = box ? floatShownAt(stage, box) : null
   const tethers = tetherFrames({ prev: moving ? prevGame : null, game, box, t, dropping })
   const moor = moorLooks(stage, tethers)
@@ -164,8 +194,10 @@ export const sceneFrame = ({
     pickUpPhase,
     crackPhase,
     tramPhase,
-    // 같은 깊이 옆 칸으로 끌려가는 배가 큐브 아래를 덮지 않는 순서
-    cube: pulledBeside(whirl.boxes, cube.cell) ? { ...cube, last: true } : cube,
+    // 같은 깊이 옆 칸으로 끌려가는 배와 돌이 큐브 아래를 덮지 않는 순서
+    cube: pulledBeside([...whirl.boxes, ...iceStone.stones.filter((s) => s.pulled)], cube.cell)
+      ? { ...cube, last: true }
+      : cube,
     cubeCell,
     cubeLean,
     rowLean,
@@ -193,6 +225,7 @@ export const sceneFrame = ({
     tethers,
     moor,
     whirl,
+    iceStone,
     lanes,
     crackView,
     seedFrame,

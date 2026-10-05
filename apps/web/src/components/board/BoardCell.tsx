@@ -2,6 +2,7 @@ import { type CSSProperties, type ReactNode, memo } from 'react'
 
 import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
+import BoardIceStone from './BoardIceStone'
 import BoardLadder from './BoardLadder'
 import BoardMushroom from './BoardMushroom'
 import BoardPit from './BoardPit'
@@ -16,12 +17,14 @@ import BoardWhirlpool from './BoardWhirlpool'
 import { type CellLook, crackThickness, sameCellLook, swampCollar, swampSink } from './frame'
 import {
   CUBE,
+  ICE,
   LEAN_LOOP,
   MUD,
   MUD_DIP,
   PIT_FLOOR,
   QUARTER,
   SHARD,
+  STONE,
   WATER,
   blend,
   cellFaces,
@@ -74,6 +77,7 @@ const BoardCell = ({
   ground,
   ice,
   crack,
+  iceStone,
   swamp,
   mushroom,
   water,
@@ -130,6 +134,8 @@ const BoardCell = ({
   const collar = swamp.risen >= 0 ? swampCollar(swamp.risen) * swamp.deep : 0
   const lean = whirl.lean ? leanShift(whirl.lean, 1) : undefined
   const leanLoop = useLoop(LEAN_LOOP, 1600)
+  // 물가 땅보다 조금 낮은 언 판 윗면
+  const iceTop = y - water.depth * TILE.layer + ICE.below
 
   return (
     <g>
@@ -250,6 +256,22 @@ const BoardCell = ({
             {whirl.eye > 0 && (
               <BoardWhirlpool part="eye" x={x} y={y} depth={water.depth} opacity={whirl.eye} />
             )}
+            {iceStone.cover > 0 && (
+              <>
+                <BoardIceStone
+                  part="plate"
+                  x={x}
+                  y={iceTop}
+                  cover={iceStone.cover}
+                  from={iceStone.from}
+                />
+                <polygon
+                  points={spotPoints(x, iceTop, GLOSS_SPOTS)}
+                  style={{ fill: 'var(--color-ice-gloss)' }}
+                  opacity={Math.max(0, iceStone.cover * 2 - 1)}
+                />
+              </>
+            )}
             {seed.stalk > 0 && (
               <BoardSeed x={x} y={y} part="stalk" level={seed.stalk} p={seed.bud} />
             )}
@@ -279,7 +301,7 @@ const BoardCell = ({
             )}
             {ice.frost > 0 && (
               <polygon
-                points={blockFaces(x, y, TILE.width, 0).top}
+                points={blockFaces(x, iceStone.cover > 0 ? iceTop : y, TILE.width, 0).top}
                 style={{ fill: 'var(--color-ice-gloss)', opacity: ice.frost * FROST_OPACITY }}
               />
             )}
@@ -321,7 +343,11 @@ const BoardCell = ({
       )}
       {box && (
         <g style={fade}>
-          {water.depth > 0 ? (
+          {iceStone.iced ? (
+            <BoardBox x={x} y={iceTop - TILE.layer} />
+          ) : iceStone.boat > 0 ? (
+            <BoardIceStone part="boat" x={x} y={iceTop} lock={iceStone.boat} />
+          ) : water.depth > 0 ? (
             <g
               ref={lean ? leanLoop : undefined}
               className={lean ? 'whirl-lean' : undefined}
@@ -332,6 +358,22 @@ const BoardCell = ({
           ) : (
             <BoardBox x={x} y={y - TILE.layer} />
           )}
+        </g>
+      )}
+      {iceStone.stone && (
+        <g style={fade}>
+          <BoardIceStone
+            part="stone"
+            x={x}
+            y={iceStone.stone === 'float' ? iceTop : y}
+            scale={1}
+            cut={iceStone.stone === 'float' ? STONE.floatCut : 0}
+            slab={iceStone.stone === 'float' ? 1 : 0}
+            frost={iceStone.stone === 'float' ? 0 : 1}
+            opacity={1}
+            wake={[]}
+            ring={null}
+          />
         </g>
       )}
       {ladder.flat > 0 && (

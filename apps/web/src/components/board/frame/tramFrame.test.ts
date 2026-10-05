@@ -107,6 +107,7 @@ describe('발판 그리기', () => {
       before: { trams: [spot(from, 1)] },
       game: { trams: [spot(to, 1)] },
       tramPhase,
+      fade: 1,
     })[0]
 
   it('tramFramesOf는 진행도만큼 미끄러진 화면 자리와 발판 높이만큼 올린 깊이를 준다', () => {

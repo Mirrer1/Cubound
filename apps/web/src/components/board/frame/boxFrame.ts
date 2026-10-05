@@ -132,10 +132,18 @@ interface BoxView {
   tramFrames: { x: number; y: number; to: Point; cell: Point }[]
   boxes: Point[]
   crackView: CrackView
+  iceDrop: number // 언 칸으로 밀려 가며 얼음 판 높이로 내려앉는 거리
 }
 
 // 칸과 따로 움직이는 밀리는 상자와 발판 위 상자의 화면 좌표
-export const boxFramesOf = ({ box, sinkingBox, tramFrames, boxes, crackView }: BoxView) => {
+export const boxFramesOf = ({
+  box,
+  sinkingBox,
+  tramFrames,
+  boxes,
+  crackView,
+  iceDrop,
+}: BoxView) => {
   const pushedScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
   return [
     ...(box && pushedScreen
@@ -146,7 +154,8 @@ export const boxFramesOf = ({ box, sinkingBox, tramFrames, boxes, crackView }: B
             y:
               pushedScreen.y -
               TILE.layer +
-              standSink(crackView, box.x, box.y) -
+              standSink(crackView, box.x, box.y) +
+              iceDrop -
               box.lift +
               (sinkingBox ? BOX_SINK * sinkingBox.deep : 0),
             to: box.to,

@@ -12,7 +12,15 @@ import type { VineKind } from './vineFrame'
 import { leanOf, whirlLook } from './whirlpoolFrame'
 import { TILE } from '@/game/iso'
 import { isDoorOpen, isIce, isLiftRaised } from '@/game/rules'
-import type { Direction, Entity, GameEvent, GameState, Point, Stage } from '@/game/types'
+import type {
+  Direction,
+  Entity,
+  GameEvent,
+  GameState,
+  LeaningLadder,
+  Point,
+  Stage,
+} from '@/game/types'
 
 // 재시작에 메운 바닥이 사라지는 진행도
 const RESTORE_FADE = 0.25
@@ -52,6 +60,13 @@ export interface CellLook {
     on: boolean
     press: number // 갓이 눌린 정도, -1은 펴짐, 0은 평소, 2는 큐브가 올라선 상태
     wither: number // 시든 정도 0~1
+  }
+  iceStone: {
+    stone: 'land' | 'float' | null // 멈춰 선 얼음 돌
+    cover: number // 언 물 판이 덮은 정도, 0이면 안 언 칸
+    from: Direction // 얼린 돌 쪽 가장자리
+    boat: number // 얼어붙은 정도, 언 칸 위로 밀어 올린 상자는 0
+    iced: boolean // 언 칸 위로 밀어 올린 상자
   }
   water: {
     depth: number // 물 깊이 층 수, 0이면 물 없는 칸
@@ -144,9 +159,15 @@ export const cellLook = ({
 }: CellLookView) => {
   const { heights, boxes, ladders, leaningLadders } = game
   const walls = { heights, before: scene.before, fillingKey, vineFrame: scene.vineFrame, railDirs }
+  // 재시작하며 처음 모습으로 돌아가는 진행도
+  const back = scene.dropping ? smooth(clamp01(t)) : 1
   // 문과 발판이 움직이기 시작하는 때, 스위치가 눌리거나 풀린 때
   const linkedPhase = (cells: Point[], pressed: boolean) =>
-    scene.moving ? switchProgress(events, cells, pressed, t, swampSeconds) : 1
+    scene.dropping
+      ? back
+      : scene.moving
+        ? switchProgress(events, cells, pressed, t, swampSeconds)
+        : 1
   const ripples = idleRipples(stage)
   const cycle = rippleCycle(ripples.size)
 
@@ -184,9 +205,11 @@ export const cellLook = ({
     const liftPhase =
       lift === undefined ? 1 : linkedPhase(switchCells(stage, lift.id), isLiftRaised(game, lift.id))
     const switchPhase =
-      entity?.type === 'switch' && scene.moving
-        ? pressProgress(events, cell.p, pressed(game), t, swampSeconds)
-        : scene.progress
+      entity?.type === 'switch' && scene.dropping
+        ? back
+        : entity?.type === 'switch' && scene.moving
+          ? pressProgress(events, cell.p, pressed(game), t, swampSeconds)
+          : scene.progress
     const passing =
       entity?.type === 'switch' && scene.moving ? passDip(events, cell.p, t, swampSeconds) : 0
     const doorDip =
@@ -212,18 +235,37 @@ export const cellLook = ({
       crackFall +
       seedShift * TILE.layer
     const pickedHere = scene.pickedUp?.type === 'pickedUp' && same(scene.pickedUp.at, cell.p)
-    const flatLadder = has(ladders, cell.p)
-      ? 1
-      : pickedHere && has(scene.before.ladders, cell.p)
-        ? 1 - scene.pickUpPhase
-        : 0
+    const hadLadder = has(scene.before.ladders, cell.p)
+    const flatLadder = scene.dropping
+      ? has(ladders, cell.p)
+        ? hadLadder
+          ? 1
+          : back
+        : hadLadder
+          ? 1 - back
+          : 0
+      : has(ladders, cell.p)
+        ? 1
+        : pickedHere && hadLadder
+          ? 1 - scene.pickUpPhase
+          : 0
     const placedOpacity = (l: Point) =>
       scene.placed?.type === 'placed' && same(scene.placed.ladder, l) ? scene.ownT : 1
+    const sameLeaning = (a: LeaningLadder) => (b: LeaningLadder) =>
+      same(a, b) && a.direction === b.direction
     const leaning = [
       ...leaningLadders
         .filter((l) => same(l, cell.p))
-        .map((l) => `${l.direction}:${placedOpacity(l)}`),
-      ...(pickedHere
+        .map((l) => {
+          const kept = scene.before.leaningLadders.some(sameLeaning(l))
+          return `${l.direction}:${scene.dropping ? (kept ? 1 : back) : placedOpacity(l)}`
+        }),
+      ...(scene.dropping
+        ? scene.before.leaningLadders
+            .filter((l) => same(l, cell.p) && !leaningLadders.some(sameLeaning(l)))
+            .map((l) => `${l.direction}:${1 - back}`)
+        : []),
+      ...(pickedHere && !scene.dropping
         ? scene.before.leaningLadders
             .filter((l) => same(l, cell.p))
             .map((l) => `${l.direction}:${1 - scene.pickUpPhase}`)
@@ -243,13 +285,21 @@ export const cellLook = ({
     const drawCube = same(scene.cube.cell, cell.p) && !(game.cleared && !scene.moving)
     const drawBoxes = scene.boxFrames.filter((frame) => same(frame.cell, cell.p))
     const whirlBoxes = scene.whirl.boxes.filter((frame) => same(frame.cell, cell.p))
+    const stones = scene.iceStone.stones.filter((frame) => same(frame.cell, cell.p))
+    const thawBoxes = scene.iceStone.thawing.filter((box) => same(box.to, cell.p))
+    const ice = scene.iceStone.covers.get(cell.key)
+    const stoneHere =
+      has(game.stones, cell.p) && !scene.iceStone.stones.some((frame) => same(frame.to, cell.p))
+    const boxHere = has(boxes, cell.p) && thawBoxes.length === 0
     const movedBoxHere =
       scene.boxFrames.some((frame) => same(frame.to, cell.p)) ||
-      scene.whirl.boxes.some((frame) => same(frame.to, cell.p))
+      scene.whirl.boxes.some((frame) => same(frame.to, cell.p)) ||
+      scene.iceStone.stones.some((frame) => same(frame.to, cell.p))
     const lane = scene.lanes.get(cell.key)
     const goalEffect = same(cell.p, stage.goal) && game.cleared && !scene.moving
     const droppingBox = scene.dropping ? boxes.findIndex((b) => same(b, cell.p)) : -1
-    const boxDrop = droppingBox >= 0 ? restartDrop(t, droppingBox + 1, boxes.length) : null
+    const boxDrop =
+      droppingBox >= 0 ? restartDrop(t, droppingBox + 1, boxes.length, game.stones.length) : null
     // 재시작하면 제자리에서 사라지는 메운 칸, 큐브와 같은 빠르기로 돌아오는 무너졌던 칸
     const restored =
       scene.dropping && !seedHere
@@ -258,6 +308,8 @@ export const cellLook = ({
     const overlay =
       drawBoxes.length > 0 ||
       whirlBoxes.length > 0 ||
+      stones.length > 0 ||
+      thawBoxes.length > 0 ||
       drawCube ||
       goalEffect ||
       boxDrop !== null ||
@@ -271,7 +323,7 @@ export const cellLook = ({
       goal: same(cell.p, stage.goal),
       faded: has(scene.faded, cell.p),
       hidden: isFilled && movedBoxHere && scene.before.heights[cell.p.y][cell.p.x] < 0,
-      box: has(boxes, cell.p) && !movedBoxHere && boxDrop === null,
+      box: boxHere && !movedBoxHere && boxDrop === null,
       ground: {
         filled:
           (isFilled || (restored > 0 && stage.heights[cell.p.y][cell.p.x] < 0)) &&
@@ -297,7 +349,12 @@ export const cellLook = ({
       },
       swamp: {
         on: swamp,
-        filled: swampHere && !has(game.swamps, cell.p) ? (sinkingHere?.filled ?? 1) : 0,
+        filled:
+          swampHere && !has(game.swamps, cell.p)
+            ? (sinkingHere?.filled ?? 1)
+            : swampHere && scene.dropping && !has(scene.before.swamps, cell.p)
+              ? 1 - back
+              : 0,
         risen: sunkHere ? sunkHere.risen : -1,
         deep: sunkHere?.deep ?? sinkingHere?.deep ?? 0,
       },
@@ -305,6 +362,13 @@ export const cellLook = ({
         on: capHere !== undefined,
         press: capHere?.press ?? 0,
         wither: capHere?.wither ?? 0,
+      },
+      iceStone: {
+        stone: stoneHere ? (water.depth > 0 ? 'float' : 'land') : null,
+        cover: ice?.cover ?? 0,
+        from: ice?.from ?? 'up',
+        boat: boxHere && !has(game.iced, cell.p) ? (ice?.cover ?? 0) : 0,
+        iced: boxHere && has(game.iced, cell.p),
       },
       water: {
         depth: water.depth,
@@ -314,7 +378,7 @@ export const cellLook = ({
         sideRight: water.sideRight,
         ring: rippleHere?.size ?? 0,
         ringOpacity: rippleHere?.opacity ?? 0,
-        idle: ripples.get(cell.key) ?? -1,
+        idle: ice || has(game.stones, cell.p) ? -1 : (ripples.get(cell.key) ?? -1),
         idleCycle: cycle,
       },
       tether: {
@@ -322,7 +386,7 @@ export const cellLook = ({
         range: scene.moor.get(cell.key) ?? -1,
       },
       whirl: {
-        ...whirlLook(stage, cell.p, lane, scene.whirl),
+        ...whirlLook(stage, cell.p, lane, scene.whirl, scene.iceStone.lanes.get(cell.key) ?? 1),
         lean: leanOf(lane, game, cell.p, scene.whirl),
       },
       device: {
@@ -386,6 +450,8 @@ export const cellLook = ({
         drawCube,
         drawBoxes,
         whirlBoxes,
+        stones,
+        thawBoxes,
         boxDrop,
         goalEffect,
         overlay,

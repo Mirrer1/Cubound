@@ -200,7 +200,7 @@ export const whirlFrames = (view: WhirlView) => {
 export type WhirlFrames = ReturnType<typeof whirlFrames>
 
 // 큐브와 같은 깊이 옆 칸에 그리는 배, 큐브를 같은 깊이 맨 뒤에 그릴 경우
-export const pulledBeside = (boxes: WhirlBoxFrame[], cube: Point) =>
+export const pulledBeside = (boxes: { cell: Point }[], cube: Point) =>
   boxes.some(({ cell }) => cell.x + cell.y === cube.x + cube.y && Math.abs(cell.x - cube.x) === 1)
 
 // 앞 칸에 멈춘 배가 쏠리는 쪽, 열린 소용돌이 한정
@@ -212,12 +212,13 @@ export const leanOf = (
 ): Direction | null =>
   lane?.front && has(game.boxes, p) && frames.openings[lane.whirl].eye >= 1 ? lane.toward : null
 
-// 칸에 넘길 소용돌이 값, eye는 소용돌이 칸, lane은 물길 칸, ghost는 막힌 칸
+// 칸에 넘길 소용돌이 값, eye는 소용돌이 칸, lane은 물길 칸, ghost는 막힌 칸, shown은 얼음에 끊긴 물길 진하기
 export const whirlLook = (
   stage: GameState['stage'],
   p: Point,
   lane: Lane | undefined,
   frames: WhirlFrames,
+  shown = 1,
 ) => {
   const whirl = whirlpoolsOf(stage).findIndex((w) => same(w, p))
   const opening = whirl >= 0 ? frames.openings[whirl] : null
@@ -225,6 +226,6 @@ export const whirlLook = (
     eye: opening?.eye ?? 0,
     ghost: opening?.ghost ?? 0,
     lane: lane ? lane.axis : null,
-    laneOpacity: lane ? frames.openings[lane.whirl].lane : 0,
+    laneOpacity: lane ? frames.openings[lane.whirl].lane * shown : 0,
   }
 }

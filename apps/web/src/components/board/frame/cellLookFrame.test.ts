@@ -7,7 +7,7 @@ import { NO_CHAIN, smooth } from './curveFrame'
 import { fillingCellKey } from './fillFrame'
 import { sceneFrame } from './sceneFrame'
 import { swampTime } from './swampFrame'
-import { LIFT_STAGE, TRAM_STAGE, WHIRL_STAGE, lastMove } from './testStages'
+import { LIFT_STAGE, STONE_STAGE, TRAM_STAGE, WHIRL_STAGE, lastMove } from './testStages'
 import { railDirsOf } from './tramFrame'
 import { vineLooks } from './vineFrame'
 import { createState } from '@/game/rules'
@@ -217,5 +217,102 @@ describe('cellLook 소용돌이', () => {
 
     expect(looks(game).get('2-1')!.look.whirl.lean).toBe('left')
     expect(looks(game).get('3-1')!.look.whirl.lean).toBeNull()
+  })
+})
+
+describe('cellLook 얼음 돌', () => {
+  it('땅 위 돌 칸과 언 칸과 얼어붙은 배 칸은 얼음 돌 묶음으로 받는다', () => {
+    const stage: Stage = {
+      ...STONE_STAGE,
+      entities: [
+        ...STONE_STAGE.entities,
+        { type: 'box', x: 3, y: 2 },
+        { type: 'iceStone', x: 3, y: 1 },
+      ],
+    }
+    const map = looks(createState(stage))
+
+    expect(map.get('2-1')!.look.iceStone).toMatchObject({ stone: 'land', cover: 0 })
+    expect(map.get('2-2')!.look.iceStone).toMatchObject({ stone: null, cover: 1, from: 'up' })
+    expect(map.get('2-2')!.look.water.idle).toBe(-1)
+    expect(map.get('3-2')!.look.iceStone).toMatchObject({ boat: 1, iced: false })
+    expect(map.get('3-3')!.look.iceStone).toMatchObject({ cover: 0, boat: 0 })
+  })
+
+  it('물에 뜬 돌은 칸 그림 몫이고 밀려 가는 동안은 칸 위에 얹어 그린다', () => {
+    const { prev, game, events } = lastMove(STONE_STAGE, ['down'])
+    const resting = looks(game).get('2-2')!
+    const moving = looks(game, prev, events, 0.5)
+
+    expect(resting.look.iceStone.stone).toBe('float')
+    expect(moving.get('2-2')!.look.iceStone.stone).toBeNull()
+    expect([...moving.values()].flatMap(({ over }) => over.stones)).toHaveLength(1)
+  })
+})
+
+describe('재시작하며 처음 모습으로 돌아가는 칸', () => {
+  const restart = (stage: Stage, moves: Parameters<typeof lastMove>[1], t: number) =>
+    looks(createState(stage), lastMove(stage, moves).game, [], t, true)
+  const between = (v: number) => {
+    expect(v).toBeGreaterThan(0)
+    expect(v).toBeLessThan(1)
+  }
+
+  it('주운 사다리는 제자리에 서서히 나타나고 기대 놓은 사다리는 서서히 사라진다', () => {
+    const stage: Stage = {
+      version: 1,
+      id: 'test-restart-ladder',
+      heights: [[0, 0, 1, 1]],
+      start: { x: 0, y: 0 },
+      goal: { x: 3, y: 0 },
+      entities: [{ type: 'ladder', x: 1, y: 0 }],
+    }
+    const { ladder } = restart(stage, ['right', 'right'], 0.5).get('1-0')!.look
+
+    between(ladder.flat)
+    expect(ladder.leaning).toMatch(/^right:/)
+    between(Number(ladder.leaning.split(':')[1]))
+  })
+
+  it('늪을 메운 상자가 사라지면 늪이 서서히 드러난다', () => {
+    const stage: Stage = {
+      version: 1,
+      id: 'test-restart-swamp',
+      heights: [[0, 0, 0, 0]],
+      swamp: ['..#.'],
+      start: { x: 0, y: 0 },
+      goal: { x: 3, y: 0 },
+      entities: [{ type: 'box', x: 1, y: 0 }],
+    }
+
+    between(restart(stage, ['right'], 0.5).get('2-0')!.look.swamp.filled)
+  })
+
+  it('시든 버섯은 서서히 다시 편다', () => {
+    const stage: Stage = {
+      version: 1,
+      id: 'test-restart-cap',
+      heights: [[0, 0, 0, 0, 0]],
+      mushroom: ['.#...'],
+      start: { x: 0, y: 0 },
+      goal: { x: 4, y: 0 },
+      entities: [],
+      rules: { mushroomWither: true },
+    }
+
+    between(restart(stage, ['right'], 0.5).get('1-0')!.look.mushroom.wither)
+  })
+
+  it('스위치와 엘리베이터 발판은 감속하며 처음 자리로 돌아간다', () => {
+    const switchCell = restart(LIFT_STAGE, ['down'], 0.25).get('1-1')!.look
+
+    expect(switchCell.device.switchDepth).toBeCloseTo(2 + 7 * smooth(0.25))
+  })
+
+  it('처음 자리로 돌아간 움직이는 발판은 큐브처럼 서서히 나타난다', () => {
+    const tram = [...restart(TRAM_STAGE, ['right'], 0.02).values()].find(({ over }) => over.tram)!
+      .over.tram!
+
+    between(tram.opacity)
   })
 })

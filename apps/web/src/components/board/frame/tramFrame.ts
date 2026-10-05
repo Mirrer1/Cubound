@@ -71,10 +71,11 @@ interface TramView {
   before: Pick<GameState, 'trams'>
   game: Pick<GameState, 'trams'>
   tramPhase: number
+  fade: number // 재시작하며 처음 자리에 다시 나타나는 진하기
 }
 
 // 이전 자리에서 다음 자리로 미끄러지는 발판, 코와 밝은 레일이 넘어가는 때는 도착 순간
-export const tramFramesOf = ({ trams, before, game, tramPhase }: TramView) =>
+export const tramFramesOf = ({ trams, before, game, tramPhase, fade }: TramView) =>
   trams.map((tram, i) => {
     const from = tram.cells[before.trams[i].at]
     const to = tram.cells[game.trams[i].at]
@@ -94,5 +95,6 @@ export const tramFramesOf = ({ trams, before, game, tramPhase }: TramView) =>
       to,
       cell: slidingCell(from, to, tramPhase),
       next: tramNext(tram, spot),
+      opacity: before.trams[i].at === game.trams[i].at ? 1 : fade,
     }
   })

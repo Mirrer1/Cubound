@@ -12,6 +12,7 @@ import {
   RIDE,
   SEED_STAGE,
   STAGE,
+  STONE_STAGE,
   TRAM_STAGE,
   WARP_STAGE,
   WHIRL_STAGE,
@@ -26,10 +27,14 @@ import {
   struggleSwamp,
 } from './testStages'
 import {
+  FREEZE_SECONDS,
+  MELT_SECONDS,
   PLUG,
   PULL_SECONDS,
+  SECONDS,
   countDisplay,
   durationOf,
+  moveSeconds,
   plugStart,
   pullStart,
   riseProgress,
@@ -326,5 +331,48 @@ describe('plugStart', () => {
 
   it('막지 않는 수는 null이다', () => {
     expect(plugStart(lastMove(WHIRL_STAGE, ['left']).events)).toBeNull()
+  })
+})
+
+describe('durationOf 얼음 돌', () => {
+  it('얼음 돌을 미는 길은 상자를 미는 길과 같은 시간이고 얼음이 바뀌면 덮이는 시간까지 이어진다', () => {
+    const land = lastMove(
+      { ...STONE_STAGE, start: { x: 0, y: 1 }, entities: [{ type: 'iceStone', x: 1, y: 1 }] },
+      ['right'],
+    )
+    const floated = lastMove(STONE_STAGE, ['down'])
+
+    expect(durationOf(land.events)).toBeCloseTo(Math.max(SECONDS.pushed, FREEZE_SECONDS))
+    expect(durationOf(floated.events)).toBeCloseTo(SECONDS.floated)
+  })
+
+  it('녹아 사라지는 수는 이동 몫이 끝난 뒤 녹는 시간을 더한다', () => {
+    const { events } = lastMove({ ...STONE_STAGE, rules: { melt: 1 } }, ['down', 'left'])
+
+    expect(events).toContainEqual({ type: 'melted', at: { x: 2, y: 2 } })
+    expect(durationOf(events)).toBeCloseTo(moveSeconds(events, { lead: 0, tail: 0 }) + MELT_SECONDS)
+    expect(
+      stepProgress(events, moveSeconds(events, { lead: 0, tail: 0 }) / durationOf(events)),
+    ).toBe(1)
+  })
+})
+
+describe('pullStart 얼음 돌', () => {
+  // (4,2) 소용돌이가 왼쪽 줄을 끄는 판, (2,1) 돌을 아래로 띄우면 같은 수에 한 칸 끌림
+  const WHIRL_STONE: Stage = {
+    ...STONE_STAGE,
+    entities: [
+      { type: 'whirlpool', x: 4, y: 2 },
+      { type: 'iceStone', x: 2, y: 1 },
+    ],
+  }
+
+  it('이 수에 띄운 돌은 물 위로 다 밀려 온 뒤 끌리기 시작한다', () => {
+    const { events } = lastMove(WHIRL_STONE, ['down'])
+    const pulled = events.find((e) => e.type === 'stonePulled')
+
+    expect(pulled).toEqual({ type: 'stonePulled', from: { x: 2, y: 2 }, to: { x: 3, y: 2 } })
+    expect(pullStart(events, pulled!)).toBeCloseTo(SECONDS.floated * 0.5)
+    expect(durationOf(events)).toBeCloseTo(SECONDS.floated * 0.5 + PULL_SECONDS)
   })
 })

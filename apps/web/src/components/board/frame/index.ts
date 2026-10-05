@@ -99,3 +99,4 @@ export {
   type WhirlFrames,
   whirlLook,
 } from './whirlpoolFrame'
+export { meltDisplay, type StoneFrame } from './iceStoneFrame'

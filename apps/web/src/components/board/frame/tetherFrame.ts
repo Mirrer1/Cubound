@@ -32,7 +32,7 @@ export const tetherFrames = ({ prev, game, box, t, dropping }: TetherView): Teth
     const rowing = prev !== null && box !== null && !same(prev.tethered[i], boat)
     const at = rowing ? { x: box.x, y: box.y } : boat
     const drop = dropping
-      ? restartDrop(t, boxes.findIndex((b) => same(b, boat)) + 1, boxes.length)
+      ? restartDrop(t, boxes.findIndex((b) => same(b, boat)) + 1, boxes.length, game.stones.length)
       : null
     const top = rowing ? box.level + 1 : (stage.water ?? 0) + (drop?.lift ?? 0)
     const d = Math.abs(at.x - post.x) + Math.abs(at.y - post.y)

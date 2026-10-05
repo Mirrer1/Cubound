@@ -3,6 +3,7 @@ import { type CSSProperties, useMemo } from 'react'
 import BoardBox from './BoardBox'
 import BoardCell from './BoardCell'
 import BoardClear from './BoardClear'
+import BoardIceStone from './BoardIceStone'
 import BoardLadder from './BoardLadder'
 import BoardSeed from './BoardSeed'
 import BoardTether from './BoardTether'
@@ -54,7 +55,7 @@ const Board = ({
   restarting,
   guideCell,
 }: BoardProps) => {
-  const restartSeconds = restarting ? restartDuration(game.boxes.length) : 0
+  const restartSeconds = restarting ? restartDuration(game.boxes.length, game.stones.length) : 0
   // 늪에 드나드는 이동은 뽑혀 나오고 가라앉는 만큼 긴 연출
   const swampSeconds = swampTime(restarting ? null : prevGame, game)
   const { t, chain } = useBoardAnimation(
@@ -131,13 +132,15 @@ const Board = ({
             {over.overlay ? (
               <>
                 {over.tram && (
-                  <BoardTram
-                    x={over.tram.x}
-                    y={over.tram.y}
-                    depth={over.tram.depth}
-                    dx={over.tram.dx}
-                    dy={over.tram.dy}
-                  />
+                  <g opacity={over.tram.opacity}>
+                    <BoardTram
+                      x={over.tram.x}
+                      y={over.tram.y}
+                      depth={over.tram.depth}
+                      dx={over.tram.dx}
+                      dy={over.tram.dy}
+                    />
+                  </g>
                 )}
                 {over.drawBoxes.map((frame) =>
                   scene.box && same(frame.to, scene.box.to) && scene.boxShown !== null ? (
@@ -155,6 +158,18 @@ const Board = ({
                 )}
                 {over.whirlBoxes.map((frame) => (
                   <BoardWhirlpool key={`${frame.to.x}-${frame.to.y}`} part="boat" {...frame} />
+                ))}
+                {over.thawBoxes.map((thaw) => (
+                  <BoardWater
+                    key={`${thaw.to.x}-${thaw.to.y}`}
+                    part="box"
+                    x={cell.x}
+                    y={thaw.y}
+                    shown={thaw.shown}
+                  />
+                ))}
+                {over.stones.map((frame) => (
+                  <BoardIceStone key={`${frame.to.x}-${frame.to.y}`} part="stone" {...frame} />
                 ))}
                 {over.boxDrop && (
                   <g opacity={over.boxDrop.opacity}>

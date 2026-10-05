@@ -10,12 +10,19 @@ import {
 } from 'react'
 
 import Board from '@/components/board/Board'
-import { capsDisplay, mudDisplay, vinesDisplay, windDisplay } from '@/components/board/frame'
+import {
+  capsDisplay,
+  meltDisplay,
+  mudDisplay,
+  vinesDisplay,
+  windDisplay,
+} from '@/components/board/frame'
 import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
 import RestartCard from '@/components/ui/RestartCard'
 import { climbsLeft, dirLeft, movesLeft, pushesLeft, ridesLeft } from '@/game/rules'
+import { useLoop } from '@/hooks/useLoop'
 import { useText } from '@/hooks/useText'
 import { stageTextKey } from '@/i18n'
 import { directionFromKey, directionFromSwipe, isRestartKey } from '@/platform/input'
@@ -28,6 +35,9 @@ interface PlayScreenProps {
 }
 
 const ASK_FROM_MOVES = 5 // 재시작 전에 묻기 시작하는 이동 수
+
+// 녹을 0에서 큐브가 둘레에 서서 버티는 동안 숫자가 옅어졌다 돌아오는 한 바퀴
+const MELT_HOLD: Keyframe[] = [{ opacity: 1 }, { opacity: 0.3 }, { opacity: 1 }]
 
 // 보스 제약에 막힌 수의 숫자 깜빡임, hit은 이어서 막혀도 다시 깜빡이는 막힌 수의 차례
 const LimitCount = ({ hit, children }: { hit: number | null; children: ReactNode }) => (
@@ -95,6 +105,8 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const reduced = useReducedMotion()
   const { gustAt, wind, blew } = windDisplay({ game, prevGame, events, animating })
   const gusting = gustAt !== null && gustTurn === turn && animating
+  const melt = meltDisplay(game)
+  const meltHold = useLoop(MELT_HOLD, 600)
   const limitedDir = game?.stage.rules?.dirLimit?.dir
   const limited = events.flatMap((e) => (e.type === 'limit' ? [e.limit] : []))[0]
   const outOfMoves = left === 0 && !game?.cleared
@@ -297,6 +309,22 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                     ) : (
                       <LimitCount hit={blew ? turn : null}>{wind}</LimitCount>
                     )}
+                  </div>
+                )}
+                {melt && (
+                  <div
+                    className={`flex flex-col items-end gap-0.5 rounded-md outline outline-offset-4 transition-soft-colors short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2 ${melt.edge ? 'outline-ink' : 'outline-transparent'}`}
+                  >
+                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">MELT</span>
+                    <span
+                      key={melt.holding ? 'hold' : 'count'}
+                      ref={melt.holding ? meltHold : undefined}
+                      className={
+                        melt.faint ? 'text-faint transition-soft-colors' : 'transition-soft-colors'
+                      }
+                    >
+                      <LimitCount hit={null}>{melt.count}</LimitCount>
+                    </span>
                   </div>
                 )}
                 <div
