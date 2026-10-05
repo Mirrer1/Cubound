@@ -6,7 +6,7 @@ import { wallHeight } from './fillFrame'
 import { frostAt } from './iceFrame'
 import { restartDrop } from './restartFrame'
 import type { sceneFrame } from './sceneFrame'
-import { pressProgress, switchCells, switchProgress } from './switchFrame'
+import { passDip, pressProgress, switchCells, switchProgress } from './switchFrame'
 import { type SwampTime, has, same } from './timeFrame'
 import type { VineKind } from './vineFrame'
 import { leanOf, whirlLook } from './whirlpoolFrame'
@@ -187,6 +187,15 @@ export const cellLook = ({
       entity?.type === 'switch' && scene.moving
         ? pressProgress(events, cell.p, pressed(game), t, swampSeconds)
         : scene.progress
+    const passing =
+      entity?.type === 'switch' && scene.moving ? passDip(events, cell.p, t, swampSeconds) : 0
+    const doorDip =
+      entity?.type === 'door' && scene.moving
+        ? Math.max(
+            0,
+            ...switchCells(stage, entity.id).map((p) => passDip(events, p, t, swampSeconds)),
+          )
+        : 0
     const doorPhase =
       entity?.type === 'door'
         ? linkedPhase([...switchCells(stage, entity.id), cell.p], isDoorOpen(game, entity.id))
@@ -318,8 +327,12 @@ export const cellLook = ({
       },
       device: {
         entity: entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null,
-        switchDepth: lerp(pressed(scene.before) ? 2 : 9, pressed(game) ? 2 : 9, switchPhase),
-        doorDepth: lerp(doorDepth(scene.before), doorDepth(game), doorPhase),
+        // 미끄러져 지나칠 때는 눌림 깊이의 절반
+        switchDepth:
+          lerp(pressed(scene.before) ? 2 : 9, pressed(game) ? 2 : 9, switchPhase) - 3.5 * passing,
+        // 지나치는 스위치에 딸린 문은 한 층의 4분의 1
+        doorDepth:
+          lerp(doorDepth(scene.before), doorDepth(game), doorPhase) - (TILE.layer / 4) * doorDip,
         lift: lift !== undefined,
         warp: warp !== undefined,
       },

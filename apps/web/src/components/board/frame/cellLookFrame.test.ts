@@ -108,6 +108,32 @@ describe('cellLook', () => {
     expect(looks(game).get('1-1')!.look.device.switchDepth).toBe(2)
   })
 
+  it('미끄러져 지나치는 스위치와 그 문은 살짝 내려갔다 돌아온다', () => {
+    const stage: Stage = {
+      version: 1,
+      id: 'test-cell-look-pass',
+      heights: [
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      ice: ['.###.', '.....'],
+      start: { x: 0, y: 0 },
+      goal: { x: 4, y: 1 },
+      entities: [
+        { type: 'switch', x: 2, y: 0, target: 'a' },
+        { type: 'door', id: 'a', x: 0, y: 1 },
+      ],
+    }
+    const { prev, game, events } = lastMove(stage, ['right'])
+    const frames = Array.from({ length: 101 }, (_, i) => looks(game, prev, events, i / 100))
+    const device = (i: number, key: string) => frames[i].get(key)!.look.device
+
+    expect(Math.min(...frames.map((_, i) => device(i, '2-0').switchDepth))).toBeLessThan(9)
+    expect(Math.min(...frames.map((_, i) => device(i, '0-1').doorDepth))).toBeLessThan(30)
+    expect(device(100, '2-0').switchDepth).toBe(9)
+    expect(device(100, '0-1').doorDepth).toBe(30)
+  })
+
   it('옆에서 밀어 메우는 칸은 상자가 닿는 동안 숨긴다', () => {
     const { prev, game, events } = lastMove(FILL_STAGE, ['right'])
     expect(looks(game, prev, events, 0.5).get('2-0')!.look.hidden).toBe(true)

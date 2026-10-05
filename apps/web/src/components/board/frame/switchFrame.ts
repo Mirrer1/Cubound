@@ -1,5 +1,16 @@
 import { smooth } from './curveFrame'
-import { NO_SWAMP, SWITCH_SECONDS, type SwampTime, elapsedAt, same, touchAt } from './timeFrame'
+import {
+  NO_SWAMP,
+  SWITCH_SECONDS,
+  type SwampTime,
+  boxPath,
+  cellsOf,
+  elapsedAt,
+  playerSegments,
+  same,
+  segmentsOf,
+  touchAt,
+} from './timeFrame'
 import { isLiftRaised } from '@/game/rules'
 import type { Entity, GameEvent, GameState, Point, Stage } from '@/game/types'
 
@@ -43,6 +54,37 @@ export const pressProgress = (
 
   const start = pressed ? at - PRESS_SECONDS : at
   return Math.min(1, Math.max(0, (elapsedAt(events, swamp, t) - start) / PRESS_SECONDS))
+}
+
+// 미끄러져 지나가는 칸의 스위치가 눌렸다 돌아오는 정도 0~1, 앞뒤 반 칸씩 걸치는 시간
+// 이 이동에서 걸어 들어와 바로 미끄러져 나가는 출발 칸 포함
+export const passDip = (events: GameEvent[], p: Point, t: number, swamp: SwampTime = NO_SWAMP) => {
+  const now = elapsedAt(events, swamp, t)
+  let dip = 0
+  for (const segments of [playerSegments(events), segmentsOf(boxPath(events))]) {
+    let start = 0
+    let arrived = false
+    for (const { event, seconds, wait } of segments) {
+      const cells = cellsOf(event)
+      const step = Math.abs(p.x - event.from.x) + Math.abs(p.y - event.from.y)
+      const dx = Math.sign(event.to.x - event.from.x)
+      const dy = Math.sign(event.to.y - event.from.y)
+      const passing =
+        event.type === 'slid' &&
+        !wait &&
+        (step > 0 || arrived) &&
+        step < cells &&
+        same(p, { x: event.from.x + dx * step, y: event.from.y + dy * step })
+      if (passing) {
+        const cell = seconds / cells
+        const u = (now - start - cell * (step - 1)) / (cell * 2)
+        if (u > 0 && u < 1) dip = Math.max(dip, Math.sin(Math.PI * u))
+      }
+      start += seconds
+      arrived = !wait && same(event.to, p)
+    }
+  }
+  return dip
 }
 
 export const switchCells = (stage: Stage, target: string): Point[] =>

@@ -17,7 +17,7 @@ export const SECONDS = {
 }
 
 // 상자와 큐브가 나란히 가는 칸당 같은 속도, max는 아주 긴 미끄러짐의 상한
-const SLIDE = { perCell: 0.1, max: 0.9 }
+const SLIDE = { perCell: 0.14, max: 1.2 }
 
 // 연쇄가 길어져도 같은 속도인 칸 수 비례 시간, peak는 튕김 한 번의 꼭대기 높이 px
 // max는 갓마다 머무는 몫까지 담아 버섯 셋을 잇는 일곱 칸(1.9초)도 넘지 않는 상한
