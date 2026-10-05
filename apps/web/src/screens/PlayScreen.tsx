@@ -323,6 +323,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                 )}
                 {melt && (
                   <div
+                    data-guide="melt"
                     className={`flex flex-col items-end gap-0.5 rounded-md outline outline-offset-4 transition-soft-colors short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2 ${melt.edge ? 'outline-ink' : 'outline-transparent'}`}
                   >
                     <span className="font-mono text-[10px] tracking-[0.22em] text-mute">MELT</span>
@@ -408,7 +409,8 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                   game.stage.rules?.pushLimit ??
                   game.stage.rules?.climbLimit ??
                   game.stage.rules?.rideLimit ??
-                  game.stage.rules?.dirLimit?.count
+                  game.stage.rules?.dirLimit?.count ??
+                  game.stage.rules?.melt
                 }
                 containerRef={sectionRef}
                 onNext={nextGuide}

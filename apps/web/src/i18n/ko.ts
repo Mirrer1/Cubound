@@ -67,6 +67,7 @@ export const ko: Partial<Texts> = {
   'guide.whirlpool': '소용돌이는 같은 줄에 있는 빈 배를 한 수마다 한 칸씩 끌어당겨요',
   'guide.plug': '상자를 소용돌이에 밀어 넣으면 막혀서 더는 끌어당기지 않아요',
   'guide.iceStone': '얼음 돌 둘레의 물은 얼어서 미끄러지며 건널 수 있어요',
+  'guide.melt': '물에 띄운 얼음 돌은 {n}수가 지나면 녹아요',
 
   'chapter.1': '돌 위의 첫걸음',
   'chapter.2': '풀이 우거진 길',

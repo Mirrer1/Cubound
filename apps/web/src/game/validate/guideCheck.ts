@@ -1,6 +1,6 @@
 import { type CheckContext, isInt, isObject } from './stageCheck'
 
-const GUIDE_TARGETS = ['restart', 'moves', 'pushes', 'climbs', 'rides', 'dir', 'wind']
+const GUIDE_TARGETS = ['restart', 'moves', 'pushes', 'climbs', 'rides', 'dir', 'wind', 'melt']
 const MAX_GUIDES = 3
 
 export const checkGuides = ({ data, grid, add }: CheckContext) => {

@@ -91,6 +91,16 @@ describe('checkRules 바람', () => {
     expect(errorsOf({ ...VALID, rules: { wind: 'left' }, guides })).toEqual([])
   })
 
+  it('녹는 얼음 가이드를 MELT 숫자에 둔다', () => {
+    const guides = [{ id: 'melt', target: 'melt' }]
+
+    const entities = VALID.entities.map((e) =>
+      e.type === 'box' ? { type: 'iceStone', x: 1, y: 0 } : e,
+    )
+
+    expect(errorsOf({ ...VALID, entities, rules: { melt: 3 }, guides })).toEqual([])
+  })
+
   it('녹는 얼음 숫자는 양의 정수여야 한다', () => {
     const melt = (value: unknown) => errorsOf({ ...VALID, rules: { melt: value } })
 

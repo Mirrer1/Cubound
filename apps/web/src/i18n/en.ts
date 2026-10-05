@@ -67,6 +67,7 @@ export const en = {
   'guide.whirlpool': 'A whirlpool pulls every empty boat in its line one cell closer each move',
   'guide.plug': 'Push a box into a whirlpool to plug it, and it stops pulling',
   'guide.iceStone': 'An ice stone freezes the water around it, and you can slide across the ice',
+  'guide.melt': 'An ice stone in the water melts after {n} moves',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',

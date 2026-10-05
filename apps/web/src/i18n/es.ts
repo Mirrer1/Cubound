@@ -73,6 +73,7 @@ export const es: Partial<Texts> = {
   'guide.plug': 'Empuja una caja al remolino para taparlo y dejará de atraer',
   'guide.iceStone':
     'La piedra de hielo congela el agua a su alrededor y puedes deslizarte por el hielo',
+  'guide.melt': 'La piedra de hielo en el agua se derrite tras {n} movimientos',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',

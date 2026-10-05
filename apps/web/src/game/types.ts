@@ -61,7 +61,7 @@ export interface Stage {
 
 // 칸 좌표나 화면 요소 이름
 export type GuideTarget =
-  Point | 'restart' | 'moves' | 'pushes' | 'climbs' | 'rides' | 'dir' | 'wind'
+  Point | 'restart' | 'moves' | 'pushes' | 'climbs' | 'rides' | 'dir' | 'wind' | 'melt'
 
 export interface Guide {
   id: string // 문구 사전의 키
