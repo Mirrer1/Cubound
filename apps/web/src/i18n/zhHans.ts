@@ -66,6 +66,7 @@ export const zhHans: Partial<Texts> = {
   'guide.tether': '拴住的船只能划到绳子够得着的地方',
   'guide.whirlpool': '漩涡每走一步就把同一条线上的空船拉近一格',
   'guide.plug': '把箱子推进漩涡就能堵住它，它就不再拉船了',
+  'guide.iceStone': '冰石会冻住四周的水，可以在冰上滑过去',
 
   'chapter.1': '踏石之路',
   'chapter.2': '草木丛生之路',

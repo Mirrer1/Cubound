@@ -71,6 +71,8 @@ export const es: Partial<Texts> = {
   'guide.tether': 'Un bote atado solo llega hasta donde alcanza su cuerda',
   'guide.whirlpool': 'El remolino acerca una casilla por movimiento cada bote vacío de su línea',
   'guide.plug': 'Empuja una caja al remolino para taparlo y dejará de atraer',
+  'guide.iceStone':
+    'La piedra de hielo congela el agua a su alrededor y puedes deslizarte por el hielo',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',

@@ -66,6 +66,7 @@ export const ja: Partial<Texts> = {
   'guide.tether': 'つながれた舟は綱が届くところまでしか行けません',
   'guide.whirlpool': '渦は同じ列の空の舟を一手ごとに一マスずつ引き寄せます',
   'guide.plug': '箱を渦に押し込むとふさがって、もう引き寄せなくなります',
+  'guide.iceStone': '氷の石のまわりの水は凍って、滑って渡れます',
 
   'chapter.1': '石を踏む道',
   'chapter.2': '草が茂る道',
