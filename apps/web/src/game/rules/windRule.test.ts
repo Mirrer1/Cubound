@@ -143,6 +143,18 @@ describe('move 바람', () => {
     expect(events.at(-1)).toEqual({ type: 'braced', direction: 'left' })
   })
 
+  it('얼음 돌 쪽으로는 밀리지도 올라서지도 않고 기대서 버틴다', () => {
+    const state = gusty(
+      { entities: [{ type: 'iceStone', x: 2, y: 0 }] },
+      { player: { x: 3, y: 1 } },
+    )
+    const { state: next, events } = move(state, 'up')
+
+    expect(next.player).toEqual({ x: 3, y: 0 })
+    expect(next.stones).toEqual([{ x: 2, y: 0 }])
+    expect(events.at(-1)).toEqual({ type: 'braced', direction: 'left' })
+  })
+
   it('낮은 칸의 상자도 높이와 상관없이 기대서 버티고 그 위로 밀려 올라가지 않는다', () => {
     const state = gusty(
       {

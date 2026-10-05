@@ -68,10 +68,10 @@ const zoneMoves = (stage: Stage, path: Direction[]) => {
 
   const counts = zones.map(() => 0)
   // 제한만 빼고 남기는 판을 바꾸는 규칙, 빼면 버섯과 덩굴이 그대로라 다른 길로 새는 풀이
-  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug } = stage.rules ?? {}
+  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt } = stage.rules ?? {}
   let state = createState({
     ...stage,
-    rules: { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug },
+    rules: { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt },
   })
   let zone = zoneIndexAt(zones, state.player, 0)
 

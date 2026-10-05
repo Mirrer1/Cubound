@@ -1,4 +1,4 @@
-import { SEED_WAIT, STRUGGLES, readCracks, readMushrooms, readSwamps } from './rules'
+import { SEED_WAIT, STRUGGLES, createState, readCracks, readMushrooms, readSwamps } from './rules'
 import type {
   Carried,
   Crack,
@@ -21,6 +21,9 @@ export interface Session {
   boxes: Point[]
   tethered?: Point[] // 예전 저장에는 없는 값
   plugged?: Point[] // 예전 저장에는 없는 값
+  stones?: Point[] // 예전 저장에는 없는 값
+  iced?: Point[] // 예전 저장에는 없는 값
+  melt?: number | null // 예전 저장에는 없는 값
   cracks: Crack[]
   trams: TramSpot[]
   swamps?: Point[] // 예전 저장에는 없는 값
@@ -58,6 +61,9 @@ export const toSession = (game: GameState): Session => ({
   boxes: game.boxes,
   tethered: game.tethered,
   plugged: game.plugged,
+  stones: game.stones,
+  iced: game.iced,
+  melt: game.melt,
   cracks: game.cracks,
   trams: game.trams,
   swamps: game.swamps,
@@ -242,9 +248,22 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   const plugged =
     saved.plugged === undefined ? [] : listOf(saved.plugged, isWhirlpool, whirlpoolKeys.size)
 
+  const start = createState(stage)
+  const stones =
+    saved.stones === undefined
+      ? start.stones
+      : listOf<Point>(saved.stones, onFloor, start.stones.length)
+  const isBox = (value: unknown): value is Point =>
+    isObject(value) && (boxes ?? []).some(({ x, y }) => x === value.x && y === value.y)
+  const iced = saved.iced === undefined ? [] : listOf(saved.iced, isBox, boxCount)
+  const melt = saved.melt === undefined ? start.melt : saved.melt
+  const mostMelt = stage.rules?.melt ?? -1
+  if (melt !== null && !(isCount(melt) && (melt as number) <= mostMelt)) return null
+
   if (!boxes || !ladders || !leaningLadders || !seeds || !planted || !tethered || !plugged) {
     return null
   }
+  if (!stones || !iced) return null
   if (new Set(plugged.map(({ x, y }) => `${x},${y}`)).size !== plugged.length) return null
   const tiedToBox = (boat: Point) => boxes.some(({ x, y }) => x === boat.x && y === boat.y)
   if (tethered.length !== stagePosts.length || !tethered.every(tiedToBox)) return null
@@ -263,6 +282,9 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     boxes: boxes.map(({ x, y }) => ({ x, y })),
     tethered: tethered.map(({ x, y }) => ({ x, y })),
     plugged: plugged.map(({ x, y }) => ({ x, y })),
+    stones: stones.map(({ x, y }) => ({ x, y })),
+    iced: iced.map(({ x, y }) => ({ x, y })),
+    melt: melt as number | null,
     cracks: (savedCracks as Crack[]).map(({ x, y, left }) => ({ x, y, left })),
     trams: (savedTrams as TramSpot[]).map(({ id, at, dir }) => ({ id, at, dir })),
     swamps:

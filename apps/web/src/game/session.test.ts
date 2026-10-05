@@ -21,6 +21,9 @@ const MID = {
   boxes: [{ x: 2, y: 0 }],
   tethered: [],
   plugged: [],
+  stones: [],
+  iced: [],
+  melt: null,
   cracks: [],
   trams: [],
   swamps: [],
@@ -652,5 +655,54 @@ describe('restoreSession 소용돌이', () => {
 
     expect(restoreSession({ ...session, plugged: [{ x: 2, y: 2 }] }, PLUG_STAGE)).toBeNull()
     expect(restoreSession({ ...session, plugged: [at, at] }, PLUG_STAGE)).toBeNull()
+  })
+})
+
+describe('restoreSession 얼음 돌', () => {
+  // 물 높이 1, (1,1) 돌을 띄우고 (2,1) 상자를 언 칸 (2,2) 위로 민 판
+  const STONE_STAGE: Stage = {
+    version: 1,
+    id: '13-10',
+    heights: [
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 0, 0, 0],
+      [1, 0, 0, 0],
+    ],
+    water: 1,
+    start: { x: 1, y: 0 },
+    goal: { x: 0, y: 3 },
+    entities: [
+      { type: 'iceStone', x: 1, y: 1 },
+      { type: 'box', x: 2, y: 1 },
+    ],
+    rules: { melt: 5 },
+  }
+  const iced = played(STONE_STAGE, ['down', 'up', 'right', 'down'])
+
+  it('돌 자리와 언 칸 위 상자와 녹는 숫자를 그대로 이어간다', () => {
+    expect(iced.stones).toEqual([{ x: 1, y: 2 }])
+    expect(iced.iced).toEqual([{ x: 2, y: 2 }])
+    expect(iced.melt).toBe(2)
+    expect(restoreSession(toSession(iced), STONE_STAGE)).toEqual(iced)
+  })
+
+  it('얼음 돌이 없던 때 저장한 것은 판의 처음 돌로 읽는다', () => {
+    const session = {
+      ...toSession(createState(STONE_STAGE)),
+      stones: undefined,
+      iced: undefined,
+      melt: undefined,
+    }
+
+    expect(restoreSession(session, STONE_STAGE)).toEqual(createState(STONE_STAGE))
+  })
+
+  it('판 숫자보다 큰 녹는 숫자와 상자가 없는 언 칸 위 상자는 버린다', () => {
+    const session = toSession(iced)
+
+    expect(restoreSession({ ...session, melt: 6 }, STONE_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, iced: [{ x: 3, y: 3 }] }, STONE_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, stones: [{ x: 9, y: 9 }] }, STONE_STAGE)).toBeNull()
   })
 })

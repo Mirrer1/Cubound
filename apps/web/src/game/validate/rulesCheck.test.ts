@@ -90,4 +90,12 @@ describe('checkRules 바람', () => {
 
     expect(errorsOf({ ...VALID, rules: { wind: 'left' }, guides })).toEqual([])
   })
+
+  it('녹는 얼음 숫자는 양의 정수여야 한다', () => {
+    const melt = (value: unknown) => errorsOf({ ...VALID, rules: { melt: value } })
+
+    expect(melt(0)).toContain('rules.melt는 양의 정수여야 한다')
+    expect(melt(2.5)).toContain('rules.melt는 양의 정수여야 한다')
+    expect(melt(3)).not.toContain('rules.melt는 양의 정수여야 한다')
+  })
 })

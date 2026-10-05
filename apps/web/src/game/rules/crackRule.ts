@@ -1,9 +1,9 @@
 import type { GameEvent, GameState, MoveResult, Point } from '../types'
-import { hasBox, same } from './cellRule'
+import { hasBox, hasStone, same } from './cellRule'
 
 // 칸을 딛는 것, 상자 위에 선 큐브는 제외
 const restingOn = (state: GameState, p: Point) =>
-  hasBox(state, p) ? 'box' : same(state.player, p) ? 'player' : null
+  hasBox(state, p) || hasStone(state, p) ? 'box' : same(state.player, p) ? 'player' : null
 
 // 기대 놓은 사다리가 선 칸은 다 닳아도 유지, 허공에 남는 사다리 방지
 const holdsLadder = (state: GameState, p: Point) => state.leaningLadders.some((l) => same(l, p))

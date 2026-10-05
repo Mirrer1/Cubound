@@ -1,12 +1,13 @@
 import type { Direction, GameState, Point } from '../types'
-import { hasBox, same, step } from './cellRule'
+import { hasBox, hasStone, isFrozen, same, step } from './cellRule'
 import { floorAt } from './stateRule'
 import { isClosedDoor } from './switchRule'
 
 export const isIce = (state: GameState, { x, y }: Point) => state.stage.ice?.[y]?.[x] === '#'
 
-// 얼음 위 상자에 선 큐브는 미끄럼 제외
-const onIce = (state: GameState, p: Point) => isIce(state, p) && !hasBox(state, p)
+// 얼음 위 상자와 얼어붙은 배에 선 큐브는 미끄럼 제외
+const onIce = (state: GameState, p: Point) =>
+  (isIce(state, p) || isFrozen(state, p)) && !hasBox(state, p)
 
 export const slidePlayer = (
   state: GameState,
@@ -21,7 +22,13 @@ export const slidePlayer = (
 
     const next = step(at, direction)
     const floor = floorAt(state, next)
-    if (floor === null || floor > level || hasBox(state, next) || isClosedDoor(state, next)) {
+    if (
+      floor === null ||
+      floor > level ||
+      hasBox(state, next) ||
+      hasStone(state, next) ||
+      isClosedDoor(state, next)
+    ) {
       return { rest: at, landed: null }
     }
     if (floor < level) return { rest: at, landed: next }

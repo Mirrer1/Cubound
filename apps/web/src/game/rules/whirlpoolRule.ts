@@ -1,5 +1,5 @@
 import type { Direction, GameEvent, GameState, MoveResult, Point } from '../types'
-import { isWater, same, step } from './cellRule'
+import { isFrozen, isWater, same, step } from './cellRule'
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
 
@@ -15,11 +15,13 @@ const lineFrom = (state: GameState, at: Point, direction: Direction) => {
   return line
 }
 
-// 큐브가 안 탄 뜬 상자를 소용돌이 쪽으로 한 칸씩 끄는 수, 가까운 상자부터 옮겨 붙은 줄은 같이 이동
+// 큐브가 안 탄 뜬 상자와 물에 뜬 얼음 돌을 소용돌이 쪽으로 한 칸씩 끄는 수, 가까운 것부터 옮겨 붙은 줄은 같이 이동
 export const pullBoats = (state: GameState): MoveResult => {
   const events: GameEvent[] = []
   let boxes = state.boxes
+  let stones = state.stones
   const hasBoat = (p: Point) => boxes.some((box) => same(box, p))
+  const hasStone = (p: Point) => stones.some((q) => same(q, p))
 
   for (const whirlpool of state.stage.entities) {
     if (whirlpool.type !== 'whirlpool' || isPlugged(state, whirlpool)) continue
@@ -28,12 +30,27 @@ export const pullBoats = (state: GameState): MoveResult => {
       const line = lineFrom(state, whirlpool, direction)
       line.forEach((from, i) => {
         const to = line[i - 1]
-        if (!to || same(from, state.player) || !hasBoat(from) || hasBoat(to)) return
-        boxes = boxes.map((box) => (same(box, from) ? to : box))
-        events.push({ type: 'pulled', from, to })
+        const stone = hasStone(from)
+        if (!to || same(from, state.player) || !(stone || hasBoat(from))) return
+        if (hasBoat(to) || hasStone(to)) return
+
+        const now = { ...state, boxes, stones }
+        // 다른 돌이 얼린 칸은 땅처럼 줄을 끊는 칸
+        const others = { ...now, stones: stones.filter((q) => !same(q, from)) }
+        if (line.slice(0, i).some((p) => isFrozen(others, p))) return
+
+        if (stone) {
+          // 큐브가 선 언 칸의 돌은 탄 배처럼 제외
+          if (isFrozen({ ...now, stones: [from] }, state.player)) return
+          stones = stones.map((q) => (same(q, from) ? to : q))
+          events.push({ type: 'stonePulled', from, to })
+        } else if (!isFrozen(now, from)) {
+          boxes = boxes.map((box) => (same(box, from) ? to : box))
+          events.push({ type: 'pulled', from, to })
+        }
       })
     }
   }
 
-  return events.length === 0 ? { state, events } : { state: { ...state, boxes }, events }
+  return events.length === 0 ? { state, events } : { state: { ...state, boxes, stones }, events }
 }

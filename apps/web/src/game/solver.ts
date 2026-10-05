@@ -15,15 +15,15 @@ const points = (list: Point[]) =>
     .sort()
     .join(' ')
 
-// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개는 유지
+// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개와 녹는 얼음은 유지
 // 제한이 너무 작을 때도 진짜 최소 이동 수를 얻는 방법
 const forSearch = (stage: Stage): Stage => {
-  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug } = stage.rules ?? {}
+  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt } = stage.rules ?? {}
   return {
     ...stage,
     rules:
-      swampDeepen || mushroomWither || vineStop || seedGrow || wind || plug
-        ? { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug }
+      swampDeepen || mushroomWither || vineStop || seedGrow || wind || plug || melt
+        ? { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt }
         : undefined,
   }
 }
@@ -70,6 +70,11 @@ const stateKey = (state: GameState, deep = true) => {
     ...(state.tethered.length > 0 ? [state.tethered.map(({ x, y }) => `${x},${y}`).join(' ')] : []),
     // 상자가 사라져 남은 상자 자리만으로는 갈리지 않는 막은 소용돌이
     ...(state.stage.rules?.plug ? [points(state.plugged)] : []),
+    // 얼음 돌, 얼어붙은 배와 자리만으로 갈리지 않는 언 칸 위 상자
+    ...(state.stage.entities.some((e) => e.type === 'iceStone')
+      ? [points(state.stones), points(state.iced)]
+      : []),
+    ...(state.stage.rules?.melt ? [`${state.melt}`] : []),
     ...(state.trams.length > 0
       ? [state.trams.map(({ at, dir }) => `${at}${dir > 0 ? '+' : '-'}`).join(' ')]
       : []),

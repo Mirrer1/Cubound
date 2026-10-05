@@ -17,6 +17,7 @@ export type Entity = (
   | { type: 'vine'; id: string; cells: Point[] } // x, y는 뿌리 칸, cells는 자랄 순서
   | { type: 'post'; length: number; boat: Point } // x, y는 말뚝 칸, boat는 묶인 배의 처음 자리
   | { type: 'whirlpool' }
+  | { type: 'iceStone' }
 ) &
   Point
 
@@ -36,6 +37,7 @@ export interface StageRules {
   seedGrow?: boolean // 솟은 씨앗 칸이 4수마다 한 층씩 세 층까지 솟는 판
   wind?: Direction // 4수마다 큐브가 밀려 가는 방향
   plug?: boolean // 땅 상자를 밀어 넣으면 소용돌이가 막히는 판
+  melt?: number // 물에 뜬 얼음 돌이 녹기까지의 수
 }
 
 export interface Stage {
@@ -107,6 +109,9 @@ export interface GameState {
   boxes: Point[]
   tethered: Point[] // 말뚝 순서대로 묶인 배의 지금 자리
   plugged: Point[] // 상자로 막혀 보통 물 칸이 된 소용돌이
+  stones: Point[] // 얼음 돌
+  iced: Point[] // 언 칸 위에 올라선 상자, 얼어붙은 배는 제외
+  melt: number | null // 물에 뜬 얼음 돌이 녹기까지 남은 수, 녹는 판이 아니거나 뜬 돌이 없으면 null
   cracks: Crack[]
   trams: TramSpot[]
   swamps: Point[] // 남아 있는 늪 칸, 상자가 가라앉은 칸은 제외
@@ -132,7 +137,7 @@ export type GameEvent =
   | { type: 'moved'; from: Point; to: Point }
   | { type: 'fell'; from: Point; to: Point; drop: number } // drop은 떨어진 층 수
   | { type: 'climbed'; from: Point; to: Point; via: 'box' | 'ladder' }
-  | { type: 'slid'; subject: 'player' | 'box'; from: Point; to: Point } // 얼음 위 미끄러짐, 이웃하지 않을 수도 있는 from과 to
+  | { type: 'slid'; subject: 'player' | 'box' | 'stone'; from: Point; to: Point } // 얼음 위 미끄러짐, 이웃하지 않을 수도 있는 from과 to
   | { type: 'pushed'; from: Point; to: Point; result: 'slid' | 'fell' | 'filled' | 'floated' } // floated는 땅에서 물에 떨어져 뜬 상자
   | { type: 'cracked'; at: Point; left: number; gone: boolean } // gone은 바닥 없는 칸이 되었는지 여부
   | { type: 'struggled'; at: Point } // 늪에서 제자리에 선 수
@@ -145,6 +150,16 @@ export type GameEvent =
   | { type: 'rowed'; from: Point; to: Point } // 뜬 상자를 탄 채 함께 간 한 칸
   | { type: 'pulled'; from: Point; to: Point } // 소용돌이에 끌려 한 칸 간 빈 배
   | { type: 'plugged'; at: Point } // 밀어 넣은 땅 상자로 막힌 소용돌이
+  | {
+      type: 'stonePushed'
+      from: Point
+      to: Point
+      result: 'slid' | 'fell' | 'filled' | 'floated' | 'rowed' // rowed는 물에 뜬 채 한 칸
+    }
+  | { type: 'stonePulled'; from: Point; to: Point } // 소용돌이에 끌려 한 칸 간 물에 뜬 얼음 돌
+  | { type: 'melted'; at: Point } // 녹아 사라진 얼음 돌
+  | { type: 'froze'; cells: Point[] } // 이번 수에 언 물 칸
+  | { type: 'thawed'; cells: Point[] } // 이번 수에 녹아 물로 돌아간 칸
   | { type: 'tram'; id: string; from: Point; to: Point }
   | { type: 'grew'; id: string; at: Point } // 덩굴이 한 칸 뻗어 메운 칸
   | { type: 'planted'; at: Point; direction: Direction } // direction은 턱 쪽으로 민 방향

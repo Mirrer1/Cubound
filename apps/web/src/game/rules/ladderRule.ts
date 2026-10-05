@@ -1,5 +1,5 @@
 import type { Direction, GameState, MoveResult, Point } from '../types'
-import { hasBox, same } from './cellRule'
+import { hasBox, isFrozen, same } from './cellRule'
 import { climbsLeft, limitBlocked } from './limitRule'
 import { SEED_WAIT, canPlant, isPlanted } from './seedRule'
 import { floorAt, standHeight } from './stateRule'
@@ -13,7 +13,10 @@ export const climbOrPlaceLadder = (
 ): MoveResult | null => {
   const from = state.player
   const toFloor = floorAt(state, to)
-  if (hasBox(state, from) || toFloor !== standHeight(state, from) + 1) return null
+  // 녹으면 물 위에 남는 언 칸은 놓기와 심기 모두 불가
+  if (hasBox(state, from) || isFrozen(state, from) || toFloor !== standHeight(state, from) + 1) {
+    return null
+  }
 
   if (state.leaningLadders.some((l) => same(l, from) && l.direction === direction)) {
     if (climbsLeft(state) === 0) return limitBlocked(state, direction, 'climbs')

@@ -12,6 +12,7 @@ const ENTITY_TYPES = [
   'seed',
   'post',
   'whirlpool',
+  'iceStone',
 ]
 
 export const checkEntities = ({
@@ -44,13 +45,14 @@ export const checkEntities = ({
     }
     if (occupied.has(key(entity))) add(`entities[${i}]이 다른 오브젝트와 같은 칸에 있다`)
     if (reserved.has(key(entity))) add(`entities[${i}]이 시작이나 목표 칸에 있다`)
-    // 밀려 다니는 상자는 무너지는 칸에서 시작해도 되는 예외
-    if (entity.type !== 'box' && crackCells.has(key(entity))) {
+    // 밀려 다니는 상자와 얼음 돌은 무너지는 칸에서 시작해도 되는 예외
+    const pushable = entity.type === 'box' || entity.type === 'iceStone'
+    if (!pushable && crackCells.has(key(entity))) {
       add(`entities[${i}]이 무너지는 칸에 있다`)
     }
     if (swampCells.has(key(entity))) add(`entities[${i}]이 늪 칸에 있다`)
     if (mushroomCells.has(key(entity))) add(`entities[${i}]이 버섯 칸에 있다`)
-    const wetOk = entity.type === 'box' || entity.type === 'whirlpool'
+    const wetOk = pushable || entity.type === 'whirlpool'
     if (!wetOk && isWaterCell(entity)) add(`entities[${i}]이 물 칸에 있다`)
     if (entity.type === 'whirlpool' && !isWaterCell(entity)) {
       add(`entities[${i}]의 소용돌이가 물 칸에 있지 않다`)

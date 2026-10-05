@@ -757,3 +757,38 @@ describe('solve 마개', () => {
     expect(result.status === 'solved' && result.moves).toBe(10)
   })
 })
+
+describe('solve 얼음 돌', () => {
+  // 물 높이 1, y 2 줄이 물 칸, x 2의 높이 3 벽, (1,1) 돌을 아래로 띄워 언 칸 (0,2)로 건너는 판
+  const STONE_STAGE: Stage = {
+    version: 1,
+    id: 'test-solver-ice-stone',
+    heights: [
+      [1, 1, 3],
+      [1, 1, 3],
+      [0, 0, 0],
+      [1, 1, 1],
+    ],
+    water: 1,
+    start: { x: 0, y: 0 },
+    goal: { x: 1, y: 3 },
+    entities: [{ type: 'iceStone', x: 1, y: 1 }],
+  }
+
+  it('돌 자리가 다른 상태를 합치지 않아 같은 칸으로 돌아오는 풀이를 찾는다', () => {
+    const result = solve(STONE_STAGE)
+
+    expect(result.status === 'solved' && result.path).toEqual([
+      'right',
+      'down',
+      'left',
+      'down',
+      'right',
+    ])
+  })
+
+  it('녹는 판은 숫자를 지킨 채 푼다', () => {
+    expect(solve({ ...STONE_STAGE, rules: { melt: 2 } }).status).toBe('solved')
+    expect(solve({ ...STONE_STAGE, rules: { melt: 1 } }).status).toBe('unsolvable')
+  })
+})

@@ -1,7 +1,8 @@
 import type { Direction, GameEvent, GameState, MoveResult } from '../types'
 import { pushBox } from './boxRule'
-import { hasBox, isWater, step } from './cellRule'
+import { hasBox, hasStone, isOpenWater, step } from './cellRule'
 import { crumble } from './crackRule'
+import { meltStones, pushStone, settleIce } from './iceStoneRule'
 import { climbOrPlaceLadder } from './ladderRule'
 import { climbsLeft, dirLeft, limitBlocked, movesLeft, pushesLeft, ridesLeft } from './limitRule'
 import { hop, isMushroom, spring } from './mushroomRule'
@@ -30,7 +31,13 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
     return hopped ? spring(state, hopped, direction) : blocked
   }
 
-  if (isWater(state, from) && isWater(state, to) && !hasBox(state, to)) {
+  if (hasStone(state, to)) {
+    const pushed = pushStone(state, to, direction)
+    if (!pushed) return blocked
+    return pushesLeft(state) === 0 ? limitBlocked(state, direction, 'pushes') : pushed
+  }
+
+  if (isOpenWater(state, from) && isOpenWater(state, to) && !hasBox(state, to)) {
     return withinReach(state, from, to) && !isWhirlpool(state, to)
       ? row(state, to, direction)
       : blocked
@@ -72,7 +79,9 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
   const { state: rode, events: tramEvents } = rideTrams(crumbled)
   const { state: grown, events: vineEvents } = growVines(rode)
   const { state: seeded, events: seedEvents } = riseSeeds(before, grown)
-  const { state: moved, events: pullEvents } = pullBoats(seeded)
+  const { state: pulled, events: pullEvents } = pullBoats(seeded)
+  const { state: melted, events: meltEvents } = meltStones(before, pulled)
+  const { state: moved, events: iceEvents } = settleIce(before, melted)
 
   const doorEvents: GameEvent[] = doors(before.stage)
     .map((door) => ({
@@ -97,6 +106,8 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
       ...vineEvents,
       ...seedEvents,
       ...pullEvents,
+      ...meltEvents,
+      ...iceEvents,
       ...doorEvents,
       ...liftEvents,
       ...(moved.cleared ? [{ type: 'cleared' } as const] : []),

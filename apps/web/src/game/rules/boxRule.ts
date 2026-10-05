@@ -1,5 +1,5 @@
 import type { Direction, GameEvent, GameState, MoveResult, Point } from '../types'
-import { hasBox, isWater, same, step } from './cellRule'
+import { hasBox, hasStone, isFrozen, isOpenWater, same, step } from './cellRule'
 import { isIce } from './iceRule'
 import { isMushroom, wither } from './mushroomRule'
 import { floorAt, rawHeight } from './stateRule'
@@ -10,13 +10,14 @@ import { walk } from './walkRule'
 import { isWhirlpool } from './whirlpoolRule'
 
 // 바닥 없는 칸은 -1, 상자가 들어가 메울 자리
-const boxLanding = (state: GameState, p: Point, level: number): number | null => {
+export const boxLanding = (state: GameState, p: Point, level: number): number | null => {
   const floor = rawHeight(state, p)
   if (floor === undefined || floor > level) return null
   // 상자가 메운 발판 길 칸은 발판 통행 불가
   if (floor < 0 && onTramPath(state.stage, p)) return null
   if (
     hasBox(state, p) ||
+    hasStone(state, p) ||
     state.ladders.some((l) => same(l, p)) ||
     state.leaningLadders.some((l) => same(l, p)) ||
     state.seeds.some((s) => same(s, p)) ||
@@ -59,9 +60,11 @@ const slideBox = (
   let at = from
 
   for (;;) {
-    if (!isIce(state, at)) return { rest: at, landed: null }
+    if (!isIce(state, at) && !isFrozen(state, at)) return { rest: at, landed: null }
 
     const next = step(at, direction)
+    // 언 칸이 끝나는 물 앞 멈춤
+    if (isFrozen(state, at) && isOpenWater(state, next)) return { rest: at, landed: null }
     const floor = boxLanding(state, next, level)
     if (floor === null) return { rest: at, landed: null }
     if (floor < level)
@@ -69,7 +72,7 @@ const slideBox = (
         rest: at,
         landed: {
           to: next,
-          result: isWater(state, next) ? 'floated' : floor < 0 ? 'filled' : 'fell',
+          result: isOpenWater(state, next) ? 'floated' : floor < 0 ? 'filled' : 'fell',
         },
       }
     at = next
@@ -101,7 +104,7 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
       from: box,
       to: target,
       result:
-        isWater(state, target) && !isWater(state, box)
+        isOpenWater(state, target) && !isOpenWater(state, box)
           ? 'floated'
           : landing < 0
             ? 'filled'
@@ -124,8 +127,10 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
   const fillHeight = landing < 0 ? launch : landing
 
   // 미끄러짐과 낙하까지 밀기 한 번
+  const iced = state.iced.filter((p) => !same(p, box))
   const pushing: GameState = {
     ...state,
+    iced,
     pushes: state.pushes + 1,
     mushrooms: wither(state, flight?.sprung ?? []),
   }
@@ -141,7 +146,11 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
               y === filled.y ? row.map((h, x) => (x === filled.x ? fillHeight : h)) : row,
             ),
           }
-        : { ...pushing, boxes: [...others, stop] }
+        : {
+            ...pushing,
+            boxes: [...others, stop],
+            iced: isFrozen(state, stop) ? [...iced, stop] : iced,
+          }
 
   return walk(next, box, boxFloor, direction, events)
 }
