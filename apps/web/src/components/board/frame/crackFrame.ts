@@ -1,5 +1,6 @@
 import { clamp01, easeIn, easeOut, lerp } from './curveFrame'
-import { hopCells, playerSegments, same } from './timeFrame'
+import { hopCells, same } from './pathFrame'
+import { playerSegments } from './timeFrame'
 import type { GameEvent, GameState, Point } from '@/game/types'
 
 // 단계가 오르는 앞부분과 가라앉아 사라지는 뒷부분, 가라앉음은 이동 연출 거의 전부

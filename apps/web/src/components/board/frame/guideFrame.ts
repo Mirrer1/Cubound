@@ -10,7 +10,7 @@ import {
   waterLook,
 } from '../view'
 import { MUSHROOM_STAND, mushroomPose } from './mushroomFrame'
-import { has, same } from './timeFrame'
+import { has, same } from './pathFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { isDoorOpen, isLiftRaised, readMushrooms } from '@/game/rules'
 import type { GameState, Point } from '@/game/types'

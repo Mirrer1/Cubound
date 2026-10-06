@@ -1,27 +1,23 @@
 import { atStage } from './crackFrame'
 import { type Chain, NO_CHAIN, clamp01, easeIn, easeOut, lerp } from './curveFrame'
 import { slideChain } from './iceFrame'
-import { swampTime } from './swampFrame'
 import {
   CAP_PRESS,
-  type CountView,
   HOP,
   type PathEvent,
   type Segment,
   boxPath,
   capFrom,
   cellsOf,
-  countDisplay,
-  durationOf,
-  elapsedAt,
   has,
   hopCells,
   hopSpan,
-  playerSegments,
   same,
   segmentsOf,
   stepAt,
-} from './timeFrame'
+} from './pathFrame'
+import { swampTime } from './swampFrame'
+import { type CountView, countDisplay, durationOf, elapsedAt, playerSegments } from './timeFrame'
 import { TILE } from '@/game/iso'
 import { capsLeft, readMushrooms, standHeight } from '@/game/rules'
 import type { GameEvent, GameState, Point } from '@/game/types'

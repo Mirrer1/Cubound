@@ -1,15 +1,14 @@
 import { CUBE, type Lane, WATER, whirlpoolsOf } from '../view'
 import { clamp01, easeOut, lerp, smooth } from './curveFrame'
+import { has, same } from './pathFrame'
 import {
   NO_SWAMP,
   PLUG,
   type SwampTime,
   elapsedAt,
-  has,
   moveSeconds,
   plugStart,
   pullStart,
-  same,
 } from './timeFrame'
 import { frontOf } from './tramFrame'
 import { TILE, toScreen } from '@/game/iso'

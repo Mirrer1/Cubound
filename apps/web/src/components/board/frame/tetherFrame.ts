@@ -1,8 +1,8 @@
 import { moorCells, postsOf, ropeEnds, ropePoints } from '../view'
 import type { BoxFrame } from './boxFrame'
 import { clamp01, lerp, smooth } from './curveFrame'
+import { same } from './pathFrame'
 import { restartDrop } from './restartFrame'
-import { same } from './timeFrame'
 import type { GameState, Point, Stage } from '@/game/types'
 
 export interface TetherFrame {

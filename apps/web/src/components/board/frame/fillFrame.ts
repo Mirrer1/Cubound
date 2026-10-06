@@ -1,4 +1,4 @@
-import { has } from './timeFrame'
+import { has } from './pathFrame'
 import type { VineFrame, VineLook } from './vineFrame'
 import type { Entity, GameEvent, GameState, Point, VineSpot } from '@/game/types'
 

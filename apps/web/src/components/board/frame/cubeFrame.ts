@@ -11,24 +11,19 @@ import {
   restLift,
   restWalk,
 } from './mushroomFrame'
-import { PLANT_SEED, seedLift } from './seedFrame'
-import { inSwamp, swampTime } from './swampFrame'
-import { ridePhase } from './switchFrame'
 import {
   type PathEvent,
-  WARP,
   cellsOf,
-  elapsedAt,
   hopCells,
   hopSpan,
   playerPath,
-  playerSegments,
-  riseProgress,
-  rises,
   stepAt,
   totalSeconds,
-  warpAt,
-} from './timeFrame'
+} from './pathFrame'
+import { PLANT_SEED, seedLift } from './seedFrame'
+import { inSwamp, swampTime } from './swampFrame'
+import { ridePhase } from './switchFrame'
+import { WARP, elapsedAt, playerSegments, riseProgress, rises, warpAt } from './timeFrame'
 import { carriedBy, carryOf, frontOf, slidingCell, tramProgress } from './tramFrame'
 import { windLean, windSpan } from './windFrame'
 import { TILE } from '@/game/iso'

@@ -1,13 +1,6 @@
 import { type Chain, easeIn, easeOut } from './curveFrame'
-import {
-  FROST_FADE,
-  NO_SWAMP,
-  type Segment,
-  type SwampTime,
-  elapsedAt,
-  frostStamps,
-  same,
-} from './timeFrame'
+import { type Segment, same } from './pathFrame'
+import { FROST_FADE, NO_SWAMP, type SwampTime, elapsedAt, frostStamps } from './timeFrame'
 import type { GameEvent, Point } from '@/game/types'
 
 // 칸 하나의 자국 진하기 0~1, 겹치면 진한 쪽

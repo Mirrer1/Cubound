@@ -23,20 +23,12 @@ import {
   thawingBoxes,
 } from './iceStoneFrame'
 import { mushroomFrames } from './mushroomFrame'
+import { cellsOf, has, playerPath, same } from './pathFrame'
 import { restartDrop } from './restartFrame'
 import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFrame'
 import { boxSink, swampFrame } from './swampFrame'
 import { moorLooks, tetherFrames } from './tetherFrame'
-import {
-  type SwampTime,
-  cellsOf,
-  elapsedAt,
-  has,
-  playerPath,
-  pullStart,
-  same,
-  stepProgress,
-} from './timeFrame'
+import { type SwampTime, elapsedAt, pullStart, stepProgress } from './timeFrame'
 import { tramFramesOf, tramProgress } from './tramFrame'
 import { vineFrames } from './vineFrame'
 import { rippleOf } from './waterFrame'

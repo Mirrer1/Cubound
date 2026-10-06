@@ -1,4 +1,5 @@
 import { clamp01 } from './curveFrame'
+import { totalSeconds } from './pathFrame'
 import { swampTime } from './swampFrame'
 import {
   NO_SWAMP,
@@ -8,7 +9,6 @@ import {
   moveSeconds,
   playerSegments,
   stepProgress,
-  totalSeconds,
 } from './timeFrame'
 import { windLeft } from '@/game/rules'
 import type { GameEvent, GameState } from '@/game/types'

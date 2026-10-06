@@ -3,14 +3,10 @@ import { type CrackView, standSink } from './crackFrame'
 import { type Chain, NO_CHAIN, easeIn, lerp, smooth } from './curveFrame'
 import { slideChain } from './iceFrame'
 import { hopClear, hopLevel, hopLift, hopProgress } from './mushroomFrame'
-import { seedLift } from './seedFrame'
-import { type BoxSinkFrame, boxSink, swampTime } from './swampFrame'
-import { ridePhase } from './switchFrame'
 import {
   type PathEvent,
   boxPath,
   cellsOf,
-  elapsedAt,
   has,
   hopCells,
   hopSpan,
@@ -18,7 +14,11 @@ import {
   segmentsOf,
   stepAt,
   totalSeconds,
-} from './timeFrame'
+} from './pathFrame'
+import { seedLift } from './seedFrame'
+import { type BoxSinkFrame, boxSink, swampTime } from './swampFrame'
+import { ridePhase } from './switchFrame'
+import { elapsedAt } from './timeFrame'
 import { carriedBy, carryOf, frontOf, slidingCell, tramProgress } from './tramFrame'
 import { floatGone, floatLevel } from './waterFrame'
 import { TILE, toScreen } from '@/game/iso'

@@ -1,22 +1,16 @@
 import { CUBE, ICE, type Lane, STONE, floatShownAt, waterLook } from '../view'
 import { NO_CHAIN, clamp01, easeIn, easeOut, lerp, smooth } from './curveFrame'
+import { type PathEvent, has, same, segmentsOf, stepAt, stonePath, totalSeconds } from './pathFrame'
 import { restartDrop } from './restartFrame'
 import {
   MELT_SECONDS,
   PULL_SECONDS,
-  type PathEvent,
   type SwampTime,
   elapsedAt,
   freezeEnd,
-  has,
   moveSeconds,
   pullStart,
-  same,
-  segmentsOf,
-  stepAt,
-  stonePath,
   thaws,
-  totalSeconds,
 } from './timeFrame'
 import { frontOf } from './tramFrame'
 import { FLOAT, floatGone, floatLevel } from './waterFrame'

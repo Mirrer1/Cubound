@@ -1,14 +1,11 @@
 import { smooth } from './curveFrame'
+import { boxPath, cellsOf, same, segmentsOf } from './pathFrame'
 import {
   NO_SWAMP,
   SWITCH_SECONDS,
   type SwampTime,
-  boxPath,
-  cellsOf,
   elapsedAt,
   playerSegments,
-  same,
-  segmentsOf,
   touchAt,
 } from './timeFrame'
 import { isLiftRaised } from '@/game/rules'

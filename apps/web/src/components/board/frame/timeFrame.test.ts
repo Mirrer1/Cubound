@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { playerFrame } from './cubeFrame'
+import { SECONDS } from './pathFrame'
 import { swampTime } from './swampFrame'
 import {
   CHAIN_STAGE,
@@ -32,7 +33,6 @@ import {
   MELT_SECONDS,
   PLUG,
   PULL_SECONDS,
-  SECONDS,
   countDisplay,
   durationOf,
   moveSeconds,

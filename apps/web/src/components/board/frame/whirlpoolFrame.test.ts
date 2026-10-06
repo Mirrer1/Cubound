@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { pullLanes } from '../view'
+import { same } from './pathFrame'
 import { PLUG_STAGE, WHIRL_STAGE, lastMove } from './testStages'
-import { PLUG, same } from './timeFrame'
+import { PLUG } from './timeFrame'
 import { PULL_DIP, leanOf, plugPhase, pulledBeside, whirlFrames, whirlLook } from './whirlpoolFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { createState, move } from '@/game/rules'

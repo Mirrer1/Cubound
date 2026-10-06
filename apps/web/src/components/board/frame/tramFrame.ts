@@ -1,12 +1,11 @@
 import { PIT_FLOOR } from '../view'
 import { lerp, smooth } from './curveFrame'
+import { SECONDS, same } from './pathFrame'
 import {
   NO_SWAMP,
-  SECONDS,
   type SwampTime,
   type TramEvent,
   elapsedAt,
-  same,
   tramMoves,
   tramStart,
 } from './timeFrame'
