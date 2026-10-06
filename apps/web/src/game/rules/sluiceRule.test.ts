@@ -347,3 +347,40 @@ describe('floodsPlayer', () => {
     expect(floodsPlayer(before, pressed(before))).toBe(false)
   })
 })
+
+describe('move 잠긴 골', () => {
+  // 물 높이 1, (1,1) 골이 잠기는 줄, (3,0) 수위 장치, (1,2) 얼음 돌이 잠긴 골을 얼림
+  const SUNK_GOAL: Stage = {
+    version: 1,
+    id: 'sunk-goal',
+    heights: [
+      [2, 2, 2, 2],
+      [2, 1, 2, 2],
+      [2, 2, 2, 2],
+    ],
+    water: 1,
+    start: { x: 0, y: 1 },
+    goal: { x: 1, y: 1 },
+    entities: [
+      { type: 'sluice', x: 3, y: 0 },
+      { type: 'iceStone', x: 1, y: 2 },
+    ],
+  }
+
+  it('물에 잠긴 골은 언 칸으로 올라서도 클리어가 아니다', () => {
+    const flooded = createState({
+      ...SUNK_GOAL,
+      entities: [...SUNK_GOAL.entities, { type: 'box', x: 3, y: 0 }],
+    })
+    const { state } = move(flooded, 'right')
+
+    expect(state.player).toEqual({ x: 1, y: 1 })
+    expect(state.cleared).toBe(false)
+  })
+
+  it('물이 낮아 드러난 골은 클리어다', () => {
+    const { state } = move(createState(SUNK_GOAL), 'right')
+
+    expect(state.cleared).toBe(true)
+  })
+})

@@ -1,6 +1,6 @@
 import type { Direction, GameEvent, GameState, MoveResult } from '../types'
 import { pushBox } from './boxRule'
-import { hasBox, hasStone, isOpenWater, step } from './cellRule'
+import { hasBox, hasStone, isOpenWater, isWater, step } from './cellRule'
 import { crumble } from './crackRule'
 import { meltStones, pushStone, settleIce } from './iceStoneRule'
 import { climbOrPlaceLadder } from './ladderRule'
@@ -82,7 +82,12 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
   const { state: seeded, events: seedEvents } = riseSeeds(before, grown)
   const { state: pulled, events: pullEvents } = pullBoats(seeded)
   const { state: melted, events: meltEvents } = meltStones(before, pulled)
-  const { state: moved, events: iceEvents } = settleIce(before, melted)
+  const { state: settled, events: iceEvents } = settleIce(before, melted)
+  // 물에 잠긴 골은 언 칸이나 배로 올라서도 못 들어가는 집
+  const moved =
+    settled.cleared && isWater(settled, settled.stage.goal)
+      ? { ...settled, cleared: false }
+      : settled
 
   const doorEvents: GameEvent[] = doors(before.stage)
     .map((door) => ({
