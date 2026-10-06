@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<script src="cubound-iso.js?v=20261005m"></script>
+<script src="cubound-iso.js?v=20261006b"></script>
 <style>
   html, body { margin: 0; padding: 0; background: #E9E7E2; }
   a { color: #3A3936; }
@@ -280,6 +280,28 @@
     </div>
 
     <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">K</span><span style="font-size:22px;font-weight:400">수위 (14월드)</span></div>
+      <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:860px;word-break:keep-all;text-wrap:pretty">수위 장치에 큐브, 상자, 얼음 돌이 올라가 있는 동안만 판 전체 물이 한 층 높습니다. 판은 낮은 물로 시작합니다. 물, 뜬 상자, 얼음 돌, 잠긴 땅 비침은 B·D·J 그대로이고 수위 표시는 따로 두지 않습니다.</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(520px, 1fr));gap:16px">
+        <sc-for list="{{ Kx }}" as="g" hint-placeholder-count="9">
+          <div style="background:#D9E7E8;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><span style="font-size:13px;color:#5F6566;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+              <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <div style="width:{{ f.w }};max-width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#4F5859">{{ f.cap }}</span>
+                  <div style="width:{{ f.w60 }};display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                </div>
+              </sc-for>
+            </div>
+            <span style="font-size:13px;color:#3A3936;line-height:1.6;word-break:keep-all;text-wrap:pretty;border-top:1px solid #C9D7D8;padding-top:10px">{{ g.pick }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
       <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">G</span><span style="font-size:22px;font-weight:400">장 고르기와 월드 이름</span></div>
       <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:860px;word-break:keep-all;text-wrap:pretty">장 들어가는 자리 v2의 확정안(3안)을 그대로 따랐습니다. 지금 보는 장이 3장이라 목록 화면 전체가 3장 세계 색이고, 카드 창은 각 장의 실제 세계 색입니다.</span>
       <div style="background:#D9E7E8;border-radius:22px;padding:14px">
@@ -393,7 +415,7 @@ class Component extends DCLogic {
   wait() { if (!window.CuboundIso || !window.CuboundIso.CH3) { this.tm = setTimeout(() => this.wait(), 40); return; } this.forceUpdate(); }
   renderVals() {
     const K = window.CuboundIso;
-    const empty = { J: [], I: [], H: [], variants: [], side: [], B: [], Cf: [], D: [], E: [], F: [], tide: [], chapters: [], wtable: [], css: [] };
+    const empty = { Kx: [], J: [], I: [], H: [], variants: [], side: [], B: [], Cf: [], D: [], E: [], F: [], tide: [], chapters: [], wtable: [], css: [] };
     if (!K || !K.CH3) return empty;
     const C = K.C, P3 = K.CH3, ST = K.STONE, mid = P3.mid;
     const vbw = vb => +vb.split(' ')[2];
@@ -621,6 +643,58 @@ class Component extends DCLogic {
         '60px에서 언 물은 물보다 훨씬 밝은 판, 얼음바닥은 옆면까지 밝은 덩이, 물에 뜬 돌은 얼음 판 위 흰 계단과 그 밑동의 짙은 선으로 갈립니다.')
     ];
 
+    // ---------- K · 수위 (14월드) ----------
+    const LVD = (v, pressed, on) => [{ t: 'lvd', v, pressed }].concat(on ? [on] : [], [{ t: 'lvx', v, pressed }]);
+    const one = objs => ({ W: 0, base: -1, g: [[0]], objs: { '0,0': objs } });
+    const pair = v => ({ W: 0, base: -1, g: [[0, 0]], objs: { '0,0': [{ t: 'sw' }], '1,0': LVD(v) } });
+    const g2 = [[1, 1, 1, 1, 1], [1, 0, -1, -1, 1], [1, 0, -1, -1, 1], [1, 1, 1, 1, 1]];
+    const RISE = W => ({ W, base: -1, g: g2, objs: { '3,1': [{ t: 'fbox', rider: true }] } });
+    const DRAIN = (W, rider) => ({ W, base: -1, g: g2, objs: { '1,1': [{ t: W >= 1 ? 'fbox' : 'gbox', rider }], '3,2': [{ t: 'fbox' }] } });
+    const g4 = [[1, 1, 1, 1], [1, 0, 0, 1], [-1, -1, -1, -1]];
+    const HOLE = W => ({ W, base: -1, g: g4, objs: { '1,1': [{ t: 'hole' }], '3,0': [{ t: 'cube' }] } });
+    const g5 = [[1, 1, 1, 1, 1], [1, 0, 0, 0, 1], [1, -1, -1, -1, 1], [1, 1, 1, 1, 1]];
+    const ICE = (W, p) => W === 0
+      ? { W, base: -1, g: g5, cells: { '2,2': { t: 'ice', from: 'y-' } }, objs: { '2,1': [{ t: 'stone', frost: true }] } }
+      : { W, base: -1, g: g5, cells: { '2,2': { t: 'ice', from: 'y-' }, '1,1': { t: 'ice', from: 'x+', p }, '3,1': { t: 'ice', from: 'x-', p } }, objs: { '2,1': [{ t: 'fstone', float: true, sv: 'shadow' }] } };
+    const gB = [[1, 1, 1, 1, 1, 1, 1], [1, 0, 0, 1, 0, 0, 1], [1, 0, 0, 1, 0, 0, 1], [1, 1, 1, 1, 1, 1, 1]];
+    const pA = ['1,1', '2,1', '1,2', '2,2'], pB = ['4,1', '5,1', '4,2', '5,2'];
+    const LOCK = (t, mark) => {
+      const a = 1 - t, b = t, Wc = {}; pA.forEach(k => { Wc[k] = a; }); pB.forEach(k => { Wc[k] = b; });
+      const on = t > 0, objs = { '3,1': LVD('tap', on, on ? { t: 'cube' } : null), '2,2': [{ t: a >= 1 ? 'fbox' : 'gbox' }], '4,1': [{ t: b >= 1 ? 'fbox' : 'gbox' }] };
+      if (!on) objs['3,2'] = [{ t: 'cube' }];
+      const d = { W: 0, base: -1, g: gB, Wc, objs };
+      if (mark !== 'damp') { d.chan = { '3,1': 'x' }; d.chanFlow = t > 0 && t < 1; }
+      if (mark === 'damp') d.damp = { tops: (a < 0.2 ? pA : []).concat(b < 0.2 ? pB : []) };
+      return d;
+    };
+    const g7 = [[1, 1, 1, 1, 1, 1], [1, 1, 1, 0, 1, 1], [0, 0, -1, -1, 0, 1], [0, -1, -1, -1, 0, 1], [0, 0, 0, 0, 0, 1]];
+    const ALL = hi => ({ W: hi ? 1 : 0, base: -1, g: g7, objs: Object.assign({ '0,0': [{ t: 'hole' }], '2,2': [{ t: 'fbox' }] },
+      hi ? { '5,2': LVD('tap', true, { t: 'box' }), '5,1': [{ t: 'cube' }] } : { '5,2': LVD('tap'), '5,1': [{ t: 'box' }], '5,0': [{ t: 'cube' }] }) });
+    const Kx = [
+      G('1 · 수위 장치 · 가 · 물 트는 꼭지', '노란 판(0.62, 3px)은 밟는 자리이고, 오른쪽 모서리에 꼭지가 섭니다(기둥 14px + 바깥쪽 주둥이 + 손잡이 바퀴, 모두 16px). 올라가 있는 동안 ① 바퀴가 물빛으로 바뀌며 홈이 가로로 돌고 ② 주둥이에서 5px 물줄기가 떨어져 ③ 꼭지 밑동 바깥에 0.34배 물웅덩이가 고입니다. 셋 다 큐브와 상자에서 먼 쪽이라 위에 무언가 있어도 보입니다. 내려오면 물이 끊기고 바퀴가 노랗게 돌아옵니다.',
+        [one(LVD('tap')), one(LVD('tap', true, { t: 'cube' })), one(LVD('tap', true, { t: 'box' })), pair('tap')], ['안 밟힘', '큐브 · 열림', '상자 · 열림', '일반 스위치 | 꼭지'], ''),
+      G('1 · 수위 장치 · 나 · 레버', '같은 판에 오른쪽 모서리 경첩(5px)과 팔. 비어 있으면 팔이 뒤로 서 있고(20px), 올라가 있는 동안 앞으로 눕고 경첩 둘레에 물이 고입니다.',
+        [one(LVD('lever')), one(LVD('lever', true, { t: 'cube' })), one(LVD('lever', true, { t: 'box' })), pair('lever')], ['안 밟힘', '큐브 · 열림', '상자 · 열림', '일반 스위치 | 레버'],
+        '추천 · 가. 꼭지는 모양만으로 "물"을 말하고, 열린 동안만 물빛으로 바뀌는 바퀴와 바깥 물웅덩이가 "올라가 있는 동안만"을 그대로 보여 줍니다. 레버는 문 장치로도 읽혀 물과의 연결을 따로 배워야 하고, 눕힌 팔은 60px에서 판 둘레와 섞입니다. 둘 다 모서리에 서서 큐브와 상자가 올라도 옆으로 보이고, 한 층(30px)보다 낮습니다.'),
+      G('2 · 큐브가 탄 배가 같이 오름', '장치가 눌리면 수면이 한 층 오르고, 배와 큐브가 한 덩어리로 같이 오릅니다. 앞 줄 땅은 잠겨 비침이 됩니다. 마지막에 배 윗면이 위 땅(한 층)과 같은 높이가 되어 큐브가 걸어 내립니다.',
+        [RISE(0), RISE(0.34), RISE(0.67), RISE(1)], ['1 · 낮은 물', '2', '3', '4 · 위 땅과 같은 높이']),
+      G('3 · 물이 빠지며 배가 내려앉음', '잠긴 땅 위에 뜬 배(왼쪽)는 물이 빠지기 시작하면 바로 땅에 닿습니다. 상자 키가 한 층이라 윗면 높이는 그대로이고, 물테가 사라진 뒤 수면이 내려가며 노란 옆면이 드러납니다. 깊은 물 위의 배(오른쪽)는 계속 떠서 한 층 내려갑니다.',
+        [DRAIN(1), DRAIN(0.6), DRAIN(0.3), DRAIN(0)], ['1 · 높은 물 · 뜸', '2 · 닿음', '3', '4 · 땅 상자']),
+      G('3 · 큐브가 탄 채', '배 위 큐브는 그대로 상자 위에 섭니다. 큐브 높이도 변하지 않습니다.',
+        [DRAIN(1, true), DRAIN(0.5, true), DRAIN(0, true)], ['높은 물', '빠지는 중', '상자 위 큐브']),
+      G('4 · 잠기는 집', '집이 잠기는 줄에 있을 때. 물이 오르면 집은 수면 아래 어두운 비침으로만 남고, 둑 6px와 수면이 그 위를 덮어 들어갈 수 없다는 것이 읽힙니다. 물이 빠지면 다시 보통 집입니다.',
+        [HOLE(0), HOLE(0.5), HOLE(1)], ['낮은 물 · 보통 집', '오르는 중', '높은 물 · 잠김']),
+      G('5 · 얼음 돌과 수위', '잠기는 줄 위의 땅 돌. 물이 오르면 ① 원래 언 칸(앞)이 수면과 같이 오르고 ② 돌이 뜨며 J절의 얼음 판을 입고 ③ 새로 잠긴 옆 칸 둘이 돌 쪽부터 업니다.',
+        [ICE(0), ICE(0.5, 0.5), ICE(1, 1)], ['낮은 물 · 땅 돌', '오르는 중 · 돌이 뜸', '높은 물 · 새 둘레 얼음']),
+      G('6 · 보스 140 갑문 · 물이 오감', '수위 장치가 비면 웅덩이 가(왼쪽)가, 올라가 있으면 웅덩이 나(오른쪽)가 찹니다. 큐브가 장치에 오르자 가가 빠지며 나가 차고, 그동안 가운데 물길에 물이 흐릅니다. 웅덩이 깊이가 한 층이라 상자 윗면 높이는 그대로입니다. 가의 배는 땅 상자로 내려앉고, 나의 땅 상자는 끝에 물테가 생기며 배가 됩니다.',
+        [LOCK(0), LOCK(0.4), LOCK(0.7), LOCK(1)], ['1 · 가 참', '2 · 오가는 중', '3', '4 · 나 참']),
+      G('6 · 갑문 · 한 짝 표시 두 안', '두 웅덩이가 한 짝이라는 것을 판에 늘 남기는 표시.',
+        [LOCK(0), LOCK(0, 'damp')], ['가 · 물길 자국 (추천)', '나 · 빈 웅덩이 젖은 바닥'],
+        '추천 · 가. 두 웅덩이 사이 땅에 칸 폭 0.2배 홈이 이어지고 장치가 그 홈 위에 앉아, "이 장치가 저 둘 사이의 문"이 한 줄로 읽힙니다. 물이 오갈 때 홈에 물이 차 흐름 방향도 보입니다. 나는 빈 쪽이 "물이 있던 곳"인 것만 말하고 둘이 서로 오간다는 것은 말하지 않습니다. 시작 가이드는 두 웅덩이를 같이 비추는 쪽을 권합니다. 장치가 물길 가운데라 한 틀에 들어오고, 이 판은 "한쪽이 차면 한쪽이 빈다"를 둘을 같이 봐야 읽힙니다.'),
+      G('7 · 한 판에 다', '꼭지(가) 장치, 상자를 올려 둔 장치, 배, 잠기는 줄(물가의 낮은 땅), 위 땅, 집. 낮음에서 큐브가 상자를 장치로 밀어 올리면 높음이 됩니다. 배가 한 층 올라 위 땅과 닿고 앞 줄 땅이 잠깁니다.',
+        [ALL(false), ALL(true)], ['수위 낮음', '수위 높음 · 상자가 장치 위'], '')
+    ];
+
     // ---------- F ----------
     const bossG = [[2, 2, 1, 1, 1], [1, 1, 0, 0, 1], [1, 0, -1, -1, 0], [1, 0, -1, -1, 0], [1, 1, 0, 0, 1]];
     const tops0 = []; bossG.forEach((row, y) => row.forEach((v, x) => { if (v === 0) tops0.push(x + ',' + y); }));
@@ -668,6 +742,7 @@ class Component extends DCLogic {
       '/* 1장 얼음바닥: 윗면 --color-ice-top, 옆면 --color-ice-left / -right 를 땅 덩이 전체에 */',
       '', '/* 수위 스위치 · 판은 도구 옐로 그대로 */',
       `--color-switch: #E3CD8E;   /* 판 0.66, 안 밟힘 4px · 밟힘 1px, tone() 그대로 */`, `--color-levelswitch-pool: ${m.d2};   /* 추천 나 · 0.86, 3px 아래 */`, `--color-levelswitch-pool-inner: ${mx(m.d2, m.d1, 0.5)};   /* 0.76 */`, `--color-levelswitch-pool-full: ${m.d1};   /* 밟힘 · 바닥 높이까지 참 */`, `--color-levelswitch-pool-full-inner: ${mx(m.d1, m.refl, 0.5)};`,
+      '', '/* 14월드 · 수위 장치 (K) · 판 0.62 노란 판 3px · 밟힘 1px, 모서리 장치는 tone(#E3CD8E) */', `--color-level-stream: ${m.d1};   /* 꼭지 물줄기 5.2px · 밑동 바깥 웅덩이 0.34 */`, `--color-level-puddle-inner: ${mx(m.d1, m.refl, 0.55)};   /* 웅덩이 안쪽 0.24 */`, `--color-level-wheel-open: ${m.refl};   /* 열림 바퀴 0.26 · 홈 --color-water-d2 */`, `--color-hole-sunk: ${mx(C.hole, m.d1, 0.5)};   /* 잠긴 집 · 0.62, 안쪽 0.46 */`, `--color-lock-channel: ${mx(m.a, m.d2, 0.42)};   /* 보스 140 물길 홈 · 칸 폭 0.2 */`, `--color-lock-channel-flow: ${m.d1};   /* 오가는 동안, 가운데 0.06 --color-water-reflect */`,
       '', '/* 묶인 배 (110번) */', '--color-post-top: #9A968E;', '--color-post-left: #6F6C66;', '--color-post-right: #85827B;', '--color-post-band: #F2F1EE;', '--color-rope: #7E7A72;   /* 두께 2.2px, 처짐 7px */', `--color-moor-range: ${mx(m.d1, m.refl, 0.25)};   /* 늘 보임 · 0.9 판 */`, `--color-moor-range-active: ${mx(m.d1, m.refl, 0.42)};   /* 탔을 때 */`,
       '', '/* 보스 · 젖은 자국 */',
       `--color-tide-damp-top: ${mx(m.a, m.d1, 0.45)};`, `--color-tide-damp-left: ${mx(m.l, m.wl, 0.35)};`, `--color-tide-damp-right: ${mx(m.r, m.wr, 0.35)};`,
@@ -680,7 +755,7 @@ class Component extends DCLogic {
     const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { if (o.shapes && o.vb) { const vbp = o.vb.split(' ');
         o.bgi = 'url("data:image/svg+xml,' + toSrc(o.shapes, o.vb) + '")';   // no ";utf8": the template style parser splits on ";"
         o.ar = vbp[2] + ' / ' + vbp[3]; delete o.shapes; } Object.values(o).forEach(walk); } };
-    const out = { variants, side, B, Cf, D, E, H, I, J, F: Fb, tide, chapters, wtable, css };
+    const out = { Kx, variants, side, B, Cf, D, E, H, I, J, F: Fb, tide, chapters, wtable, css };
     walk(out);
     return out;
   }

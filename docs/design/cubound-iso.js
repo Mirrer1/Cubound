@@ -484,6 +484,14 @@
       if (o.t === 'fbox') { out.push(...floatBox(X, Y, Object.assign({ top, noCollar: onWhirl }, o), pal, 'box')); continue; }
       if (o.t === 'fstone') { out.push(...floatBox(X, Y, Object.assign({ top, noCollar: onWhirl }, o), pal, 'stone')); continue; }
       if (o.t === 'cube' && o.air !== undefined) { out.push(...cube(X, Y, C.blue, LV, 1, o.air)); continue; }
+      if (o.t === 'hole') { out.push(plate(X, Y, 0.62, mix(C.hole, top, 0.5)), plate(X, Y + 1, 0.46, mix(C.holeIn, top, 0.42))); continue; }
+      if (o.t === 'gbox') {
+        // box resting on sunk ground: its top stays at ground + 30, the water line climbs / drops along its sides
+        const vis = h * LV + LV - Zw;
+        if (vis > 0) { out.push(plate(X, Y, CS * 1.25, pal.refl)); out.push(...cube(X, Y, C.yellow, vis)); if (o.rider) out.push(...cube(X, Y, C.blue, LV, 1, vis)); }
+        else out.push(plate(X, Y, CS, mix(C.yellow, top, 0.55)));
+        continue;
+      }
       // things standing on the sunk ground: poke out above the surface, or show through as a ghost
       const H = { box: LV, cube: LV, stone: 26, sw: 4, lsw: 4 }[o.t] || LV, col = { box: C.yellow, cube: C.blue, stone: STONE.t, sw: C.yellow, lsw: C.yellow }[o.t] || C.yellow;
       const vis = h * LV + H - Zw;
@@ -497,6 +505,37 @@
     const Zw = WT.Z, zt = Math.min(h * LV, Zw + LV); if (zt <= Zw) return [];
     const c = corners(cx, cy0, 1), q = (a, b, f) => sh(P([[a[0], a[1] - zt], [b[0], b[1] - zt], [b[0], b[1] - Zw], [a[0], a[1] - Zw]]), f);
     return [q(c.W, c.S, mix(FL ? FL.l : C.a, pal.wl, 0.35)), q(c.S, c.E, mix(FL ? FL.r : C.a, pal.wr, 0.35))];
+  };
+
+  // 14 world level device. Yellow plate (0.62, 3px · pressed 1px) + a fixture on the right (E) corner, clear of a rider on the plate.
+  // tap (가): post 14px + spout + handwheel. pressed (open): a stream from the spout and a puddle on the plate.
+  // lever (나): hinge block 5px + arm. idle: arm leans back. pressed: arm swings forward-down, water ring at the hinge.
+  const LVX = { u: 0.38, v: -0.38 };
+  const lvPlate = (cx, cy, pressed, pal, v) => {
+    const k = tone(C.yellow), out = block(cx, cy, 0.62, 0, pressed ? 1 : 3, k.t, k.l, k.r);
+    return out;
+  };
+  const lvFix = (cx, cy, pressed, pal, v) => {
+    const k = tone(C.yellow), out = [], b = pt(cx, cy, LVX.u, LVX.v);
+    if (v === 'lever') {
+      if (pressed) out.push(plate(b[0], b[1], 0.3, pal.d1), plate(b[0], b[1], 0.22, mix(pal.d1, pal.refl, 0.5)));
+      out.push(...block(b[0], b[1], 0.16, 0, 5, k.t, k.l, k.r));
+      const A = [b[0], b[1] - 5], T = pressed ? [b[0] + 11, b[1] - 8] : [b[0] - 4, b[1] - 20];
+      const dx = T[0] - A[0], dy = T[1] - A[1], L = Math.hypot(dx, dy), nx = -dy / L * 1.7, ny = dx / L * 1.7;
+      out.push(sh(P([[A[0] + nx, A[1] + ny], [T[0] + nx, T[1] + ny], [T[0] - nx, T[1] - ny], [A[0] - nx, A[1] - ny]]), k.l));
+      out.push(...block(T[0], T[1] + 3, 0.1, 0, 5, k.t, k.l, k.r));
+      return out;
+    }
+    // spout points to the outside (right, away from a rider); open: wide stream + pool round the base, wheel turns light
+    const sp = [b[0] + 13, b[1] - 1];
+    if (pressed) out.push(plate(sp[0], sp[1], 0.34, pal.d1), plate(sp[0], sp[1], 0.24, mix(pal.d1, pal.refl, 0.55)));
+    out.push(...block(b[0], b[1], 0.11, 0, 14, k.t, k.l, k.r));
+    out.push(sh(P([[b[0] + 3, b[1] - 13], [b[0] + 14, b[1] - 8], [b[0] + 14, b[1] - 4], [b[0] + 3, b[1] - 9]]), k.r));
+    if (pressed) out.push(sh(P([[sp[0] - 2.6, sp[1] - 5], [sp[0] + 2.6, sp[1] - 5], [sp[0] + 2.6, sp[1] + 1], [sp[0] - 2.6, sp[1] + 1]]), pal.d1), sh(P([[sp[0] - 0.8, sp[1] - 5], [sp[0] + 0.8, sp[1] - 5], [sp[0] + 0.8, sp[1]], [sp[0] - 0.8, sp[1]]]), pal.refl));
+    // handwheel: closed = the yellow wheel with a dark hub. open = wheel turned a quarter (hub slot across) and lit by water colour
+    out.push(...block(b[0], b[1] - 14, 0.26, 0, 2, pressed ? pal.refl : k.t, k.l, k.r));
+    if (pressed) out.push(uvq(b[0], b[1] - 16, -0.12, 0.12, -0.025, 0.025, pal.d2)); else out.push(uvq(b[0], b[1] - 16, -0.025, 0.025, -0.12, 0.12, k.l));
+    return out;
   };
 
   const obj = (o, cx, cy) => {
@@ -519,7 +558,9 @@
       case 'lsw': return lsw(cx, cy, o.pressed, (WT && WT.pal) || CH3.mid, o.v);
       case 'post': return post(cx, cy, o.bands);
       case 'ladder': return ladderFlat(cx, cy);
-      case 'fbox': return box(cx, cy, 0);
+      case 'fbox': case 'gbox': return o.rider ? box(cx, cy, 0).concat(cube(cx, cy, C.blue, LV, 1, LV)) : box(cx, cy, 0);
+      case 'lvd': return lvPlate(cx, cy, o.pressed, (WT && WT.pal) || CH3.mid, o.v);
+      case 'lvx': return lvFix(cx, cy, o.pressed, (WT && WT.pal) || CH3.mid, o.v);
     }
     return [];
   };
@@ -568,6 +609,7 @@
     for (const c of list) {
       const v = g[c.y][c.x], isP = v === 'p', h = isP ? 0 : v, p = iso(c.x, c.y, h), cx = p[0], cy = p[1];
       const par = (c.x + c.y) % 2, key = c.x + ',' + c.y, cd = cells[key];
+      if (WT && def.Wc) { const w = def.Wc[key] !== undefined ? def.Wc[key] : def.W; WT.W = w; WT.Z = w * LV - WS; }
       if (WT && !isP && h < WT.W - 0.2) {
         const p0 = iso(c.x, c.y, 0);
         out.push(...waterCell(c.x, c.y, p0[0], p0[1], h, par, cd, V, objs[key] || []));
@@ -599,6 +641,14 @@
       } else {
         out.push(...land(cx, cy, h, par));
         if (cd && cd.t === 'crack') out.push(...crack(cx, cy));
+        if (def.chan && def.chan[key]) {
+          // boss 140 sluice channel: a groove along the cell, filled with water while the pools exchange
+          const ax = def.chan[key], pl = WT ? WT.pal : CH3.mid, f = def.chanFlow ? pl.d1 : mix(par ? FL.b : FL.a, pl.d2, 0.42);
+          const w = 0.1, seg = ax === 'x' ? [-0.5, 0.5, -w, w] : [-w, w, -0.5, 0.5];
+          out.push(uvq(cx, cy, seg[0], seg[1], seg[2], seg[3], f));
+          if (def.chanFlow) out.push(uvq(cx, cy, seg[0], seg[1], ax === 'x' ? -0.03 : seg[2], ax === 'x' ? 0.03 : seg[3], pl.refl));
+          if (ax !== 'x' && ax !== 'y') {}
+        }
         if (def.damp && def.damp.tops && def.damp.tops.includes(key)) out.push(plate(cx, cy, 1, mix(par ? FL.b : FL.a, WT.pal.d1, 0.45)));
         if (def.damp && def.damp.band && WT) out.push(...dampBand(cx, iso(c.x, c.y, 0)[1], h, WT.pal));
       }
