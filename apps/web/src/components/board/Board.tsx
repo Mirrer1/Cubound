@@ -6,6 +6,7 @@ import BoardClear from './BoardClear'
 import BoardIceStone from './BoardIceStone'
 import BoardLadder from './BoardLadder'
 import BoardSeed from './BoardSeed'
+import BoardSluice from './BoardSluice'
 import BoardTether from './BoardTether'
 import BoardTram from './BoardTram'
 import BoardWater from './BoardWater'
@@ -142,6 +143,11 @@ const Board = ({
     p.x - stage.goal.x + p.y - stage.goal.y > 0 &&
     p.x - stage.goal.x <= 1 &&
     p.y - stage.goal.y <= 1
+  // 장치 위로 올라온 물건 앞에 다시 그리는 꼭지
+  const tapLooks = scene.taps.flatMap((tap) => {
+    const device = cells.find((cell) => same(cell.p, tap.device))
+    return device ? [{ ...tap, look: lookOf(device).look }] : []
+  })
 
   return (
     <svg ref={ref} viewBox={viewBox} className="h-full w-full">
@@ -151,6 +157,7 @@ const Board = ({
         scene.cube.last,
       ).map((cell) => {
         const { cellY, look, over } = lookOf(cell)
+        const taps = tapLooks.filter((tap) => same(tap.cell, cell.p))
 
         return (
           <BoardCell
@@ -158,7 +165,7 @@ const Board = ({
             {...look}
             behindGoal={sunkGoal && isFrontOfGoal(cell.p) ? sunkGoal : null}
           >
-            {over.overlay ? (
+            {over.overlay || taps.length > 0 ? (
               <>
                 {over.tram && (
                   <g opacity={over.tram.opacity}>
@@ -268,6 +275,16 @@ const Board = ({
                     </g>
                   )}
                 </g>
+                {taps.map((tap) => (
+                  <BoardSluice
+                    key={`${tap.device.x}-${tap.device.y}`}
+                    part="tap"
+                    x={tap.look.x}
+                    y={tap.look.y}
+                    open={tap.look.sluice.open}
+                    turn={tap.look.sluice.turn}
+                  />
+                ))}
                 {over.goalEffect && <BoardClear x={cell.x} y={cell.y} />}
               </>
             ) : undefined}

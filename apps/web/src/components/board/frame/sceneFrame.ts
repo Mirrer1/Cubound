@@ -26,7 +26,7 @@ import { mushroomFrames } from './mushroomFrame'
 import { cellsOf, has, playerPath, same } from './pathFrame'
 import { restartDrop } from './restartFrame'
 import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFrame'
-import { fadeLanes, sluiceScene } from './sluiceFrame'
+import { fadeLanes, sluiceScene, tapFronts } from './sluiceFrame'
 import { boxSink, swampFrame } from './swampFrame'
 import { moorLooks, tetherFrames } from './tetherFrame'
 import { type SwampTime, elapsedAt, pullStart, stepProgress } from './timeFrame'
@@ -222,6 +222,17 @@ export const sceneFrame = ({
   const moor = moorLooks(stage, tethers)
   const guide = guideCell ? guideRect(game, guideCell) : null
   const lockGuide = guideCell && stage.rules?.lock ? lockRect(game) : null
+  const still = (list: Point[], moved: Point[]) =>
+    list.filter((p) => !has(moved, p)).map((p) => ({ ...p, cell: p }))
+  const taps = tapFronts(stage, [
+    { x: cube.x, y: cube.y, cell: cube.cell },
+    ...(box ? [{ x: box.x, y: box.y, cell: box.cell }] : []),
+    ...still(game.boxes, box ? [box.to] : []),
+    ...still(
+      game.stones,
+      iceStone.stones.map((s) => s.to),
+    ),
+  ])
 
   return {
     moving,
@@ -276,5 +287,6 @@ export const sceneFrame = ({
     caps,
     guide,
     lockGuide,
+    taps,
   }
 }

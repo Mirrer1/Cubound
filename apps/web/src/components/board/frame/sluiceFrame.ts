@@ -72,6 +72,18 @@ export const sluiceScene = ({
   }
 }
 
+// 장치 위로 올라온 물건 앞에 다시 그리는 꼭지와 그 물건을 그리는 칸, 앞 칸 차례 물건은 장치 칸 가운데에서 반 칸 안 기준
+export const tapFronts = (stage: Stage, holders: { x: number; y: number; cell: Point }[]) =>
+  stage.entities.flatMap((device) => {
+    if (device.type !== 'sluice') return []
+    const at = { x: device.x, y: device.y }
+    const holder = holders.find((h) => {
+      const off = Math.max(Math.abs(h.x - at.x), Math.abs(h.y - at.y))
+      return same(h.cell, at) ? off <= 1 : h.cell.x + h.cell.y > at.x + at.y && off <= 0.5
+    })
+    return holder ? [{ device: at, cell: holder.cell }] : []
+  })
+
 const wet = (state: GameState, p: Point) => {
   const h = state.stage.heights[p.y][p.x]
   return h >= 0 && h < waterLevel(state, p)

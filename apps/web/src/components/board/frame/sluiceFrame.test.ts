@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import { TAP, pullLanes } from '../view'
-import { fadeLanes, sluiceLookOf, sluiceScene, stoneSlab, waterAtOf } from './sluiceFrame'
+import {
+  fadeLanes,
+  sluiceLookOf,
+  sluiceScene,
+  stoneSlab,
+  tapFronts,
+  waterAtOf,
+} from './sluiceFrame'
 import { ridePhase } from './switchFrame'
 import { LOCK_STAGE, SLUICE_STAGE, SLUICE_WHIRL_STAGE, STAGE, lastMove } from './testStages'
 import { NO_SWAMP, SLUICE, durationOf, sluicePhase, sluiceStart } from './timeFrame'
@@ -178,6 +185,51 @@ describe('fadeLanes', () => {
       ['1-1', 0.4],
       ['2-1', 0.5],
     ])
+  })
+})
+
+describe('tapFronts', () => {
+  const device = { x: 0, y: 0 }
+
+  it('장치 칸 가운데 물건 앞에 꼭지, 그 물건을 그리는 칸', () => {
+    expect(tapFronts(SLUICE_STAGE, [{ x: 0, y: 0, cell: device }])).toEqual([
+      { device, cell: device },
+    ])
+  })
+
+  it('앞 칸 차례로 그리는 물건은 장치 칸 가운데에서 반 칸 안일 때만', () => {
+    const cell = { x: 1, y: 0 }
+
+    expect(tapFronts(SLUICE_STAGE, [{ x: 0.5, y: 0, cell }])).toEqual([{ device, cell }])
+    expect(tapFronts(SLUICE_STAGE, [{ x: 0.75, y: 0, cell }])).toEqual([])
+  })
+
+  it('장치 칸 차례로 그리는 동안은 안쪽 칸으로 나가도 꼭지가 앞', () => {
+    const stage = {
+      ...SLUICE_STAGE,
+      entities: [{ type: 'sluice' as const, x: 1, y: 1 }],
+    }
+
+    expect(tapFronts(stage, [{ x: 1, y: 0.25, cell: { x: 1, y: 1 } }])).toEqual([
+      { device: { x: 1, y: 1 }, cell: { x: 1, y: 1 } },
+    ])
+    expect(tapFronts(stage, [{ x: 1, y: 0, cell: { x: 1, y: 1 } }])).toEqual([
+      { device: { x: 1, y: 1 }, cell: { x: 1, y: 1 } },
+    ])
+  })
+
+  it('여럿이면 꼭지 앞에 오는 물건 하나', () => {
+    const holders = [
+      { x: 1, y: 0.5, cell: { x: 1, y: 1 } },
+      { x: 0, y: 0.5, cell: { x: 0, y: 1 } },
+    ]
+
+    expect(tapFronts(SLUICE_STAGE, holders)).toEqual([{ device, cell: { x: 0, y: 1 } }])
+  })
+
+  it('옆 칸에 있거나 장치가 없는 판은 앞 꼭지 없음', () => {
+    expect(tapFronts(SLUICE_STAGE, [{ x: 1, y: 0, cell: { x: 1, y: 0 } }])).toEqual([])
+    expect(tapFronts(STAGE, [{ x: 0, y: 0, cell: device }])).toEqual([])
   })
 })
 

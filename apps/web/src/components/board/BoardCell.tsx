@@ -399,6 +399,11 @@ const BoardCell = ({
       {sluice.device && (
         <BoardSluice part="plate" x={x} y={y} depth={sluice.plate} open={sluice.open} />
       )}
+      {sluice.device && (
+        <g style={fade}>
+          <BoardSluice part="tap" x={x} y={y} open={sluice.open} turn={sluice.turn} />
+        </g>
+      )}
       {box && (
         <g style={fade}>
           {iceStone.iced ? (
@@ -472,11 +477,6 @@ const BoardCell = ({
         </>
       ) : (
         children
-      )}
-      {sluice.device && (
-        <g style={fade}>
-          <BoardSluice part="tap" x={x} y={y} open={sluice.open} turn={sluice.turn} />
-        </g>
       )}
       {(seed.stakes > 0 || seed.stakesNext > 0) && (
         <g style={fade}>
