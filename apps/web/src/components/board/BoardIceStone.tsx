@@ -52,7 +52,7 @@ const BoardIceStone = (props: BoardIceStoneProps) => {
       <>
         <polygon points={plate.left} style={{ fill: 'var(--color-ice-left)' }} />
         <polygon points={plate.right} style={{ fill: 'var(--color-ice-right)' }} />
-        <polygon points={plate.top} style={{ fill: 'var(--color-ice)' }} />
+        <polygon points={plate.top} style={{ fill: 'var(--color-ice-frozen)' }} />
       </>
     )
   ) : props.part === 'boat' ? (
@@ -119,7 +119,7 @@ const BoardIceStone = (props: BoardIceStoneProps) => {
               y={props.y}
               width={TILE.width * props.slab}
               depth={ICE.slab}
-              top="var(--color-ice)"
+              top="var(--color-ice-frozen)"
               left="var(--color-ice-left)"
               right="var(--color-ice-right)"
             />
