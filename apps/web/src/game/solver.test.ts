@@ -4,6 +4,7 @@ import { createState, move } from './rules'
 import {
   deadEnds,
   eachMove,
+  floodBlocks,
   minPushes,
   moveLimit,
   solutionCount,
@@ -289,8 +290,48 @@ describe('eachMove', () => {
     expect(new Set(fills)).toEqual(new Set(['2,1', '1,2']))
   })
 
+  it('막힌 이동도 그 이벤트와 함께 넘긴다', () => {
+    const blocked: string[] = []
+    eachMove(STAGE, (_, events) => {
+      events.forEach((e) => e.type === 'blocked' && blocked.push(e.direction))
+    })
+
+    expect(blocked).toContain('up')
+  })
+
   it('탐색 상태 수 한도를 넘으면 false를 돌려준다', () => {
     expect(eachMove(STAGE, () => {}, { maxStates: 2 })).toBe(false)
+  })
+})
+
+describe('floodBlocks', () => {
+  // 물 높이 1, 가 웅덩이 (1,1)과 (2,1), 나 웅덩이 (4,1)과 (5,1), 사이 (3,1)이 수위 장치
+  const LOCK: Stage = {
+    version: 1,
+    id: 'test-solver-flood',
+    heights: [
+      [2, 2, 2, 2, 2, 2, 2],
+      [2, 0, 1, 2, 1, 0, 2],
+      [2, 2, 2, 2, 2, 2, 2],
+    ],
+    water: 1,
+    start: { x: 3, y: 0 },
+    goal: { x: 6, y: 0 },
+    entities: [{ type: 'sluice', x: 3, y: 1 }],
+    rules: { lock: { x: 1, y: 1 } },
+  }
+
+  it('장치를 떠나 가 웅덩이의 드러난 칸으로 내려서는 이동을 센다', () => {
+    expect(floodBlocks(LOCK)).toEqual({ status: 'ok', count: 1 })
+  })
+
+  it('잠기는 칸으로 들어설 길이 없으면 0', () => {
+    const heights = LOCK.heights.map((row) => row.map((h) => (h === 1 ? 2 : h)))
+    expect(floodBlocks({ ...LOCK, heights })).toEqual({ status: 'ok', count: 0 })
+  })
+
+  it('탐색 상태 수 한도를 넘으면 limit', () => {
+    expect(floodBlocks(LOCK, { maxStates: 2 })).toEqual({ status: 'limit' })
   })
 })
 
@@ -790,5 +831,27 @@ describe('solve 얼음 돌', () => {
   it('녹는 판은 숫자를 지킨 채 푼다', () => {
     expect(solve({ ...STONE_STAGE, rules: { melt: 2 } }).status).toBe('solved')
     expect(solve({ ...STONE_STAGE, rules: { melt: 1 } }).status).toBe('unsolvable')
+  })
+})
+
+describe('solve 갑문', () => {
+  // 물 높이 1, 가 웅덩이 (1,0)의 배가 장치가 빈 동안 높은 물에 떠 집 (2,0)과 같은 높이
+  const LOCK: Stage = {
+    version: 1,
+    id: 'test-solver-lock',
+    heights: [[2, 0, 2, 2, 0]],
+    water: 1,
+    start: { x: 0, y: 0 },
+    goal: { x: 2, y: 0 },
+    entities: [
+      { type: 'box', x: 1, y: 0 },
+      { type: 'sluice', x: 3, y: 0 },
+    ],
+    rules: { lock: { x: 1, y: 0 } },
+  }
+
+  it('갑문 규칙을 지킨 채 푼다', () => {
+    expect(solve(LOCK)).toEqual({ status: 'solved', moves: 2, path: ['right', 'right'] })
+    expect(solve({ ...LOCK, rules: undefined }).status).toBe('unsolvable')
   })
 })

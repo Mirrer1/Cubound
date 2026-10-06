@@ -15,7 +15,7 @@ import {
 import { frontOf } from './tramFrame'
 import { FLOAT, floatGone, floatLevel } from './waterFrame'
 import { TILE, toScreen } from '@/game/iso'
-import { isIce } from '@/game/rules'
+import { isIce, waterLevel } from '@/game/rules'
 import type { Direction, GameEvent, GameState, Point, Stage } from '@/game/types'
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
@@ -104,7 +104,7 @@ const floatEntry = (before: GameState, events: GameEvent[]) => {
   if (!last || last.event.type !== 'pushed' || last.event.result !== 'floated') return null
 
   const first = path[0].from
-  const water = floatBase(before.stage.water ?? 0)
+  const water = floatBase(waterLevel(before, first))
   const start = isWet(before.stage, first) ? water : before.heights[first.y][first.x]
   const from = path.slice(0, -1).reduce((level, e) => levelAfter(before, level, e), start)
   // floatLevel이 수면 높이를 지나는 진행도, smooth의 역함수를 반으로 나눠 찾음
@@ -207,7 +207,8 @@ interface StoneView {
   swamp: SwampTime
 }
 
-const surfaceY = (game: GameState, p: Point) => toScreen(p, floatBase(game.stage.water ?? 0)).y
+const surfaceY = (game: GameState, p: Point) =>
+  toScreen(p, floatBase(waterLevel(game, { x: Math.round(p.x), y: Math.round(p.y) }))).y
 
 const wakeOf = (game: GameState, at: Point, from: Point, to: Point, strength: number) =>
   strength > 0
@@ -226,7 +227,7 @@ const levelAfter = (prev: GameState, level: number, event: PathEvent) =>
   event.type !== 'pushed'
     ? level
     : event.result === 'floated'
-      ? floatBase(prev.stage.water ?? 0)
+      ? floatBase(waterLevel(prev, event.to))
       : event.result === 'fell'
         ? prev.heights[event.to.y][event.to.x]
         : event.result === 'filled'
@@ -242,7 +243,7 @@ const pushedFrame = (view: StoneView, prev: GameState, elapsed: number): StoneFr
   const { event, index, p } = step
   const first = path[0].from
   const wet = isWet(prev.stage, first)
-  const start = wet ? floatBase(prev.stage.water ?? 0) : prev.heights[first.y][first.x]
+  const start = wet ? floatBase(waterLevel(prev, first)) : prev.heights[first.y][first.x]
   const fromLevel = path.slice(0, index).reduce((level, e) => levelAfter(prev, level, e), start)
   const toLevel = levelAfter(prev, fromLevel, event)
   const result = event.type === 'pushed' ? event.result : 'slid'
@@ -309,9 +310,9 @@ const pulledFrame = (view: StoneView, event: StonePulled, elapsed: number): Ston
     x: lerp(event.from.x, event.to.x, smooth(p)),
     y: lerp(event.from.y, event.to.y, smooth(p)),
   }
-  const screen = toScreen(at, floatBase(game.stage.water ?? 0))
+  const screen = toScreen(at, floatBase(waterLevel(game, event.from)))
   const r = clamp01((p - SETTLE.from) / (1 - SETTLE.from))
-  const ringAt = toScreen(event.to, floatBase(game.stage.water ?? 0))
+  const ringAt = toScreen(event.to, floatBase(waterLevel(game, event.to)))
 
   return {
     x: screen.x,
@@ -342,7 +343,7 @@ const pulledFrame = (view: StoneView, event: StonePulled, elapsed: number): Ston
 const meltingFrame = (view: StoneView, at: Point, elapsed: number): StoneFrame => {
   const { game, events, swamp } = view
   const m = clamp01((elapsed - moveSeconds(events, swamp) + swamp.lead) / MELT_SECONDS)
-  const screen = toScreen(at, floatBase(game.stage.water ?? 0))
+  const screen = toScreen(at, floatBase(waterLevel(game, at)))
   const r = clamp01((m - MELT.ring) / (1 - MELT.ring))
 
   return {
@@ -407,10 +408,10 @@ export const stoneFrames = (view: StoneView): StoneFrame[] => {
 
 // 칸이 녹아 내려앉는 언 칸 위 상자의 바닥 높이와 윗면 중심, 수면 위로 보이는 px
 export const thawingBoxes = (before: GameState, game: GameState, phase: number) => {
-  const water = game.stage.water ?? 0
   return before.iced
     .filter((p) => !has(game.iced, p) && has(game.boxes, p))
     .map((p) => {
+      const water = waterLevel(game, p)
       // 얼음이 물러나기 시작할 때부터 내려앉는 몫, 띄우기 곡선의 기다림 구간 제외
       const level = floatLevel(floatBase(water), water - 1, lerp(FLOAT.drop, 1, phase))
       return {
@@ -487,7 +488,7 @@ export const restartStones = (game: GameState, t: number): StoneFrame[] => {
     const rank = n > 1 ? order.indexOf(p) / (n - 1) : 0
     const drop = restartDrop(t, game.boxes.length, game.boxes.length, n, rank)
     const float = isWet(game.stage, p)
-    const level = float ? floatBase(game.stage.water ?? 0) : game.heights[p.y][p.x]
+    const level = float ? floatBase(waterLevel(game, p)) : game.heights[p.y][p.x]
     return {
       x: toScreen(p, level).x,
       y: toScreen(p, level).y - drop.lift * TILE.layer,

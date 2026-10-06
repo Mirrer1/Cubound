@@ -4,7 +4,15 @@ import { join } from 'node:path'
 import { zoneIndexAt } from '@/game/camera'
 import { type Hidden, type HiddenKind, hiddenFills, hiddenObjects } from '@/game/occlusion'
 import { createState, move } from '@/game/rules'
-import { deadEnds, minPushes, moveLimit, solutionCount, solve, statesWithin } from '@/game/solver'
+import {
+  deadEnds,
+  floodBlocks,
+  minPushes,
+  moveLimit,
+  solutionCount,
+  solve,
+  statesWithin,
+} from '@/game/solver'
 import type { Direction, Stage } from '@/game/types'
 import { validateStage } from '@/game/validate'
 
@@ -112,6 +120,10 @@ const check = (file: string): Summary | null => {
   row('가림', hiddenText(hidden))
   const fills = hiddenFills(stage)
   row('메움 가림', fills ? hiddenText(fills) : '탐색 한도 초과')
+  if (stage.entities.some((e) => e.type === 'sluice')) {
+    const flooded = floodBlocks(stage)
+    row('잠김 막힘', flooded.status === 'ok' ? `${flooded.count}` : '탐색 한도 초과')
+  }
 
   const started = Date.now()
   const solved = solve(stage)

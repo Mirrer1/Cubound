@@ -1,4 +1,5 @@
 import type { Direction, GameState, Point } from '../types'
+import { waterLevel } from './sluiceRule'
 
 const OFFSETS: Record<Direction, Point> = {
   up: { x: 0, y: -1 },
@@ -18,7 +19,7 @@ export const hasBox = (state: GameState, p: Point) => state.boxes.some((box) => 
 
 export const isWater = (state: GameState, { x, y }: Point) => {
   const h = state.stage.heights[y]?.[x]
-  return h !== undefined && h >= 0 && h < (state.stage.water ?? 0)
+  return h !== undefined && h >= 0 && h < waterLevel(state, { x, y })
 }
 
 export const hasStone = (state: GameState, p: Point) => state.stones.some((s) => same(s, p))

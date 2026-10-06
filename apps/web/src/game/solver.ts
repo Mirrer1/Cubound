@@ -15,15 +15,16 @@ const points = (list: Point[]) =>
     .sort()
     .join(' ')
 
-// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개와 녹는 얼음은 유지
+// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개와 녹는 얼음과 갑문은 유지
 // 제한이 너무 작을 때도 진짜 최소 이동 수를 얻는 방법
 const forSearch = (stage: Stage): Stage => {
-  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt } = stage.rules ?? {}
+  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock } =
+    stage.rules ?? {}
   return {
     ...stage,
     rules:
-      swampDeepen || mushroomWither || vineStop || seedGrow || wind || plug || melt
-        ? { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt }
+      swampDeepen || mushroomWither || vineStop || seedGrow || wind || plug || melt || lock
+        ? { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock }
         : undefined,
   }
 }
@@ -227,8 +228,8 @@ const explore = (stage: Stage, maxStates: number, visit?: Visit): Explored | nul
 
       for (const direction of DIRECTIONS) {
         const { state: moved, events } = move(state, direction)
-        if (moved === state) continue
         visit?.(moved, events)
+        if (moved === state) continue
 
         const movedKey = stateKey(moved)
         links.push(movedKey)
@@ -379,6 +380,19 @@ export const solutionCount = (stage: Stage, { maxStates = 1_000_000 } = {}): Cou
     if (solved > 0) return { status: 'ok', count: solved }
     ways = later
   }
+}
+
+// 닿을 수 있는 모든 상태에서 큐브가 선 칸에 물이 차올라 막힌 이동 수
+export const floodBlocks = (stage: Stage, { maxStates = 1_000_000 } = {}): CountResult => {
+  let count = 0
+  const done = eachMove(
+    stage,
+    (_, events) => {
+      if (events.some((e) => e.type === 'blocked' && e.flooded)) count += 1
+    },
+    { maxStates },
+  )
+  return done ? { status: 'ok', count } : { status: 'limit' }
 }
 
 // maxMoves 안에 목표까지 갈 수 있는 상태 수, 제한이 실수를 만회할 자리를 얼마나 주는지 보는 값

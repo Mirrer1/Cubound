@@ -13,6 +13,7 @@ const ENTITY_TYPES = [
   'post',
   'whirlpool',
   'iceStone',
+  'sluice',
 ]
 
 export const checkEntities = ({

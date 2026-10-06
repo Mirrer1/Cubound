@@ -6,6 +6,7 @@ import { checkIce } from './iceCheck'
 import { checkIceStones } from './iceStoneCheck'
 import { checkMushroom } from './mushroomCheck'
 import { checkRules } from './rulesCheck'
+import { checkSluices } from './sluiceCheck'
 import { checkBest, checkStartGoal, isObject, stageContext } from './stageCheck'
 import { checkSwamp } from './swampCheck'
 import { checkTethers } from './tetherCheck'
@@ -41,6 +42,7 @@ export const validateStage = (data: unknown): ValidateResult => {
   checkTethers(ctx)
   checkWhirlpools(ctx)
   checkIceStones(ctx)
+  checkSluices(ctx)
   checkBest(ctx)
   checkRules(ctx)
   checkGuides(ctx)

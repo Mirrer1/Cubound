@@ -3,6 +3,7 @@ import type { BoxFrame } from './boxFrame'
 import { clamp01, lerp, smooth } from './curveFrame'
 import { same } from './pathFrame'
 import { restartDrop } from './restartFrame'
+import { waterLevel } from '@/game/rules'
 import type { GameState, Point, Stage } from '@/game/types'
 
 export interface TetherFrame {
@@ -34,7 +35,7 @@ export const tetherFrames = ({ prev, game, box, t, dropping }: TetherView): Teth
     const drop = dropping
       ? restartDrop(t, boxes.findIndex((b) => same(b, boat)) + 1, boxes.length, game.stones.length)
       : null
-    const top = rowing ? box.level + 1 : (stage.water ?? 0) + (drop?.lift ?? 0)
+    const top = rowing ? box.level + 1 : waterLevel(game, at) + (drop?.lift ?? 0)
     const d = Math.abs(at.x - post.x) + Math.abs(at.y - post.y)
     const slack = smooth(clamp01(post.length - d))
     const { from, to } = ropeEnds(post, stage.heights[post.y][post.x], at, top)

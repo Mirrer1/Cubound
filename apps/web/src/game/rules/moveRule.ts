@@ -7,6 +7,7 @@ import { climbOrPlaceLadder } from './ladderRule'
 import { climbsLeft, dirLeft, limitBlocked, movesLeft, pushesLeft, ridesLeft } from './limitRule'
 import { hop, isMushroom, spring } from './mushroomRule'
 import { riseSeeds } from './seedRule'
+import { floodsPlayer, sluiceEvents } from './sluiceRule'
 import { floorAt, standHeight } from './stateRule'
 import { struggling } from './swampRule'
 import { doors, isClosedDoor, isDoorOpen, isLiftRaised, lifts } from './switchRule'
@@ -110,6 +111,7 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
       ...iceEvents,
       ...doorEvents,
       ...liftEvents,
+      ...sluiceEvents(before, moved),
       ...(moved.cleared ? [{ type: 'cleared' } as const] : []),
     ],
   }
@@ -155,5 +157,8 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
     ? { ...acted.state, dirUses: acted.state.dirUses + 1 }
     : acted.state
 
-  return tick(state, spent, acted.events)
+  const ticked = tick(state, spent, acted.events)
+  return floodsPlayer(state, ticked.state)
+    ? { state, events: [{ type: 'blocked', direction, flooded: true }] }
+    : ticked
 }

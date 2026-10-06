@@ -12,7 +12,7 @@ import {
 } from './timeFrame'
 import { frontOf } from './tramFrame'
 import { TILE, toScreen } from '@/game/iso'
-import { standHeight } from '@/game/rules'
+import { standHeight, waterLevel } from '@/game/rules'
 import type { Direction, GameEvent, GameState, Point } from '@/game/types'
 
 // 끌려가는 배가 더 잠기는 px
@@ -55,7 +55,7 @@ interface WhirlView {
 type Pulled = Extract<GameEvent, { type: 'pulled' }>
 
 const surfaceY = (game: GameState, p: { x: number; y: number }) =>
-  toScreen(p, game.stage.water ?? 0).y + WATER.lip
+  toScreen(p, waterLevel(game, { x: Math.round(p.x), y: Math.round(p.y) })).y + WATER.lip
 
 // 한 칸 끌려가는 배, 출발한 뒤 그 수가 끝날 때까지 미끄러지듯 가는 자리
 // 이 수에 밀어 띄운 상자는 다 뜰 때까지 상자 연출 몫이라 투명
@@ -78,7 +78,7 @@ const pulledFrame = (view: WhirlView, event: Pulled): WhirlBoxFrame => {
   const dx = event.to.x - event.from.x
   const dy = event.to.y - event.from.y
   const r = clamp01((p - SETTLE.from) / (1 - SETTLE.from))
-  const ringAt = toScreen(event.to, game.stage.water ?? 0)
+  const ringAt = toScreen(event.to, waterLevel(game, event.to))
 
   return {
     x: toScreen(at, 0).x,

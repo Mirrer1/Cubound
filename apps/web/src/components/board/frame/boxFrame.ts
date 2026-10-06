@@ -22,7 +22,7 @@ import { elapsedAt } from './timeFrame'
 import { carriedBy, carryOf, frontOf, slidingCell, tramProgress } from './tramFrame'
 import { floatGone, floatLevel } from './waterFrame'
 import { TILE, toScreen } from '@/game/iso'
-import { standHeight } from '@/game/rules'
+import { standHeight, waterLevel } from '@/game/rules'
 import type { GameEvent, GameState, Point } from '@/game/types'
 
 export interface BoxFrame {
@@ -37,7 +37,7 @@ export interface BoxFrame {
 // 튕겨 간 상자가 마지막 갓에서 떠나 앉는 도착 칸 높이
 const boxLevelAfter = (prev: GameState, level: number, event: PathEvent) => {
   if (event.type !== 'pushed') return level
-  if (event.result === 'floated') return (prev.stage.water ?? 0) - 1
+  if (event.result === 'floated') return waterLevel(prev, event.to) - 1
   const hopped = hopCells(event) > 0
   const dx = Math.sign(event.to.x - event.from.x)
   const dy = Math.sign(event.to.y - event.from.y)

@@ -3,6 +3,7 @@ import { boxLanding } from './boxRule'
 import { hasBox, hasStone, isFrozen, isWater, same, step } from './cellRule'
 import { isIce } from './iceRule'
 import { isMushroom } from './mushroomRule'
+import { waterLevel } from './sluiceRule'
 import { floorAt, standHeight } from './stateRule'
 import { isSwamp } from './swampRule'
 import { walk } from './walkRule'
@@ -75,7 +76,7 @@ export const pushStone = (
   direction: Direction,
 ): MoveResult | null => {
   const floating = isWater(state, stone)
-  const level = floating ? (state.stage.water ?? 0) : floorAt(state, stone)
+  const level = floating ? waterLevel(state, stone) : floorAt(state, stone)
   if (level !== standHeight(state, state.player)) return null
 
   const legs = floating ? waterLegs(state, stone, direction) : landLegs(state, stone, direction)

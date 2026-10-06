@@ -2,6 +2,7 @@ import type { Direction, GameState, MoveResult, Point } from '../types'
 import { hasBox, isFrozen, same } from './cellRule'
 import { climbsLeft, limitBlocked } from './limitRule'
 import { SEED_WAIT, canPlant, isPlanted } from './seedRule'
+import { isFloodable } from './sluiceRule'
 import { floorAt, standHeight } from './stateRule'
 import { arrive } from './walkRule'
 
@@ -13,8 +14,13 @@ export const climbOrPlaceLadder = (
 ): MoveResult | null => {
   const from = state.player
   const toFloor = floorAt(state, to)
-  // 녹으면 물 위에 남는 언 칸은 놓기와 심기 모두 불가
-  if (hasBox(state, from) || isFrozen(state, from) || toFloor !== standHeight(state, from) + 1) {
+  // 녹으면 물 위에 남는 언 칸과 물이 오르면 잠기는 칸은 놓기와 심기 모두 불가
+  if (
+    hasBox(state, from) ||
+    isFrozen(state, from) ||
+    isFloodable(state.stage, from) ||
+    toFloor !== standHeight(state, from) + 1
+  ) {
     return null
   }
 

@@ -1,5 +1,6 @@
 import type { Crack, Entity, GameState, Point, Stage } from '../types'
 import { hasBox, isFrozen, isIced, isOpenWater, isWater, same } from './cellRule'
+import { waterLevel } from './sluiceRule'
 import { isLiftRaised } from './switchRule'
 import { isPost, posts } from './tetherRule'
 import { tramLevelAt, trams } from './tramRule'
@@ -12,7 +13,7 @@ export const rawHeight = (state: GameState, p: Point): number | undefined => {
   const h = state.heights[p.y]?.[p.x]
   if (h === undefined || isPost(state.stage, p)) return undefined
   if (isWater(state, p)) {
-    const water = state.stage.water ?? 0
+    const water = waterLevel(state, p)
     // 얼어붙은 배는 얼음에 박혀 윗면이 물가 땅 높이
     const lockedBoat = hasBox(state, p) && !isIced(state, p)
     return isFrozen(state, p) && !lockedBoat ? water : water - 1
