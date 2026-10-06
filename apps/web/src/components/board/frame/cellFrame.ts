@@ -25,7 +25,7 @@ export const boardCells = (
     .filter((cell) => cell.h >= 0)
     .sort((a, b) => a.p.x + a.p.y - (b.p.x + b.p.y))
 
-// 굴러 나가는 큐브가 옆 칸 상자 앞으로 튀어나오지 않게 같은 깊이 맨 앞에 둔 큐브 칸, last면 맨 뒤
+// 굴러 나가는 큐브와 밀리는 상자가 옆 칸 앞으로 튀어나오지 않게 같은 깊이 맨 앞에 둔 칸, last면 맨 뒤
 export const cubeFirst = <T extends { p: Point }>(cells: T[], cube: Point, last = false) => {
   const index = cells.findIndex(({ p }) => p.x === cube.x && p.y === cube.y)
   if (index < 0) return cells

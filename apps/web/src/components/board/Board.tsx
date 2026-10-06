@@ -145,7 +145,11 @@ const Board = ({
 
   return (
     <svg ref={ref} viewBox={viewBox} className="h-full w-full">
-      {cubeFirst(cells, scene.cube.cell, scene.cube.last).map((cell) => {
+      {cubeFirst(
+        scene.box ? cubeFirst(cells, scene.box.cell) : cells,
+        scene.cube.cell,
+        scene.cube.last,
+      ).map((cell) => {
         const { cellY, look, over } = lookOf(cell)
 
         return (
