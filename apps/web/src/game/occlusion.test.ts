@@ -218,6 +218,34 @@ describe('fadedCells', () => {
     expect(fadedCells(raise([[1, 0, 1]]), { x: 0, y: 0 }, 0, state, [])).toEqual([{ x: 1, y: 0 }])
   })
 
+  it('물에 뜬 상자는 수면 높이로 재서 같은 높이 둑은 가리지 않는다', () => {
+    // 물 높이 2, (0,0) 물 칸의 배 오른쪽 (1,0)이 높이 2 둑이고 그 위에 상자
+    const heights = [
+      [0, 2, 2],
+      [2, 2, 2],
+    ]
+    const state = {
+      ...createState({ ...STAGE, heights, water: 2, start: { x: 2, y: 1 } }),
+      boxes: [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+      ],
+    }
+
+    expect(fadedCells(heights, { x: 2, y: 1 }, 2, state, [])).toEqual([])
+  })
+
+  it('큐브에서 먼 물에 뜬 배는 윗면보다 한 층 넘게 높은 앞 칸만 흐린다', () => {
+    // 물 높이 1, (0,0) 물 칸의 배 오른쪽 (1,0)이 높이 2 둑
+    const heights = [[0, 2, 3]]
+    const state = {
+      ...createState({ ...STAGE, heights, water: 1, start: { x: 2, y: 0 } }),
+      boxes: [{ x: 0, y: 0 }],
+    }
+
+    expect(fadedCells(heights, { x: 2, y: 0 }, 3, state, [])).toEqual([])
+  })
+
   it('큐브에서 먼 상자와 메운 칸과 씨앗을 가리는 앞 칸도 모은다', () => {
     const state = {
       ...createState(STAGE),

@@ -1,5 +1,5 @@
 import { TILE } from './iso'
-import { same } from './rules'
+import { same, waterLevel } from './rules'
 import { eachMove } from './solver'
 import type { GameState, Point, Stage } from './types'
 
@@ -41,12 +41,12 @@ export const fadedCells = (
   const { boxes, leaningLadders, player } = game
   return [
     ...occludingCells(shown, cubeCell, cubeLevel, boxes),
-    // 큐브에서 멀리 떨어져 저 혼자 벽에 묻히는 상자와 메운 바닥
+    // 큐브에서 멀리 떨어져 저 혼자 벽에 묻히는 상자와 메운 바닥, 물에 뜬 배는 윗면보다 한 층 넘게 높은 벽 기준
     ...boxes.flatMap((b, i) =>
       occludingCells(
         shown,
         b,
-        shown[b.y][b.x] + 1,
+        shown[b.y][b.x] < waterLevel(game, b) ? waterLevel(game, b) + 1 : shown[b.y][b.x] + 1,
         boxes.filter((_, j) => j !== i),
       ),
     ),
