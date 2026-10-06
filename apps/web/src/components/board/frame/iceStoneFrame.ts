@@ -80,6 +80,7 @@ export const frozenCells = (state: GameState) => {
 export interface IceCover {
   cover: number // 붙은 쪽 가장자리에서 덮은 정도
   from: Direction // 얼린 돌 쪽
+  gloss: number // 반짝임 줄 진하기, 돌이 떠난 칸은 얼음 연출 끝 무렵부터, 녹는 칸은 0
 }
 
 // 그 순간 언 칸마다 덮인 정도, 돌이 막 들어선 칸은 그 수 동안 덮인 채, 돌이 막 떠난 칸은 처음부터 덮인 채
@@ -89,12 +90,13 @@ export const iceCovers = (before: GameState, game: GameState, phase: number, tha
   const covers = new Map<string, IceCover>()
   now.forEach((from, key) => {
     const left = before.stones.some((s) => keyOf(s) === key)
-    covers.set(key, { cover: was.has(key) || left ? 1 : phase, from })
+    const cover = was.has(key) || left ? 1 : phase
+    covers.set(key, { cover, from, gloss: clamp01((left ? phase : cover) * 5 - 4) })
   })
   was.forEach((from, key) => {
     if (now.has(key)) return
     const entered = game.stones.some((s) => keyOf(s) === key)
-    covers.set(key, { cover: entered ? 1 : 1 - thaw, from })
+    covers.set(key, { cover: entered ? 1 : 1 - thaw, from, gloss: entered ? 1 : 0 })
   })
   return covers
 }
@@ -157,7 +159,7 @@ export const iceCoversAt = (
     ...before,
     stones: before.stones.map((s) => (same(s, path[0].from) ? pushedTo : s)),
   }
-  const start = pullStart(events, pull)
+  const start = pullStart(events)
   const toPull = smooth(clamp01(elapsed / Math.max(start, 1e-6)))
   return elapsed < start
     ? iceCovers(before, mid, entry === null ? toPull : fromEntry(elapsed, entry, start), toPull)
@@ -178,7 +180,7 @@ export const icePhase = (events: GameEvent[], t: number, swamp: SwampTime) => {
     windows.push([0, thaws(events) ? Math.max(push, freezeEnd(events)) : push])
   for (const e of events) {
     if (e.type === 'stonePulled')
-      windows.push([pullStart(events, e), pullStart(events, e) + PULL_SECONDS])
+      windows.push([pullStart(events), pullStart(events) + PULL_SECONDS])
   }
   const flood = sluiceStart(events)
   if (flood !== null && thaws(events)) windows.push([flood, freezeEnd(events)])
@@ -289,7 +291,7 @@ const pushedFrame = (view: StoneView, prev: GameState, elapsed: number): StoneFr
     pulled: false,
     to: path[path.length - 1].to,
     cell: frontOf(event.from, event.to),
-    wake: wet ? wakeOf(view.game, at, event.from, event.to, Math.sin(Math.PI * p)) : [],
+    wake: [],
     ring: null,
   }
 }
@@ -321,7 +323,7 @@ type StonePulled = Extract<GameEvent, { type: 'stonePulled' }>
 // 소용돌이에 한 칸 끌려가는 뜬 돌, 끌린 배와 같은 결
 const pulledFrame = (view: StoneView, event: StonePulled, elapsed: number): StoneFrame => {
   const { game, events, swamp } = view
-  const start = pullStart(events, event)
+  const start = pullStart(events)
   const end = moveSeconds(events, swamp) - swamp.lead
   const p = clamp01((elapsed - start) / Math.max(end - start, 1e-6))
   const at = {
@@ -402,7 +404,7 @@ export const stoneFrames = (view: StoneView): StoneFrame[] => {
   const frames: StoneFrame[] = []
 
   const handed = pulls.some(
-    (e) => pushedTo && same(e.from, pushedTo) && elapsed >= pullStart(events, e),
+    (e) => pushedTo && same(e.from, pushedTo) && elapsed >= pullStart(events),
   )
   if (pushedTo && elapsed < totalSeconds(segmentsOf(path)) && !handed) {
     const frame = pushedFrame(view, prev, elapsed)

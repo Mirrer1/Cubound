@@ -309,22 +309,22 @@ describe('pullStart', () => {
   it('땅 위를 걷는 수에 끌린 배는 처음부터 가고 연출 시간은 끌리는 시간이다', () => {
     const { events } = lastMove(WHIRL_STAGE, ['left'])
 
-    expect(pulledOf(events).map((e) => pullStart(events, e))).toEqual([0, 0])
+    expect(pulledOf(events).map(() => pullStart(events))).toEqual([0, 0])
     expect(durationOf(events)).toBeCloseTo(PULL_SECONDS)
   })
 
   it('큐브가 내린 배와 그 뒤에 붙은 배는 큐브가 반쯤 굴러 나간 뒤 같이 출발한다', () => {
     const { events } = lastMove(WHIRL_STAGE, ['down', 'up'])
 
-    expect(pulledOf(events).map((e) => pullStart(events, e))).toEqual([0.12, 0.12])
+    expect(pulledOf(events).map(() => pullStart(events))).toEqual([0.12, 0.12])
     expect(durationOf(events)).toBeCloseTo(0.12 + PULL_SECONDS)
   })
 
-  it('이 수에 띄운 배는 물 칸 위로 다 밀려 온 뒤 출발하고 앞의 배들은 처음부터 간다', () => {
+  it('이 수에 띄운 배가 물에 다 내려앉은 뒤 앞의 배들과 같이 출발한다', () => {
     const { events } = lastMove({ ...WHIRL_STAGE, start: { x: 5, y: 3 } }, ['up'])
 
-    expect(pulledOf(events).map((e) => pullStart(events, e))).toEqual([0, 0, 0.3])
-    expect(durationOf(events)).toBeCloseTo(0.3 + PULL_SECONDS)
+    expect(pullStart(events)).toBeCloseTo(SECONDS.floated)
+    expect(durationOf(events)).toBeCloseTo(SECONDS.floated + PULL_SECONDS)
   })
 })
 
@@ -379,7 +379,7 @@ describe('pullStart 얼음 돌', () => {
     const pulled = events.find((e) => e.type === 'stonePulled')
 
     expect(pulled).toEqual({ type: 'stonePulled', from: { x: 2, y: 2 }, to: { x: 3, y: 2 } })
-    expect(pullStart(events, pulled!)).toBeCloseTo(SECONDS.floated * 0.5)
+    expect(pullStart(events)).toBeCloseTo(SECONDS.floated * 0.5)
     expect(durationOf(events)).toBeCloseTo(SECONDS.floated * 0.5 + PULL_SECONDS)
   })
 })
@@ -417,7 +417,7 @@ describe('durationOf 수위', () => {
     const end = SECONDS.moved + SLUICE.tap + SLUICE.level
 
     expect(pulled).toEqual({ type: 'pulled', from: { x: 1, y: 1 }, to: { x: 2, y: 1 } })
-    expect(pullStart(events, pulled!)).toBeCloseTo(end)
+    expect(pullStart(events)).toBeCloseTo(end)
     expect(durationOf(events)).toBeCloseTo(end + PULL_SECONDS)
   })
 })

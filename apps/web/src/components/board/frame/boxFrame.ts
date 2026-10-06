@@ -97,9 +97,11 @@ export const movingBox = (
   // 상자가 앉을 높이는 도착 칸에 서는 높이에서 한 층을 뺀 값, 발판이 오르내린 몫 포함
   const endLevel = path.reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
   // 상자가 자리에 앉은 뒤 칸과 같이 오르는 씨앗이 솟는 몫
-  const riding =
-    (standHeight(game, to) - 1 - seedLift(events, to, 'box') - endLevel) *
-    ridePhase(game, events, to, t, swamp)
+  const pulledAway = events.some((e) => e.type === 'pulled' && same(e.from, to))
+  const riding = pulledAway
+    ? 0
+    : (standHeight(game, to) - 1 - seedLift(events, to, 'box') - endLevel) *
+      ridePhase(game, events, to, t, swamp)
   const shift = carry ? carriedBy(carry, ride) : { x: 0, y: 0 }
 
   return {

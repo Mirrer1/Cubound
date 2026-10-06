@@ -68,7 +68,7 @@ describe('iceCovers', () => {
     const game = createState(STONE_STAGE)
     const covers = iceCovers(game, game, 1)
 
-    expect(covers.get('2-2')).toEqual({ cover: 1, from: 'up' })
+    expect(covers.get('2-2')).toEqual({ cover: 1, from: 'up', gloss: 1 })
   })
 
   it('새로 언 칸은 돌 쪽에서 덮여 가고 녹는 칸은 옛 돌 쪽으로 물러난다', () => {
@@ -77,15 +77,28 @@ describe('iceCovers', () => {
     ])
     const covers = iceCovers(prev, game, 0.25)
 
-    expect(covers.get('4-3')).toEqual({ cover: 0.25, from: 'left' })
-    expect(covers.get('2-2')).toEqual({ cover: 0.75, from: 'down' })
+    expect(covers.get('4-3')).toEqual({ cover: 0.25, from: 'left', gloss: 0 })
+    expect(covers.get('2-2')).toEqual({ cover: 0.75, from: 'down', gloss: 0 })
     expect(covers.get('2-3')?.cover).toBe(1)
+  })
+
+  it('반짝임 줄은 새로 언 칸과 돌이 떠난 칸에서 얼음 연출 끝 무렵 짙어지고 녹는 칸에서는 수가 시작하자마자 없다', () => {
+    const { prev, game } = lastMove(withEntities([stone(2, 3)], { start: { x: 1, y: 3 } }), [
+      'right',
+    ])
+    const covers = iceCovers(prev, game, 0.9, 0)
+
+    expect(iceCovers(prev, game, 0.8, 0).get('4-3')?.gloss).toBe(0)
+    expect(covers.get('4-3')?.gloss).toBeCloseTo(0.5)
+    expect(covers.get('2-2')).toEqual({ cover: 1, from: 'down', gloss: 0 })
+    expect(iceCovers(prev, game, 0.8, 0).get('2-3')).toMatchObject({ cover: 1, gloss: 0 })
+    expect(covers.get('2-3')?.gloss).toBeCloseTo(0.5)
   })
 
   it('돌이 막 들어선 칸은 녹는 연출 없이 그 수가 끝날 때까지 덮인 채이다', () => {
     const { prev, game } = lastMove(STONE_STAGE, ['down'])
 
-    expect(iceCovers(prev, game, 0.5).get('2-2')).toEqual({ cover: 1, from: 'up' })
+    expect(iceCovers(prev, game, 0.5).get('2-2')).toEqual({ cover: 1, from: 'up', gloss: 1 })
     expect(iceCovers(game, game, 1).has('2-2')).toBe(false)
   })
 })
@@ -97,7 +110,7 @@ describe('iceCoversAt', () => {
     const pulling = iceCoversAt(prev, game, events, at(events, 0.3), NO_SWAMP)
     const half = iceCoversAt(prev, game, events, at(events, 0.45), NO_SWAMP)
 
-    expect(pulling.get('3-2')).toEqual({ cover: 1, from: 'left' })
+    expect(pulling.get('3-2')).toEqual({ cover: 1, from: 'left', gloss: 1 })
     expect(pulling.get('2-3')?.cover).toBe(1)
     expect(half.get('3-2')?.cover).toBe(1)
     expect(half.get('2-3')?.cover).toBeLessThan(1)
@@ -243,7 +256,7 @@ describe('stoneFrames', () => {
     }
   })
 
-  it('물에 뜬 돌을 밀면 한 칸 미끄러지며 뒤에 물테가 남는다', () => {
+  it('물에 뜬 돌을 밀면 한 칸 미끄러지고 둘레가 언 물이라 물테가 없다', () => {
     const { prev, game, events } = lastMove(
       withEntities([stone(2, 3)], { start: { x: 1, y: 3 } }),
       ['right'],
@@ -252,7 +265,7 @@ describe('stoneFrames', () => {
 
     expect(mid.to).toEqual({ x: 3, y: 3 })
     expect(mid.slab).toBe(1)
-    expect(mid.wake.length).toBeGreaterThan(0)
+    expect(mid.wake).toEqual([])
     expect(mid.bare).toBe(true)
   })
 

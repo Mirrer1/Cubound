@@ -70,6 +70,7 @@ export interface CellLook {
     patch: number // 돌이 밀려 떠나거나 도착하는 칸의 땅 서리 진하기
     slab: number // 돌 밑 얼음 판 진하기, 물이 바뀌는 수에는 둘레 언 칸과 같이 얼고 녹는 값
     cover: number // 언 물 판이 덮은 정도, 0이면 안 언 칸
+    gloss: number // 언 물 판 반짝임 줄 진하기
     from: Direction // 얼린 돌 쪽 가장자리
     boat: number // 얼어붙은 정도, 언 칸 위로 밀어 올린 상자는 0
     iced: boolean // 언 칸 위로 밀어 올린 상자
@@ -378,6 +379,7 @@ export const cellLook = ({
         patch: patches?.get(cell.key) ?? 0,
         slab: stoneHere ? stoneSlab(scene.before, game, scene.sluice.phase, cell.p) : 0,
         cover: ice?.cover ?? 0,
+        gloss: ice?.gloss ?? 0,
         from: ice?.from ?? 'up',
         boat: boxHere && !has(game.iced, cell.p) ? (ice?.cover ?? 0) : 0,
         iced: boxHere && has(game.iced, cell.p),

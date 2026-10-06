@@ -58,6 +58,31 @@ describe('movingBox', () => {
     const lift = 1 - switchProgress(events, [{ x: 0, y: 1 }], false, 0.8)
     expect(movingBox(prev, state, events, 0.8)?.level).toBeCloseTo(lift, 1)
   })
+
+  it('물이 높은 동안 잠긴 칸에 띄워 같은 수에 끌려가는 상자는 땅 위에서 출발 높이 그대로', () => {
+    // (0,0) 장치 위 상자로 물이 높은 판, (1,1) 상자를 잠긴 (1,2)에 띄우면 (3,2) 소용돌이로 한 칸 끌림
+    const stage: Stage = {
+      ...STAGE,
+      heights: [
+        [2, 2, 2, 2],
+        [2, 2, 2, 2],
+        [2, 1, 1, 0],
+      ],
+      water: 1,
+      start: { x: 1, y: 0 },
+      entities: [
+        { type: 'sluice', x: 0, y: 0 },
+        { type: 'box', x: 0, y: 0 },
+        { type: 'box', x: 1, y: 1 },
+        { type: 'whirlpool', x: 3, y: 2 },
+      ],
+    }
+    const prev = createState(stage)
+    const { state, events } = move(prev, 'down')
+
+    expect(events).toContainEqual({ type: 'pulled', from: { x: 1, y: 2 }, to: { x: 2, y: 2 } })
+    expect(movingBox(prev, state, events, 0.1)?.level).toBe(2)
+  })
 })
 
 describe('movingBox 미끄러짐', () => {

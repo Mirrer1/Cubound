@@ -325,7 +325,7 @@ const BoardCell = ({
                 <polygon
                   points={spotPoints(x, iceTop, GLOSS_SPOTS)}
                   style={{ fill: 'var(--color-ice-gloss)' }}
-                  opacity={Math.max(0, iceStone.cover * 2 - 1)}
+                  opacity={iceStone.gloss}
                 />
               </>
             )}
@@ -400,12 +400,10 @@ const BoardCell = ({
         <BoardSluice part="plate" x={x} y={y} depth={sluice.plate} open={sluice.open} />
       )}
       {sluice.device && (
-        <g style={fade}>
-          <BoardSluice part="tap" x={x} y={y} open={sluice.open} turn={sluice.turn} />
-        </g>
+        <BoardSluice part="tap" x={x} y={y} open={sluice.open} turn={sluice.turn} />
       )}
       {box && (
-        <g style={fade}>
+        <g>
           {iceStone.iced ? (
             <BoardBox x={x} y={iceTop - TILE.layer} />
           ) : iceStone.boat > 0 ? (
@@ -431,7 +429,7 @@ const BoardCell = ({
         />
       )}
       {iceStone.stone && (
-        <g style={fade}>
+        <g>
           <BoardIceStone
             part="stone"
             x={x}
@@ -457,7 +455,7 @@ const BoardCell = ({
         </g>
       ))}
       {seed.on > 0 && (
-        <g style={fade} opacity={seed.on}>
+        <g opacity={seed.on}>
           <BoardSeed x={x} y={y} part="seed" />
         </g>
       )}

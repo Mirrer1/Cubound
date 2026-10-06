@@ -68,7 +68,7 @@ const surfaceY = (view: WhirlView, p: { x: number; y: number }) =>
 const pulledFrame = (view: WhirlView, event: Pulled): WhirlBoxFrame => {
   const { game, events, t } = view
   const swamp = view.swamp ?? NO_SWAMP
-  const start = pullStart(events, event)
+  const start = pullStart(events)
   const end = moveSeconds(events, swamp)
   const elapsed = elapsedAt(events, swamp, t)
   const floating = events.some((e) => e.type === 'pushed' && same(e.to, event.from))

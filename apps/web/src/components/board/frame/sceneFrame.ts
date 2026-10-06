@@ -104,7 +104,7 @@ export const sceneFrame = ({
       (e) =>
         e.type === 'pulled' &&
         same(e.from, moved.to) &&
-        elapsedAt(events, swampSeconds, t) >= pullStart(events, e),
+        elapsedAt(events, swampSeconds, t) >= pullStart(events),
     )
   const box = handed ? null : moved
   const sunk = swampFrame(dropping ? null : prevGame, game, events, t)
