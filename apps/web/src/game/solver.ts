@@ -1,4 +1,4 @@
-import { WIND_EVERY, createState, move } from './rules'
+import { WIND_EVERY, createState, move, waterLevel } from './rules'
 import type { Direction, GameEvent, GameState, Point, Stage } from './types'
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
@@ -389,6 +389,25 @@ export const floodBlocks = (stage: Stage, { maxStates = 1_000_000 } = {}): Count
     stage,
     (_, events) => {
       if (events.some((e) => e.type === 'blocked' && e.flooded)) count += 1
+    },
+    { maxStates },
+  )
+  return done ? { status: 'ok', count } : { status: 'limit' }
+}
+
+// 닿을 수 있는 모든 상태에서 물 높이와 같은 높이로 메운 구덩이에 물이 오른 이동 수, 메운 칸은 잠기지 않는 규칙이라 판에서 막는 경우
+export const filledFloods = (stage: Stage, { maxStates = 1_000_000 } = {}): CountResult => {
+  const water = stage.water ?? 0
+  let count = 0
+  const done = eachMove(
+    stage,
+    (moved) => {
+      const sunk = moved.heights.some((row, y) =>
+        row.some(
+          (h, x) => stage.heights[y][x] < 0 && h === water && waterLevel(moved, { x, y }) > water,
+        ),
+      )
+      if (sunk) count += 1
     },
     { maxStates },
   )

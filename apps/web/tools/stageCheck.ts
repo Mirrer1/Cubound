@@ -6,6 +6,7 @@ import { type Hidden, type HiddenKind, hiddenFills, hiddenObjects } from '@/game
 import { createState, move } from '@/game/rules'
 import {
   deadEnds,
+  filledFloods,
   floodBlocks,
   minPushes,
   moveLimit,
@@ -123,6 +124,8 @@ const check = (file: string): Summary | null => {
   if (stage.entities.some((e) => e.type === 'sluice')) {
     const flooded = floodBlocks(stage)
     row('잠김 막힘', flooded.status === 'ok' ? `${flooded.count}` : '탐색 한도 초과')
+    const sunk = filledFloods(stage)
+    row('메움 잠김', sunk.status === 'ok' ? `${sunk.count}` : '탐색 한도 초과')
   }
 
   const started = Date.now()

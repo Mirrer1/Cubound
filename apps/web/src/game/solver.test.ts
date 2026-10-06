@@ -4,6 +4,7 @@ import { createState, move } from './rules'
 import {
   deadEnds,
   eachMove,
+  filledFloods,
   floodBlocks,
   minPushes,
   moveLimit,
@@ -332,6 +333,41 @@ describe('floodBlocks', () => {
 
   it('탐색 상태 수 한도를 넘으면 limit', () => {
     expect(floodBlocks(LOCK, { maxStates: 2 })).toEqual({ status: 'limit' })
+  })
+})
+
+describe('filledFloods', () => {
+  // 물 높이 1, 낮은 줄의 상자로 (2,1) 구덩이를 메우고 (4,1) 상자를 딛고 (4,0) 수위 장치로
+  const FILL: Stage = {
+    version: 1,
+    id: 'test-solver-fill',
+    heights: [
+      [2, 2, 2, 2, 2],
+      [1, 1, -1, 1, 1],
+    ],
+    water: 1,
+    start: { x: 0, y: 0 },
+    goal: { x: 2, y: 0 },
+    entities: [
+      { type: 'sluice', x: 4, y: 0 },
+      { type: 'box', x: 1, y: 1 },
+      { type: 'box', x: 4, y: 1 },
+    ],
+  }
+
+  it('물 높이와 같은 높이로 메운 구덩이에 물이 오른 이동을 센다', () => {
+    const result = filledFloods(FILL)
+
+    expect(result.status === 'ok' && result.count).toBeGreaterThan(0)
+  })
+
+  it('메운 칸이 없으면 0', () => {
+    const heights = FILL.heights.map((row) => row.map((h) => (h < 0 ? 1 : h)))
+    expect(filledFloods({ ...FILL, heights })).toEqual({ status: 'ok', count: 0 })
+  })
+
+  it('탐색 상태 수 한도를 넘으면 limit', () => {
+    expect(filledFloods(FILL, { maxStates: 2 })).toEqual({ status: 'limit' })
   })
 })
 
