@@ -68,8 +68,9 @@ export const en = {
   'guide.plug': 'Push a box into a whirlpool to plug it, and it stops pulling',
   'guide.iceStone': 'An ice stone freezes the water around it, and you can slide across the ice',
   'guide.melt': 'An ice stone in the water melts after {n} moves',
-  'guide.sluice': 'The water rises one level while something holds the tap down',
-  'guide.lock': 'While something holds the tap down, the water flows over to the other pool',
+  'guide.sluice': 'The water rises one level while something holds the water switch down',
+  'guide.lock':
+    'While something holds the water switch down, the water flows over to the other pool',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',

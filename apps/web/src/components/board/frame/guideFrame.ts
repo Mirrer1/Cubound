@@ -4,6 +4,7 @@ import {
   PIT_FLOOR,
   PLATE,
   STONE,
+  TAP,
   WATER,
   stoneSteps,
   surfaceRise,
@@ -12,8 +13,8 @@ import {
 import { MUSHROOM_STAND, mushroomPose } from './mushroomFrame'
 import { has, same } from './pathFrame'
 import { TILE, toScreen } from '@/game/iso'
-import { isDoorOpen, isLiftRaised, readMushrooms } from '@/game/rules'
-import type { GameState, Point } from '@/game/types'
+import { isDoorOpen, isLiftRaised, readMushrooms, waterLevel } from '@/game/rules'
+import type { GameState, Point, Stage } from '@/game/types'
 
 const GUIDE_MARGIN = 12
 
@@ -24,7 +25,7 @@ const halfTop = (width: number) => width / 4
 const surfaceOf = (game: GameState, p: Point) => {
   const h = game.heights[p.y]?.[p.x]
   if (h === undefined || h < 0) return null
-  const { depth } = waterLook(game.stage, p)
+  const { depth } = waterLook(game.stage, p, (q) => waterLevel(game, q))
   if (depth > 0) return h * TILE.layer + surfaceRise(depth)
   const lift = game.stage.entities.find((e) => e.type === 'lift' && same(e, p))
   const raised = lift?.type === 'lift' && isLiftRaised(game, lift.id) ? 1 : 0
@@ -51,6 +52,8 @@ const reachOf = (game: GameState, p: Point, floating: boolean) => {
     reaches.push(-peak.y + halfTop(peak.width))
   }
   if (player) reaches.push((boxed ? boxTop : mushroom ? MUSHROOM_STAND : 0) + TILE.layer + cube)
+  if (entity?.type === 'sluice')
+    reaches.push(TAP.height + TAP.wheelDepth + halfTop(TILE.width * TAP.wheel))
   if (entity?.type === 'door' && !isDoorOpen(game, entity.id)) {
     reaches.push(TILE.layer + PLATE.rise + halfTop(TILE.width * PLATE.scale))
   }
@@ -81,7 +84,7 @@ const dropOf = (game: GameState, p: Point, surface: number, depth: number) => {
 export const guideRect = (game: GameState, p: Point) => {
   // 바닥 없는 칸은 덩굴 길이나 발판 길의 팬 구덩이
   const surface = surfaceOf(game, p)
-  const floating = waterLook(game.stage, p).depth > 0
+  const floating = waterLook(game.stage, p, (q) => waterLevel(game, q)).depth > 0
   const center = toScreen(p, 0)
   const y = center.y - (surface ?? 0)
   const reach = reachOf(game, p, floating)
@@ -101,4 +104,23 @@ export const guideRect = (game: GameState, p: Point) => {
   const bottom = y + TILE.height / 2 + drop + GUIDE_MARGIN
 
   return { x, y: top, width, height: bottom - top }
+}
+
+// 갑문 판 가이드가 비추는 두 웅덩이 칸 전체의 사각형
+export const lockRect = (game: GameState) => {
+  const water = game.stage.water ?? 0
+  const rects = game.stage.heights.flatMap((row, y) =>
+    row.flatMap((h, x) => (h >= 0 && h <= water ? [guideRect(game, { x, y })] : [])),
+  )
+  const left = Math.min(...rects.map((r) => r.x))
+  const top = Math.min(...rects.map((r) => r.y))
+  const right = Math.max(...rects.map((r) => r.x + r.width))
+  const bottom = Math.max(...rects.map((r) => r.y + r.height))
+  return { x: left, y: top, width: right - left, height: bottom - top }
+}
+
+// 갑문 가이드에서 카메라가 맞추는 칸, 두 웅덩이 사이의 장치
+export const lockFocus = (stage: Stage): Point | null => {
+  const sluice = stage.rules?.lock ? stage.entities.find((e) => e.type === 'sluice') : undefined
+  return sluice ? { x: sluice.x, y: sluice.y } : null
 }

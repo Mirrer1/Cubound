@@ -7,7 +7,15 @@ import { NO_CHAIN, smooth } from './curveFrame'
 import { fillingCellKey } from './fillFrame'
 import { sceneFrame } from './sceneFrame'
 import { swampTime } from './swampFrame'
-import { LIFT_STAGE, STONE_STAGE, TRAM_STAGE, WHIRL_STAGE, lastMove } from './testStages'
+import {
+  LIFT_STAGE,
+  SLUICE_STAGE,
+  STONE_STAGE,
+  TRAM_STAGE,
+  WHIRL_STAGE,
+  lastMove,
+} from './testStages'
+import { SLUICE, durationOf, sluiceStart } from './timeFrame'
 import { railDirsOf } from './tramFrame'
 import { vineLooks } from './vineFrame'
 import { createState } from '@/game/rules'
@@ -314,5 +322,18 @@ describe('재시작하며 처음 모습으로 돌아가는 칸', () => {
       .over.tram!
 
     between(tram.opacity)
+  })
+})
+
+describe('cellLook 수위', () => {
+  it('물이 오르는 동안 잠기는 줄은 그 순간 물 깊이, 장치 칸은 수위 묶음', () => {
+    const { prev, game, events } = lastMove(SLUICE_STAGE, ['left'])
+    const t = (sluiceStart(events)! + SLUICE.tap + SLUICE.level / 2) / durationOf(events)
+    const cells = looks(game, prev, events, t)
+
+    expect(cells.get('1-1')!.look.water.depth).toBeCloseTo(0.5)
+    expect(cells.get('0-1')!.look.water.depth).toBeCloseTo(1.5)
+    expect(cells.get('0-0')!.look.sluice).toMatchObject({ device: true, open: 1 })
+    expect(cells.get('2-0')!.look.sluice.device).toBe(false)
   })
 })

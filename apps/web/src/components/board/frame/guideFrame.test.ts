@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { PIT_FLOOR, PLATE } from '../view'
-import { guideRect } from './guideFrame'
-import { WHIRL_STAGE } from './testStages'
+import { TAP } from '../view'
+import { guideRect, lockFocus } from './guideFrame'
+import { LOCK_STAGE, SLUICE_STAGE, WHIRL_STAGE } from './testStages'
 import { TILE, toScreen } from '@/game/iso'
 import { createState } from '@/game/rules'
 import type { GameState, Point, Stage } from '@/game/types'
@@ -186,5 +187,23 @@ describe('guideRect', () => {
     const leaning = (direction: 'up' | 'down') =>
       spanOf({ ...game, leaningLadders: [{ ...MID, direction }] }, MID).above
     expect(leaning('up') - leaning('down')).toBe(TILE.height / 2)
+  })
+})
+
+describe('guideRect 수위 장치', () => {
+  it('빈 장치 칸은 꼭지 바퀴 윗면까지 감싼다', () => {
+    const game = createState({ ...SLUICE_STAGE, start: { x: 2, y: 0 } })
+    const rect = guideRect(game, { x: 0, y: 0 })
+    const top =
+      toScreen({ x: 0, y: 0 }, 2).y - TAP.height - TAP.wheelDepth - (TILE.width * TAP.wheel) / 4
+
+    expect(rect.y).toBeLessThanOrEqual(top - 12)
+  })
+})
+
+describe('lockFocus', () => {
+  it('갑문 판은 장치 칸, 아니면 null', () => {
+    expect(lockFocus(LOCK_STAGE)).toEqual({ x: 3, y: 1 })
+    expect(lockFocus(SLUICE_STAGE)).toBeNull()
   })
 })

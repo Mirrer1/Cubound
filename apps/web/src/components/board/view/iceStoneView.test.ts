@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ICE, STONE, icePlate, stoneSteps } from './iceStoneView'
+import { ICE, STONE, frostWidth, icePlate, stoneFloat, stoneSteps } from './iceStoneView'
 import { TILE } from '@/game/iso'
 
 const pointsOf = (points: string) => points.split(' ').map((p) => p.split(',').map(Number))
@@ -56,5 +56,24 @@ describe('icePlate', () => {
 
     expect(Math.max(...xs)).toBe(TILE.width / 2)
     expect(Math.min(...xs)).toBeGreaterThan(-TILE.width / 2)
+  })
+})
+
+describe('stoneFloat', () => {
+  it('땅 위 돌은 0, 물이 언 판 밑까지 차면 0, 한 층 다 차면 1로 이어서 떠오른다', () => {
+    expect(stoneFloat(0)).toBe(0)
+    expect(stoneFloat(ICE.below / TILE.layer)).toBe(0)
+    expect(stoneFloat(1)).toBe(1)
+    expect(stoneFloat(2)).toBe(1)
+    expect(stoneFloat(0.5)).toBeGreaterThan(0)
+    expect(stoneFloat(0.5)).toBeLessThan(1)
+  })
+})
+
+describe('frostWidth', () => {
+  it('서리 판은 돌 바닥 가운데에서 작게 시작해 다 자라면 서리 판 크기다', () => {
+    expect(frostWidth(1)).toBe(STONE.frost)
+    expect(frostWidth(0)).toBeLessThan(STONE.frost / 2)
+    expect(frostWidth(0.5)).toBeGreaterThan(frostWidth(0))
   })
 })

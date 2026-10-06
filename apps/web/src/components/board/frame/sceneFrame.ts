@@ -11,7 +11,7 @@ import {
 import { crackProgress, standSink } from './crackFrame'
 import { SLIDE_DEG, playerFrame, squashTransform } from './cubeFrame'
 import { type Chain, smooth } from './curveFrame'
-import { guideRect } from './guideFrame'
+import { guideRect, lockRect } from './guideFrame'
 import {
   iceCovers,
   iceCoversAt,
@@ -26,6 +26,7 @@ import { mushroomFrames } from './mushroomFrame'
 import { cellsOf, has, playerPath, same } from './pathFrame'
 import { restartDrop } from './restartFrame'
 import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFrame'
+import { fadeLanes, sluiceScene } from './sluiceFrame'
 import { boxSink, swampFrame } from './swampFrame'
 import { moorLooks, tetherFrames } from './tetherFrame'
 import { type SwampTime, elapsedAt, pullStart, stepProgress } from './timeFrame'
@@ -73,8 +74,27 @@ export const sceneFrame = ({
   const { stage, heights, boxes } = game
   // 재시작은 처음 자리에 새로 내려앉는 것이라 넘기지 않는 앞 상태
   const cube = playerFrame(dropping ? null : prevGame, game, events, t, chain)
+  const sluice = sluiceScene({
+    before,
+    game,
+    events,
+    t,
+    swamp: swampSeconds,
+    moving,
+    dropping,
+    lanes,
+  })
   const cubeCell = { x: Math.round(cube.x), y: Math.round(cube.y) }
-  const whirl = whirlFrames({ before, game, events, t, swamp: swampSeconds, moving, dropping })
+  const whirl = whirlFrames({
+    before,
+    game,
+    events,
+    t,
+    swamp: swampSeconds,
+    moving,
+    dropping,
+    waterAt: sluice.waterAt,
+  })
   // 마개 상자는 떠오르지 않고 빨려 드는 whirl 몫
   const moved = whirl.plugging ? null : movingBox(prevGame, game, events, t, chain)
   // 밀어 띄운 상자가 끌려가기 시작하면 끌린 배 그림 몫
@@ -151,7 +171,7 @@ export const sceneFrame = ({
   const progress = moving ? t : 1
   // 소용돌이 앞 흔들리는 배에 탄 큐브의 쏠림, 오르는 수에 차오르고 저어 떠나는 수에 배와 같이 풀림
   const leanAt = (state: GameState) =>
-    leanOf(lanes.get(`${state.player.x}-${state.player.y}`), state, state.player, whirl)
+    leanOf(sluice.lanes.get(`${state.player.x}-${state.player.y}`), state, state.player, whirl)
   const riding = leanAt(game)
   const left = moving && !same(before.player, game.player) ? leanAt(before) : null
   const boarding = moving && riding !== null && !same(before.player, game.player)
@@ -177,7 +197,7 @@ export const sceneFrame = ({
       ? restartStones(game, t)
       : stoneFrames({ prev: prevGame, game, events, t, swamp: swampSeconds }),
     thawing: moving ? thawingBoxes(before, game, iceT) : [],
-    lanes: laneShown(lanes, before, game, iceT),
+    lanes: fadeLanes(laneShown(sluice.lanes, before, game, iceT), sluice.laneFade),
   }
 
   const cubeSink = standSink(crackView, cube.x, cube.y) + iceSink(covers, game, cube.x, cube.y)
@@ -197,10 +217,11 @@ export const sceneFrame = ({
   )
   const iceDrop = box ? iceSink(covers, game, box.x, box.y) : 0
   const boxFrames = boxFramesOf({ box, sinkingBox, tramFrames, boxes, crackView, iceDrop })
-  const boxShown = box ? floatShownAt(stage, box) : null
+  const boxShown = box ? floatShownAt(stage, box, sluice.waterAt) : null
   const tethers = tetherFrames({ prev: moving ? prevGame : null, game, box, t, dropping })
   const moor = moorLooks(stage, tethers)
   const guide = guideCell ? guideRect(game, guideCell) : null
+  const lockGuide = guideCell && stage.rules?.lock ? lockRect(game) : null
 
   return {
     moving,
@@ -244,7 +265,8 @@ export const sceneFrame = ({
     moor,
     whirl,
     iceStone,
-    lanes,
+    lanes: sluice.lanes,
+    sluice,
     crackView,
     seedFrame,
     faded,
@@ -253,5 +275,6 @@ export const sceneFrame = ({
     nextRails,
     caps,
     guide,
+    lockGuide,
   }
 }

@@ -10,6 +10,10 @@ const stepsOf = (boxes: number) => Math.min(boxes, RESTART.steps)
 export const restartDuration = (boxes: number, stones = 0) =>
   RESTART.fall + stepsOf(boxes) * RESTART.stagger + (stones > 1 ? RESTART.spread : 0)
 
+// 처음 모습으로 돌아가는 진행도, 큐브가 내려앉는 곡선
+export const restartPhase = (t: number, boxes: number, stones = 0) =>
+  smooth(Math.min(1, Math.max(0, (t * restartDuration(boxes, stones)) / RESTART.fall)))
+
 export interface DropFrame {
   lift: number // 처음 자리보다 높이 뜬 층 수
   opacity: number

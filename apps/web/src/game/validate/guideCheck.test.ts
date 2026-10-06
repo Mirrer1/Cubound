@@ -30,6 +30,7 @@ describe('checkGuides', () => {
     expect(errorsOf({ ...VALID, guides: [{ id: 'a', target: 'climbs' }] })).toEqual([])
     expect(errorsOf({ ...VALID, guides: [{ id: 'a', target: 'rides' }] })).toEqual([])
     expect(errorsOf({ ...VALID, guides: [{ id: 'a', target: 'dir' }] })).toEqual([])
+    expect(errorsOf({ ...VALID, guides: [{ id: 'a', target: 'lock' }] })).toEqual([])
     expect(errorsOf({ ...VALID, guides: [{ id: 'a', target: 'undo' }] })).toContain(
       'guides[0]의 target을 알 수 없다',
     )

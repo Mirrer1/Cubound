@@ -1,13 +1,14 @@
-import { idleRipples, postBands, rippleCycle, waterLook } from '../view'
+import { ICE, idleRipples, postBands, rippleCycle, waterLook } from '../view'
 import type { boardCells } from './cellFrame'
 import { crackFrame, crackLeft, sinkAt } from './crackFrame'
 import { clamp01, lerp, smooth } from './curveFrame'
 import { wallHeight } from './fillFrame'
 import { frostAt } from './iceFrame'
-import { frostGround } from './iceStoneFrame'
+import { frostGround, frostPatches } from './iceStoneFrame'
 import { has, same } from './pathFrame'
 import { restartDrop } from './restartFrame'
 import type { sceneFrame } from './sceneFrame'
+import { type SluiceLook, sluiceLookOf, stoneSlab } from './sluiceFrame'
 import { passDip, pressProgress, switchCells, switchProgress } from './switchFrame'
 import { type SwampTime } from './timeFrame'
 import type { VineKind } from './vineFrame'
@@ -66,6 +67,8 @@ export interface CellLook {
   iceStone: {
     stone: 'land' | 'float' | null // 멈춰 선 얼음 돌
     frost: boolean // 땅 위 돌 밑 서리 판
+    patch: number // 돌이 밀려 떠나거나 도착하는 칸의 땅 서리 진하기
+    slab: number // 돌 밑 얼음 판 진하기, 물이 바뀌는 수에는 둘레 언 칸과 같이 얼고 녹는 값
     cover: number // 언 물 판이 덮은 정도, 0이면 안 언 칸
     from: Direction // 얼린 돌 쪽 가장자리
     boat: number // 얼어붙은 정도, 언 칸 위로 밀어 올린 상자는 0
@@ -73,8 +76,8 @@ export interface CellLook {
   }
   water: {
     depth: number // 물 깊이 층 수, 0이면 물 없는 칸
-    bankX: boolean // 왼쪽 위 가장자리 반사 띠
-    bankY: boolean // 오른쪽 위 가장자리 반사 띠
+    bankX: number // 왼쪽 위 가장자리 반사 띠 진하기
+    bankY: number // 오른쪽 위 가장자리 반사 띠 진하기
     sideLeft: boolean
     sideRight: boolean
     ring: number // 퍼지는 고리 크기, 0이면 고리 없음
@@ -82,6 +85,7 @@ export interface CellLook {
     idle: number // 가만히 있을 때 잔물결이 이는 차례, -1이면 안 이는 칸
     idleCycle: number // 한 칸의 잔물결 한 바퀴 ms
   }
+  sluice: SluiceLook
   tether: {
     post: number // 말뚝 띠 수, 0이면 말뚝 없는 칸
     range: number // 갈 수 있는 범위 칸의 큐브가 탄 정도, -1이면 범위 밖
@@ -171,7 +175,9 @@ export const cellLook = ({
       : scene.moving
         ? switchProgress(events, cells, pressed, t, swampSeconds)
         : 1
-  const ripples = idleRipples(stage)
+  const ripples = idleRipples(stage, scene.sluice.still)
+  const sluiceAt = sluiceLookOf(scene, { game, events, t, swamp: swampSeconds })
+  const patches = scene.moving ? frostPatches(scene.before, game, events, t, swampSeconds) : null
   const cycle = rippleCycle(ripples.size)
 
   return (cell: ReturnType<typeof boardCells>[number]) => {
@@ -189,7 +195,7 @@ export const cellLook = ({
       (e): e is Extract<Entity, { type: 'warp' }> => e.type === 'warp' && same(e, cell.p),
     )
     const capHere = scene.caps.find((capFrame) => same(capFrame.cell, cell.p))
-    const water = waterLook(stage, cell.p)
+    const water = waterLook(stage, cell.p, scene.sluice.waterAt)
     const rippleHere = scene.ripple && same(scene.ripple.at, cell.p) ? scene.ripple : null
     const swampHere = (stage.swamp?.[cell.p.y]?.[cell.p.x] ?? '.') !== '.'
     // 상자가 가라앉는 동안 남는 진흙, 그 위로 드러나는 메운 자리
@@ -367,8 +373,10 @@ export const cellLook = ({
         wither: capHere?.wither ?? 0,
       },
       iceStone: {
-        stone: stoneHere ? (water.depth > 0 ? 'float' : 'land') : null,
+        stone: stoneHere ? (water.depth * TILE.layer > ICE.below ? 'float' : 'land') : null,
         frost: stoneHere && frostGround(game, cell.p),
+        patch: patches?.get(cell.key) ?? 0,
+        slab: stoneHere ? stoneSlab(scene.before, game, scene.sluice.phase, cell.p) : 0,
         cover: ice?.cover ?? 0,
         from: ice?.from ?? 'up',
         boat: boxHere && !has(game.iced, cell.p) ? (ice?.cover ?? 0) : 0,
@@ -385,6 +393,7 @@ export const cellLook = ({
         idle: ice || has(game.stones, cell.p) ? -1 : (ripples.get(cell.key) ?? -1),
         idleCycle: cycle,
       },
+      sluice: sluiceAt(cell.p),
       tether: {
         post: postBands(stage, cell.p),
         range: scene.moor.get(cell.key) ?? -1,

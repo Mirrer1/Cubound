@@ -14,6 +14,7 @@ import {
 import Board from '@/components/board/Board'
 import {
   capsDisplay,
+  lockFocus,
   meltDisplay,
   mudDisplay,
   vinesDisplay,
@@ -93,7 +94,13 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const guides = game?.stage.guides ?? []
   const hasGuide = guides.length > 0
   const guideTarget = guideStep !== null ? guides[guideStep]?.target : undefined
-  const guideCell = typeof guideTarget === 'object' ? guideTarget : undefined
+  // 갑문 가이드는 두 웅덩이 사이 장치 칸으로 맞추는 카메라
+  const guideCell =
+    typeof guideTarget === 'object'
+      ? guideTarget
+      : guideTarget === 'lock' && game
+        ? (lockFocus(game.stage) ?? undefined)
+        : undefined
   const left = game ? movesLeft(game) : null
   const pushesOver = game ? pushesLeft(game) : null
   const climbsOver = game ? climbsLeft(game) : null

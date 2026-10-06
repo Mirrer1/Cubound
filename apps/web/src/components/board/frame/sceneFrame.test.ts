@@ -8,8 +8,9 @@ import { guideRect } from './guideFrame'
 import { restartDrop } from './restartFrame'
 import { sceneFrame } from './sceneFrame'
 import { swampTime } from './swampFrame'
-import { PLUG_STAGE, WHIRL_STAGE, lastMove } from './testStages'
+import { LOCK_STAGE, PLUG_STAGE, SLUICE_STAGE, WHIRL_STAGE, lastMove } from './testStages'
 import { tetherFrames } from './tetherFrame'
+import { SLUICE, durationOf, sluiceStart } from './timeFrame'
 import { createState } from '@/game/rules'
 import type { GameEvent, GameState, Point, Stage } from '@/game/types'
 
@@ -174,5 +175,39 @@ describe('sceneFrame 끌린 배', () => {
 
     expect(sceneOf(game, prev, events, 0.8).cube.last).toBe(true)
     expect(sceneOf(game, null, [], 1).cube.last).toBeFalsy()
+  })
+})
+
+describe('sceneFrame 수위', () => {
+  it('장치에서 배로 내려선 큐브는 배에 앉은 뒤 수면과 같이 내려간다', () => {
+    const { prev, game, events } = lastMove(SLUICE_STAGE, ['left', 'down'])
+    const at = (seconds: number) => sceneOf(game, prev, events, seconds / durationOf(events))
+    const start = sluiceStart(events)!
+
+    expect(at(start).cubeLevel).toBeCloseTo(2)
+    expect(at(start + SLUICE.tap + SLUICE.level / 2).cubeLevel).toBeCloseTo(1.5)
+    expect(at(start + SLUICE.tap + SLUICE.level / 2).sluice.waterAt(game.player)).toBeCloseTo(1.5)
+    expect(at(durationOf(events)).cubeLevel).toBeCloseTo(1)
+  })
+
+  it('갑문 판의 가이드는 두 웅덩이를 같이 감싼다', () => {
+    const game = createState(LOCK_STAGE)
+    const scene = sceneOf(game, null, [], 1, { guideCell: { x: 3, y: 1 } })
+    const pools = [1, 2, 4, 5].map((x) => guideRect(game, { x, y: 1 }))
+
+    expect(scene.lockGuide).not.toBeNull()
+    for (const rect of pools) {
+      expect(scene.lockGuide!.x).toBeLessThanOrEqual(rect.x)
+      expect(scene.lockGuide!.y).toBeLessThanOrEqual(rect.y)
+      expect(scene.lockGuide!.x + scene.lockGuide!.width).toBeGreaterThanOrEqual(
+        rect.x + rect.width,
+      )
+      expect(scene.lockGuide!.y + scene.lockGuide!.height).toBeGreaterThanOrEqual(
+        rect.y + rect.height,
+      )
+    }
+    expect(
+      sceneOf(createState(SLUICE_STAGE), null, [], 1, { guideCell: { x: 0, y: 0 } }).lockGuide,
+    ).toBeNull()
   })
 })

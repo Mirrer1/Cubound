@@ -2,12 +2,14 @@ import { type CSSProperties, type ReactNode, memo } from 'react'
 
 import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
+import BoardGoal from './BoardGoal'
 import BoardIceStone from './BoardIceStone'
 import BoardLadder from './BoardLadder'
 import BoardMushroom from './BoardMushroom'
 import BoardPit from './BoardPit'
 import BoardPlate from './BoardPlate'
 import BoardSeed from './BoardSeed'
+import BoardSluice from './BoardSluice'
 import BoardSwamp from './BoardSwamp'
 import BoardSwitch from './BoardSwitch'
 import BoardTether from './BoardTether'
@@ -25,18 +27,23 @@ import {
   QUARTER,
   SHARD,
   STONE,
-  WATER,
   blend,
+  boatLook,
   cellFaces,
   crackQuarters,
   crackShards,
   crackSplit,
-  darken,
   dim,
+  frostWidth,
   isPit,
   leanShift,
   leaningOf,
   spotPoints,
+  stoneFloat,
+  sunkLift,
+  surfaceRise,
+  surfaceShown,
+  waterTone,
 } from './view'
 import { TILE, blockFaces } from '@/game/iso'
 import { useLoop } from '@/hooks/useLoop'
@@ -53,19 +60,28 @@ const GLOSS_SPOTS: [number, number][] = [
 const FROST_OPACITY = 0.7
 
 // 같은 크기 판 두 장을 어긋나게 겹쳐 낸 구멍 두께
-const HOLE = { scale: 0.62, wall: 7 }
-
 // 잠긴 것의 진흙 면 아래를 가리는 자르기, 밑면 앞 모서리를 따라 아이소메트릭 면과 나란한 선
 const mudClipPoints = (x: number, y: number) => {
   const hw = (TILE.width * CUBE) / 2
   return `${x - 4000},${y} ${x - hw},${y} ${x},${y + MUD_DIP} ${x + hw},${y} ${x + 4000},${y} ${x + 4000},${y - 4000} ${x - 4000},${y - 4000}`
 }
 
+// 이 칸 수면 뒤에 비치는 물에 잠긴 골, x와 y는 골 칸 윗면 중심
+export interface BehindGoal {
+  x: number
+  y: number
+  parity: boolean
+  sunk: number
+  depth: number
+}
+
 interface BoardCellProps extends CellLook {
+  behindGoal?: BehindGoal | null
   children?: ReactNode
 }
 
 const BoardCell = ({
+  behindGoal,
   x,
   y,
   h,
@@ -84,6 +100,7 @@ const BoardCell = ({
   tether,
   whirl,
   device,
+  sluice,
   pit: pitLook,
   ladder,
   vine,
@@ -117,7 +134,12 @@ const BoardCell = ({
     knot: vine.knot,
     opacity: vine.opacity,
   }
-  const faces = cellFaces(surface, grownVine, vine.hard, crack.on, crack.stage, parity)
+  const baseFaces = cellFaces(surface, grownVine, vine.hard, crack.on, crack.stage, parity)
+  // 물에 잠긴 집 칸의 땅 높이 윗면, 수면 이음매로 짙은 골 색이 비치지 않는 물빛
+  const faces =
+    goal && sluice.sunk > 0
+      ? { ...baseFaces, top: blend(baseFaces.top, waterTone(water.depth), sluice.sunk) }
+      : baseFaces
   const depth = crack.on ? crackThickness(crack.stage) + h * TILE.layer : h * TILE.layer + TILE.lip
   // 원래 땅 위에 볏짚빛으로 얹히는 씨앗으로 솟은 층, 옆면 색이 바뀌는 자리가 경계
   const seedRise = seed.land * TILE.layer
@@ -136,6 +158,7 @@ const BoardCell = ({
   const leanLoop = useLoop(LEAN_LOOP, 1600)
   // 물가 땅보다 조금 낮은 언 판 윗면
   const iceTop = y - water.depth * TILE.layer + ICE.below
+  const boat = boatLook(water.depth)
 
   return (
     <g>
@@ -223,22 +246,56 @@ const BoardCell = ({
                 right={faces.right}
               />
             )}
-            {water.depth > 0 && (
-              <BoardWater
-                part="surface"
+            {sluice.channel && (
+              <BoardSluice part="channel" x={x} y={y} axis={sluice.channel} flow={sluice.flow} />
+            )}
+            {surfaceRise(water.depth) > 0 && (
+              <g opacity={surfaceShown(water.depth)}>
+                <BoardWater
+                  part="surface"
+                  x={x}
+                  y={y}
+                  depth={water.depth}
+                  bankX={water.bankX}
+                  bankY={water.bankY}
+                  sideLeft={water.sideLeft}
+                  sideRight={water.sideRight}
+                  ring={water.ring}
+                  ringOpacity={water.ringOpacity}
+                  idle={water.idle}
+                  idleCycle={water.idleCycle}
+                  range={tether.range}
+                />
+              </g>
+            )}
+            {goal && sluice.sunk > 0 && (
+              <BoardGoal
                 x={x}
-                y={y}
+                y={y - sunkLift(water.depth)}
+                top={baseFaces.top}
+                sunk={sluice.sunk}
                 depth={water.depth}
-                bankX={water.bankX}
-                bankY={water.bankY}
-                sideLeft={water.sideLeft}
-                sideRight={water.sideRight}
-                ring={water.ring}
-                ringOpacity={water.ringOpacity}
-                idle={water.idle}
-                idleCycle={water.idleCycle}
-                range={tether.range}
+                film={surfaceShown(water.depth)}
               />
+            )}
+            {behindGoal && surfaceRise(water.depth) > 0 && (
+              <>
+                <clipPath id={`behind-goal-${x}-${y}`}>
+                  <polygon
+                    points={blockFaces(x, y - surfaceRise(water.depth), TILE.width, 0).top}
+                  />
+                </clipPath>
+                <g clipPath={`url(#behind-goal-${x}-${y})`}>
+                  <BoardGoal
+                    x={behindGoal.x}
+                    y={behindGoal.y - sunkLift(behindGoal.depth)}
+                    top={cellFaces('hole', false, 0, false, 0, behindGoal.parity).top}
+                    sunk={behindGoal.sunk}
+                    depth={behindGoal.depth}
+                    film={surfaceShown(behindGoal.depth)}
+                  />
+                </g>
+              </>
             )}
             {whirl.lane && whirl.laneOpacity > 0 && (
               <BoardWhirlpool
@@ -317,17 +374,15 @@ const BoardCell = ({
                 right={faces.right}
               />
             ))}
-            {goal && (
-              <>
-                <polygon
-                  points={blockFaces(x, y + HOLE.wall, TILE.width * HOLE.scale, 0).top}
-                  style={{ fill: darken('goal', 16) }}
-                />
-                <polygon
-                  points={blockFaces(x, y + 1, TILE.width * HOLE.scale, 0).top}
-                  style={{ fill: darken('goal', 36) }}
-                />
-              </>
+            {goal && sluice.sunk === 0 && (
+              <BoardGoal
+                x={x}
+                y={y - sunkLift(water.depth)}
+                top={baseFaces.top}
+                sunk={sluice.sunk}
+                depth={water.depth}
+                film={surfaceShown(water.depth)}
+              />
             )}
           </g>
         </g>
@@ -341,6 +396,9 @@ const BoardCell = ({
           doorDepth={device.doorDepth}
         />
       )}
+      {sluice.device && (
+        <BoardSluice part="plate" x={x} y={y} depth={sluice.plate} open={sluice.open} />
+      )}
       {box && (
         <g style={fade}>
           {iceStone.iced ? (
@@ -353,23 +411,30 @@ const BoardCell = ({
               className={lean ? 'whirl-lean' : undefined}
               style={lean as CSSProperties}
             >
-              <BoardWater part="box" x={x} y={y - water.depth * TILE.layer} shown={WATER.lip} />
+              <BoardWater part="box" x={x} y={y - boat.top} shown={boat.shown} />
             </g>
           ) : (
             <BoardBox x={x} y={y - TILE.layer} />
           )}
         </g>
       )}
+      {iceStone.patch > 0 && (
+        <polygon
+          points={blockFaces(x, y, TILE.width * frostWidth(iceStone.patch), 0).top}
+          style={{ fill: blend('var(--color-floor-top)', 'var(--color-ice)', 0.55) }}
+          opacity={iceStone.patch}
+        />
+      )}
       {iceStone.stone && (
         <g style={fade}>
           <BoardIceStone
             part="stone"
             x={x}
-            y={iceStone.stone === 'float' ? iceTop : y}
+            y={Math.min(y, iceTop)}
             scale={1}
-            cut={iceStone.stone === 'float' ? STONE.floatCut : 0}
-            slab={iceStone.stone === 'float' ? 1 : 0}
-            frost={iceStone.frost ? 1 : 0}
+            cut={STONE.floatCut * stoneFloat(water.depth)}
+            slab={iceStone.slab}
+            frost={iceStone.frost ? 1 - iceStone.slab : 0}
             opacity={1}
             wake={[]}
             ring={null}
@@ -407,6 +472,11 @@ const BoardCell = ({
         </>
       ) : (
         children
+      )}
+      {sluice.device && (
+        <g style={fade}>
+          <BoardSluice part="tap" x={x} y={y} open={sluice.open} turn={sluice.turn} />
+        </g>
       )}
       {(seed.stakes > 0 || seed.stakesNext > 0) && (
         <g style={fade}>

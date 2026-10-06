@@ -1,7 +1,7 @@
 import { spotPoints } from './cellView'
 import { CUBE } from './cubeView'
 import { blend } from './shadeView'
-import { waterDepth } from './waterView'
+import { type WaterAt, waterDepth } from './waterView'
 import { TILE, blockFaces, isoDelta } from '@/game/iso'
 import type { Direction, Point, Stage } from '@/game/types'
 
@@ -90,7 +90,7 @@ export interface Lane {
 }
 
 // 칸마다 그 칸을 지나는 물길, 소용돌이에서 네 방향으로 물 칸이 이어진 데까지
-export const pullLanes = (stage: Stage) => {
+export const pullLanes = (stage: Stage, waterAt?: WaterAt) => {
   const lanes = new Map<string, Lane>()
   whirlpoolsOf(stage).forEach((whirl, i) =>
     DIRECTIONS.forEach((direction) => {
@@ -98,7 +98,7 @@ export const pullLanes = (stage: Stage) => {
       const toward = DIRECTIONS.find((o) => OFFSETS[o].x === -d.x && OFFSETS[o].y === -d.y)!
       for (let k = 1; ; k += 1) {
         const p = { x: whirl.x + d.x * k, y: whirl.y + d.y * k }
-        if (waterDepth(stage, p) === 0) break
+        if (waterDepth(stage, p, waterAt) === 0) break
         lanes.set(`${p.x}-${p.y}`, {
           whirl: i,
           axis: d.x === 0 ? 'y' : 'x',

@@ -68,8 +68,8 @@ export const zhHans: Partial<Texts> = {
   'guide.plug': '把箱子推进漩涡就能堵住它，它就不再拉船了',
   'guide.iceStone': '冰石会冻住四周的水，可以在冰上滑过去',
   'guide.melt': '浮在水上的冰石过 {n} 步就会融化',
-  'guide.sluice': '有东西压着水龙头时，水会涨高一层',
-  'guide.lock': '有东西压着水龙头时，水会流到对面的水池',
+  'guide.sluice': '有东西压着水开关时，水会涨高一层',
+  'guide.lock': '有东西压着水开关时，水会流到对面的水池',
 
   'chapter.1': '踏石之路',
   'chapter.2': '草木丛生之路',

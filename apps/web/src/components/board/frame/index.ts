@@ -66,6 +66,8 @@ export {
   standSink,
 } from './crackFrame'
 export { type DropFrame, restartDrop, restartDuration } from './restartFrame'
+export { lockFocus } from './guideFrame'
+export { type SluiceLook, waterAtOf } from './sluiceFrame'
 export {
   plantedSeedAt,
   type PlantingFrame,

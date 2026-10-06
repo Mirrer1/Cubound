@@ -1,7 +1,7 @@
 import { type CSSProperties, useMemo } from 'react'
 
 import BoardBox from './BoardBox'
-import BoardCell from './BoardCell'
+import BoardCell, { type BehindGoal } from './BoardCell'
 import BoardClear from './BoardClear'
 import BoardIceStone from './BoardIceStone'
 import BoardLadder from './BoardLadder'
@@ -24,6 +24,7 @@ import {
   sceneFrame,
   swampTime,
   vineLooks,
+  waterAtOf,
 } from './frame'
 import { LEAN_LOOP, WATER, leanShift, pullLanes, shade } from './view'
 import { TILE } from '@/game/iso'
@@ -79,7 +80,8 @@ const Board = ({
     [heights, stage.heights, stage.entities, game.vines],
   )
 
-  const lanes = useMemo(() => pullLanes(stage), [stage])
+  // 수위 판은 물 높이를 따라 바뀌는 물길
+  const lanes = useMemo(() => pullLanes(stage, waterAtOf(game, game, 1)), [stage, game])
 
   const scene = sceneFrame({
     game,
@@ -121,6 +123,25 @@ const Board = ({
   )
 
   const lookOf = cellLook({ stage, game, events, t, swampSeconds, fillingKey, railDirs, scene })
+  // 물에 잠긴 골, 앞줄 칸이 자기 수면 위에 다시 비추는 자리
+  const goalCell = cells.find((cell) => same(cell.p, stage.goal))
+  const goalLook = goalCell ? lookOf(goalCell).look : null
+  const sunkGoal: BehindGoal | null =
+    goalLook && goalLook.sluice.sunk > 0
+      ? {
+          x: goalLook.x,
+          y: goalLook.y,
+          parity: goalLook.parity,
+          sunk: goalLook.sluice.sunk,
+          depth: goalLook.water.depth,
+        }
+      : null
+  const isFrontOfGoal = (p: Point) =>
+    p.x - stage.goal.x >= 0 &&
+    p.y - stage.goal.y >= 0 &&
+    p.x - stage.goal.x + p.y - stage.goal.y > 0 &&
+    p.x - stage.goal.x <= 1 &&
+    p.y - stage.goal.y <= 1
 
   return (
     <svg ref={ref} viewBox={viewBox} className="h-full w-full">
@@ -128,7 +149,11 @@ const Board = ({
         const { cellY, look, over } = lookOf(cell)
 
         return (
-          <BoardCell key={cell.key} {...look}>
+          <BoardCell
+            key={cell.key}
+            {...look}
+            behindGoal={sunkGoal && isFrontOfGoal(cell.p) ? sunkGoal : null}
+          >
             {over.overlay ? (
               <>
                 {over.tram && (
@@ -270,6 +295,16 @@ const Board = ({
           <BoardTether part="rope" points={tether.points} opacity={tether.opacity} />
         </g>
       ))}
+      {scene.lockGuide && (
+        <rect
+          data-guide="lock"
+          x={scene.lockGuide.x}
+          y={scene.lockGuide.y}
+          width={scene.lockGuide.width}
+          height={scene.lockGuide.height}
+          fill="none"
+        />
+      )}
       {scene.guide && (
         <rect
           data-guide="cell"

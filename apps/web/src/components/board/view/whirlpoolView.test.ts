@@ -40,6 +40,13 @@ describe('pullLanes', () => {
     expect(lanes.get('1-2')).toEqual({ whirl: 0, axis: 'y', toward: 'up', front: true })
   })
 
+  it('그 순간 물 높이로 이어진 물 칸까지가 물길', () => {
+    const lanes = pullLanes(STAGE, () => 2)
+
+    expect(lanes.has('4-1')).toBe(true)
+    expect(lanes.has('1-0')).toBe(true)
+  })
+
   it('소용돌이가 없는 판은 물길이 없다', () => {
     expect(pullLanes({ ...STAGE, entities: [] }).size).toBe(0)
   })

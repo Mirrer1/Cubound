@@ -4,12 +4,15 @@ import {
   IDLE_RIPPLE,
   WATER,
   bankPoints,
+  boatLook,
   floatShown,
   floatShownAt,
   idleRipples,
   rippleCycle,
   rippleLoop,
+  sunkLift,
   surfaceRise,
+  surfaceShown,
   waterDepth,
   waterLook,
   waterTone,
@@ -45,21 +48,21 @@ describe('waterDepth', () => {
 
 describe('waterLook', () => {
   it('왼쪽 위와 오른쪽 위가 마른 땅인 가장자리에만 반사 띠를 둔다', () => {
-    expect(waterLook(STAGE, { x: 1, y: 1 })).toMatchObject({ depth: 1, bankX: true, bankY: true })
-    expect(waterLook(STAGE, { x: 2, y: 1 })).toMatchObject({ depth: 2, bankX: false, bankY: true })
+    expect(waterLook(STAGE, { x: 1, y: 1 })).toMatchObject({ depth: 1, bankX: 1, bankY: 1 })
+    expect(waterLook(STAGE, { x: 2, y: 1 })).toMatchObject({ depth: 2, bankX: 0, bankY: 1 })
   })
 
   it('필드 밖과 바닥 없는 칸은 마른 땅이 아니다', () => {
     const stage: Stage = { ...STAGE, heights: [[-1, 0]], water: 1 }
 
-    expect(waterLook(stage, { x: 1, y: 0 })).toMatchObject({ depth: 1, bankX: false, bankY: false })
+    expect(waterLook(stage, { x: 1, y: 0 })).toMatchObject({ depth: 1, bankX: 0, bankY: 0 })
   })
 
   it('물이 아닌 칸은 깊이 0에 반사 띠도 옆면도 없다', () => {
     expect(waterLook(STAGE, { x: 1, y: 2 })).toEqual({
       depth: 0,
-      bankX: false,
-      bankY: false,
+      bankX: 0,
+      bankY: 0,
       sideLeft: false,
       sideRight: false,
     })
@@ -154,5 +157,65 @@ describe('idleRipples', () => {
 
     expect([...idleRipples(stage).keys()]).toEqual(['1-0'])
     expect([...idleRipples(pond(4, 3))]).toEqual([...idleRipples(pond(4, 3))])
+  })
+})
+
+// 물 높이를 칸마다 따로 주는 판, (1,1)은 1.5층, 나머지는 판의 물 높이 2
+const rising = (p: { x: number; y: number }) => (p.x === 1 && p.y === 1 ? 2.5 : 2)
+
+describe('waterAt', () => {
+  it('그 순간 칸의 물 높이로 깊이를 재고, 막 잠기는 옆 칸은 수면이 옅은 만큼 반사 띠를 남긴다', () => {
+    expect(waterDepth(STAGE, { x: 1, y: 1 }, rising)).toBe(1.5)
+    expect(waterDepth(STAGE, { x: 0, y: 0 }, () => 2.4)).toBeCloseTo(0.4)
+    const look = waterLook(STAGE, { x: 1, y: 1 }, () => 2.4)
+    expect(look.bankX).toBeCloseTo(0.5)
+    expect(look.bankY).toBeCloseTo(0.5)
+    expect(floatShownAt(STAGE, { x: 1, y: 1, level: 1.5 }, rising)).toBe(WATER.lip)
+  })
+
+  it('물 높이를 안 주면 판의 물 높이', () => {
+    expect(waterDepth(STAGE, { x: 1, y: 1 })).toBe(waterDepth(STAGE, { x: 1, y: 1 }, () => 2))
+  })
+
+  it('잔물결은 그 물 높이로 잠긴 칸에서도 인다', () => {
+    expect(idleRipples(STAGE, () => 3).size).toBe(8)
+  })
+})
+
+describe('boatLook', () => {
+  it('한 층 넘게 잠기면 수면 위 상자 윗면과 둑 높이만큼 보이는 몸', () => {
+    expect(boatLook(1)).toEqual({ top: TILE.layer, shown: WATER.lip })
+    expect(boatLook(2)).toEqual({ top: 2 * TILE.layer, shown: WATER.lip })
+  })
+
+  it('잠기는 땅 위 상자는 윗면 그대로 물이 차는 만큼 덜 보이는 몸', () => {
+    expect(boatLook(0)).toEqual({ top: TILE.layer, shown: TILE.layer })
+    expect(boatLook(0.5)).toEqual({ top: TILE.layer, shown: TILE.layer / 2 + WATER.lip })
+  })
+})
+
+describe('waterTone 소수 깊이', () => {
+  it('차오르는 중인 칸은 위아래 깊이의 색을 깊이만큼 섞는다', () => {
+    expect(waterTone(0.3)).toBe(waterTone(1))
+    expect(waterTone(1.5)).toBe(
+      'color-mix(in srgb, var(--color-water-1), var(--color-water-2) 50%)',
+    )
+    expect(waterTone(3.5)).toBe(waterTone(3))
+  })
+})
+
+describe('surfaceShown', () => {
+  it('잠기는 땅 위로 올라오는 수면은 투명에서 또렷해지고 가만히 있는 물은 늘 또렷하다', () => {
+    expect(surfaceShown(0.2)).toBe(0)
+    expect(surfaceShown(0.4)).toBeCloseTo(0.5)
+    expect(surfaceShown(1)).toBe(1)
+  })
+})
+
+describe('sunkLift', () => {
+  it('물에 잠긴 바닥은 수면 위 물 깊이의 0.3배만큼 떠 보이고 물 밖에서는 그대로다', () => {
+    expect(sunkLift(0)).toBe(0)
+    expect(sunkLift(0.2)).toBe(0)
+    expect(sunkLift(1)).toBeCloseTo(0.3 * (TILE.layer - 6))
   })
 })

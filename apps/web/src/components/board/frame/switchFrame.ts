@@ -6,6 +6,8 @@ import {
   type SwampTime,
   elapsedAt,
   playerSegments,
+  sluicePhase,
+  sluiceStart,
   touchAt,
 } from './timeFrame'
 import { isLiftRaised } from '@/game/rules'
@@ -87,7 +89,7 @@ export const passDip = (events: GameEvent[], p: Point, t: number, swamp: SwampTi
 export const switchCells = (stage: Stage, target: string): Point[] =>
   stage.entities.filter((e) => e.type === 'switch' && e.target === target)
 
-// 그 칸의 발판이 오르내리는 진행도, 발판 칸이 아니면 이동 전체
+// 그 칸의 발판이 오르내리는 진행도, 물이 바뀌는 수는 수면 진행도, 발판 칸이 아니면 이동 전체
 export const ridePhase = (
   game: GameState,
   events: GameEvent[],
@@ -95,6 +97,7 @@ export const ridePhase = (
   t: number,
   swamp: SwampTime,
 ) => {
+  if (sluiceStart(events) !== null) return sluicePhase(events, t, swamp).level
   const lift = game.stage.entities.find(
     (e): e is Extract<Entity, { type: 'lift' }> => e.type === 'lift' && same(e, p),
   )

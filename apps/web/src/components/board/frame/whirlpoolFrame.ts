@@ -1,4 +1,4 @@
-import { CUBE, type Lane, WATER, whirlpoolsOf } from '../view'
+import { CUBE, type Lane, WATER, type WaterAt, whirlpoolsOf } from '../view'
 import { clamp01, easeOut, lerp, smooth } from './curveFrame'
 import { has, same } from './pathFrame'
 import {
@@ -50,12 +50,18 @@ interface WhirlView {
   swamp?: SwampTime
   moving: boolean
   dropping: boolean
+  waterAt?: WaterAt // 그 순간 칸의 물 높이, 물이 오르내리는 수에 차오르는 중인 높이
 }
 
 type Pulled = Extract<GameEvent, { type: 'pulled' }>
 
-const surfaceY = (game: GameState, p: { x: number; y: number }) =>
-  toScreen(p, waterLevel(game, { x: Math.round(p.x), y: Math.round(p.y) })).y + WATER.lip
+const levelAt = (view: WhirlView, p: { x: number; y: number }) => {
+  const cell = { x: Math.round(p.x), y: Math.round(p.y) }
+  return view.waterAt ? view.waterAt(cell) : waterLevel(view.game, cell)
+}
+
+const surfaceY = (view: WhirlView, p: { x: number; y: number }) =>
+  toScreen(p, levelAt(view, p)).y + WATER.lip
 
 // 한 칸 끌려가는 배, 출발한 뒤 그 수가 끝날 때까지 미끄러지듯 가는 자리
 // 이 수에 밀어 띄운 상자는 다 뜰 때까지 상자 연출 몫이라 투명
@@ -73,7 +79,9 @@ const pulledFrame = (view: WhirlView, event: Pulled): WhirlBoxFrame => {
     y: lerp(event.from.y, event.to.y, smooth(p)),
   }
   const dip = PULL_DIP * Math.sin(Math.PI * p)
-  const surface = surfaceY(game, at)
+  const level = levelAt(view, at)
+  // 잠기는 땅 위 상자는 물이 다 찰 때까지 땅에 앉은 윗면
+  const top = Math.max(level, game.stage.heights[Math.round(at.y)][Math.round(at.x)] + 1)
   const wakeOn = Math.sin(Math.PI * p)
   const dx = event.to.x - event.from.x
   const dy = event.to.y - event.from.y
@@ -82,8 +90,8 @@ const pulledFrame = (view: WhirlView, event: Pulled): WhirlBoxFrame => {
 
   return {
     x: toScreen(at, 0).x,
-    y: surface - WATER.lip + dip,
-    shown: Math.max(0, WATER.lip - dip),
+    y: toScreen(at, top).y + dip,
+    shown: clamp01(((top - level) * TILE.layer + WATER.lip - dip) / TILE.layer) * TILE.layer,
     opacity: floating && elapsed < start ? 0 : 1,
     to: event.to,
     cell: p > 0 ? frontOf(event.from, event.to) : event.from,
@@ -93,7 +101,7 @@ const pulledFrame = (view: WhirlView, event: Pulled): WhirlBoxFrame => {
             const q = { x: at.x - dx * w.behind, y: at.y - dy * w.behind }
             return {
               x: toScreen(q, 0).x,
-              y: surfaceY(game, q),
+              y: surfaceY(view, q),
               width: TILE.width * CUBE * w.size,
               opacity: w.opacity * wakeOn,
             }
@@ -126,7 +134,7 @@ export const plugPhase = (events: GameEvent[], t: number, swamp: SwampTime = NO_
 
 // 소용돌이 칸으로 밀려 빨려 들며 사라지는 땅 상자
 const plugBox = (view: WhirlView, phase: NonNullable<ReturnType<typeof plugPhase>>) => {
-  const { before, game, events } = view
+  const { before, events } = view
   const pushed = events
     .filter((e): e is Extract<GameEvent, { type: 'pushed' }> => e.type === 'pushed')
     .at(-1)
@@ -137,7 +145,7 @@ const plugBox = (view: WhirlView, phase: NonNullable<ReturnType<typeof plugPhase
     y: lerp(pushed.from.y, pushed.to.y, smooth(phase.push)),
   }
   const startTop = toScreen(at, standHeight(before, pushed.from)).y
-  const surface = surfaceY(game, pushed.to)
+  const surface = surfaceY(view, pushed.to)
   const top =
     phase.suck < 1
       ? lerp(startTop, surface + PLUG_DEPTH.suck, smooth(phase.suck))

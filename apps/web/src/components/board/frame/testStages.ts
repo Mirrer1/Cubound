@@ -290,3 +290,79 @@ export const STONE_STAGE: Stage = {
   goal: { x: 5, y: 4 },
   entities: [{ type: 'iceStone', x: 2, y: 1 }],
 }
+
+// 물 높이 1, (0,0) 수위 장치, (0,1) 늘 물인 칸의 배, (1,1)이 잠기는 줄, 왼쪽으로 장치에 올라 아래 배로 내려섬
+export const SLUICE_STAGE: Stage = {
+  version: 1,
+  id: 'test-sluice',
+  name: '수위',
+  heights: [
+    [2, 2, 2],
+    [0, 1, 2],
+  ],
+  water: 1,
+  start: { x: 1, y: 0 },
+  goal: { x: 2, y: 1 },
+  entities: [
+    { type: 'sluice', x: 0, y: 0 },
+    { type: 'box', x: 0, y: 1 },
+  ],
+}
+
+// 물 높이 1, (3,1) 소용돌이, (1,1) 잠기는 줄의 땅 상자, 왼쪽으로 장치에 오르면 상자가 떠서 끌림
+export const SLUICE_WHIRL_STAGE: Stage = {
+  version: 1,
+  id: 'test-sluice-whirl',
+  name: '수위 소용돌이',
+  heights: [
+    [2, 2, 2, 2],
+    [2, 1, 1, 0],
+  ],
+  water: 1,
+  start: { x: 1, y: 0 },
+  goal: { x: 3, y: 0 },
+  entities: [
+    { type: 'sluice', x: 0, y: 0 },
+    { type: 'box', x: 1, y: 1 },
+    { type: 'whirlpool', x: 3, y: 1 },
+  ],
+}
+
+// 물 높이 1, (2,1) 얼음 돌 옆 (1,1)이 잠기는 줄, 왼쪽으로 장치에 오르면 (1,1)이 어는 판
+export const SLUICE_ICE_STAGE: Stage = {
+  version: 1,
+  id: 'test-sluice-ice',
+  name: '수위 얼음',
+  heights: [
+    [2, 2, 2],
+    [2, 1, 2],
+  ],
+  water: 1,
+  start: { x: 1, y: 0 },
+  goal: { x: 2, y: 0 },
+  entities: [
+    { type: 'sluice', x: 0, y: 0 },
+    { type: 'iceStone', x: 2, y: 1 },
+  ],
+}
+
+// 물 높이 1, 가 웅덩이 (1,1)과 (2,1), 나 웅덩이 (4,1)과 (5,1), 사이 (3,1) 수위 장치에서 위아래로 갈린 판
+export const LOCK_STAGE: Stage = {
+  version: 1,
+  id: 'test-lock',
+  name: '갑문',
+  heights: [
+    [2, 2, 2, 2, 2, 2, 2],
+    [2, 0, 1, 2, 1, 0, 2],
+    [2, 2, 2, 2, 2, 2, 2],
+  ],
+  water: 1,
+  start: { x: 3, y: 0 },
+  goal: { x: 6, y: 0 },
+  entities: [
+    { type: 'sluice', x: 3, y: 1 },
+    { type: 'box', x: 2, y: 1 },
+    { type: 'box', x: 4, y: 1 },
+  ],
+  rules: { lock: { x: 1, y: 1 } },
+}

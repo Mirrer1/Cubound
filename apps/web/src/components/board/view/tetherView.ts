@@ -1,6 +1,6 @@
 import { clamp01 } from './cellView'
 import { CUBE } from './cubeView'
-import { waterDepth } from './waterView'
+import { type WaterAt, waterDepth } from './waterView'
 import { TILE, toScreen } from '@/game/iso'
 import type { Entity, Point, Stage } from '@/game/types'
 
@@ -23,13 +23,13 @@ export const postBands = (stage: Stage, p: Point) => {
 }
 
 // 칸마다 그 칸을 범위로 갖는 말뚝 순서
-export const moorCells = (stage: Stage) => {
+export const moorCells = (stage: Stage, waterAt?: WaterAt) => {
   const cells = new Map<string, number[]>()
   postsOf(stage).forEach((post, i) =>
     stage.heights.forEach((row, y) =>
       row.forEach((_, x) => {
         const d = Math.abs(x - post.x) + Math.abs(y - post.y)
-        if (d > post.length || waterDepth(stage, { x, y }) === 0) return
+        if (d > post.length || waterDepth(stage, { x, y }, waterAt) === 0) return
         const key = `${x}-${y}`
         cells.set(key, [...(cells.get(key) ?? []), i])
       }),

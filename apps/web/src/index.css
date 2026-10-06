@@ -88,6 +88,17 @@
   --color-water-left: #7a8e8a;
   --color-water-right: #92a7a2;
   --color-water-reflect: #e5f0ed;
+  /* 수위 장치 꼭지의 물줄기와 밑동 웅덩이 안쪽, 열린 바퀴와 그 홈, 잠긴 집, 갑문 물길 홈과 흐르는 물 */
+  --color-level-stream: var(--color-water-1);
+  --color-level-puddle-inner: color-mix(
+    in srgb,
+    var(--color-water-1),
+    var(--color-water-reflect) 55%
+  );
+  --color-level-wheel-open: var(--color-water-reflect);
+  --color-level-wheel-slot: var(--color-water-2);
+  --color-lock-channel: color-mix(in srgb, var(--color-floor-top), var(--color-water-2) 42%);
+  --color-lock-channel-flow: var(--color-water-1);
   /* 소용돌이, 끄는 물길 띠와 그 먼 가장자리 선, 막은 상자 비침 */
   --color-whirl-pull: #adc5c0;
   --color-whirl-pull-edge: #d5e6e2;

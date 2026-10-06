@@ -10,6 +10,8 @@ import {
   freezeEnd,
   moveSeconds,
   pullStart,
+  sluicePhase,
+  sluiceStart,
   thaws,
 } from './timeFrame'
 import { frontOf } from './tramFrame'
@@ -48,11 +50,12 @@ const keyOf = (p: Point) => `${p.x}-${p.y}`
 // 언 판에 선 돌 바닥 높이, 같은 높이 땅보다 판이 낮은 만큼 아래
 export const floatBase = (water: number) => water - ICE.below / TILE.layer
 
-const isWet = (stage: Stage, p: Point) => waterLook(stage, p).depth > 0
+const isWet = (state: GameState, p: Point) =>
+  waterLook(state.stage, p, (q) => waterLevel(state, q)).depth > 0
 
 // 서리 판을 까는 칸, 물과 얼음바닥과 표시가 있는 칸(무너지는 칸, 스위치, 짝 칸) 제외
 export const frostGround = (state: GameState, p: Point) =>
-  !isWet(state.stage, p) &&
+  !isWet(state, p) &&
   !isIce(state, p) &&
   !/[1-9]/.test(state.stage.cracks?.[p.y]?.[p.x] ?? '.') &&
   !state.stage.entities.some((e) => (e.type === 'switch' || e.type === 'warp') && same(e, p))
@@ -67,7 +70,7 @@ export const frozenCells = (state: GameState) => {
     for (const toward of DIRECTIONS) {
       const p = { x: stone.x - OFFSET[toward].x, y: stone.y - OFFSET[toward].y }
       const key = keyOf(p)
-      if (cells.has(key) || !isWet(state.stage, p) || isWhirl(state.stage, p)) continue
+      if (cells.has(key) || !isWet(state, p) || isWhirl(state.stage, p)) continue
       if (!has(state.stones, p)) cells.set(key, toward)
     }
   }
@@ -105,7 +108,7 @@ const floatEntry = (before: GameState, events: GameEvent[]) => {
 
   const first = path[0].from
   const water = floatBase(waterLevel(before, first))
-  const start = isWet(before.stage, first) ? water : before.heights[first.y][first.x]
+  const start = isWet(before, first) ? water : before.heights[first.y][first.x]
   const from = path.slice(0, -1).reduce((level, e) => levelAfter(before, level, e), start)
   // floatLevel이 수면 높이를 지나는 진행도, smooth의 역함수를 반으로 나눠 찾음
   const target = Math.max(0, from - water) / (Math.max(0, from - water) + FLOAT.sink)
@@ -140,6 +143,11 @@ export const iceCoversAt = (
   const entry = floatEntry(before, events)
   const elapsed = elapsedAt(events, swamp, t)
   const phase = icePhase(events, t, swamp)
+  // 물이 바뀌어 얼고 녹는 칸, 녹는 칸은 꼭지가 잠기기 시작할 때부터 얼음 녹는 시간 동안, 어는 칸은 수면이 반쯤 오른 뒤
+  if (path.length === 0 && sluiceStart(events) !== null) {
+    const flood = sluicePhase(events, t, swamp)
+    return iceCovers(before, game, flood.freeze, flood.thaw)
+  }
   if (!pull || !pushedTo) {
     const end = Math.max(totalSeconds(segmentsOf(path)), freezeEnd(events))
     return iceCovers(before, game, entry === null ? phase : fromEntry(elapsed, entry, end), phase)
@@ -172,6 +180,8 @@ export const icePhase = (events: GameEvent[], t: number, swamp: SwampTime) => {
     if (e.type === 'stonePulled')
       windows.push([pullStart(events, e), pullStart(events, e) + PULL_SECONDS])
   }
+  const flood = sluiceStart(events)
+  if (flood !== null && thaws(events)) windows.push([flood, freezeEnd(events)])
   if (events.some((e) => e.type === 'melted')) {
     const start = moveSeconds(events, swamp) - swamp.lead
     windows.push([start, start + MELT_SECONDS])
@@ -242,7 +252,7 @@ const pushedFrame = (view: StoneView, prev: GameState, elapsed: number): StoneFr
 
   const { event, index, p } = step
   const first = path[0].from
-  const wet = isWet(prev.stage, first)
+  const wet = isWet(prev, first)
   const start = wet ? floatBase(waterLevel(prev, first)) : prev.heights[first.y][first.x]
   const fromLevel = path.slice(0, index).reduce((level, e) => levelAfter(prev, level, e), start)
   const toLevel = levelAfter(prev, fromLevel, event)
@@ -265,20 +275,6 @@ const pushedFrame = (view: StoneView, prev: GameState, elapsed: number): StoneFr
     x: lerp(event.from.x, event.to.x, gone),
     y: lerp(event.from.y, event.to.y, gone),
   }
-  const lo = { x: Math.floor(at.x), y: Math.floor(at.y) }
-  const hi = { x: Math.ceil(at.x), y: Math.ceil(at.y) }
-  const frac = at.x - lo.x + (at.y - lo.y)
-  const ahead = event.to.x - event.from.x + (event.to.y - event.from.y) > 0
-  const [back, front, k] = ahead ? [lo, hi, frac] : [hi, lo, 1 - frac]
-  const frostOn = (q: Point) => (frostGround(prev, q) ? 1 : 0)
-  const steady =
-    frostOn(back) === frostOn(front) &&
-    prev.heights[back.y][back.x] === prev.heights[front.y][front.x]
-  // 얼음바닥과 물 칸은 서리 판 제외, 높이나 바닥이 바뀌는 칸은 앞 30%에 사라지고 뒤 30%에 생김
-  const frost = steady
-    ? frostOn(back)
-    : frostOn(back) * (1 - smooth(clamp01(k / 0.3))) +
-      frostOn(front) * smooth(clamp01((k - 0.7) / 0.3))
   const screen = toScreen(at, level)
 
   return {
@@ -288,7 +284,7 @@ const pushedFrame = (view: StoneView, prev: GameState, elapsed: number): StoneFr
     cut: STONE.floatCut * slab,
     slab,
     bare: wet,
-    frost: (1 - slab) * frost,
+    frost: 0,
     opacity: 1,
     pulled: false,
     to: path[path.length - 1].to,
@@ -296,6 +292,28 @@ const pushedFrame = (view: StoneView, prev: GameState, elapsed: number): StoneFr
     wake: wet ? wakeOf(view.game, at, event.from, event.to, Math.sin(Math.PI * p)) : [],
     ring: null,
   }
+}
+
+// 돌이 밀려 떠나는 칸과 도착하는 칸의 땅 서리 진하기, 떠나는 칸은 앞 절반에 옅어지고 도착하는 칸은 뒤 절반에 생김
+export const frostPatches = (
+  prev: GameState,
+  game: GameState,
+  events: GameEvent[],
+  t: number,
+  swamp: SwampTime,
+) => {
+  const patches = new Map<string, number>()
+  const path = stonePath(events)
+  const seconds = totalSeconds(segmentsOf(path))
+  if (path.length === 0 || seconds <= 0) return patches
+
+  const p = clamp01(elapsedAt(events, swamp, t) / seconds)
+  const from = path[0].from
+  const to = path[path.length - 1].to
+  if (frostGround(prev, from)) patches.set(keyOf(from), 1 - smooth(clamp01(p / 0.5)))
+  if (has(game.stones, to) && frostGround(game, to))
+    patches.set(keyOf(to), smooth(clamp01((p - 0.5) / 0.5)))
+  return patches
 }
 
 type StonePulled = Extract<GameEvent, { type: 'stonePulled' }>
@@ -409,7 +427,7 @@ export const stoneFrames = (view: StoneView): StoneFrame[] => {
 // 칸이 녹아 내려앉는 언 칸 위 상자의 바닥 높이와 윗면 중심, 수면 위로 보이는 px
 export const thawingBoxes = (before: GameState, game: GameState, phase: number) => {
   return before.iced
-    .filter((p) => !has(game.iced, p) && has(game.boxes, p))
+    .filter((p) => !has(game.iced, p) && has(game.boxes, p) && isWet(game, p))
     .map((p) => {
       const water = waterLevel(game, p)
       // 얼음이 물러나기 시작할 때부터 내려앉는 몫, 띄우기 곡선의 기다림 구간 제외
@@ -480,14 +498,14 @@ export const meltDisplay = (game: GameState | null) => {
   }
 }
 
-// 재시작할 때 상자 뒤에 안쪽 돌부터 차례로 내려앉는 돌, 물에 뜬 돌의 얼음 판은 거의 닿을 때 차오름
+// 재시작할 때 상자 뒤에 안쪽 돌부터 차례로 내려앉는 돌, 물에 뜬 돌의 얼음 판과 땅 위 돌의 서리 판은 거의 닿을 때 차오름
 export const restartStones = (game: GameState, t: number): StoneFrame[] => {
   const n = game.stones.length
   const order = [...game.stones].sort((a, b) => a.x + a.y - (b.x + b.y))
   return game.stones.map((p) => {
     const rank = n > 1 ? order.indexOf(p) / (n - 1) : 0
     const drop = restartDrop(t, game.boxes.length, game.boxes.length, n, rank)
-    const float = isWet(game.stage, p)
+    const float = isWet(game, p)
     const level = float ? floatBase(waterLevel(game, p)) : game.heights[p.y][p.x]
     return {
       x: toScreen(p, level).x,
@@ -495,7 +513,7 @@ export const restartStones = (game: GameState, t: number): StoneFrame[] => {
       scale: 1,
       cut: float ? STONE.floatCut : 0,
       slab: float ? clamp01(1 - drop.lift * 4) : 0,
-      frost: frostGround(game, p) ? 1 : 0,
+      frost: frostGround(game, p) ? smooth(clamp01(1 - drop.lift * 2)) : 0,
       opacity: drop.opacity,
       pulled: false,
       to: p,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { restartDrop, restartDuration } from './restartFrame'
+import { restartDrop, restartDuration, restartPhase } from './restartFrame'
 
 describe('restartDrop', () => {
   it('진행도 0에서는 처음 자리보다 높이 떠 있다', () => {
@@ -49,5 +49,15 @@ describe('restartDrop 늦게 출발하는 단계', () => {
   it('떨어지기 시작하자마자 또렷해져서 빈 자리처럼 보이지 않는다', () => {
     expect(restartDrop(0.1, 0, 0).opacity).toBeGreaterThan(0.5)
     expect(restartDrop(0.2, 0, 0).opacity).toBe(1)
+  })
+})
+
+describe('restartPhase', () => {
+  it('큐브가 내려앉는 것과 같은 감속으로 0에서 1까지', () => {
+    expect(restartPhase(0, 2)).toBe(0)
+    expect(restartPhase(1, 2)).toBe(1)
+    expect(restartPhase(0.3, 2)).toBeCloseTo(
+      1 - restartDrop(0.3, 0, 2).lift / restartDrop(0, 0, 2).lift,
+    )
   })
 })

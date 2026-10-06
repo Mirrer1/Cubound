@@ -32,9 +32,12 @@ export { CUBE, type CubeFace, rollingCubeFaces, tiltOnTop, type TopTilt } from '
 export { blend, checker, darken, dim, shade } from './shadeView'
 export {
   bankPoints,
+  boatLook,
   COLLAR,
   floatShownAt,
   surfaceRise,
+  sunkLift,
+  surfaceShown,
   WATER,
   waterLook,
   IDLE_RIPPLE,
@@ -42,7 +45,17 @@ export {
   rippleCycle,
   rippleLoop,
   waterTone,
+  type WaterAt,
 } from './waterView'
+export {
+  CHANNEL,
+  channelCells,
+  channelPoints,
+  slotPoints,
+  TAP,
+  tapBase,
+  tapParts,
+} from './sluiceView'
 export {
   moorCells,
   POST,
@@ -69,4 +82,13 @@ export {
   ringPath,
   whirlpoolsOf,
 } from './whirlpoolView'
-export { ICE, icePlate, LOCKED, STONE, stoneSteps, type StoneTone } from './iceStoneView'
+export {
+  ICE,
+  icePlate,
+  LOCKED,
+  STONE,
+  frostWidth,
+  stoneFloat,
+  stoneSteps,
+  type StoneTone,
+} from './iceStoneView'

@@ -18,6 +18,16 @@ export const STONE = {
 // 언 물 판, 윗면이 같은 높이 땅보다 낮은 px와 판 두께
 export const ICE = { below: 2, slab: 4 }
 
+// 서리 판이 처음 생길 때 다 자란 크기에 대한 비율
+const FROST_SEED = 0.3
+
+// 서리 판이 생기거나 사라지는 동안의 칸 폭 배수, 돌 바닥 가운데에서 퍼지는 크기
+export const frostWidth = (frost: number) => STONE.frost * (FROST_SEED + (1 - FROST_SEED) * frost)
+
+// 멈춰 선 돌이 물에 뜬 정도, 언 판 밑까지 차면 0에서 한 층 다 차면 1로 이어지는 값
+export const stoneFloat = (depth: number) =>
+  Math.min(1, Math.max(0, (depth * TILE.layer - ICE.below) / (TILE.layer - ICE.below)))
+
 // 얼어붙은 배의 얼음 위로 보이는 px, 서리 테와 그 바깥 금의 상자 폭 배수
 export const LOCKED = { shown: 3, rim: 1.3, crack: 1.42 }
 

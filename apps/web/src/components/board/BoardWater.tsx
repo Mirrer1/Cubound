@@ -26,8 +26,8 @@ type BoardWaterProps =
       x: number
       y: number // 물 바닥 칸 윗면 중심
       depth: number // 물 깊이 층 수
-      bankX: boolean
-      bankY: boolean
+      bankX: number // 왼쪽 위 가장자리 반사 띠 진하기
+      bankY: number // 오른쪽 위 가장자리 반사 띠 진하기
       sideLeft: boolean
       sideRight: boolean
       ring: number // 퍼지는 고리 크기, 0이면 고리 없음
@@ -89,8 +89,12 @@ const BoardWater = (props: BoardWaterProps) => {
         left={props.sideLeft ? 'var(--color-water-left)' : 'none'}
         right={props.sideRight ? 'var(--color-water-right)' : 'none'}
       />
-      {props.bankX && <polygon points={bankPoints(x, surface, 'x')} style={REFLECT} />}
-      {props.bankY && <polygon points={bankPoints(x, surface, 'y')} style={REFLECT} />}
+      {props.bankX > 0 && (
+        <polygon points={bankPoints(x, surface, 'x')} style={REFLECT} opacity={props.bankX} />
+      )}
+      {props.bankY > 0 && (
+        <polygon points={bankPoints(x, surface, 'y')} style={REFLECT} opacity={props.bankY} />
+      )}
       {props.range >= 0 && <BoardTether part="range" x={x} y={surface} active={props.range} />}
       {idle >= 0 && (
         <>

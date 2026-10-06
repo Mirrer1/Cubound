@@ -74,8 +74,9 @@ export const es: Partial<Texts> = {
   'guide.iceStone':
     'La piedra de hielo congela el agua a su alrededor y puedes deslizarte por el hielo',
   'guide.melt': 'La piedra de hielo en el agua se derrite tras {n} movimientos',
-  'guide.sluice': 'El agua sube un nivel mientras algo mantiene pulsado el grifo',
-  'guide.lock': 'Mientras algo mantiene pulsado el grifo, el agua pasa al otro estanque',
+  'guide.sluice': 'El agua sube un nivel mientras algo mantiene pulsado el interruptor de agua',
+  'guide.lock':
+    'Mientras algo mantiene pulsado el interruptor de agua, el agua pasa al otro estanque',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',

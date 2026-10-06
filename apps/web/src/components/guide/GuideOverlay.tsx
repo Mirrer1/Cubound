@@ -112,6 +112,8 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
   const language = useSettingsStore((s) => s.language)
   const guide = guides[step]
   const targetName = typeof guide.target === 'string' ? guide.target : 'cell'
+  // 판 위 칸을 감싸는 대상, 갑문 두 웅덩이 포함
+  const onBoard = targetName === 'cell' || targetName === 'lock'
   const isLast = step === guides.length - 1
   const hole = measured?.hole
   const place = measured?.place ?? 'bottom'
@@ -137,15 +139,15 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
         : undefined
       if (container && found) {
         const base = container.getBoundingClientRect()
-        const padding = targetName === 'cell' ? 0 : ELEMENT_PADDING
+        const padding = onBoard ? 0 : ELEMENT_PADDING
         const next = {
           left: Math.round(found.left - base.left - padding),
           top: Math.round(found.top - base.top - padding),
           width: Math.round(found.width + padding * 2),
           height: Math.round(found.height + padding * 2),
-          borderRadius: targetName === 'cell' ? 28 : 18,
+          borderRadius: onBoard ? 28 : 18,
         }
-        const nextPlace = placeFor(next, base.width, base.height, targetName !== 'cell')
+        const nextPlace = placeFor(next, base.width, base.height, !onBoard)
         const nextAlign = alignFor(next, base.width)
         setMeasured((prev) =>
           prev && sameHole(prev.hole, next) && prev.place === nextPlace && prev.align === nextAlign
@@ -157,7 +159,7 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
     }
     frame = requestAnimationFrame(measure)
     return () => cancelAnimationFrame(frame)
-  }, [containerRef, targetName])
+  }, [containerRef, targetName, onBoard])
 
   // Enter와 Space는 다음 단계, Esc는 건너뛰기, 카드 안에 포커스가 있으면 버튼 몫
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { clamp01 } from './curveFrame'
+import { clamp01, smooth } from './curveFrame'
 import {
   type PathEvent,
   SECONDS,
@@ -286,13 +286,45 @@ const freeAt = (events: GameEvent[], from: Point) => {
   return 0
 }
 
-// 끌린 배가 출발하는 때, 붙은 줄의 뒤 배는 앞 배가 출발한 뒤
+// 물이 바뀌는 수에 꼭지가 열리거나 닫히는 시간과 수면이 오르내리는 시간, afloat은 끌림과 얼기가 시작하는 수면 진행도
+export const SLUICE = { tap: 0.12, level: 0.48, afloat: 0.5 }
+
+// 물이 바뀌기 시작하는 때, 큐브와 상자와 돌이 다 움직인 뒤, 물이 그대로인 수는 null
+export const sluiceStart = (events: GameEvent[]) =>
+  events.some((e) => e.type === 'sluice')
+    ? Math.max(
+        totalSeconds(playerSegments(events)),
+        totalSeconds(segmentsOf(boxPath(events))),
+        totalSeconds(segmentsOf(stonePath(events))),
+      )
+    : null
+
+const sluiceEnd = (events: GameEvent[]) => {
+  const at = sluiceStart(events)
+  return at === null ? 0 : at + SLUICE.tap + SLUICE.level
+}
+
+// 물이 바뀌는 수에 떠오른 배가 끌리고 새로 잠긴 칸이 얼기 시작하는 때
+const sluiceAfloat = (events: GameEvent[]) => {
+  const at = sluiceStart(events)
+  return at === null ? 0 : at + SLUICE.tap + SLUICE.level * SLUICE.afloat
+}
+
+// 끌린 배가 출발하는 때, 붙은 줄의 뒤 배는 앞 배가 출발한 뒤, 물이 바뀌는 수는 수면이 반쯤 움직인 뒤
 export const pullStart = (events: GameEvent[], pulled: Pulled): number => {
   const ahead = events.find(
     (e): e is Pulled =>
       (e.type === 'pulled' || e.type === 'stonePulled') && same(e.from, pulled.to),
   )
-  return Math.max(freeAt(events, pulled.from), ahead ? pullStart(events, ahead) : 0)
+  // 잠기는 땅에서 이 수에 새로 뜬 배는 수면이 다 오른 뒤
+  const lifted = events.some(
+    (e) => e.type === 'sluice' && e.up && e.cells.some((cell) => same(cell, pulled.from)),
+  )
+  return Math.max(
+    freeAt(events, pulled.from),
+    lifted ? sluiceEnd(events) : sluiceAfloat(events),
+    ahead ? pullStart(events, ahead) : 0,
+  )
 }
 
 const pullEnd = (events: GameEvent[]) =>
@@ -338,6 +370,7 @@ export const moveSeconds = (events: GameEvent[], swamp: SwampTime) =>
     sinkEnd(events),
     pullEnd(events),
     plugEnd(events),
+    sluiceEnd(events),
     ...events.map((e) =>
       e.type === 'blocked' || e.type === 'placed' || e.type === 'planted' ? SECONDS[e.type] : 0,
     ),
@@ -356,6 +389,11 @@ export const thaws = (events: GameEvent[]) =>
 
 // 돌을 민 수에 얼음이 다 덮이는 때, 물로 떨어지는 돌은 가장 늦게 수면에 닿는 때부터 얼음 덮임 시간
 export const freezeEnd = (events: GameEvent[]) => {
+  if (sluiceStart(events) !== null && thaws(events)) {
+    return events.some((e) => e.type === 'froze')
+      ? Math.max(sluiceEnd(events), sluiceAfloat(events) + FREEZE_SECONDS)
+      : sluiceEnd(events)
+  }
   const segments = segmentsOf(stonePath(events))
   const last = segments.at(-1)
   if (!last || !thaws(events)) return 0
@@ -375,6 +413,24 @@ export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
   moveSeconds(events, swamp) +
   (rises(events) ? RISE_SECONDS : 0) +
   (events.some((e) => e.type === 'melted') ? MELT_SECONDS : 0)
+
+// 물이 바뀌는 수의 꼭지, 수면, 새로 잠긴 칸이 어는 진행도, 드러나는 칸이 녹는 진행도와 그 뒤 돌 밑 판이 녹는 진행도, 물이 그대로인 수는 모두 1
+export const sluicePhase = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
+  const at = sluiceStart(events)
+  if (at === null) return { tap: 1, level: 1, freeze: 1, thaw: 1, slab: 1 }
+
+  const now = elapsedAt(events, swamp, t)
+  const afloat = at + SLUICE.tap + SLUICE.level * SLUICE.afloat
+  return {
+    tap: smooth(clamp01((now - at) / SLUICE.tap)),
+    level: smooth(clamp01((now - at - SLUICE.tap) / SLUICE.level)),
+    freeze: smooth(clamp01((now - afloat) / FREEZE_SECONDS)),
+    thaw: smooth(clamp01((now - at) / FREEZE_SECONDS)),
+    slab: smooth(
+      clamp01((now - at - FREEZE_SECONDS) / (SLUICE.tap + SLUICE.level - FREEZE_SECONDS)),
+    ),
+  }
+}
 
 // 이동 몫의 진행도, 씨앗이 솟는 수는 솟기 전에 1
 export const stepProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {

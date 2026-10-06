@@ -12,6 +12,9 @@ import {
   PLUG_STAGE,
   RIDE,
   SEED_STAGE,
+  SLUICE_ICE_STAGE,
+  SLUICE_STAGE,
+  SLUICE_WHIRL_STAGE,
   STAGE,
   STONE_STAGE,
   TRAM_STAGE,
@@ -33,12 +36,15 @@ import {
   MELT_SECONDS,
   PLUG,
   PULL_SECONDS,
+  SLUICE,
   countDisplay,
   durationOf,
   moveSeconds,
   plugStart,
   pullStart,
   riseProgress,
+  sluicePhase,
+  sluiceStart,
   stepProgress,
 } from './timeFrame'
 import { createState, move } from '@/game/rules'
@@ -375,5 +381,62 @@ describe('pullStart 얼음 돌', () => {
     expect(pulled).toEqual({ type: 'stonePulled', from: { x: 2, y: 2 }, to: { x: 3, y: 2 } })
     expect(pullStart(events, pulled!)).toBeCloseTo(SECONDS.floated * 0.5)
     expect(durationOf(events)).toBeCloseTo(SECONDS.floated * 0.5 + PULL_SECONDS)
+  })
+})
+
+describe('durationOf 수위', () => {
+  it('물이 바뀌는 수는 움직임이 다 끝난 뒤 꼭지와 수면 시간을 더한다', () => {
+    const up = lastMove(SLUICE_STAGE, ['left'])
+    const down = lastMove(SLUICE_STAGE, ['left', 'down'])
+
+    expect(sluiceStart(up.events)).toBeCloseTo(SECONDS.moved)
+    expect(sluiceStart(down.events)).toBeCloseTo(SECONDS.moved)
+    expect(durationOf(up.events)).toBeCloseTo(SECONDS.moved + SLUICE.tap + SLUICE.level)
+    expect(durationOf(down.events)).toBeCloseTo(SECONDS.moved + SLUICE.tap + SLUICE.level)
+  })
+
+  it('물이 그대로인 수는 꼭지와 수면 시간이 없다', () => {
+    const { events } = lastMove(SLUICE_STAGE, ['down'])
+
+    expect(sluiceStart(events)).toBeNull()
+    expect(durationOf(events)).toBeCloseTo(SECONDS.fell)
+  })
+
+  it('새로 언 칸은 수면이 반쯤 오른 때부터 덮인다', () => {
+    const { events } = lastMove(SLUICE_ICE_STAGE, ['left'])
+
+    expect(events).toContainEqual({ type: 'froze', cells: [{ x: 1, y: 1 }] })
+    expect(durationOf(events)).toBeCloseTo(
+      SECONDS.moved + SLUICE.tap + SLUICE.level * SLUICE.afloat + FREEZE_SECONDS,
+    )
+  })
+
+  it('물이 올라 잠기는 땅에서 새로 뜬 배는 수면이 다 오른 뒤 끌린다', () => {
+    const { events } = lastMove(SLUICE_WHIRL_STAGE, ['left'])
+    const pulled = events.find((e) => e.type === 'pulled')
+    const end = SECONDS.moved + SLUICE.tap + SLUICE.level
+
+    expect(pulled).toEqual({ type: 'pulled', from: { x: 1, y: 1 }, to: { x: 2, y: 1 } })
+    expect(pullStart(events, pulled!)).toBeCloseTo(end)
+    expect(durationOf(events)).toBeCloseTo(end + PULL_SECONDS)
+  })
+})
+
+describe('sluicePhase', () => {
+  it('꼭지는 움직임 뒤 0.12초에, 수면은 그 뒤 0.48초에 걸쳐 바뀐다', () => {
+    const { events } = lastMove(SLUICE_STAGE, ['left'])
+    const total = durationOf(events)
+    const at = (seconds: number) => sluicePhase(events, seconds / total)
+
+    expect(at(SECONDS.moved)).toEqual({ tap: 0, level: 0, freeze: 0, thaw: 0, slab: 0 })
+    expect(at(SECONDS.moved + SLUICE.tap)).toMatchObject({ tap: 1, level: 0 })
+    expect(at(SECONDS.moved + SLUICE.tap + SLUICE.level / 2).level).toBeCloseTo(0.5)
+    expect(at(total)).toMatchObject({ tap: 1, level: 1 })
+  })
+
+  it('물이 그대로인 수는 처음부터 다 바뀐 진행도', () => {
+    const { events } = lastMove(SLUICE_STAGE, ['down'])
+
+    expect(sluicePhase(events, 0)).toEqual({ tap: 1, level: 1, freeze: 1, thaw: 1, slab: 1 })
   })
 })
