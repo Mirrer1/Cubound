@@ -68,6 +68,8 @@ export const ko: Partial<Texts> = {
   'guide.plug': '상자를 소용돌이에 밀어 넣으면 막혀서 더는 끌어당기지 않아요',
   'guide.iceStone': '얼음 돌 둘레의 물은 얼어서 미끄러지며 건널 수 있어요',
   'guide.melt': '물에 띄운 얼음 돌은 {n}수가 지나면 녹아요',
+  'guide.sluice': '꼭지를 누르는 동안 물이 한 층 차올라요',
+  'guide.lock': '꼭지를 누르는 동안 물이 건너편 웅덩이로 넘어가요',
 
   'chapter.1': '돌 위의 첫걸음',
   'chapter.2': '풀이 우거진 길',
