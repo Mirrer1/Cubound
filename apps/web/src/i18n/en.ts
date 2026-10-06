@@ -219,6 +219,9 @@ export const en = {
   'world.13': 'Land of Ice',
   'world.13.note':
     'Ice floats and freezes the water around it. The path lasts only while the ice is there.',
+  'world.14': 'Land of Floods',
+  'world.14.note':
+    'Raise the water and the boats rise with it, but the low ground sinks. Count the paths you gain and the ones you lose.',
   'stage.12-1': 'Swept Along',
   'stage.12-2': 'Reeling In',
   'stage.12-3': 'In Line',
@@ -239,6 +242,16 @@ export const en = {
   'stage.13-8': 'Ice From Afar',
   'stage.13-9': 'Twin Ice',
   'stage.13-10': 'Melting Ice',
+  'stage.14-1': 'Rising Water',
+  'stage.14-2': 'Sunken Path',
+  'stage.14-3': 'Anchor',
+  'stage.14-4': 'Lifted Cargo',
+  'stage.14-5': 'Water and Gate',
+  'stage.14-6': 'Along the Current',
+  'stage.14-7': 'The Loft',
+  'stage.14-8': 'Frozen Shore',
+  'stage.14-9': 'Sunken Home',
+  'stage.14-10': 'The Lock',
 }
 
 export type Texts = typeof en

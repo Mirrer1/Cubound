@@ -226,6 +226,9 @@ export const es: Partial<Texts> = {
   'world.13': 'Tierra de hielo',
   'world.13.note':
     'El hielo flota y congela el agua a su alrededor. El camino dura mientras el hielo esté ahí.',
+  'world.14': 'Tierra anegada',
+  'world.14.note':
+    'Al subir el agua, los botes suben con ella y la tierra baja se hunde. Cuenta los caminos que ganas y los que pierdes.',
   'stage.12-1': 'Arrastre',
   'stage.12-2': 'Atraer',
   'stage.12-3': 'En fila',
@@ -246,4 +249,14 @@ export const es: Partial<Texts> = {
   'stage.13-8': 'Hielo de la otra orilla',
   'stage.13-9': 'Hielo doble',
   'stage.13-10': 'Hielo que se derrite',
+  'stage.14-1': 'Agua que sube',
+  'stage.14-2': 'Camino sumergido',
+  'stage.14-3': 'El ancla',
+  'stage.14-4': 'Carga a flote',
+  'stage.14-5': 'Agua y puerta',
+  'stage.14-6': 'A favor de la corriente',
+  'stage.14-7': 'El desván',
+  'stage.14-8': 'Orilla helada',
+  'stage.14-9': 'Hogar sumergido',
+  'stage.14-10': 'La esclusa',
 }
