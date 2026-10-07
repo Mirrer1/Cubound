@@ -40,7 +40,9 @@ interface PlayScreenProps {
 const ASK_FROM_MOVES = 5 // 재시작 전에 묻기 시작하는 이동 수
 
 // 개발 서버 전용 최단 풀이 띠, 배포 빌드에서 빠지는 동적 import
-const DevFollow = import.meta.env.DEV ? lazy(() => import('@/components/dev/DevFollow')) : null
+const DevController = import.meta.env.DEV
+  ? lazy(() => import('@/components/dev/DevController'))
+  : null
 
 // 녹을 0에서 큐브가 둘레에 서서 버티는 동안 숫자가 옅어졌다 돌아오는 한 바퀴
 const MELT_HOLD: Keyframe[] = [{ opacity: 1 }, { opacity: 0.3 }, { opacity: 1 }]
@@ -241,9 +243,9 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                 {t(stageTextKey(game.stage.id))}
               </span>
             </div>
-            {DevFollow && (
+            {DevController && (
               <Suspense>
-                <DevFollow key={game.stage.id} game={game} />
+                <DevController key={game.stage.id} game={game} />
               </Suspense>
             )}
             <div className="flex shrink-0 items-center gap-5 wide:gap-7 narrow:contents">

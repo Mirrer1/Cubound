@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { loadCollapsed, loadShown, saveCollapsed } from './followStorage'
+import { loadCollapsed, loadShown, saveCollapsed } from './controllerStorage'
 
 const memoryStorage = () => {
   const items = new Map<string, string>()

@@ -9,6 +9,7 @@ import {
   useState,
 } from 'react'
 
+import { loadCollapsed, loadShown, saveCollapsed } from '@/dev/controllerStorage'
 import {
   type Follow,
   type FollowMark,
@@ -22,7 +23,6 @@ import {
   sessionKey,
   tracePath,
 } from '@/dev/follow'
-import { loadCollapsed, loadShown, saveCollapsed } from '@/dev/followStorage'
 import {
   backTarget,
   controlsOf,
@@ -40,7 +40,7 @@ import { directionFromKey } from '@/platform/input'
 import { localSessionStorage } from '@/platform/storage'
 import { useGameStore } from '@/store/gameStore'
 
-interface DevFollowProps {
+interface DevControllerProps {
   game: GameState
 }
 
@@ -66,7 +66,7 @@ const MARK_CLASS: Record<FollowMark, string> = {
   off: 'rounded-sm bg-red-600 text-base-bg',
 }
 
-const DevFollow = ({ game }: DevFollowProps) => {
+const DevController = ({ game }: DevControllerProps) => {
   const [result, setResult] = useState<SolveResult | null>(null)
   const [trace, setTrace] = useState<string[] | null>(null)
   const [seen, setSeen] = useState<{ key: string; follow: Follow | null }>({
@@ -235,7 +235,7 @@ const DevFollow = ({ game }: DevFollowProps) => {
   return (
     shown && (
       <div
-        data-dev-follow
+        data-dev-controller
         onPointerDown={stopSwipe}
         className="@container pointer-events-none flex min-w-0 flex-1 justify-center self-center narrow:order-[10000] narrow:w-full narrow:flex-none"
       >
@@ -380,4 +380,4 @@ const DevFollow = ({ game }: DevFollowProps) => {
   )
 }
 
-export default DevFollow
+export default DevController
