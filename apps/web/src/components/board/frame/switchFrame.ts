@@ -151,7 +151,8 @@ export const switchLookOf = (
 
   return (cell: { p: Point }): { raised: number; device: SwitchLook } => {
     const entity = stage.entities.find((e) => same(e, cell.p))
-    const pressed = (state: GameState) => same(state.player, cell.p) || has(state.boxes, cell.p)
+    const pressed = (state: GameState) =>
+      same(state.player, cell.p) || has(state.boxes, cell.p) || has(state.stones, cell.p)
     const doorDepth = (state: GameState) =>
       entity?.type === 'door' && isDoorOpen(state, entity.id) ? 0 : TILE.layer
     // 상자가 얹힌 칸도 찾도록 entity와 따로 보는 발판

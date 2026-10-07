@@ -153,7 +153,11 @@ export const frostStamps = (events: GameEvent[]) => [
 export const touchAt = (events: GameEvent[], p: Point) => {
   let arrive: number | null = null
   let leave: number | null = null
-  for (const segments of [playerSegments(events), segmentsOf(boxPath(events))]) {
+  for (const segments of [
+    playerSegments(events),
+    segmentsOf(boxPath(events)),
+    segmentsOf(stonePath(events)),
+  ]) {
     let start = 0
     for (const { event, seconds, wait } of segments) {
       if (!wait && leave === null && same(event.from, p)) leave = start

@@ -74,6 +74,21 @@ describe('pressProgress', () => {
     expect(pressProgress(events, at, true, landed)).toBeCloseTo(1)
   })
 
+  it('얼음 돌도 닿을 때에 맞춰 눌리고 오는 동안에는 그대로다', () => {
+    const stage: Stage = {
+      ...SLIDE_SWITCH_STAGE,
+      entities: [
+        { type: 'iceStone', x: 1, y: 0 },
+        ...SLIDE_SWITCH_STAGE.entities.filter((e) => e.type !== 'box'),
+      ],
+    }
+    const { state, events } = move(createState(stage), 'right')
+
+    expect(state.stones).toContainEqual(at)
+    expect(pressProgress(events, at, true, 0.1)).toBe(0)
+    expect(pressProgress(events, at, true, 1)).toBe(1)
+  })
+
   it('상자가 오는 동안 눌리기 시작해 줄곧 깊어진다', () => {
     const { events } = push()
     let last = 0

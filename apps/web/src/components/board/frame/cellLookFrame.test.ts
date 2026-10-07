@@ -116,6 +116,11 @@ describe('cellLook', () => {
     expect(looks(game).get('1-1')!.look.device.switchDepth).toBe(2)
   })
 
+  it('얼음 돌이 얹힌 스위치도 얕게 그린다', () => {
+    const game = { ...createState(LIFT_STAGE), stones: [{ x: 1, y: 1 }] }
+    expect(looks(game).get('1-1')!.look.device.switchDepth).toBe(2)
+  })
+
   it('미끄러져 지나치는 스위치와 그 문은 살짝 내려갔다 돌아온다', () => {
     const stage: Stage = {
       version: 1,
