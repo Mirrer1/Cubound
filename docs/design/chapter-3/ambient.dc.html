@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="../cubound-iso.js?v=20261007i"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #E9E7E2; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+</style>
+</helmet>
+<div style="background:{{ P.bg }};color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 90px;min-height:100vh">
+  <div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">
+      <span style="white-space:nowrap">{{ head.tag }}</span>
+      <span style="white-space:nowrap">분위기 연출</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:860px">
+      <span style="font-size:34px;font-weight:400;letter-spacing:-0.01em">{{ head.title }}</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.7;word-break:keep-all;text-wrap:pretty">{{ head.note }}</span>
+    </div>
+
+    <div style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">ORDER</span><span style="font-size:22px;font-weight:400">한 바퀴 · {{ head.cycle }}</span></div>
+      <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ head.order }}</span>
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+        <div style="width:{{ live.w }};max-width:100%;aspect-ratio:{{ live.ar }};background-image:{{ live.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:420px;max-width:100%;flex:1">
+          <div style="display:grid;grid-template-columns:28px minmax(84px,1.6fr) 72px 56px minmax(120px,2fr);gap:10px;font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781;padding:0 0 6px;border-bottom:1px solid rgba(58,57,54,0.1)"><span>#</span><span>연출</span><span>시작</span><span>길이</span><span>자리</span></div>
+          <sc-for list="{{ seq }}" as="r" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:28px minmax(84px,1.6fr) 72px 56px minmax(120px,2fr);gap:10px;font-size:13px;line-height:1.5;padding:4px 0;word-break:keep-all"><span style="font-family:'IBM Plex Mono', monospace;color:#8A8781">{{ r.n }}</span><span>{{ r.name }}</span><span style="font-family:'IBM Plex Mono', monospace">{{ r.s }}</span><span style="font-family:'IBM Plex Mono', monospace">{{ r.len }}</span><span style="color:#5F5D59">{{ r.where }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">PHONE</span><span style="font-size:22px;font-weight:400">폰 390 × 844 · 판 전체 · 칸 폭 52px</span></div>
+      <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ head.phone }}</span>
+      <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+        <div style="width:390px;height:844px;max-width:100%;border-radius:40px;background:{{ P.bg }};box-shadow:0 0 0 8px #3A3936;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+          <div style="width:{{ phone.w }};max-width:100%;aspect-ratio:{{ phone.ar }};background-image:{{ phone.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;flex:1;min-width:260px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;color:#8A8781">같은 크기 · 가장 크게 퍼진 때 · 실제 폰 픽셀</span>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">
+            <sc-for list="{{ cmp }}" as="f" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="width:{{ f.w }};aspect-ratio:{{ f.ar }};background-color:{{ P.bg }};border-radius:6px;background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.1em;color:#6E6C68;max-width:120px">{{ f.cap }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;color:#8A8781;padding-top:10px">같은 장면 × 2</span>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">
+            <sc-for list="{{ cmp2 }}" as="f" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="width:{{ f.w }};aspect-ratio:{{ f.ar }};background-color:{{ P.bg }};border-radius:8px;background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.1em;color:#6E6C68">{{ f.cap }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <sc-for list="{{ opts }}" as="o" hint-placeholder-count="3">
+      <div id="{{ o.id }}" style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">{{ o.badge }}</span><span style="font-size:22px;font-weight:400">{{ o.title }}</span></div>
+        <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ o.note }}</span>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+          <sc-for list="{{ o.frames }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="width:{{ f.w }};max-width:100%;aspect-ratio:{{ f.ar }};background-color:{{ P.bg }};border-radius:10px;background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#6E6C68">{{ f.cap }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11.5px;line-height:1.7;color:#3A3936;white-space:pre-wrap">{{ o.vals }}</span>
+      </div>
+    </sc-for>
+
+    <div style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">REDUCED MOTION</span><span style="font-size:22px;font-weight:400">움직임 줄이기 · 정지 모습</span></div>
+      <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ head.still }}</span>
+      <div style="width:{{ still.w }};max-width:100%;aspect-ratio:{{ still.ar }};background-image:{{ still.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">VALUES</span><span style="font-size:22px;font-weight:400">값</span></div>
+      <div style="background:{{ P.card }};border-radius:16px;padding:18px 20px;font-family:'IBM Plex Mono', monospace;font-size:12px;line-height:1.75;display:flex;flex-direction:column">
+        <sc-for list="{{ css }}" as="l" hint-placeholder-count="12"><span style="white-space:pre-wrap">{{ l.s }}</span></sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.wait(); }
+  componentWillUnmount() { clearTimeout(this.tm); }
+  wait() { if (!window.CuboundIso || !window.CuboundIso.CH3) { this.tm = setTimeout(() => this.wait(), 40); return; } this.forceUpdate(); }
+  engine(K, T) {
+    const r2 = v => Math.round(v * 100) / 100;
+    // keys: [[seconds from start, {numeric attrs}]], s = start inside the chapter cycle T. derive maps numbers to svg attrs
+    const fx = (tag, base, keys, s, derive) => { const k = [], rows = [];
+      const push = (t, o) => { k.push(+(t / T).toFixed(5)); rows.push(o); };
+      if (s + keys[0][0] > 0) { const hold = Object.assign({}, keys[0][1], { opacity: 0 }); push(0, hold); if (s + keys[0][0] > 0.02) push(s + keys[0][0] - 0.01, hold); }
+      keys.forEach(([t, o]) => push(s + t, o));
+      if (s + keys[keys.length - 1][0] < T) push(T, keys[keys.length - 1][1]);
+      return { tag, base, k, rows, names: Object.keys(keys[0][1]), derive: derive || (o => o) }; };
+    const at = (sp, t) => { const ph = (t % T) / T; let i = 0; while (i < sp.k.length - 2 && ph > sp.k[i + 1]) i++;
+      const u = Math.min(1, Math.max(0, (ph - sp.k[i]) / ((sp.k[i + 1] - sp.k[i]) || 1))), o = {};
+      sp.names.forEach(n => o[n] = r2(sp.rows[i][n] + (sp.rows[i + 1][n] - sp.rows[i][n]) * u)); return sp.derive(o); };
+    const A = o => Object.keys(o).map(n => ' ' + n + '="' + o[n] + '"').join('');
+    const live = sp => { const D = sp.rows.map(sp.derive), names = Object.keys(D[0]);
+      return '<' + sp.tag + A(Object.assign({}, sp.base, D[0])) + '>' + names.map(n => '<animate attributeName="' + n + '" values="' + D.map(d => d[n]).join(';') + '" keyTimes="' + sp.k.join(';') + '" dur="' + T + 's" repeatCount="indefinite"/>').join('') + '</' + sp.tag + '>'; };
+    const still = (sp, t) => '<' + sp.tag + A(Object.assign({}, sp.base, at(sp, t))) + '/>';
+    const dia = s => { const w = r2(52 * s), h = r2(26 * s); return 'M0,' + (-h) + 'L' + w + ',0L0,' + h + 'L' + (-w) + ',0Z'; };
+    // the game's water ripple, values as in the game: ring 0.18 → 0.84 of the tile, rim 0.06, opacity 0.9 → 0 over 1.6s
+    const ripple = (s, fill) => fx('path', { fill, 'fill-rule': 'evenodd' }, [[0, { s: 0.18, opacity: 0.9 }], [1.6, { s: 0.84, opacity: 0 }]], s, o => ({ d: dia(o.s) + dia(Math.max(0.02, o.s - 0.06)), opacity: o.opacity }));
+    const draw = sh => sh.map(p => p.raw !== undefined ? p.raw : '<polygon points="' + p.d + '" fill="' + p.f + '"' + (p.o !== 1 ? ' opacity="' + p.o + '"' : '') + '/>').join('');
+    const url = (box, body) => 'url("data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + box.join(' ') + '">' + body + '</svg>') + '")';
+    // each overlay is placed in its cell's paint order, so taller cells in front cover it
+    const build = (def, items, mode, t) => { const d = Object.assign({}, def, { objs: Object.assign({}, def.objs) });
+      if (mode !== 'none') items.forEach(it => { d.objs[it.cell] = (d.objs[it.cell] || []).concat([{ t: 'raw', raw: it.fx.map(sp => mode === 'live' ? live(sp) : still(sp, t)).join('') }]); });
+      return draw(K.scene(d)); };
+    const iso = (x, y, h) => [(x - y) * 52, (x + y) * 26 - h * 30];
+    const shot = (def, items, anchor, crop, t, sc, cap) => { const c = [anchor[0] + crop[0], anchor[1] + crop[1], crop[2], crop[3]];
+      return { cap, bgi: url(c, build(def, items, 'still', t)), w: Math.round(c[2] * sc) + 'px', ar: c[2] + ' / ' + c[3] }; };
+    // game ripple on a CHAPTER 3 water cell, for size comparison
+    const wdef = { W: 0, base: -1, pal: 'mid', g: [[-1, -1, -1]] }, wa = iso(1, 0, 0);
+    const refShot = sc => shot(wdef, [{ cell: '1,0', fx: [ripple(0, K.CH3.mid.refl)] }], [wa[0], wa[1] + 6], [-56, -32, 112, 64], 0.8, sc, '물 잔물결 (게임) · 0.8초');
+    return { fx, build, url, ripple, iso, shot, refShot };
+  }
+  renderVals() {
+    const K = window.CuboundIso;
+    if (!K || !K.CH3) return { opts: [], seq: [], css: [], cmp: [], cmp2: [], live: {}, still: {}, phone: {}, head: {}, P: { bg: '#E9E7E2', panel: '#F2F1EE', card: '#F7F6F4' } };
+    if (this.cache) return this.cache;
+    const T = 22, E = this.engine(K, T), pl = K.CH3.mid, iso = E.iso;
+    const def = { W: 0, base: -1, pal: 'mid', g: [[0, 0, 0, 0, 0], [0, -1, -1, 0, 0], [0, -1, -1, -1, 0], [0, 0, 0, 0, 0]],
+      cells: { '2,1': { t: 'ice', from: 'x+' }, '3,2': { t: 'ice', from: 'y-' } }, objs: { '3,1': [{ t: 'stone', frost: true }], '0,3': [{ t: 'cube' }], '4,0': [{ t: 'hole' }] } };
+    const vb = K.fit(K.scene(def), 16).split(' ').map(Number);
+    const MIST = '#B8CAD3', RF = pl.refl;
+    // ripple every 2.2s on a random open water cell (here three cells in turn), exactly the game's ring
+    const RC = ['1,1', '2,2', '1,2', '1,1', '2,2', '1,2', '2,2', '1,1', '1,2', '2,2'], rip = {};
+    RC.forEach((c, i) => (rip[c] = rip[c] || []).push(E.ripple(i * 2.2, RF)));
+    // cold mist: cold air sinks. two low sheets roll off the stone's foot sideways (96px wide), one thin wisp leaves the top step
+    const sheet = (sg, s) => E.fx('ellipse', { fill: MIST }, [[0, { cx: sg * 8, cy: 10, rx: 6, ry: 3, opacity: 0 }], [0.4, { cx: sg * 14, cy: 11, rx: 10, ry: 4.5, opacity: 0.45 }], [1.6, { cx: sg * 26, cy: 12, rx: 18, ry: 7, opacity: 0.22 }], [2.4, { cx: sg * 30, cy: 12, rx: 20, ry: 8, opacity: 0 }]], s);
+    const wisp = s => E.fx('ellipse', { fill: MIST }, [[0, { cx: -1, cy: -30, rx: 3, ry: 3, opacity: 0 }], [0.4, { cx: -4, cy: -31, rx: 5, ry: 3.6, opacity: 0.5 }], [1.6, { cx: -10, cy: -32.5, rx: 8, ry: 4.6, opacity: 0.22 }], [2.4, { cx: -12, cy: -33, rx: 9, ry: 5, opacity: 0 }]], s);
+    const mist = s => [wisp(s), sheet(-1, s), sheet(1, s + 0.15)];
+    const items = Object.keys(rip).map(c => ({ cell: c, fx: rip[c] })).concat([{ cell: '3,1', fx: mist(4).concat(mist(15)) }]);
+    const opts = [
+      { id: 'amb-ripple', badge: '늘', title: '물 잔물결 (게임 값 그대로)', at: [iso(1, 1, 0)[0], iso(1, 1, 0)[1] + 6], crop: [-56, -32, 112, 64], s: 0, peak: 0.8,
+        note: '물방울 없이 수면에서 고리 하나가 퍼집니다. 지금 게임의 값을 그대로 옮겼고 바꾸지 않습니다. 판 어딘가의 빈 물 칸(소용돌이, 얼음, 뜬 상자 칸 제외)에서 2.2초마다 하나. 물은 "수면이 늘 살아 있는 장"이라 이 잔물결만 "한 화면에 하나" 규칙에서 빠집니다.',
+        shots: [[0.2, '0.2초'], [0.6, '0.6초'], [1.0, '1.0초'], [1.4, '1.4초 · 사라짐']],
+        vals: '한 번 1.6초 · 2.2초마다 하나 (게임 값)\n고리 --color-water-refl · 칸 폭 0.18 → 0.84배 · 테 폭 0.06배 · 진하기 0.9 → 0' },
+      { id: 'amb-mist', badge: '가끔', title: '얼음 돌 찬 김', at: iso(3, 1, 0), crop: [-56, -46, 112, 72], s: 4, peak: 5.6,
+        note: '찬 김은 아래로 깔립니다. 돌 발치에서 낮은 김 두 덩이가 양옆으로 굴러 나가 96px(칸 폭 0.92배)까지 퍼지고, 맨 윗단에서는 가는 김 한 줄이 왼쪽 뒤로 흘러 사라집니다. 4장 화로 연기와 짝이지만 위로 오르지 않고 옆으로 깔리며, 더 짧습니다(2.4초, 연기 3.2초). 11초마다 한 번, 얼음 돌이 여럿이면 바퀴마다 다른 돌. 잔물결과 겹쳐도 됩니다.',
+        shots: [[4.4, '0.4초'], [5.0, '1.0초'], [5.6, '1.6초 · 가장 넓음'], [6.2, '2.2초 · 사라짐']],
+        vals: '한 번 2.4초 · 11초마다\n김 #B8CAD3 · 발치 두 덩이: 12 × 6 → 40 × 16px, 양옆으로 30px, 진하기 0.45 → 0 · 높이 0~5px\n윗단 한 줄: 6 × 6 → 18 × 10px, 왼쪽 뒤로 11px, 진하기 0.5 → 0 · 돌 꼭대기(26px) 위 4px 안' }];
+    const rest = { refFirst: false,
+      seq: [{ n: '늘', name: '물 잔물결', s: '2.2초마다', len: '1.6초', where: '빈 물 칸 하나 (무작위, 소용돌이 제외)' },
+        { n: '1', name: '얼음 돌 찬 김', s: '4초', len: '2.4초', where: '얼음 돌 하나' }, { n: '2', name: '얼음 돌 찬 김', s: '15초', len: '2.4초', where: '얼음 돌 하나 (여럿이면 다른 돌)' }],
+      head: { tag: 'CUBOUND · CHAPTER 3 · AMBIENT', title: '물이 차오르는 길 · 분위기 연출', cycle: '22초',
+        note: '물 잔물결(지금 게임 것 그대로)과 얼음 돌 찬 김 둘을 씁니다. 물은 수면이 늘 살아 있는 장이라 잔물결은 2.2초마다 그대로 돌고, 찬 김만 11초마다 그 위에 얹힙니다. "한 화면에 하나"의 예외는 물 잔물결뿐입니다. 바탕은 3장 세계 색 "보통"입니다.',
+        order: '큰 판은 실제 한 바퀴(22초 = 잔물결 열 번)를 그대로 돕니다. 얼음 돌이 없는 판에서는 잔물결만 돕니다.',
+        phone: '판 전체를 담아 칸 폭이 52px(데스크톱의 절반)인 폰 크기입니다. 오른쪽은 같은 크기로 자른 잔물결과 찬 김입니다. 찬 김은 잔물결(칸 폭 0.84배)과 비슷한 폭(0.92배)으로 퍼집니다.',
+        still: '분위기 연출을 아예 그리지 않습니다. 잔물결도 멈춘 고리로 남기지 않습니다. 멈춘 고리는 소용돌이 물길이나 묶인 배 범위처럼 칸 위 표시로 읽히고, 멈춘 김은 돌의 얼룩으로 보여서입니다. 수위가 오르내리는 것처럼 규칙에 필요한 움직임은 그대로입니다.' } };
+    const P = { bg: pl.bg, panel: pl.panel, card: pl.card };
+    const css = ['/* 잔물결은 늘 · 찬 김은 가끔 (물만 "한 화면에 하나" 예외) */', '잔물결: 2.2s마다 1개 · 1.6s · 게임 값 그대로', '찬 김: 4s, 15s (11s마다) · 2.4s · 한 바퀴 22s',
+      '', '--color-amb-mist: #B8CAD3;   /* 얼음 돌 찬 김 · 돌보다 한 단계 짙은 찬 회청색 */',
+      '', 'ripple (game): ring 0.18 → 0.84 tile · rim 0.06 tile · opacity 0.9 → 0 · 1.6s · every 2.2s · not on whirl / ice / boat cells',
+      'mist foot: 2 sheets · 12 × 6 → 40 × 16px · drift ±30px · spread 96px (0.92 tile) · opacity 0.45 → 0 · z 0–5px', 'mist top: 6 × 6 → 18 × 10px · drift up-left 11px · opacity 0.5 → 0 · ≤ 4px over the stone top',
+      'pair: 4장 화로 연기 3.2s · 위로 퍼짐 ↔ 3장 찬 김 2.4s · 옆으로 깔림',
+      '', 'prefers-reduced-motion: reduce → 분위기 연출을 그리지 않음 (잔물결 포함)'];
+    const out = Object.assign({ css: css.map(s => ({ s })), P }, rest);
+    const LW = Math.min(vb[2], 560), ar = vb[2] + ' / ' + vb[3];
+    out.live = { bgi: E.url(vb, E.build(def, items, 'live')), w: LW + 'px', ar };
+    out.still = { bgi: E.url(vb, E.build(def, items, 'none')), w: LW + 'px', ar };
+    out.phone = { bgi: out.live.bgi, w: Math.round(vb[2] / 2) + 'px', ar };
+    out.opts = opts.map(o => ({ id: o.id, badge: o.badge, title: o.title, note: o.note, vals: o.vals, frames: o.shots.map(([t, cap]) => E.shot(def, items, o.at, o.crop, t, 2, cap)) }));
+    out.cmp = (rest.refFirst ? [E.refShot(0.5)] : []).concat(opts.map(o => E.shot(def, items, o.at, o.crop, o.peak, 0.5, o.title + ' · ' + (o.peak - o.s).toFixed(1) + '초')));
+    out.cmp2 = (rest.refFirst ? [E.refShot(1)] : []).concat(opts.map(o => E.shot(def, items, o.at, o.crop, o.peak, 1, o.title)));
+    this.cache = out; return out;
+  }
+}
+</script>
+</body>
+</html>

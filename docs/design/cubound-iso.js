@@ -492,6 +492,7 @@
         else out.push(plate(X, Y, CS, mix(C.yellow, top, 0.55)));
         continue;
       }
+      if (o.t === 'raw') { out.push(...obj(o, X, Y)); continue; }
       // things standing on the sunk ground: poke out above the surface, or show through as a ghost
       const H = { box: LV, cube: LV, stone: 26, sw: 4, lsw: 4 }[o.t] || LV, col = { box: C.yellow, cube: C.blue, stone: STONE.t, sw: C.yellow, lsw: C.yellow }[o.t] || C.yellow;
       const vis = h * LV + H - Zw;
@@ -679,6 +680,8 @@
   const obj = (o, cx, cy) => {
     switch (o.t) {
       case 'brazier': return brazier(cx, cy, o.rider);
+      // ambient overlay drawn in this cell's paint order (so walls in front cover it). raw = svg markup in cell-local coords
+      case 'raw': return [{ d: n0(cx) + ',' + n0(cy), f: 'none', o: 0, raw: '<g transform="translate(' + n0(cx) + ',' + n0(cy) + ')">' + o.raw + '</g>' }];
       case 'fcube': {
         const z = (o.z || 0) + (o.roll ? 5 : 0), p = o.roll ? pt(cx, cy, o.roll, 0) : [cx, cy], lean = o.roll ? -0.32 : 0;
         const g = cubeGlow(p[0], p[1], z, o.n, o.mode || 'under', lean, o.ph), out = g.under.concat(cube(p[0], p[1], C.blue, LV, 1, z), g.over);

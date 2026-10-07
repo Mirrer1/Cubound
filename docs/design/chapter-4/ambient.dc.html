@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="../cubound-iso.js?v=20261007i"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #E9E7E2; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+</style>
+</helmet>
+<div style="background:{{ P.bg }};color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 90px;min-height:100vh">
+  <div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">
+      <span style="white-space:nowrap">{{ head.tag }}</span>
+      <span style="white-space:nowrap">분위기 연출</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:860px">
+      <span style="font-size:34px;font-weight:400;letter-spacing:-0.01em">{{ head.title }}</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.7;word-break:keep-all;text-wrap:pretty">{{ head.note }}</span>
+    </div>
+
+    <div style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">ORDER</span><span style="font-size:22px;font-weight:400">한 바퀴 · {{ head.cycle }}</span></div>
+      <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ head.order }}</span>
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+        <div style="width:{{ live.w }};max-width:100%;aspect-ratio:{{ live.ar }};background-image:{{ live.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:420px;max-width:100%;flex:1">
+          <div style="display:grid;grid-template-columns:28px minmax(84px,1.6fr) 72px 56px minmax(120px,2fr);gap:10px;font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781;padding:0 0 6px;border-bottom:1px solid rgba(58,57,54,0.1)"><span>#</span><span>연출</span><span>시작</span><span>길이</span><span>자리</span></div>
+          <sc-for list="{{ seq }}" as="r" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:28px minmax(84px,1.6fr) 72px 56px minmax(120px,2fr);gap:10px;font-size:13px;line-height:1.5;padding:4px 0;word-break:keep-all"><span style="font-family:'IBM Plex Mono', monospace;color:#8A8781">{{ r.n }}</span><span>{{ r.name }}</span><span style="font-family:'IBM Plex Mono', monospace">{{ r.s }}</span><span style="font-family:'IBM Plex Mono', monospace">{{ r.len }}</span><span style="color:#5F5D59">{{ r.where }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">PHONE</span><span style="font-size:22px;font-weight:400">폰 390 × 844 · 판 전체 · 칸 폭 52px</span></div>
+      <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ head.phone }}</span>
+      <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+        <div style="width:390px;height:844px;max-width:100%;border-radius:40px;background:{{ P.bg }};box-shadow:0 0 0 8px #3A3936;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+          <div style="width:{{ phone.w }};max-width:100%;aspect-ratio:{{ phone.ar }};background-image:{{ phone.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;flex:1;min-width:260px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;color:#8A8781">같은 크기 · 가장 크게 퍼진 때 · 실제 폰 픽셀</span>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">
+            <sc-for list="{{ cmp }}" as="f" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="width:{{ f.w }};aspect-ratio:{{ f.ar }};background-color:{{ P.bg }};border-radius:6px;background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.1em;color:#6E6C68;max-width:120px">{{ f.cap }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;color:#8A8781;padding-top:10px">같은 장면 × 2</span>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">
+            <sc-for list="{{ cmp2 }}" as="f" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="width:{{ f.w }};aspect-ratio:{{ f.ar }};background-color:{{ P.bg }};border-radius:8px;background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.1em;color:#6E6C68">{{ f.cap }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <sc-for list="{{ opts }}" as="o" hint-placeholder-count="3">
+      <div id="{{ o.id }}" style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">{{ o.badge }}</span><span style="font-size:22px;font-weight:400">{{ o.title }}</span></div>
+        <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ o.note }}</span>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+          <sc-for list="{{ o.frames }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="width:{{ f.w }};max-width:100%;aspect-ratio:{{ f.ar }};background-color:{{ P.bg }};border-radius:10px;background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#6E6C68">{{ f.cap }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11.5px;line-height:1.7;color:#3A3936;white-space:pre-wrap">{{ o.vals }}</span>
+      </div>
+    </sc-for>
+
+    <div style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">REDUCED MOTION</span><span style="font-size:22px;font-weight:400">움직임 줄이기 · 정지 모습</span></div>
+      <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ head.still }}</span>
+      <div style="width:{{ still.w }};max-width:100%;aspect-ratio:{{ still.ar }};background-image:{{ still.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">VALUES</span><span style="font-size:22px;font-weight:400">값</span></div>
+      <div style="background:{{ P.card }};border-radius:16px;padding:18px 20px;font-family:'IBM Plex Mono', monospace;font-size:12px;line-height:1.75;display:flex;flex-direction:column">
+        <sc-for list="{{ css }}" as="l" hint-placeholder-count="12"><span style="white-space:pre-wrap">{{ l.s }}</span></sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.wait(); }
+  componentWillUnmount() { clearTimeout(this.tm); }
+  wait() { if (!window.CuboundIso || !window.CuboundIso.FIRE) { this.tm = setTimeout(() => this.wait(), 40); return; } this.forceUpdate(); }
+  engine(K, T) {
+    const r2 = v => Math.round(v * 100) / 100;
+    // keys: [[seconds from start, {numeric attrs}]], s = start inside the chapter cycle T. derive maps numbers to svg attrs
+    const fx = (tag, base, keys, s, derive) => { const k = [], rows = [];
+      const push = (t, o) => { k.push(+(t / T).toFixed(5)); rows.push(o); };
+      if (s + keys[0][0] > 0) { const hold = Object.assign({}, keys[0][1], { opacity: 0 }); push(0, hold); if (s + keys[0][0] > 0.02) push(s + keys[0][0] - 0.01, hold); }
+      keys.forEach(([t, o]) => push(s + t, o));
+      if (s + keys[keys.length - 1][0] < T) push(T, keys[keys.length - 1][1]);
+      return { tag, base, k, rows, names: Object.keys(keys[0][1]), derive: derive || (o => o) }; };
+    const at = (sp, t) => { const ph = (t % T) / T; let i = 0; while (i < sp.k.length - 2 && ph > sp.k[i + 1]) i++;
+      const u = Math.min(1, Math.max(0, (ph - sp.k[i]) / ((sp.k[i + 1] - sp.k[i]) || 1))), o = {};
+      sp.names.forEach(n => o[n] = r2(sp.rows[i][n] + (sp.rows[i + 1][n] - sp.rows[i][n]) * u)); return sp.derive(o); };
+    const A = o => Object.keys(o).map(n => ' ' + n + '="' + o[n] + '"').join('');
+    const live = sp => { const D = sp.rows.map(sp.derive), names = Object.keys(D[0]);
+      return '<' + sp.tag + A(Object.assign({}, sp.base, D[0])) + '>' + names.map(n => '<animate attributeName="' + n + '" values="' + D.map(d => d[n]).join(';') + '" keyTimes="' + sp.k.join(';') + '" dur="' + T + 's" repeatCount="indefinite"/>').join('') + '</' + sp.tag + '>'; };
+    const still = (sp, t) => '<' + sp.tag + A(Object.assign({}, sp.base, at(sp, t))) + '/>';
+    const dia = s => { const w = r2(52 * s), h = r2(26 * s); return 'M0,' + (-h) + 'L' + w + ',0L0,' + h + 'L' + (-w) + ',0Z'; };
+    // the game's water ripple, values as in the game: ring 0.18 → 0.84 of the tile, rim 0.06, opacity 0.9 → 0 over 1.6s
+    const ripple = (s, fill) => fx('path', { fill, 'fill-rule': 'evenodd' }, [[0, { s: 0.18, opacity: 0.9 }], [1.6, { s: 0.84, opacity: 0 }]], s, o => ({ d: dia(o.s) + dia(Math.max(0.02, o.s - 0.06)), opacity: o.opacity }));
+    const draw = sh => sh.map(p => p.raw !== undefined ? p.raw : '<polygon points="' + p.d + '" fill="' + p.f + '"' + (p.o !== 1 ? ' opacity="' + p.o + '"' : '') + '/>').join('');
+    const url = (box, body) => 'url("data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + box.join(' ') + '">' + body + '</svg>') + '")';
+    // each overlay is placed in its cell's paint order, so taller cells in front cover it
+    const build = (def, items, mode, t) => { const d = Object.assign({}, def, { objs: Object.assign({}, def.objs) });
+      if (mode !== 'none') items.forEach(it => { d.objs[it.cell] = (d.objs[it.cell] || []).concat([{ t: 'raw', raw: it.fx.map(sp => mode === 'live' ? live(sp) : still(sp, t)).join('') }]); });
+      return draw(K.scene(d)); };
+    const iso = (x, y, h) => [(x - y) * 52, (x + y) * 26 - h * 30];
+    const shot = (def, items, anchor, crop, t, sc, cap) => { const c = [anchor[0] + crop[0], anchor[1] + crop[1], crop[2], crop[3]];
+      return { cap, bgi: url(c, build(def, items, 'still', t)), w: Math.round(c[2] * sc) + 'px', ar: c[2] + ' / ' + c[3] }; };
+    // game ripple on a CHAPTER 3 water cell, for size comparison
+    const wdef = { W: 0, base: -1, pal: 'mid', g: [[-1, -1, -1]] }, wa = iso(1, 0, 0);
+    const refShot = sc => shot(wdef, [{ cell: '1,0', fx: [ripple(0, K.CH3.mid.refl)] }], [wa[0], wa[1] + 6], [-56, -32, 112, 64], 0.8, sc, '물 잔물결 (게임) · 0.8초');
+    return { fx, build, url, ripple, iso, shot, refShot };
+  }
+  renderVals() {
+    const K = window.CuboundIso;
+    if (!K || !K.FIRE) return { opts: [], seq: [], css: [], cmp: [], cmp2: [], live: {}, still: {}, phone: {}, head: {}, P: { bg: '#E9E7E2', panel: '#F2F1EE', card: '#F7F6F4' } };
+    if (this.cache) return this.cache;
+    const T = 20, E = this.engine(K, T), M = K.CH4.amber, H = K.FIRE.HEAT, iso = E.iso;
+    const def = { floor: { a: M.a, b: M.b, l: M.l, r: M.r, pit: M.pit },
+      g: [[0, 0, 0, 0, 0, 0], [0, 0, 'p', 'p', 0, 0], [0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0]],
+      cells: { '2,1': { t: 'charbridge', st: 'cold' }, '3,1': { t: 'charbridge', st: 'cold' }, '4,2': { t: 'charwall', st: 'cold' }, '3,0': { t: 'ember', on: false } },
+      objs: { '0,4': [{ t: 'hole' }], '4,4': [{ t: 'brazier' }], '2,3': [{ t: 'cube' }], '5,2': [{ t: 'box' }] } };
+    const vb = K.fit(K.scene(def), 16).split(' ').map(Number);
+    const SM = '#C8BDB0', ES = '#A99D90';
+    // brazier smoke: two puffs drift apart, 72px wide, top at 30px
+    const puff = (s, dx) => E.fx('ellipse', { fill: SM }, [[0, { cx: -2, cy: -14, rx: 4, ry: 3.5, opacity: 0 }], [0.5, { cx: dx * 0.2, cy: -17, rx: 7, ry: 5, opacity: 0.5 }], [2.2, { cx: dx * 0.7, cy: -21, rx: 15, ry: 7.5, opacity: 0.32 }], [3.2, { cx: dx, cy: -22, rx: 20, ry: 8, opacity: 0 }]], s);
+    // sparks: four, straight up and slightly apart, all inside the brazier footprint (±24px of the bowl centre)
+    const spark = (s, x0, d, f) => E.fx('circle', { r: 2.2, fill: f }, [[0, { cx: x0, cy: -12, opacity: 0 }], [0.18, { cx: x0 + d * 0.5, cy: -22, opacity: 1 }], [0.9, { cx: x0 + d, cy: -27, opacity: 0 }]], s);
+    // unlit ember tile: one faint grey thread, low, spreading sideways. no red, no flame shape
+    const esm = (s, dx) => E.fx('ellipse', { fill: ES }, [[0, { cx: 0, cy: -3, rx: 2.5, ry: 2.5, opacity: 0 }], [0.5, { cx: dx * 0.2, cy: -7, rx: 5, ry: 3.5, opacity: 0.45 }], [2.0, { cx: dx * 0.7, cy: -13, rx: 12, ry: 6, opacity: 0.28 }], [3.0, { cx: dx, cy: -16, rx: 16, ry: 7, opacity: 0 }]], s);
+    const items = [{ cell: '3,0', fx: [esm(0, 18), esm(0.8, -16)] },
+      { cell: '4,4', fx: [puff(7, 16), puff(8.1, -14), spark(14, 5, 13, H.core), spark(14.25, -5, -12, H.hot), spark(14.5, 10, 14, H.hot), spark(14.75, -9, -15, H.core)] }];
+    const b = iso(4, 4, 0), e = iso(3, 0, 0);
+    const opts = [
+      { id: 'amb-ember', badge: '1', title: '꺼진 불씨 칸 연기', at: e, crop: [-56, -36, 112, 60], s: 0, peak: 2.2,
+        note: '꺼진 불씨 칸 가운데서 아주 옅은 회갈색 연기 두 줄기가 0.8초 차로 피어올라 양옆으로 퍼지며 사라집니다. 16월드부터 있는 요소라 화로 없는 판에도 움직이는 것이 하나 생깁니다. 불씨 칸은 지나갈 수 있는 바닥이라 "타서 못 들어가는 칸"과 헷갈리지 않고, 붉은 빛과 불꽃 모양은 없습니다. 켜진 불씨 칸(밟은 수)에서는 나오지 않습니다.',
+        shots: [[0.5, '0.5초'], [1.4, '1.4초 · 둘째 줄기'], [2.2, '2.2초 · 가장 넓음'], [3.4, '3.4초 · 사라짐']],
+        vals: '한 번 3.8초 (줄기마다 3초, 둘째 0.8초 늦게)\n연기 #A99D90 진하기 0.45 → 0 (화로 연기 0.5보다 옅음) · 5 × 5 → 32 × 14px · 양옆으로 퍼짐 66px · 꼭대기 23px' },
+      { id: 'amb-smoke', badge: '2', title: '화로 연기', at: b, crop: [-56, -44, 112, 64], s: 7, peak: 9.5,
+        note: '화로 그릇 뒤 테에서 잿빛 연기 두 덩이가 1.1초 차로 올라 양옆으로 갈라져 퍼지며 사라집니다. 퍼지는 폭 72px(칸 폭 0.69배). 큐브가 화로에 올라서 있는 동안은 건너뜁니다.',
+        shots: [[7.5, '0.5초'], [8.6, '1.6초 · 둘째 덩이'], [9.5, '2.5초 · 가장 넓음'], [10.6, '3.6초 · 사라짐']],
+        vals: '한 번 4.3초 (덩이마다 3.2초, 둘째 1.1초 늦게)\n연기 #C8BDB0 진하기 0.5 → 0 · 8 × 7 → 40 × 16px · 양옆으로 ±15px · 꼭대기 30px' },
+      { id: 'amb-spark', badge: '3', title: '화로 불티 · 화로 칸 안에서만', at: b, crop: [-56, -44, 112, 64], s: 14, peak: 14.9,
+        note: '불티 넷이 0.25초 차로 화로 위로 튀어 오르며 조금씩 벌어지다 사라집니다. 벌어지는 폭은 화로 그릇(칸 폭 0.8배) 안인 ±24px까지라 옆 칸 위로 가지 않습니다.',
+        shots: [[14.15, '0.15초 · 튐'], [14.55, '0.55초'], [14.9, '0.9초 · 가장 넓음'], [15.4, '1.4초 · 옅어짐']],
+        vals: '한 번 1.65초 (불티마다 0.9초, 0.25초씩 늦게)\n불티 --color-heat-core / --color-heat-hot 지름 4.4px 진하기 1 → 0 · 위로 15px · 벌어짐 48px (그릇 안) · 꼭대기 27px' }];
+    const rest = { refFirst: true,
+      seq: [{ n: '1', name: '불씨 칸 연기', s: '0초', len: '3.8초', where: '꺼진 불씨 칸 하나 (여럿이면 바퀴마다 다른 칸)' }, { n: '2', name: '화로 연기', s: '7초', len: '4.3초', where: '화로 하나' },
+        { n: '3', name: '화로 불티', s: '14초', len: '1.65초', where: '2와 같은 화로' }],
+      head: { tag: 'CUBOUND · CHAPTER 4 · AMBIENT', title: '불을 건너는 길 · 분위기 연출', cycle: '20초',
+        note: '꺼진 불씨 칸 연기, 화로 연기, 화로 불티 셋을 씁니다. 셋은 같이 일어나지 않고 한 바퀴 안에서 차례로 하나씩 일어납니다. 셋 다 3장 물 잔물결(칸 폭 0.84배까지)에 맞춰, 퍼지는 폭이 칸 폭의 0.46~0.69배가 되게 키웠습니다. 위로 솟지 않고 옆으로 퍼지며 한 층(30px)을 넘지 않습니다. 바탕은 4장 세계 색 "호박색"입니다.',
+        order: '큰 판은 실제 한 바퀴(20초)를 그대로 돕니다. 16월드처럼 화로가 없는 판에서는 2와 3의 차례가 쉼이 되어 불씨 칸 연기만 20초마다 오릅니다. 불씨 칸이 다 켜졌거나 없으면 1이 쉼입니다.',
+        phone: '판 전체를 담아 칸 폭이 52px(데스크톱의 절반)인 폰 크기입니다. 오른쪽은 같은 크기로 자른 장면들이고, 맨 앞이 3장 물 잔물결(게임)입니다.',
+        still: '분위기 연출을 아예 그리지 않습니다. 화로는 원래 그림(빛나는 숯불, 둘레 빛, 멈춘 불티 넷)만으로 "늘 타는 장치"가 읽히고, 멈춘 연기 덩이는 얼룩처럼 보여서 남기지 않습니다. 타는 숯의 일렁임(2.4초)도 이 설정에서는 세기 1에 멈춥니다.' } };
+    const P = { bg: M.bg, panel: M.panel, card: M.card };
+    const css = ['/* 한 바퀴 20s · 동시에 하나만 */', '0s 불씨 칸 연기 3.8s → 7s 화로 연기 4.3s → 14s 화로 불티 1.65s → 20s 다시',
+      '', '--color-amb-ember-smoke: #A99D90;   /* 꺼진 불씨 칸 연기 · 바닥보다 짙은 재 회갈색 */', '--color-amb-smoke: #C8BDB0;         /* 화로 연기 · 숯불보다 밝고 바닥보다 짙은 잿빛 */', '불티: --color-heat-core / --color-heat-hot',
+      '', '/* 크기 (칸 폭 104 기준 · 폰에서는 절반) */', 'ember smoke: 2 threads · 5 × 5 → 32 × 14px · spread 66px (0.63 tile) · opacity 0.45 → 0 · top 23px',
+      'brazier smoke: 2 puffs · 8 × 7 → 40 × 16px · spread 72px (0.69 tile) · opacity 0.5 → 0 · top 30px', 'sparks: 4 × Ø 4.4px · stagger 0.25s · spread 48px (0.46 tile, inside the bowl) · top 27px',
+      '참고 · 물 잔물결 (게임 값): ring 0.18 → 0.84 tile · rim 0.06 · opacity 0.9 → 0 · 1.6s',
+      '', 'prefers-reduced-motion: reduce → 분위기 연출을 그리지 않음 · 타는 숯 일렁임은 세기 1에 멈춤'];
+    const out = Object.assign({ css: css.map(s => ({ s })), P }, rest);
+    const LW = Math.min(vb[2], 560), ar = vb[2] + ' / ' + vb[3];
+    out.live = { bgi: E.url(vb, E.build(def, items, 'live')), w: LW + 'px', ar };
+    out.still = { bgi: E.url(vb, E.build(def, items, 'none')), w: LW + 'px', ar };
+    out.phone = { bgi: out.live.bgi, w: Math.round(vb[2] / 2) + 'px', ar };
+    out.opts = opts.map(o => ({ id: o.id, badge: o.badge, title: o.title, note: o.note, vals: o.vals, frames: o.shots.map(([t, cap]) => E.shot(def, items, o.at, o.crop, t, 2, cap)) }));
+    out.cmp = (rest.refFirst ? [E.refShot(0.5)] : []).concat(opts.map(o => E.shot(def, items, o.at, o.crop, o.peak, 0.5, o.title + ' · ' + (o.peak - o.s).toFixed(1) + '초')));
+    out.cmp2 = (rest.refFirst ? [E.refShot(1)] : []).concat(opts.map(o => E.shot(def, items, o.at, o.crop, o.peak, 1, o.title)));
+    this.cache = out; return out;
+  }
+}
+</script>
+</body>
+</html>
