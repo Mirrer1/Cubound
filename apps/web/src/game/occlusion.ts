@@ -41,13 +41,21 @@ export const fadedCells = (
   const { boxes, leaningLadders, player } = game
   return [
     ...occludingCells(shown, cubeCell, cubeLevel, boxes),
-    // 큐브에서 멀리 떨어져 저 혼자 벽에 묻히는 상자와 메운 바닥, 물에 뜬 배는 윗면보다 한 층 넘게 높은 벽 기준
+    // 큐브에서 멀리 떨어져 저 혼자 벽에 묻히는 상자와 얼음 돌과 메운 바닥, 물에 뜬 것은 윗면보다 한 층 넘게 높은 벽 기준
     ...boxes.flatMap((b, i) =>
       occludingCells(
         shown,
         b,
         shown[b.y][b.x] < waterLevel(game, b) ? waterLevel(game, b) + 1 : shown[b.y][b.x] + 1,
         boxes.filter((_, j) => j !== i),
+      ),
+    ),
+    ...game.stones.flatMap((s) =>
+      occludingCells(
+        shown,
+        s,
+        shown[s.y][s.x] < waterLevel(game, s) ? waterLevel(game, s) + 1 : shown[s.y][s.x] + 1,
+        boxes,
       ),
     ),
     ...filled.flatMap((p) => occludingCells(shown, p, shown[p.y][p.x], boxes)),

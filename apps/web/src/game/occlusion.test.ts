@@ -218,6 +218,15 @@ describe('fadedCells', () => {
     expect(fadedCells(raise([[1, 0, 1]]), { x: 0, y: 0 }, 0, state, [])).toEqual([{ x: 1, y: 0 }])
   })
 
+  it('큐브에서 먼 얼음 돌도 상자처럼 가리는 앞 칸을 모은다', () => {
+    const state = { ...createState(STAGE), stones: [{ x: 2, y: 2 }] }
+
+    expect(fadedCells(raise([[3, 2, 2]]), { x: 0, y: 0 }, 0, state, [])).toContainEqual({
+      x: 3,
+      y: 2,
+    })
+  })
+
   it('물에 뜬 상자는 수면 높이로 재서 같은 높이 둑은 가리지 않는다', () => {
     // 물 높이 2, (0,0) 물 칸의 배 오른쪽 (1,0)이 높이 2 둑이고 그 위에 상자
     const heights = [
