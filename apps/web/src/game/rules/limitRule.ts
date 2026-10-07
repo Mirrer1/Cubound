@@ -1,4 +1,5 @@
 import type { Direction, GameState, Limit, MoveResult } from '../types'
+import { TIDE_EVERY, isHighTide } from './tideRule'
 import { WIND_EVERY } from './windRule'
 
 // 이동 수를 쓰지 않는 제자리 정지
@@ -54,3 +55,9 @@ export const dirLeft = (state: GameState) => {
   const limit = state.stage.rules?.dirLimit
   return limit === undefined ? null : Math.max(limit.count - state.dirUses, 0)
 }
+
+// 밀물 판이 아니면 null, up은 다음 물때가 밀물인 경우
+export const tideLeft = (state: GameState) =>
+  state.stage.rules?.tide
+    ? { left: TIDE_EVERY - (state.moves % TIDE_EVERY), up: !isHighTide(state) }
+    : null

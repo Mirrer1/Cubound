@@ -7,6 +7,7 @@ export { isIce } from './iceRule'
 export { isMushroom } from './mushroomRule'
 export { SEED_WAIT } from './seedRule'
 export { WIND_EVERY } from './windRule'
+export { TIDE_EVERY } from './tideRule'
 export {
   capsLeft,
   climbsLeft,
@@ -15,6 +16,7 @@ export {
   pushesLeft,
   ridesLeft,
   sinkCount,
+  tideLeft,
   vinesLeft,
   windLeft,
 } from './limitRule'

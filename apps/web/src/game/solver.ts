@@ -1,4 +1,4 @@
-import { WIND_EVERY, createState, move, waterLevel } from './rules'
+import { TIDE_EVERY, WIND_EVERY, createState, move, waterLevel } from './rules'
 import type { Direction, GameEvent, GameState, Point, Stage } from './types'
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
@@ -15,16 +15,16 @@ const points = (list: Point[]) =>
     .sort()
     .join(' ')
 
-// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개와 녹는 얼음과 갑문은 유지
+// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개와 녹는 얼음과 갑문과 밀물은 유지
 // 제한이 너무 작을 때도 진짜 최소 이동 수를 얻는 방법
 const forSearch = (stage: Stage): Stage => {
-  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock } =
+  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock, tide } =
     stage.rules ?? {}
   return {
     ...stage,
     rules:
-      swampDeepen || mushroomWither || vineStop || seedGrow || wind || plug || melt || lock
-        ? { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock }
+      swampDeepen || mushroomWither || vineStop || seedGrow || wind || plug || melt || lock || tide
+        ? { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock, tide }
         : undefined,
   }
 }
@@ -65,6 +65,8 @@ const stateKey = (state: GameState, deep = true) => {
       : []),
     // 같은 자리라도 다음 바람까지 남은 수가 다르면 다른 상태
     ...(state.stage.rules?.wind ? [`${state.moves % WIND_EVERY}`] : []),
+    // 같은 자리라도 물 높이와 다음 물때까지 남은 수가 다르면 다른 상태
+    ...(state.stage.rules?.tide ? [`${state.moves % (TIDE_EVERY * 2)}`] : []),
     // 깊어지는 늪은 빠진 횟수에 따라 달라지는 앞으로 드는 수
     ...(deep && state.stage.rules?.swampDeepen ? [`${state.sinks}`] : []),
     // 자리 집합만으로는 갈리지 않는 묶인 배와 자유 배의 맞바꿈
@@ -389,6 +391,30 @@ export const floodBlocks = (stage: Stage, { maxStates = 1_000_000 } = {}): Count
     stage,
     (_, events) => {
       if (events.some((e) => e.type === 'blocked' && e.flooded)) count += 1
+    },
+    { maxStates },
+  )
+  return done ? { status: 'ok', count } : { status: 'limit' }
+}
+
+// 닿을 수 있는 모든 상태 중 밀물 수에 네 방향이 다 막혀 시계를 넘길 수 없는 상태 수
+export const tideTraps = (stage: Stage, { maxStates = 1_000_000 } = {}): CountResult => {
+  let count = 0
+  let tried = 0
+  let blocked = 0
+  let tide = false
+  const done = eachMove(
+    stage,
+    (_, events) => {
+      // 펼치는 상태마다 네 방향을 차례로 넘기는 훑기 순서 기준
+      if (events.some((e) => e.type === 'blocked')) blocked += 1
+      if (events.some((e) => e.type === 'limit' && e.limit === 'tide')) tide = true
+      tried += 1
+      if (tried < DIRECTIONS.length) return
+      if (blocked === DIRECTIONS.length && tide) count += 1
+      tried = 0
+      blocked = 0
+      tide = false
     },
     { maxStates },
   )

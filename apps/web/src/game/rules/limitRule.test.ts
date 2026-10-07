@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Direction, GameState, MoveResult, Stage } from '../types'
-import { climbsLeft, dirLeft, movesLeft, pushesLeft, ridesLeft, windLeft } from './limitRule'
+import {
+  climbsLeft,
+  dirLeft,
+  movesLeft,
+  pushesLeft,
+  ridesLeft,
+  tideLeft,
+  windLeft,
+} from './limitRule'
 import { move } from './moveRule'
 import { createState, standHeight } from './stateRule'
 import {
@@ -581,5 +589,21 @@ describe('windLeft', () => {
 
     expect(counts).toEqual([4, 3, 2, 1, 4, 3])
     expect(windLeft(createState(FLAT_STAGE))).toBeNull()
+  })
+})
+
+describe('tideLeft', () => {
+  it('밀물 판에서만 다음 물때까지 남은 수와 오르는 쪽인지', () => {
+    const stage: Stage = { ...FLAT_STAGE, water: 0, rules: { tide: true } }
+    const lefts = [0, 3, 4, 7, 8].map((moves) => tideLeft({ ...createState(stage), moves }))
+
+    expect(lefts).toEqual([
+      { left: 4, up: true },
+      { left: 1, up: true },
+      { left: 4, up: false },
+      { left: 1, up: false },
+      { left: 4, up: true },
+    ])
+    expect(tideLeft(createState(FLAT_STAGE))).toBeNull()
   })
 })

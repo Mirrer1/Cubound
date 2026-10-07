@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createState, isLiftRaised, move, windLeft } from './rules'
+import { createState, isLiftRaised, move, tideLeft, windLeft } from './rules'
 import { SESSION_VERSION, restoreSession, toSession } from './session'
 import type { Direction, Stage } from './types'
 
@@ -704,5 +704,35 @@ describe('restoreSession 얼음 돌', () => {
     expect(restoreSession({ ...session, melt: 6 }, STONE_STAGE)).toBeNull()
     expect(restoreSession({ ...session, iced: [{ x: 3, y: 3 }] }, STONE_STAGE)).toBeNull()
     expect(restoreSession({ ...session, stones: [{ x: 9, y: 9 }] }, STONE_STAGE)).toBeNull()
+  })
+})
+
+describe('restoreSession 밀물', () => {
+  it('이동 수에서 다음 물때까지 남은 수를 그대로 이어간다', () => {
+    const stage: Stage = {
+      version: 1,
+      id: '15-10',
+      heights: [
+        [2, 2, 2],
+        [2, 1, 2],
+      ],
+      water: 1,
+      start: { x: 0, y: 0 },
+      goal: { x: 2, y: 1 },
+      entities: [],
+      rules: { tide: true },
+    }
+    const state = (['right', 'left', 'right'] as Direction[]).reduce(
+      (s, d) => move(s, d).state,
+      createState(stage),
+    )
+    const restored = restoreSession(toSession(state), stage)
+
+    expect(restored).toEqual(state)
+    expect(restored && tideLeft(restored)).toEqual({ left: 1, up: true })
+    expect(restored && move(restored, 'down').events).toContainEqual({
+      type: 'limit',
+      limit: 'tide',
+    })
   })
 })

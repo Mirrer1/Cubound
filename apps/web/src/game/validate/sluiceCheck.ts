@@ -39,11 +39,26 @@ const poolsOf = (grid: number[][], water: number) => {
 export const checkSluices = ({ data, grid, entities, add, isFloor }: CheckContext) => {
   const rules = isObject(data.rules) ? data.rules : {}
   const hasSluice = entities.some((e) => isObject(e) && e.type === 'sluice')
+  const tide = rules.tide === true
   if (rules.lock !== undefined && !hasSluice) add('rules.lock 판에 수위 장치가 없다')
-  if (!hasSluice) return
+  if (!hasSluice && !tide) return
+
+  const together = (thing: string) =>
+    add(
+      tide ? `밀물 판에 ${thing} 같이 둘 수 없다` : `수위 장치와 ${thing} 한 판에 같이 둘 수 없다`,
+    )
+  if (tide) {
+    if (hasSluice) together('물 스위치를')
+    const boss = [
+      ['lock', 'rules.lock을'],
+      ['plug', 'rules.plug를'],
+      ['wind', 'rules.wind를'],
+    ]
+    boss.forEach(([field, label]) => rules[field] !== undefined && together(label))
+  }
 
   if (!isInt(data.water)) {
-    add('수위 장치 판에 water가 없다')
+    add(tide ? '밀물 판에 water가 없다' : '수위 장치 판에 water가 없다')
     return
   }
   const water = data.water
@@ -77,13 +92,11 @@ export const checkSluices = ({ data, grid, entities, add, isFloor }: CheckContex
     ['tram', '움직이는 발판'],
   ]
   others.forEach(([type, label]) => {
-    if (entities.some((e) => isObject(e) && e.type === type)) {
-      add(`수위 장치와 ${label}을 한 판에 같이 둘 수 없다`)
-    }
+    if (entities.some((e) => isObject(e) && e.type === type)) together(`${label}을`)
   })
-  if (rules.melt !== undefined) add('수위 장치와 rules.melt를 한 판에 같이 둘 수 없다')
+  if (rules.melt !== undefined) together('rules.melt를')
 
-  if (rules.lock === undefined) return
+  if (tide || rules.lock === undefined) return
   const lock = rules.lock
   const at = isObject(lock) && isInt(lock.x) && isInt(lock.y) ? { x: lock.x, y: lock.y } : null
   const h = at ? grid[at.y]?.[at.x] : undefined

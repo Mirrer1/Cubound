@@ -18,6 +18,13 @@ describe('checkRules', () => {
     expect(limit(5.5)).toContain('rules.moveLimit은 양의 정수여야 한다')
   })
 
+  it('밀물은 참이나 거짓이어야 한다', () => {
+    const tide = (value: unknown) => errorsOf({ ...VALID, rules: { tide: value } })
+
+    expect(tide(true)).not.toContain('rules.tide는 참이나 거짓이어야 한다')
+    expect(tide(1)).toContain('rules.tide는 참이나 거짓이어야 한다')
+  })
+
   it('이동 제한이 best보다 작으면 실패한다', () => {
     expect(errorsOf({ ...VALID, rules: { moveLimit: 5 } })).toEqual([])
     expect(errorsOf({ ...VALID, rules: { moveLimit: 4 } })).toContain(

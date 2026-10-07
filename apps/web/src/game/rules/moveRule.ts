@@ -163,7 +163,8 @@ export const move = (state: GameState, direction: Direction): MoveResult => {
     : acted.state
 
   const ticked = tick(state, spent, acted.events)
-  return floodsPlayer(state, ticked.state)
-    ? { state, events: [{ type: 'blocked', direction, flooded: true }] }
-    : ticked
+  if (!floodsPlayer(state, ticked.state)) return ticked
+  return state.stage.rules?.tide
+    ? limitBlocked(state, direction, 'tide')
+    : { state, events: [{ type: 'blocked', direction, flooded: true }] }
 }

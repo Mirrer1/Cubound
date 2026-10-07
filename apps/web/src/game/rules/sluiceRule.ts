@@ -1,4 +1,5 @@
 import type { GameEvent, GameState, Point, Stage } from '../types'
+import { isHighTide } from './tideRule'
 
 const NEIGHBORS = [
   [0, -1],
@@ -53,16 +54,20 @@ const poolsOf = (stage: Stage) => {
   return pools
 }
 
+// 물이 높은 상태, 수위 장치 눌림이나 밀물
 const isOn = (state: GameState) =>
+  isHighTide(state) ||
   sluices(state.stage).some(
     (p) => at([state.player], p) || at(state.boxes, p) || at(state.stones, p),
   )
+
+const hasFlood = (stage: Stage) => sluices(stage).length > 0 || stage.rules?.tide === true
 
 // 그 칸의 지금 물 높이, 갑문 판은 웅덩이마다 다른 높이
 export const waterLevel = (state: GameState, p: Point) => {
   const { stage } = state
   const water = stage.water ?? 0
-  if (sluices(stage).length === 0) return water
+  if (!hasFlood(stage)) return water
 
   const on = isOn(state)
   if (!stage.rules?.lock) return on ? water + 1 : water
@@ -72,9 +77,9 @@ export const waterLevel = (state: GameState, p: Point) => {
   return on === (pool === 1) ? water + 1 : water
 }
 
-// 수위 장치가 있는 판에서 물이 오르면 잠기는 땅
+// 수위 장치나 밀물이 있는 판에서 물이 오르면 잠기는 땅
 export const isFloodable = (stage: Stage, p: Point) =>
-  sluices(stage).length > 0 && stage.heights[p.y]?.[p.x] === (stage.water ?? 0)
+  hasFlood(stage) && stage.heights[p.y]?.[p.x] === (stage.water ?? 0)
 
 const isWet = (state: GameState, p: Point) => {
   const h = state.stage.heights[p.y]?.[p.x]
@@ -97,7 +102,7 @@ const rowOf = (stage: Stage, pool?: number) =>
 // 이번 수에 물이 오르거나 빠진 웅덩이, 갑문 판은 가와 나 두 웅덩이
 export const sluiceEvents = (before: GameState, after: GameState): GameEvent[] => {
   const { stage } = after
-  if (sluices(stage).length === 0 || isOn(before) === isOn(after)) return []
+  if (!hasFlood(stage) || isOn(before) === isOn(after)) return []
 
   const on = isOn(after)
   if (!stage.rules?.lock) return [{ type: 'sluice', up: on, cells: rowOf(stage) }]

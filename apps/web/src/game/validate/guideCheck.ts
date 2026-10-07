@@ -10,6 +10,7 @@ const GUIDE_TARGETS = [
   'wind',
   'melt',
   'lock',
+  'tide',
 ]
 const MAX_GUIDES = 3
 

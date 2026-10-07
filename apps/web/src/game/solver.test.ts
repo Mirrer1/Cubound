@@ -12,6 +12,7 @@ import {
   solve,
   stars,
   statesWithin,
+  tideTraps,
 } from './solver'
 import type { Stage } from './types'
 
@@ -889,5 +890,61 @@ describe('solve 갑문', () => {
   it('갑문 규칙을 지킨 채 푼다', () => {
     expect(solve(LOCK)).toEqual({ status: 'solved', moves: 2, path: ['right', 'right'] })
     expect(solve({ ...LOCK, rules: undefined }).status).toBe('unsolvable')
+  })
+})
+
+describe('solve 밀물', () => {
+  // 물 높이 2, (1,1) 물에 배, (2,1)과 골 (3,1)이 높이 3, 밀물 때 배로 오르는 판
+  const TIDE: Stage = {
+    version: 1,
+    id: 'test-solver-tide',
+    heights: [
+      [3, 3, 5, 5],
+      [3, 0, 3, 3],
+    ],
+    water: 2,
+    start: { x: 1, y: 0 },
+    goal: { x: 3, y: 1 },
+    entities: [{ type: 'box', x: 1, y: 1 }],
+    rules: { tide: true },
+  }
+
+  it('같은 자리라도 물때가 다르면 다른 상태로 보고 밀물을 기다려 푼다', () => {
+    const solved = solve(TIDE)
+
+    expect(solved.status).toBe('solved')
+    expect(solved.status === 'solved' && solved.moves).toBe(7)
+    expect(solve({ ...TIDE, rules: undefined }).status).toBe('unsolvable')
+  })
+})
+
+describe('tideTraps', () => {
+  // 물 높이 1, (1,1) (2,1) (3,1)이 잠기는 줄이고 오를 길이 없는 판
+  const TRAP: Stage = {
+    version: 1,
+    id: 'test-solver-trap',
+    heights: [
+      [2, 2, 2, 2, 2],
+      [2, 1, 1, 1, 2],
+      [2, 2, 2, 2, 2],
+    ],
+    water: 1,
+    start: { x: 2, y: 1 },
+    goal: { x: 4, y: 0 },
+    entities: [],
+    rules: { tide: true },
+  }
+
+  it('밀물 수에 네 방향이 다 막힌 상태를 센다', () => {
+    expect(tideTraps(TRAP)).toEqual({ status: 'ok', count: 2 })
+  })
+
+  it('마른 칸으로 나갈 길이 있으면 0', () => {
+    const heights = TRAP.heights.map((row, y) => (y === 0 ? [2, 1, 1, 1, 2] : row))
+    expect(tideTraps({ ...TRAP, heights, water: 0 })).toEqual({ status: 'ok', count: 0 })
+  })
+
+  it('탐색 상태 수 한도를 넘으면 limit', () => {
+    expect(tideTraps(TRAP, { maxStates: 2 })).toEqual({ status: 'limit' })
   })
 })

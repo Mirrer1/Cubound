@@ -13,6 +13,7 @@ import {
   solutionCount,
   solve,
   statesWithin,
+  tideTraps,
 } from '@/game/solver'
 import type { Direction, Stage } from '@/game/types'
 import { validateStage } from '@/game/validate'
@@ -77,11 +78,11 @@ const zoneMoves = (stage: Stage, path: Direction[]) => {
 
   const counts = zones.map(() => 0)
   // 제한만 빼고 남기는 판을 바꾸는 규칙, 빼면 버섯과 덩굴이 그대로라 다른 길로 새는 풀이
-  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock } =
+  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock, tide } =
     stage.rules ?? {}
   let state = createState({
     ...stage,
-    rules: { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock },
+    rules: { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock, tide },
   })
   let zone = zoneIndexAt(zones, state.player, 0)
 
@@ -122,9 +123,11 @@ const check = (file: string): Summary | null => {
   row('가림', hiddenText(hidden))
   const fills = hiddenFills(stage)
   row('메움 가림', fills ? hiddenText(fills) : '탐색 한도 초과')
-  if (stage.entities.some((e) => e.type === 'sluice')) {
-    const flooded = floodBlocks(stage)
-    row('잠김 막힘', flooded.status === 'ok' ? `${flooded.count}` : '탐색 한도 초과')
+  if (stage.rules?.tide || stage.entities.some((e) => e.type === 'sluice')) {
+    const [label, blocked] = stage.rules?.tide
+      ? (['밀물 갇힘', tideTraps(stage)] as const)
+      : (['잠김 막힘', floodBlocks(stage)] as const)
+    row(label, blocked.status === 'ok' ? `${blocked.count}` : '탐색 한도 초과')
     const sunk = filledFloods(stage)
     row('메움 잠김', sunk.status === 'ok' ? `${sunk.count}` : '탐색 한도 초과')
   }

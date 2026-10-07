@@ -24,7 +24,7 @@ export type Entity = (
 
 export type Tram = Extract<Entity, { type: 'tram' }>
 
-export type Limit = 'moves' | 'pushes' | 'climbs' | 'rides' | 'dir'
+export type Limit = 'moves' | 'pushes' | 'climbs' | 'rides' | 'dir' | 'tide'
 
 export interface StageRules {
   moveLimit?: number
@@ -40,6 +40,7 @@ export interface StageRules {
   plug?: boolean // 땅 상자를 밀어 넣으면 소용돌이가 막히는 판
   melt?: number // 물에 뜬 얼음 돌이 녹기까지의 수
   lock?: Point // 갑문 판의 가 웅덩이 칸, 수위 장치가 비면 물이 높은 쪽
+  tide?: boolean // 4수마다 판 전체 물이 차고 빠지는 판
 }
 
 export interface Stage {
@@ -63,7 +64,17 @@ export interface Stage {
 
 // 칸 좌표나 화면 요소 이름
 export type GuideTarget =
-  Point | 'restart' | 'moves' | 'pushes' | 'climbs' | 'rides' | 'dir' | 'wind' | 'melt' | 'lock'
+  | Point
+  | 'restart'
+  | 'moves'
+  | 'pushes'
+  | 'climbs'
+  | 'rides'
+  | 'dir'
+  | 'wind'
+  | 'melt'
+  | 'lock'
+  | 'tide'
 
 export interface Guide {
   id: string // 문구 사전의 키
