@@ -180,7 +180,7 @@ export type GameEvent =
   | { type: 'rose'; at: Point; height: number; lifted: Lifted[]; growing: boolean } // height는 솟은 뒤 바닥 높이, growing은 또 솟을 차례가 남았는지 여부
   | { type: 'blown'; from: Point; to: Point; direction: Direction } // 바람에 밀려 to 쪽으로 간 이동, 그 이동의 이벤트는 바로 뒤
   | { type: 'braced'; direction: Direction; sheltered?: true } // 바람을 버틴 수, sheltered는 바람 오는 쪽이 막혀 숨은 경우
-  | { type: 'sluice'; up: boolean; pool?: 0 | 1; cells: Point[] } // 수위가 바뀐 웅덩이, pool은 갑문 판의 가 0과 나 1, cells는 새로 잠기거나 드러난 칸
+  | { type: 'sluice'; up: boolean; pool?: 0 | 1; cells: Point[]; tide?: true } // 수위가 바뀐 웅덩이, pool은 갑문 판의 가 0과 나 1, cells는 새로 잠기거나 드러난 칸, tide는 밀물 판
   | { type: 'blocked'; direction: Direction; flooded?: true } // flooded는 큐브가 선 칸에 물이 차오르는 수
   | { type: 'limit'; limit: Limit } // 보스 제약에 막힌 이동
   | { type: 'cleared' }

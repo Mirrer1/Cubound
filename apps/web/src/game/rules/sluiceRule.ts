@@ -105,6 +105,7 @@ export const sluiceEvents = (before: GameState, after: GameState): GameEvent[] =
   if (!hasFlood(stage) || isOn(before) === isOn(after)) return []
 
   const on = isOn(after)
+  if (stage.rules?.tide) return [{ type: 'sluice', up: on, cells: rowOf(stage), tide: true }]
   if (!stage.rules?.lock) return [{ type: 'sluice', up: on, cells: rowOf(stage) }]
   return [
     { type: 'sluice', up: !on, pool: 0, cells: rowOf(stage, 0) },

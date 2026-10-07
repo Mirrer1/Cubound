@@ -62,8 +62,8 @@ describe('밀물 물 높이', () => {
     const up = play(tide(), SHUTTLE)
     const down = play(tide(), [...SHUTTLE, ...SHUTTLE])
 
-    expect(up.events).toContainEqual({ type: 'sluice', up: true, cells: ROW })
-    expect(down.events).toContainEqual({ type: 'sluice', up: false, cells: ROW })
+    expect(up.events).toContainEqual({ type: 'sluice', up: true, cells: ROW, tide: true })
+    expect(down.events).toContainEqual({ type: 'sluice', up: false, cells: ROW, tide: true })
     expect(play(tide(), SHUTTLE.slice(0, 3)).events.some((e) => e.type === 'sluice')).toBe(false)
   })
 

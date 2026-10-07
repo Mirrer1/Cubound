@@ -17,6 +17,7 @@ import {
   lockFocus,
   meltDisplay,
   mudDisplay,
+  tideDisplay,
   vinesDisplay,
   windDisplay,
 } from '@/components/board/frame'
@@ -120,6 +121,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const { gustAt, wind, blew } = windDisplay({ game, prevGame, events, animating })
   const gusting = gustAt !== null && gustTurn === turn && animating
   const melt = meltDisplay(game)
+  const tide = tideDisplay(game)
   const meltHold = useLoop(MELT_HOLD, 600)
   const limitedDir = game?.stage.rules?.dirLimit?.dir
   const limited = events.flatMap((e) => (e.type === 'limit' ? [e.limit] : []))[0]
@@ -344,6 +346,20 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                       }
                     >
                       <LimitCount hit={null}>{melt.count}</LimitCount>
+                    </span>
+                  </div>
+                )}
+                {tide && (
+                  <div
+                    data-guide="tide"
+                    className={`flex flex-col items-end gap-0.5 rounded-md outline outline-offset-4 transition-soft-colors short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2 ${tide.edge ? 'outline-ink' : 'outline-transparent'}`}
+                  >
+                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">TIDE</span>
+                    <span className="flex items-center gap-1.5 narrow:gap-1">
+                      <span className="text-[11px] text-ink narrow:text-[9px]">
+                        {tide.up ? '▲' : '▼'}
+                      </span>
+                      <LimitCount hit={limited === 'tide' ? turn : null}>{tide.left}</LimitCount>
                     </span>
                   </div>
                 )}

@@ -10,7 +10,15 @@ import {
   waterAtOf,
 } from './sluiceFrame'
 import { ridePhase } from './switchFrame'
-import { LOCK_STAGE, SLUICE_STAGE, SLUICE_WHIRL_STAGE, STAGE, lastMove } from './testStages'
+import {
+  LOCK_STAGE,
+  SHUTTLE,
+  SLUICE_STAGE,
+  SLUICE_WHIRL_STAGE,
+  STAGE,
+  TIDE_STAGE,
+  lastMove,
+} from './testStages'
 import { NO_SWAMP, SLUICE, durationOf, sluicePhase, sluiceStart } from './timeFrame'
 import { createState } from '@/game/rules'
 import type { GameEvent } from '@/game/types'
@@ -34,6 +42,12 @@ describe('waterAtOf', () => {
 
     expect(at({ x: 1, y: 1 })).toBeCloseTo(1.25)
     expect(at({ x: 2, y: 0 })).toBeCloseTo(1.25)
+  })
+
+  it('밀물 판도 수 전후 물 높이를 진행도만큼 섞은 높이', () => {
+    const { prev, game } = lastMove(TIDE_STAGE, SHUTTLE)
+
+    expect(waterAtOf(prev, game, 0.5)({ x: 2, y: 2 })).toBeCloseTo(1.5)
   })
 })
 

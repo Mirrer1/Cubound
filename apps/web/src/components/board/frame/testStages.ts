@@ -366,3 +366,23 @@ export const LOCK_STAGE: Stage = {
   ],
   rules: { lock: { x: 1, y: 1 } },
 }
+
+// 물 높이 1, (1,2) (2,2) (3,2)가 잠기는 줄, (4,2)는 늘 물, (5,1)은 높이 3, 나머지는 높이 2인 밀물 판
+export const TIDE_STAGE: Stage = {
+  version: 1,
+  id: 'test-tide',
+  heights: [
+    [2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 3],
+    [2, 1, 1, 1, 0, 2],
+    [2, 2, 2, 2, 2, 2],
+  ],
+  water: 1,
+  start: { x: 1, y: 0 },
+  goal: { x: 5, y: 0 },
+  entities: [],
+  rules: { tide: true },
+}
+
+// 왔다 갔다 네 수, 밀물 판의 물때 한 번
+export const SHUTTLE: Direction[] = ['right', 'left', 'right', 'left']

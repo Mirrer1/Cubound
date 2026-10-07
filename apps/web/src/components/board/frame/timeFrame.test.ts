@@ -12,11 +12,13 @@ import {
   PLUG_STAGE,
   RIDE,
   SEED_STAGE,
+  SHUTTLE,
   SLUICE_ICE_STAGE,
   SLUICE_STAGE,
   SLUICE_WHIRL_STAGE,
   STAGE,
   STONE_STAGE,
+  TIDE_STAGE,
   TRAM_STAGE,
   WARP_STAGE,
   WHIRL_STAGE,
@@ -431,6 +433,17 @@ describe('sluicePhase', () => {
     expect(at(SECONDS.moved)).toEqual({ tap: 0, level: 0, freeze: 0, thaw: 0, slab: 0 })
     expect(at(SECONDS.moved + SLUICE.tap)).toMatchObject({ tap: 1, level: 0 })
     expect(at(SECONDS.moved + SLUICE.tap + SLUICE.level / 2).level).toBeCloseTo(0.5)
+    expect(at(total)).toMatchObject({ tap: 1, level: 1 })
+  })
+
+  it('밀물은 꼭지 기다림 없이 움직임 바로 뒤 0.48초에 걸쳐 바뀌는 수면', () => {
+    const { events } = lastMove(TIDE_STAGE, SHUTTLE)
+    const total = durationOf(events)
+    const at = (seconds: number) => sluicePhase(events, seconds / total)
+
+    expect(total).toBeCloseTo(SECONDS.moved + SLUICE.level)
+    expect(at(SECONDS.moved).level).toBe(0)
+    expect(at(SECONDS.moved + SLUICE.level / 2).level).toBeCloseTo(0.5)
     expect(at(total)).toMatchObject({ tap: 1, level: 1 })
   })
 

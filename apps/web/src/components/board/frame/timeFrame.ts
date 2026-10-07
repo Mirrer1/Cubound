@@ -307,15 +307,19 @@ export const sluiceStart = (events: GameEvent[]) =>
       )
     : null
 
+// 꼭지가 열리는 시간, 꼭지 없는 밀물은 0
+const tapSeconds = (events: GameEvent[]) =>
+  events.some((e) => e.type === 'sluice' && e.tide) ? 0 : SLUICE.tap
+
 const sluiceEnd = (events: GameEvent[]) => {
   const at = sluiceStart(events)
-  return at === null ? 0 : at + SLUICE.tap + SLUICE.level
+  return at === null ? 0 : at + tapSeconds(events) + SLUICE.level
 }
 
 // 물이 바뀌는 수에 떠오른 배가 끌리고 새로 잠긴 칸이 얼기 시작하는 때
 const sluiceAfloat = (events: GameEvent[]) => {
   const at = sluiceStart(events)
-  return at === null ? 0 : at + SLUICE.tap + SLUICE.level * SLUICE.afloat
+  return at === null ? 0 : at + tapSeconds(events) + SLUICE.level * SLUICE.afloat
 }
 
 // 끌린 배가 혼자 출발할 수 있는 때, 물이 바뀌는 수는 수면이 반쯤 움직인 뒤
@@ -429,15 +433,14 @@ export const sluicePhase = (events: GameEvent[], t: number, swamp: SwampTime = N
   if (at === null) return { tap: 1, level: 1, freeze: 1, thaw: 1, slab: 1 }
 
   const now = elapsedAt(events, swamp, t)
-  const afloat = at + SLUICE.tap + SLUICE.level * SLUICE.afloat
+  const tap = tapSeconds(events)
+  const afloat = at + tap + SLUICE.level * SLUICE.afloat
   return {
-    tap: smooth(clamp01((now - at) / SLUICE.tap)),
-    level: smooth(clamp01((now - at - SLUICE.tap) / SLUICE.level)),
+    tap: tap === 0 ? 1 : smooth(clamp01((now - at) / tap)),
+    level: smooth(clamp01((now - at - tap) / SLUICE.level)),
     freeze: smooth(clamp01((now - afloat) / FREEZE_SECONDS)),
     thaw: smooth(clamp01((now - at) / FREEZE_SECONDS)),
-    slab: smooth(
-      clamp01((now - at - FREEZE_SECONDS) / (SLUICE.tap + SLUICE.level - FREEZE_SECONDS)),
-    ),
+    slab: smooth(clamp01((now - at - FREEZE_SECONDS) / (tap + SLUICE.level - FREEZE_SECONDS))),
   }
 }
 

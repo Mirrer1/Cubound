@@ -11,7 +11,8 @@ type Phase = ReturnType<typeof sluicePhase>
 
 const DONE: Phase = { tap: 1, level: 1, freeze: 1, thaw: 1, slab: 1 }
 
-const hasSluice = (stage: Stage) => stage.entities.some((e) => e.type === 'sluice')
+const hasSluice = (stage: Stage) =>
+  stage.rules?.tide === true || stage.entities.some((e) => e.type === 'sluice')
 
 // 수 전후 칸의 물 높이를 level만큼 섞은 그 순간 높이, 수위 없는 판은 판의 물 높이
 export const waterAtOf = (before: GameState, game: GameState, level: number): WaterAt => {

@@ -103,3 +103,4 @@ export {
   whirlLook,
 } from './whirlpoolFrame'
 export { meltDisplay, type StoneFrame } from './iceStoneFrame'
+export { tideDisplay } from './tideFrame'

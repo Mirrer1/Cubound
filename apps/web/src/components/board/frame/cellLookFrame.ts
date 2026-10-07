@@ -12,6 +12,7 @@ import type { sceneFrame } from './sceneFrame'
 import { type SeedCell, seedCellOf } from './seedFrame'
 import { type SluiceLook, sluiceLookOf, stoneSlab } from './sluiceFrame'
 import { type SwitchLook, switchLookOf } from './switchFrame'
+import { type TideLook, tideLookOf } from './tideFrame'
 import { type SwampTime } from './timeFrame'
 import { type VineCell, vineCellOf } from './vineFrame'
 import { leanOf, whirlLook } from './whirlpoolFrame'
@@ -81,6 +82,7 @@ export interface CellLook {
     idleCycle: number // 한 칸의 잔물결 한 바퀴 ms
   }
   sluice: SluiceLook
+  tide: TideLook
   tether: {
     post: number // 말뚝 띠 수, 0이면 말뚝 없는 칸
     range: number // 갈 수 있는 범위 칸의 큐브가 탄 정도, -1이면 범위 밖
@@ -133,6 +135,7 @@ export const cellLook = ({
   const deviceAt = switchLookOf(scene, { stage, game, events, t, swampSeconds, back })
   const ripples = idleRipples(stage, scene.sluice.still)
   const sluiceAt = sluiceLookOf(scene, { game, events, t, swamp: swampSeconds })
+  const tideAt = tideLookOf(scene, { game, t })
   const patches = scene.moving ? frostPatches(scene.before, game, events, t, swampSeconds) : null
   const cycle = rippleCycle(ripples.size)
 
@@ -281,6 +284,7 @@ export const cellLook = ({
         idleCycle: cycle,
       },
       sluice: sluiceAt(cell.p),
+      tide: tideAt(cell.p),
       tether: {
         post: postBands(stage, cell.p),
         range: scene.moor.get(cell.key) ?? -1,
