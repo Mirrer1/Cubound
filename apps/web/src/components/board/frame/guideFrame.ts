@@ -6,6 +6,7 @@ import {
   STONE,
   TAP,
   WATER,
+  channelCells,
   stoneSteps,
   surfaceRise,
   waterLook,
@@ -106,12 +107,29 @@ export const guideRect = (game: GameState, p: Point) => {
   return { x, y: top, width, height: bottom - top }
 }
 
-// 갑문 판 가이드가 비추는 두 웅덩이 칸 전체의 사각형
+// 갑문 가이드가 비추는 칸, 장치와 물길과 물길이 닿는 두 웅덩이 칸, 물길이 없으면 두 웅덩이 전체
+const lockCells = (stage: Stage): Point[] => {
+  const path = [...channelCells(stage)].map(([key, axis]) => {
+    const [x, y] = key.split('-').map(Number)
+    return { x, y, axis }
+  })
+  const water = stage.water ?? 0
+  if (path.length === 0)
+    return stage.heights.flatMap((row, y) =>
+      row.flatMap((h, x) => (h >= 0 && h <= water ? [{ x, y }] : [])),
+    )
+  const dx = path[0].axis === 'x' ? 1 : 0
+  const first = path[0]
+  const last = path[path.length - 1]
+  return [
+    { x: first.x - dx, y: first.y - (1 - dx) },
+    ...path,
+    { x: last.x + dx, y: last.y + (1 - dx) },
+  ]
+}
+
 export const lockRect = (game: GameState) => {
-  const water = game.stage.water ?? 0
-  const rects = game.stage.heights.flatMap((row, y) =>
-    row.flatMap((h, x) => (h >= 0 && h <= water ? [guideRect(game, { x, y })] : [])),
-  )
+  const rects = lockCells(game.stage).map((p) => guideRect(game, p))
   const left = Math.min(...rects.map((r) => r.x))
   const top = Math.min(...rects.map((r) => r.y))
   const right = Math.max(...rects.map((r) => r.x + r.width))

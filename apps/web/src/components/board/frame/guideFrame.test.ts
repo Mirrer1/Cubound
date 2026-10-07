@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { PIT_FLOOR, PLATE } from '../view'
 import { TAP } from '../view'
-import { guideRect, lockFocus } from './guideFrame'
+import { guideRect, lockFocus, lockRect } from './guideFrame'
 import { LOCK_STAGE, SLUICE_STAGE, WHIRL_STAGE } from './testStages'
 import { TILE, toScreen } from '@/game/iso'
 import { createState } from '@/game/rules'
@@ -205,5 +205,49 @@ describe('lockFocus', () => {
   it('갑문 판은 장치 칸, 아니면 null', () => {
     expect(lockFocus(LOCK_STAGE)).toEqual({ x: 3, y: 1 })
     expect(lockFocus(SLUICE_STAGE)).toBeNull()
+  })
+})
+
+describe('lockRect', () => {
+  // 넓게 퍼진 두 웅덩이, 장치 (3,1)에서 곧은 물길이 (2,1)과 (4,1)에 닿음
+  const WIDE: Stage = {
+    ...LOCK_STAGE,
+    heights: [
+      [2, 2, 2, 2, 2, 2, 2],
+      [0, 0, 1, 2, 1, 0, 0],
+      [0, 2, 2, 2, 2, 2, 0],
+    ],
+  }
+  const union = (game: GameState, cells: Point[]) => {
+    const rects = cells.map((p) => guideRect(game, p))
+    const left = Math.min(...rects.map((r) => r.x))
+    const top = Math.min(...rects.map((r) => r.y))
+    return {
+      x: left,
+      y: top,
+      width: Math.max(...rects.map((r) => r.x + r.width)) - left,
+      height: Math.max(...rects.map((r) => r.y + r.height)) - top,
+    }
+  }
+
+  it('물길이 있으면 장치와 물길, 물길이 닿는 두 웅덩이 칸만 감싼다', () => {
+    const game = createState(WIDE)
+
+    expect(lockRect(game)).toEqual(
+      union(game, [
+        { x: 2, y: 1 },
+        { x: 3, y: 1 },
+        { x: 4, y: 1 },
+      ]),
+    )
+  })
+
+  it('물길이 없으면 두 웅덩이 칸을 다 감싼다', () => {
+    const game = createState({ ...WIDE, entities: [{ type: 'sluice', x: 3, y: 0 }] })
+    const pools = WIDE.heights.flatMap((row, y) =>
+      row.flatMap((h, x) => (h >= 0 && h <= 1 ? [{ x, y }] : [])),
+    )
+
+    expect(lockRect(game)).toEqual(union(game, pools))
   })
 })

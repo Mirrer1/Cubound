@@ -190,10 +190,10 @@ describe('sceneFrame 수위', () => {
     expect(at(durationOf(events)).cubeLevel).toBeCloseTo(1)
   })
 
-  it('갑문 판의 가이드는 두 웅덩이를 같이 감싼다', () => {
+  it('갑문 판의 가이드는 장치와 물길이 닿는 두 웅덩이 칸을 같이 감싼다', () => {
     const game = createState(LOCK_STAGE)
     const scene = sceneOf(game, null, [], 1, { guideCell: { x: 3, y: 1 } })
-    const pools = [1, 2, 4, 5].map((x) => guideRect(game, { x, y: 1 }))
+    const pools = [2, 3, 4].map((x) => guideRect(game, { x, y: 1 }))
 
     expect(scene.lockGuide).not.toBeNull()
     for (const rect of pools) {
