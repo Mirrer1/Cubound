@@ -77,6 +77,8 @@ export const es: Partial<Texts> = {
   'guide.sluice': 'El agua sube un nivel mientras algo mantiene pulsado el interruptor de agua',
   'guide.lock':
     'Mientras algo mantiene pulsado el interruptor de agua, el agua pasa al otro estanque',
+  'guide.tide':
+    'El agua sube y baja cada cuatro movimientos, así que sal a tiempo del suelo mojado',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',
@@ -232,6 +234,9 @@ export const es: Partial<Texts> = {
   'world.14': 'Tierra anegada',
   'world.14.note':
     'Al subir el agua, los botes suben con ella y la tierra baja se hunde. Cuenta los caminos que ganas y los que pierdes.',
+  'world.15': 'Tierra de mareas',
+  'world.15.note':
+    'Todas las formas del agua se reúnen en un mismo mar. Sigue las mareas hasta casa.',
   'stage.12-1': 'Arrastre',
   'stage.12-2': 'Atraer',
   'stage.12-3': 'En fila',
@@ -262,4 +267,14 @@ export const es: Partial<Texts> = {
   'stage.14-8': 'Orilla helada',
   'stage.14-9': 'Hogar sumergido',
   'stage.14-10': 'La esclusa',
+  'stage.15-1': 'Corriente helada',
+  'stage.15-2': 'Agua crecida',
+  'stage.15-3': 'Hielo que emerge',
+  'stage.15-4': 'Puerta bajo el agua',
+  'stage.15-5': 'El camino de vuelta',
+  'stage.15-6': 'Dique roto',
+  'stage.15-7': 'Orilla lejana',
+  'stage.15-8': 'Casa bajo las aguas',
+  'stage.15-9': 'La última orilla',
+  'stage.15-10': 'Pleamar y bajamar',
 }

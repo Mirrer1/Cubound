@@ -71,6 +71,7 @@ export const en = {
   'guide.sluice': 'The water rises one level while something holds the water switch down',
   'guide.lock':
     'While something holds the water switch down, the water flows over to the other pool',
+  'guide.tide': 'The water rises and falls every four moves, so get off the wet ground in time',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',
@@ -225,6 +226,8 @@ export const en = {
   'world.14': 'Land of Floods',
   'world.14.note':
     'Raise the water and the boats rise with it, but the low ground sinks. Count the paths you gain and the ones you lose.',
+  'world.15': 'Land of Tides',
+  'world.15.note': 'Every form of water meets in one sea. Follow the tides home.',
   'stage.12-1': 'Swept Along',
   'stage.12-2': 'Reeling In',
   'stage.12-3': 'In Line',
@@ -255,6 +258,16 @@ export const en = {
   'stage.14-8': 'Frozen Shore',
   'stage.14-9': 'Sunken Home',
   'stage.14-10': 'The Lock',
+  'stage.15-1': 'Icy Current',
+  'stage.15-2': 'Swollen Water',
+  'stage.15-3': 'Rising Ice',
+  'stage.15-4': 'Gate Below the Water',
+  'stage.15-5': 'The Way Back',
+  'stage.15-6': 'Broken Bank',
+  'stage.15-7': 'Distant Shore',
+  'stage.15-8': 'Drowned Home',
+  'stage.15-9': 'The Last Shore',
+  'stage.15-10': 'Ebb and Flow',
 }
 
 export type Texts = typeof en
