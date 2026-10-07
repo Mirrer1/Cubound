@@ -12,7 +12,7 @@ import {
 } from './timeFrame'
 import { frontOf } from './tramFrame'
 import { TILE, toScreen } from '@/game/iso'
-import { standHeight, waterLevel } from '@/game/rules'
+import { isFrozen, standHeight, waterLevel } from '@/game/rules'
 import type { Direction, GameEvent, GameState, Point } from '@/game/types'
 
 // 끌려가는 배가 더 잠기는 px
@@ -210,14 +210,16 @@ export type WhirlFrames = ReturnType<typeof whirlFrames>
 export const pulledBeside = (boxes: { cell: Point }[], cube: Point) =>
   boxes.some(({ cell }) => cell.x + cell.y === cube.x + cube.y && Math.abs(cell.x - cube.x) === 1)
 
-// 앞 칸에 멈춘 배가 쏠리는 쪽, 열린 소용돌이 한정
+// 앞 칸에 멈춘 배가 쏠리는 쪽, 열린 소용돌이와 얼지 않은 배 한정
 export const leanOf = (
   lane: Lane | undefined,
   game: GameState,
   p: Point,
   frames: WhirlFrames,
 ): Direction | null =>
-  lane?.front && has(game.boxes, p) && frames.openings[lane.whirl].eye >= 1 ? lane.toward : null
+  lane?.front && has(game.boxes, p) && !isFrozen(game, p) && frames.openings[lane.whirl].eye >= 1
+    ? lane.toward
+    : null
 
 // 칸에 넘길 소용돌이 값, eye는 소용돌이 칸, lane은 물길 칸, ghost는 막힌 칸, shown은 얼음에 끊긴 물길 진하기
 export const whirlLook = (

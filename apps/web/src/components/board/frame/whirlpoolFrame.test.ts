@@ -168,6 +168,12 @@ describe('leanOf', () => {
     expect(leanOf(lanes.get('3-1'), game, { x: 3, y: 1 }, look(game))).toBeNull()
   })
 
+  it('얼어붙은 배는 소용돌이 앞 칸이어도 쏠리지 않는다', () => {
+    const game = { ...played(['left', 'right']), stones: [{ x: 3, y: 1 }] }
+
+    expect(leanOf(lanes.get('2-1'), game, { x: 2, y: 1 }, look(game))).toBeNull()
+  })
+
   it('큐브가 탄 배도 쏠림 방향은 남는다', () => {
     const game = played(['left', 'down'])
 
