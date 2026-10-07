@@ -198,3 +198,31 @@ export const hardenSeconds = (prev: GameState, game: GameState, events: GameEven
 }
 
 export const vinesDisplay = (view: CountView) => countDisplay(view, vinesLeft, hardenSeconds)
+
+export interface VineCell {
+  kind: VineKind | null // 덩굴 뿌리나 길 칸
+  enter: Direction | null
+  leave: Direction | null
+  growth: number // 줄기가 칸을 건너는 진행도
+  rise: number // 판이 구덩이에서 차오른 정도
+  tongue: number
+  sprout: number // 싹 키 px
+  sproutOpacity: number
+  hard: number // 굳은 정도
+  knot: number // 봉오리가 돋은 정도
+  opacity: number
+}
+
+export const vineCellOf = (vine: VineFrame | null): VineCell => ({
+  kind: vine?.kind ?? null,
+  enter: vine?.enter ?? null,
+  leave: vine?.leave ?? null,
+  growth: vine?.growth ?? 1,
+  rise: vine?.rise ?? 1,
+  tongue: vine?.tongue ?? 0,
+  sprout: vine?.sprout ?? 0,
+  sproutOpacity: vine?.sproutOpacity ?? 1,
+  hard: vine?.hard ?? 0,
+  knot: vine?.knot ?? 0,
+  opacity: vine?.opacity ?? 1,
+})

@@ -1,29 +1,23 @@
 import { ICE, idleRipples, postBands, rippleCycle, waterLook } from '../view'
+import { type LadderLook, ladderLookOf } from './carryFrame'
 import type { boardCells } from './cellFrame'
 import { crackFrame, crackLeft, sinkAt } from './crackFrame'
-import { clamp01, lerp, smooth } from './curveFrame'
+import { clamp01, smooth } from './curveFrame'
 import { wallHeight } from './fillFrame'
 import { frostAt } from './iceFrame'
 import { frostGround, frostPatches } from './iceStoneFrame'
 import { has, same } from './pathFrame'
 import { restartDrop } from './restartFrame'
 import type { sceneFrame } from './sceneFrame'
+import { type SeedCell, seedCellOf } from './seedFrame'
 import { type SluiceLook, sluiceLookOf, stoneSlab } from './sluiceFrame'
-import { passDip, pressProgress, switchCells, switchProgress } from './switchFrame'
+import { type SwitchLook, switchLookOf } from './switchFrame'
 import { type SwampTime } from './timeFrame'
-import type { VineKind } from './vineFrame'
+import { type VineCell, vineCellOf } from './vineFrame'
 import { leanOf, whirlLook } from './whirlpoolFrame'
 import { TILE } from '@/game/iso'
-import { isDoorOpen, isIce, isLiftRaised } from '@/game/rules'
-import type {
-  Direction,
-  Entity,
-  GameEvent,
-  GameState,
-  LeaningLadder,
-  Point,
-  Stage,
-} from '@/game/types'
+import { isIce } from '@/game/rules'
+import type { Direction, GameEvent, GameState, Stage } from '@/game/types'
 
 // 재시작에 메운 바닥이 사라지는 진행도
 const RESTORE_FADE = 0.25
@@ -98,49 +92,16 @@ export interface CellLook {
     laneOpacity: number
     lean: Direction | null // 앞 칸에 멈춘 배가 쏠리는 소용돌이 쪽
   }
-  device: {
-    entity: 'switch' | 'door' | null
-    switchDepth: number
-    doorDepth: number
-    lift: boolean
-    warp: boolean
-  }
+  device: SwitchLook
   pit: {
     rail: string // 이웃한 발판 길 칸 방향을 "x,y"로 이은 값, 빈 값이면 길이 아닌 칸
     railNext: boolean // 발판이 다음 수에 들어올 칸
     wallLeft: number // 0 이상이면 위 칸 쪽에 세우는 구덩이 벽, -1이면 벽 없는 칸
     wallRight: number // 0 이상이면 왼 칸 쪽에 세우는 구덩이 벽, -1이면 벽 없는 칸
   }
-  ladder: {
-    flat: number // 바닥에 놓인 사다리 투명도, 0이면 사다리 없는 칸
-    leaning: string // "방향:투명도"를 |로 이은 값
-  }
-  vine: {
-    kind: VineKind | null // 덩굴 뿌리나 길 칸
-    enter: Direction | null
-    leave: Direction | null
-    growth: number // 줄기가 칸을 건너는 진행도
-    rise: number // 판이 구덩이에서 차오른 정도
-    tongue: number
-    sprout: number // 싹 키 px
-    sproutOpacity: number
-    hard: number // 굳은 정도
-    knot: number // 봉오리가 돋은 정도
-    opacity: number
-  }
-  seed: {
-    on: number // 바닥에 놓인 씨앗 투명도, 0이면 씨앗 없는 칸
-    land: number // 씨앗으로 솟은 볏짚빛 층 수
-    stalk: number // 보스 기둥 줄기 층 수, 0이면 기둥 없는 칸
-    bud: number // 보스 기둥 봉오리가 돋은 정도 0~1
-    leaves: number // 솟은 땅에 남은 잎이 드러난 정도 0~1
-    tree: number // 사라지는 나무 단계, 0이면 나무 없는 칸
-    treeNext: number // 들어서는 나무 단계, 0이면 나무 없는 칸
-    treeP: number
-    stakes: number // 사라지는 말뚝 수
-    stakesNext: number // 들어서는 말뚝 수
-    stakeP: number
-  }
+  ladder: LadderLook
+  vine: VineCell
+  seed: SeedCell
 }
 
 interface CellLookView {
@@ -165,36 +126,17 @@ export const cellLook = ({
   railDirs,
   scene,
 }: CellLookView) => {
-  const { heights, boxes, ladders, leaningLadders } = game
+  const { heights, boxes } = game
   const walls = { heights, before: scene.before, fillingKey, vineFrame: scene.vineFrame, railDirs }
   // 재시작하며 처음 모습으로 돌아가는 진행도
   const back = scene.dropping ? smooth(clamp01(t)) : 1
-  // 문과 발판이 움직이기 시작하는 때, 스위치가 눌리거나 풀린 때
-  const linkedPhase = (cells: Point[], pressed: boolean) =>
-    scene.dropping
-      ? back
-      : scene.moving
-        ? switchProgress(events, cells, pressed, t, swampSeconds)
-        : 1
+  const deviceAt = switchLookOf(scene, { stage, game, events, t, swampSeconds, back })
   const ripples = idleRipples(stage, scene.sluice.still)
   const sluiceAt = sluiceLookOf(scene, { game, events, t, swamp: swampSeconds })
   const patches = scene.moving ? frostPatches(scene.before, game, events, t, swampSeconds) : null
   const cycle = rippleCycle(ripples.size)
 
   return (cell: ReturnType<typeof boardCells>[number]) => {
-    const entity = stage.entities.find((e) => same(e, cell.p))
-    const pressed = (state: GameState) => same(state.player, cell.p) || has(state.boxes, cell.p)
-    const doorDepth = (state: GameState) =>
-      entity?.type === 'door' && isDoorOpen(state, entity.id) ? 0 : TILE.layer
-    // 상자가 얹힌 칸도 찾도록 entity와 따로 보는 발판
-    const lift = stage.entities.find(
-      (e): e is Extract<Entity, { type: 'lift' }> => e.type === 'lift' && same(e, cell.p),
-    )
-    const liftLevel = (state: GameState) =>
-      lift !== undefined && isLiftRaised(state, lift.id) ? 1 : 0
-    const warp = stage.entities.find(
-      (e): e is Extract<Entity, { type: 'warp' }> => e.type === 'warp' && same(e, cell.p),
-    )
     const capHere = scene.caps.find((capFrame) => same(capFrame.cell, cell.p))
     const water = waterLook(stage, cell.p, scene.sluice.waterAt)
     const rippleHere = scene.ripple && same(scene.ripple.at, cell.p) ? scene.ripple : null
@@ -212,28 +154,7 @@ export const cellLook = ({
       game.heights[cell.p.y][cell.p.x] >= 0 &&
       (stage.heights[cell.p.y][cell.p.x] < 0 || (wasCrack && left < 0))
     const crumble = crackFrame(was, left, scene.crackPhase)
-    const liftPhase =
-      lift === undefined ? 1 : linkedPhase(switchCells(stage, lift.id), isLiftRaised(game, lift.id))
-    const switchPhase =
-      entity?.type === 'switch' && scene.dropping
-        ? back
-        : entity?.type === 'switch' && scene.moving
-          ? pressProgress(events, cell.p, pressed(game), t, swampSeconds)
-          : scene.progress
-    const passing =
-      entity?.type === 'switch' && scene.moving ? passDip(events, cell.p, t, swampSeconds) : 0
-    const doorDip =
-      entity?.type === 'door' && scene.moving
-        ? Math.max(
-            0,
-            ...switchCells(stage, entity.id).map((p) => passDip(events, p, t, swampSeconds)),
-          )
-        : 0
-    const doorPhase =
-      entity?.type === 'door'
-        ? linkedPhase([...switchCells(stage, entity.id), cell.p], isDoorOpen(game, entity.id))
-        : scene.progress
-    const raised = lerp(liftLevel(scene.before), liftLevel(game), liftPhase)
+    const { raised, device } = deviceAt(cell)
     const crackFall = crumble.fall * TILE.layer
     // 솟거나 재시작으로 내려가는 씨앗 칸은 그 순간 높이
     const seedHere = scene.seedFrame.get(cell.key)
@@ -245,42 +166,6 @@ export const cellLook = ({
       crackFall +
       seedShift * TILE.layer
     const pickedHere = scene.pickedUp?.type === 'pickedUp' && same(scene.pickedUp.at, cell.p)
-    const hadLadder = has(scene.before.ladders, cell.p)
-    const flatLadder = scene.dropping
-      ? has(ladders, cell.p)
-        ? hadLadder
-          ? 1
-          : back
-        : hadLadder
-          ? 1 - back
-          : 0
-      : has(ladders, cell.p)
-        ? 1
-        : pickedHere && hadLadder
-          ? 1 - scene.pickUpPhase
-          : 0
-    const placedOpacity = (l: Point) =>
-      scene.placed?.type === 'placed' && same(scene.placed.ladder, l) ? scene.ownT : 1
-    const sameLeaning = (a: LeaningLadder) => (b: LeaningLadder) =>
-      same(a, b) && a.direction === b.direction
-    const leaning = [
-      ...leaningLadders
-        .filter((l) => same(l, cell.p))
-        .map((l) => {
-          const kept = scene.before.leaningLadders.some(sameLeaning(l))
-          return `${l.direction}:${scene.dropping ? (kept ? 1 : back) : placedOpacity(l)}`
-        }),
-      ...(scene.dropping
-        ? scene.before.leaningLadders
-            .filter((l) => same(l, cell.p) && !leaningLadders.some(sameLeaning(l)))
-            .map((l) => `${l.direction}:${1 - back}`)
-        : []),
-      ...(pickedHere && !scene.dropping
-        ? scene.before.leaningLadders
-            .filter((l) => same(l, cell.p))
-            .map((l) => `${l.direction}:${1 - scene.pickUpPhase}`)
-        : []),
-    ].join('|')
 
     // 상자가 먼저 메운 길 칸은 덩굴이 못 자라 싹 제외
     const vineHere = scene.vineFrame.get(cell.key)
@@ -404,57 +289,16 @@ export const cellLook = ({
         ...whirlLook(stage, cell.p, lane, scene.whirl, scene.iceStone.lanes.get(cell.key) ?? 1),
         lean: leanOf(lane, game, cell.p, scene.whirl),
       },
-      device: {
-        entity: entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null,
-        // 미끄러져 지나칠 때는 눌림 깊이의 절반
-        switchDepth:
-          lerp(pressed(scene.before) ? 2 : 9, pressed(game) ? 2 : 9, switchPhase) - 3.5 * passing,
-        // 지나치는 스위치에 딸린 문은 한 층의 4분의 1
-        doorDepth:
-          lerp(doorDepth(scene.before), doorDepth(game), doorPhase) - (TILE.layer / 4) * doorDip,
-        lift: lift !== undefined,
-        warp: warp !== undefined,
-      },
+      device,
       pit: {
         rail: cell.rail,
         railNext: scene.nextRails.has(cell.key),
         wallLeft: pitShown ? wallHeight(walls, cell.p.x, cell.p.y - 1) : -1,
         wallRight: pitShown ? wallHeight(walls, cell.p.x - 1, cell.p.y) : -1,
       },
-      ladder: {
-        flat: flatLadder,
-        leaning,
-      },
-      vine: {
-        kind: vine?.kind ?? null,
-        enter: vine?.enter ?? null,
-        leave: vine?.leave ?? null,
-        growth: vine?.growth ?? 1,
-        rise: vine?.rise ?? 1,
-        tongue: vine?.tongue ?? 0,
-        sprout: vine?.sprout ?? 0,
-        sproutOpacity: vine?.sproutOpacity ?? 1,
-        hard: vine?.hard ?? 0,
-        knot: vine?.knot ?? 0,
-        opacity: vine?.opacity ?? 1,
-      },
-      seed: {
-        on: has(game.seeds, cell.p)
-          ? 1
-          : pickedHere && has(scene.before.seeds, cell.p)
-            ? 1 - scene.pickUpPhase
-            : 0,
-        land: seedHere?.land ?? 0,
-        stalk: seedHere?.stalk ?? 0,
-        bud: seedHere?.bud ?? 0,
-        leaves: seedHere?.leaves ?? 0,
-        tree: seedHere?.tree ?? 0,
-        treeNext: seedHere?.treeNext ?? 0,
-        treeP: seedHere?.treeP ?? 1,
-        stakes: seedHere?.stakes ?? 0,
-        stakesNext: seedHere?.stakesNext ?? 0,
-        stakeP: seedHere?.stakeP ?? 1,
-      },
+      ladder: ladderLookOf(scene, game, back, cell, pickedHere),
+      vine: vineCellOf(vine),
+      seed: seedCellOf(scene, game, cell, seedHere, pickedHere),
     }
 
     return {

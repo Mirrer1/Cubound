@@ -1,5 +1,5 @@
-import { smooth } from './curveFrame'
-import { boxPath, cellsOf, same, segmentsOf } from './pathFrame'
+import { lerp, smooth } from './curveFrame'
+import { boxPath, cellsOf, has, same, segmentsOf } from './pathFrame'
 import {
   NO_SWAMP,
   SWITCH_SECONDS,
@@ -10,7 +10,8 @@ import {
   sluiceStart,
   touchAt,
 } from './timeFrame'
-import { isLiftRaised } from '@/game/rules'
+import { TILE } from '@/game/iso'
+import { isDoorOpen, isLiftRaised } from '@/game/rules'
 import type { Entity, GameEvent, GameState, Point, Stage } from '@/game/types'
 
 // cells 중 한 칸이 pressed 상태가 되는 시각, 이 이동에서 닿지 않는 칸뿐이면 null
@@ -110,4 +111,94 @@ export const ridePhase = (
         t,
         swamp,
       )
+}
+
+export interface SwitchLook {
+  entity: 'switch' | 'door' | null
+  switchDepth: number
+  doorDepth: number
+  lift: boolean
+  warp: boolean
+}
+
+interface SwitchScene {
+  before: GameState
+  moving: boolean
+  dropping: boolean
+  progress: number
+}
+
+interface SwitchView {
+  stage: Stage
+  game: GameState
+  events: GameEvent[]
+  t: number
+  swampSeconds: SwampTime
+  back: number
+}
+
+export const switchLookOf = (
+  scene: SwitchScene,
+  { stage, game, events, t, swampSeconds, back }: SwitchView,
+) => {
+  // 문과 발판이 움직이기 시작하는 때, 스위치가 눌리거나 풀린 때
+  const linkedPhase = (cells: Point[], pressed: boolean) =>
+    scene.dropping
+      ? back
+      : scene.moving
+        ? switchProgress(events, cells, pressed, t, swampSeconds)
+        : 1
+
+  return (cell: { p: Point }): { raised: number; device: SwitchLook } => {
+    const entity = stage.entities.find((e) => same(e, cell.p))
+    const pressed = (state: GameState) => same(state.player, cell.p) || has(state.boxes, cell.p)
+    const doorDepth = (state: GameState) =>
+      entity?.type === 'door' && isDoorOpen(state, entity.id) ? 0 : TILE.layer
+    // 상자가 얹힌 칸도 찾도록 entity와 따로 보는 발판
+    const lift = stage.entities.find(
+      (e): e is Extract<Entity, { type: 'lift' }> => e.type === 'lift' && same(e, cell.p),
+    )
+    const liftLevel = (state: GameState) =>
+      lift !== undefined && isLiftRaised(state, lift.id) ? 1 : 0
+    const warp = stage.entities.find(
+      (e): e is Extract<Entity, { type: 'warp' }> => e.type === 'warp' && same(e, cell.p),
+    )
+    const liftPhase =
+      lift === undefined ? 1 : linkedPhase(switchCells(stage, lift.id), isLiftRaised(game, lift.id))
+    const switchPhase =
+      entity?.type === 'switch' && scene.dropping
+        ? back
+        : entity?.type === 'switch' && scene.moving
+          ? pressProgress(events, cell.p, pressed(game), t, swampSeconds)
+          : scene.progress
+    const passing =
+      entity?.type === 'switch' && scene.moving ? passDip(events, cell.p, t, swampSeconds) : 0
+    const doorDip =
+      entity?.type === 'door' && scene.moving
+        ? Math.max(
+            0,
+            ...switchCells(stage, entity.id).map((p) => passDip(events, p, t, swampSeconds)),
+          )
+        : 0
+    const doorPhase =
+      entity?.type === 'door'
+        ? linkedPhase([...switchCells(stage, entity.id), cell.p], isDoorOpen(game, entity.id))
+        : scene.progress
+    const raised = lerp(liftLevel(scene.before), liftLevel(game), liftPhase)
+
+    return {
+      raised,
+      device: {
+        entity: entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null,
+        // 미끄러져 지나칠 때는 눌림 깊이의 절반
+        switchDepth:
+          lerp(pressed(scene.before) ? 2 : 9, pressed(game) ? 2 : 9, switchPhase) - 3.5 * passing,
+        // 지나치는 스위치에 딸린 문은 한 층의 4분의 1
+        doorDepth:
+          lerp(doorDepth(scene.before), doorDepth(game), doorPhase) - (TILE.layer / 4) * doorDip,
+        lift: lift !== undefined,
+        warp: warp !== undefined,
+      },
+    }
+  }
 }

@@ -1,10 +1,11 @@
 import { type TopTilt, tiltOnTop } from '../view'
 import type { CubeFrame } from './cubeFrame'
 import { type Chain, clamp01 } from './curveFrame'
+import { has, same } from './pathFrame'
 import { LADDER_SECONDS, NO_SWAMP, type SwampTime, elapsedAt, pickUpAt } from './timeFrame'
 import { windLeaning } from './windFrame'
 import { TILE } from '@/game/iso'
-import type { GameEvent, GameState, Point } from '@/game/types'
+import type { GameEvent, GameState, LeaningLadder, Point } from '@/game/types'
 
 // 구를 때 머리 위 물건의 가장 큰 기울기 라디안, 그 기울기가 풀리는 구르기 몫, 튀어 오르는 높이 px
 const CARRY_LEAN = { max: 0.31, until: 0.6 }
@@ -91,3 +92,66 @@ export const carriedTilt = ({ events, moving, t, swampSeconds, cube, rolling }: 
 // 큐브 윗면보다 2px 위에 그리는 사다리
 export const ladderTilt = (bump: TopTilt | undefined): TopTilt | undefined =>
   bump && ((u, v, z) => bump(u, v, z + 2))
+
+export interface LadderLook {
+  flat: number // 바닥에 놓인 사다리 투명도, 0이면 사다리 없는 칸
+  leaning: string // "방향:투명도"를 |로 이은 값
+}
+
+interface LadderScene {
+  before: GameState
+  dropping: boolean
+  placed: GameEvent | undefined
+  ownT: number
+  pickUpPhase: number
+}
+
+export const ladderLookOf = (
+  scene: LadderScene,
+  { ladders, leaningLadders }: Pick<GameState, 'ladders' | 'leaningLadders'>,
+  back: number,
+  cell: { p: Point },
+  pickedHere: boolean,
+): LadderLook => {
+  const hadLadder = has(scene.before.ladders, cell.p)
+  const flatLadder = scene.dropping
+    ? has(ladders, cell.p)
+      ? hadLadder
+        ? 1
+        : back
+      : hadLadder
+        ? 1 - back
+        : 0
+    : has(ladders, cell.p)
+      ? 1
+      : pickedHere && hadLadder
+        ? 1 - scene.pickUpPhase
+        : 0
+  const placedOpacity = (l: Point) =>
+    scene.placed?.type === 'placed' && same(scene.placed.ladder, l) ? scene.ownT : 1
+  const sameLeaning = (a: LeaningLadder) => (b: LeaningLadder) =>
+    same(a, b) && a.direction === b.direction
+  const leaning = [
+    ...leaningLadders
+      .filter((l) => same(l, cell.p))
+      .map((l) => {
+        const kept = scene.before.leaningLadders.some(sameLeaning(l))
+        return `${l.direction}:${scene.dropping ? (kept ? 1 : back) : placedOpacity(l)}`
+      }),
+    ...(scene.dropping
+      ? scene.before.leaningLadders
+          .filter((l) => same(l, cell.p) && !leaningLadders.some(sameLeaning(l)))
+          .map((l) => `${l.direction}:${1 - back}`)
+      : []),
+    ...(pickedHere && !scene.dropping
+      ? scene.before.leaningLadders
+          .filter((l) => same(l, cell.p))
+          .map((l) => `${l.direction}:${1 - scene.pickUpPhase}`)
+      : []),
+  ].join('|')
+
+  return {
+    flat: flatLadder,
+    leaning,
+  }
+}

@@ -1,7 +1,7 @@
 import { type TopTilt, tiltOnTop } from '../view'
 import type { CubeFrame } from './cubeFrame'
 import { clamp01, lerp } from './curveFrame'
-import { same } from './pathFrame'
+import { has, same } from './pathFrame'
 import { NO_SWAMP, type SwampTime, riseProgress, stepProgress } from './timeFrame'
 import { ownProgress } from './windFrame'
 import { TILE, isoDelta } from '@/game/iso'
@@ -201,3 +201,46 @@ export const seedFrames = (
     }),
   )
 }
+
+export interface SeedCell {
+  on: number // 바닥에 놓인 씨앗 투명도, 0이면 씨앗 없는 칸
+  land: number // 씨앗으로 솟은 볏짚빛 층 수
+  stalk: number // 보스 기둥 줄기 층 수, 0이면 기둥 없는 칸
+  bud: number // 보스 기둥 봉오리가 돋은 정도 0~1
+  leaves: number // 솟은 땅에 남은 잎이 드러난 정도 0~1
+  tree: number // 사라지는 나무 단계, 0이면 나무 없는 칸
+  treeNext: number // 들어서는 나무 단계, 0이면 나무 없는 칸
+  treeP: number
+  stakes: number // 사라지는 말뚝 수
+  stakesNext: number // 들어서는 말뚝 수
+  stakeP: number
+}
+
+interface SeedScene {
+  before: GameState
+  pickUpPhase: number
+}
+
+export const seedCellOf = (
+  scene: SeedScene,
+  game: Pick<GameState, 'seeds'>,
+  cell: { p: Point },
+  seedHere: SeedFrame | undefined,
+  pickedHere: boolean,
+): SeedCell => ({
+  on: has(game.seeds, cell.p)
+    ? 1
+    : pickedHere && has(scene.before.seeds, cell.p)
+      ? 1 - scene.pickUpPhase
+      : 0,
+  land: seedHere?.land ?? 0,
+  stalk: seedHere?.stalk ?? 0,
+  bud: seedHere?.bud ?? 0,
+  leaves: seedHere?.leaves ?? 0,
+  tree: seedHere?.tree ?? 0,
+  treeNext: seedHere?.treeNext ?? 0,
+  treeP: seedHere?.treeP ?? 1,
+  stakes: seedHere?.stakes ?? 0,
+  stakesNext: seedHere?.stakesNext ?? 0,
+  stakeP: seedHere?.stakeP ?? 1,
+})
