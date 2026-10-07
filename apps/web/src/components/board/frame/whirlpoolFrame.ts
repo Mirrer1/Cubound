@@ -4,9 +4,9 @@ import { has, same } from './pathFrame'
 import {
   NO_SWAMP,
   PLUG,
+  PULL_SECONDS,
   type SwampTime,
   elapsedAt,
-  moveSeconds,
   plugStart,
   pullStart,
 } from './timeFrame'
@@ -63,17 +63,16 @@ const levelAt = (view: WhirlView, p: { x: number; y: number }) => {
 const surfaceY = (view: WhirlView, p: { x: number; y: number }) =>
   toScreen(p, levelAt(view, p)).y + WATER.lip
 
-// 한 칸 끌려가는 배, 출발한 뒤 그 수가 끝날 때까지 미끄러지듯 가는 자리
+// 한 칸 끌려가는 배, 출발한 뒤 끌림 시간 동안 미끄러지듯 가는 자리
 // 이 수에 밀어 띄운 상자는 다 뜰 때까지 상자 연출 몫이라 투명
 const pulledFrame = (view: WhirlView, event: Pulled): WhirlBoxFrame => {
   const { game, events, t } = view
   const swamp = view.swamp ?? NO_SWAMP
   const start = pullStart(events)
-  const end = moveSeconds(events, swamp)
   const elapsed = elapsedAt(events, swamp, t)
   const floating = events.some((e) => e.type === 'pushed' && same(e.to, event.from))
 
-  const p = clamp01((elapsed - start) / Math.max(end - start, 1e-6))
+  const p = clamp01((elapsed - start) / PULL_SECONDS)
   const at = {
     x: lerp(event.from.x, event.to.x, smooth(p)),
     y: lerp(event.from.y, event.to.y, smooth(p)),

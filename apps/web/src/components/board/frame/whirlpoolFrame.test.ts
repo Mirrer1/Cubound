@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { pullLanes } from '../view'
 import { same } from './pathFrame'
 import { PLUG_STAGE, WHIRL_STAGE, lastMove } from './testStages'
-import { PLUG } from './timeFrame'
+import { PLUG, PULL_SECONDS, durationOf, pullStart } from './timeFrame'
 import { PULL_DIP, leanOf, plugPhase, pulledBeside, whirlFrames, whirlLook } from './whirlpoolFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { createState, move } from '@/game/rules'
@@ -31,6 +31,27 @@ describe('whirlFrames 끌린 배', () => {
     expect(near.wake[0].opacity).toBeGreaterThan(near.wake[2].opacity)
     expect(near.cell).toEqual({ x: 3, y: 1 })
     expect(far.to).toEqual({ x: 3, y: 1 })
+  })
+
+  it('큐브가 얼음에서 길게 미끄러지는 수에도 끌린 배는 걷는 수와 같은 빠르기로 간다', () => {
+    const slide: Stage = {
+      ...WHIRL_STAGE,
+      ice: ['.......', '.......', '.......', '.######'],
+      start: { x: 6, y: 3 },
+    }
+    const { prev, game, events } = lastMove(slide, ['left'])
+    const at = (seconds: number) =>
+      whirlFrames({
+        before: prev,
+        game,
+        events,
+        t: seconds / durationOf(events),
+        moving: true,
+        dropping: false,
+      }).boxes[0]
+
+    expect(durationOf(events)).toBeGreaterThan(PULL_SECONDS * 2)
+    expect(at(pullStart(events) + PULL_SECONDS / 2).x).toBeCloseTo(toScreen({ x: 2.5, y: 1 }, 0).x)
   })
 
   it('출발과 도착에서는 잠기지 않고 꼬리도 없다', () => {
