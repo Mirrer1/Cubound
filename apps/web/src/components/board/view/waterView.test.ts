@@ -124,16 +124,15 @@ describe('rippleCycle', () => {
 })
 
 describe('rippleLoop', () => {
-  it('한 바퀴 중 처음 life 동안만 보이고 안쪽 판은 테 폭만큼 작게 시작한다', () => {
-    const [start, end] = rippleLoop(10000, false)
-    const [inset] = rippleLoop(10000, true)
-    const { from, to, width } = IDLE_RIPPLE
+  it('한 바퀴 중 처음 life 동안만 보이고 작게 시작해 다 퍼진다', () => {
+    const [start, end] = rippleLoop(10000)
+    const { from, to } = IDLE_RIPPLE
 
     expect(start.opacity).toBe(0.9)
     expect(end.offset).toBeCloseTo(IDLE_RIPPLE.life / 10000)
     expect(end.opacity).toBe(0)
     expect(start.transform).toBe(`scale(${from / to})`)
-    expect(inset.transform).toBe(`scale(${(from - width) / (to - width)})`)
+    expect(end.transform).toBe('scale(1)')
   })
 })
 

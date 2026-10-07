@@ -284,8 +284,6 @@ const BoardCell = ({
                   sideRight={water.sideRight}
                   ring={water.ring}
                   ringOpacity={water.ringOpacity}
-                  idle={water.idle}
-                  idleCycle={water.idleCycle}
                   range={tether.range}
                 />
               </g>
@@ -334,6 +332,18 @@ const BoardCell = ({
             )}
             {whirl.eye > 0 && (
               <BoardWhirlpool part="eye" x={x} y={y} depth={water.depth} opacity={whirl.eye} />
+            )}
+            {surfaceRise(water.depth) > 0 && water.idle >= 0 && (
+              <g opacity={surfaceShown(water.depth)}>
+                <BoardWater
+                  part="ripple"
+                  x={x}
+                  y={y}
+                  depth={water.depth}
+                  idle={water.idle}
+                  idleCycle={water.idleCycle}
+                />
+              </g>
             )}
             {iceStone.cover > 0 && (
               <>

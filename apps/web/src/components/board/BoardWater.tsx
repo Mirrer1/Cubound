@@ -20,6 +20,9 @@ const RING_WIDTH = 0.07
 
 const REFLECT = { fill: 'var(--color-water-reflect)' }
 
+// 잔물결 테 두께 px, 칸 폭 배수 테 폭을 비스듬한 변에 수직으로 잰 값
+const RIPPLE_STROKE = ((TILE.width * IDLE_RIPPLE.width) / 2) * Math.sin(Math.atan(0.5))
+
 type BoardWaterProps =
   | {
       part: 'surface'
@@ -32,9 +35,15 @@ type BoardWaterProps =
       sideRight: boolean
       ring: number // 퍼지는 고리 크기, 0이면 고리 없음
       ringOpacity: number
+      range: number // 갈 수 있는 범위 칸의 큐브가 탄 정도, -1이면 범위 밖
+    }
+  | {
+      part: 'ripple'
+      x: number
+      y: number // 물 바닥 칸 윗면 중심
+      depth: number // 물 깊이 층 수
       idle: number // 잔물결 차례, -1이면 안 이는 칸
       idleCycle: number // 한 칸의 잔물결 한 바퀴 ms
-      range: number // 갈 수 있는 범위 칸의 큐브가 탄 정도, -1이면 범위 밖
     }
   | {
       part: 'box'
@@ -45,22 +54,33 @@ type BoardWaterProps =
 
 const BoardWater = (props: BoardWaterProps) => {
   const { x } = props
-  const rise = props.part === 'surface' ? surfaceRise(props.depth) : 0
+  const rise = props.part === 'box' ? 0 : surfaceRise(props.depth)
   const surface = props.y - rise
   const tone = props.part === 'surface' ? waterTone(props.depth) : ''
-  const idle = props.part === 'surface' ? props.idle : -1
-  const cycle = props.part === 'surface' ? props.idleCycle : IDLE_RIPPLE.life * 2
-  const outer = useMemo(() => rippleLoop(cycle, false), [cycle])
-  const inner = useMemo(() => rippleLoop(cycle, true), [cycle])
-  const delay = Math.max(0, idle) * IDLE_RIPPLE.gap
-  const outerRipple = useLoop(outer, cycle, delay)
-  const innerRipple = useLoop(inner, cycle, delay)
+  const idle = props.part === 'ripple' ? props.idle : -1
+  const cycle = props.part === 'ripple' ? props.idleCycle : IDLE_RIPPLE.life * 2
+  const keyframes = useMemo(() => rippleLoop(cycle), [cycle])
+  const ripple = useLoop(keyframes, cycle, Math.max(0, idle) * IDLE_RIPPLE.gap)
   const spot = isoDelta(IDLE_RIPPLE.at.u, IDLE_RIPPLE.at.v)
   const rx = x + spot.x
   const ry = surface + spot.y
-  const origin = { transformOrigin: `${rx}px ${ry}px` }
 
-  return props.part === 'box' ? (
+  return props.part === 'ripple' ? (
+    <>
+      {idle >= 0 && (
+        <polygon
+          ref={ripple}
+          opacity={0}
+          points={blockFaces(rx, ry, TILE.width * (IDLE_RIPPLE.to - IDLE_RIPPLE.width / 2), 0).top}
+          fill="none"
+          stroke="var(--color-water-reflect)"
+          strokeWidth={RIPPLE_STROKE}
+          vectorEffect="non-scaling-stroke"
+          style={{ transformOrigin: `${rx}px ${ry}px` }}
+        />
+      )}
+    </>
+  ) : props.part === 'box' ? (
     <>
       {props.shown < TILE.layer && (
         <polygon
@@ -96,22 +116,6 @@ const BoardWater = (props: BoardWaterProps) => {
         <polygon points={bankPoints(x, surface, 'y')} style={REFLECT} opacity={props.bankY} />
       )}
       {props.range >= 0 && <BoardTether part="range" x={x} y={surface} active={props.range} />}
-      {idle >= 0 && (
-        <>
-          <polygon
-            ref={outerRipple}
-            opacity={0}
-            points={blockFaces(rx, ry, TILE.width * IDLE_RIPPLE.to, 0).top}
-            style={{ ...REFLECT, ...origin }}
-          />
-          <polygon
-            ref={innerRipple}
-            opacity={0}
-            points={blockFaces(rx, ry, TILE.width * (IDLE_RIPPLE.to - IDLE_RIPPLE.width), 0).top}
-            style={{ fill: tone, ...origin }}
-          />
-        </>
-      )}
       {props.ring > 0 && (
         <g opacity={props.ringOpacity}>
           <polygon

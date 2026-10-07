@@ -142,13 +142,11 @@ export const idleRipples = (stage: Stage, waterAt = stillWater(stage)) => {
 export const rippleCycle = (cells: number) =>
   Math.max(cells * IDLE_RIPPLE.gap, IDLE_RIPPLE.life * 2)
 
-// 잔물결 한 바퀴, 처음 life 동안만 퍼지며 옅어지는 판, inset은 테 폭만큼 작은 안쪽 판
-// 바깥과 안쪽이 같은 크기만큼 자라 테 폭이 늘 같은 고리, 작을 때는 거의 꽉 찬 면
-export const rippleLoop = (cycle: number, inset: boolean): Keyframe[] => {
-  const { from, to, width } = IDLE_RIPPLE
-  const start = inset ? (from - width) / (to - width) : from / to
+// 잔물결 한 바퀴, 처음 life 동안만 퍼지며 옅어지는 고리
+export const rippleLoop = (cycle: number): Keyframe[] => {
+  const { from, to } = IDLE_RIPPLE
   return [
-    { opacity: 0.9, transform: `scale(${start})`, easing: 'ease-out' },
+    { opacity: 0.9, transform: `scale(${from / to})`, easing: 'ease-out' },
     { offset: IDLE_RIPPLE.life / cycle, opacity: 0, transform: 'scale(1)' },
     { opacity: 0, transform: 'scale(1)' },
   ]
