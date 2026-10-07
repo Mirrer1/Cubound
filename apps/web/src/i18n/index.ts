@@ -48,6 +48,9 @@ export const worldTextKey = (world: number) => `world.${world}` as TextKey
 
 export const worldNoteKey = (world: number) => `world.${world}.note` as TextKey
 
+// 월드 설명을 한 줄에 한 문장씩 그리는 문장 단위
+export const sentencesOf = (text: string) => text.split(/(?<=[.。!?！？])\s*/).filter(Boolean)
+
 export const chapterTextKey = (chapter: number) => `chapter.${chapter}` as TextKey
 
 export const isLanguage = (value: unknown): value is Language =>

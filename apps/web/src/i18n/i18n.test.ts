@@ -8,6 +8,7 @@ import {
   guideText,
   isLanguage,
   languageFrom,
+  sentencesOf,
   text,
   worldNoteKey,
 } from '.'
@@ -70,6 +71,20 @@ describe('사전', () => {
     const missing = Object.keys(en).filter((key) => !(key in DICTIONARIES[code as Language]))
 
     expect(missing).toEqual([])
+  })
+})
+
+describe('sentencesOf', () => {
+  it('문장 끝에서 나눈다', () => {
+    expect(sentencesOf('얼음은 물에 떠요. 길은 이어져요.')).toEqual([
+      '얼음은 물에 떠요.',
+      '길은 이어져요.',
+    ])
+    expect(sentencesOf('氷は浮きます。道は続きます。')).toEqual([
+      '氷は浮きます。',
+      '道は続きます。',
+    ])
+    expect(sentencesOf('한 문장')).toEqual(['한 문장'])
   })
 })
 

@@ -7,7 +7,7 @@ import ChapterTab from '@/components/ui/ChapterTab'
 import StageCard, { type StageCardState } from '@/components/ui/StageCard'
 import { isUnlocked, isWorldUnlocked, totalStars } from '@/game/progress'
 import { useText } from '@/hooks/useText'
-import { chapterTextKey, worldNoteKey, worldTextKey } from '@/i18n'
+import { chapterTextKey, sentencesOf, worldNoteKey, worldTextKey } from '@/i18n'
 import { localWorldStorage } from '@/platform/storage'
 import { goTo, showingAll } from '@/routes/route'
 import {
@@ -205,7 +205,11 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
             </Button>
           </span>
           <span className="hidden text-sm break-keep text-mute min-[1700px]:order-2 min-[1700px]:block">
-            {t(worldNoteKey(world))}
+            {sentencesOf(t(worldNoteKey(world))).map((sentence) => (
+              <span key={sentence} className="block">
+                {sentence}
+              </span>
+            ))}
           </span>
         </header>
         {/* 장 고르기 카드는 ← 아래 장 덩이부터 화살표까지와 같은 높이 */}
