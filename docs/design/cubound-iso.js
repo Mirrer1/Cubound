@@ -63,7 +63,7 @@
     const c = corners(cx, cy, 1), s = FL ? { l: FL.l, r: FL.r } : side(C.a), out = [];
     if (o.nw !== 'p') out.push(wallDown(c.W, c.N, (typeof o.nw === 'number' ? o.nw : 0) * LV, D, s.r));
     if (o.ne !== 'p') out.push(wallDown(c.N, c.E, (typeof o.ne === 'number' ? o.ne : 0) * LV, D, s.l));
-    out.push(plate(cx, cy + D, 1, C.pitFloor));
+    out.push(plate(cx, cy + D, 1, (FL && FL.pit) || C.pitFloor));
     if (o.fl) out.push(wallDown(c.W, c.S, 0, D, s.l));
     if (o.fr) out.push(wallDown(c.S, c.E, 0, D, s.r));
     return out;
@@ -538,8 +538,152 @@
     return out;
   };
 
+  // ---------- CHAPTER 4 · fire ----------
+  // world palettes: CHAPTER 2 (C) oklch lightness per value, hue 55 (warm ash, between rose and CHAPTER 1's yellow-grey), chroma ×0.65 / ×1 / ×1.3
+  const lin = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  const gam = c => { c = c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055; return Math.round(Math.min(1, Math.max(0, c)) * 255); };
+  const hexOk = h => {
+    const r = lin(parseInt(h.slice(1, 3), 16)), g = lin(parseInt(h.slice(3, 5), 16)), b = lin(parseInt(h.slice(5, 7), 16));
+    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    const A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+    return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, Math.hypot(A, B)];
+  };
+  const okHex = (L, Cc, H) => {
+    const A = Cc * Math.cos(H * Math.PI / 180), B = Cc * Math.sin(H * Math.PI / 180);
+    const l = Math.pow(L + 0.3963377774 * A + 0.2158037573 * B, 3), m = Math.pow(L - 0.1055613458 * A - 0.0638541728 * B, 3), s = Math.pow(L - 0.0894841775 * A - 1.2914855480 * B, 3);
+    return '#' + [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s].map(v => gam(v).toString(16).padStart(2, '0')).join('').toUpperCase();
+  };
+  const CH2C = { bg: '#E2E6DB', panel: '#EDF0E7', card: '#F4F6EE', locked: '#E7EAE0', hover: '#E6E9DF', a: '#EAEBE0', b: '#E2E5DA', l: '#BFC1B4', r: '#D2D4C8', pit: '#A6A89B' };
+  const CH4 = {};
+  // amber: same chroma as mid, hue 72 (amber / ember orange), away from mid's rose (55) and short of CHAPTER 1's yellow-grey (~85, far lower chroma)
+  [['light', 0.65, 55], ['mid', 1, 55], ['more', 1.3, 55], ['amber', 1, 72]].forEach(([n, f, hu]) => { CH4[n] = {}; for (const k in CH2C) { const q = hexOk(CH2C[k]); CH4[n][k] = okHex(q[0], q[1] * f, hu); } });
+  // char (burnt wood, warm black), heat (glowing), ash, stove stone, flame
+  // char: burnt log, one step lighter grey-brown. ring = end-grain ring / log highlight, split = bark cracks
+  const CHAR = { t: '#7A6D61', g: '#5A4F46', l: '#5E544A', r: '#6C6156', ring: '#6E6155', hi: '#8C7E70' };
+  // heat: ember glow (campfire orange → yellow), no red
+  const HEAT = { t: '#A3694A', l: '#7C4F39', r: '#8F5C42', crack: '#F08C3A', hot: '#F8B04C', core: '#FCDD86', ring: '#C77A45', hi: '#D98E4E' };
+  const ASH = { t: '#C4BDB4', l: '#9C958C', r: '#B0A9A0' };
+  const STOVE = { t: '#A9A39B', l: '#7D776F', r: '#928C84', coal: '#3C3632', bed: '#CFC8BF' };
+  const FLAME = { o: '#EE8A36', m: '#F6AE45', i: '#FBDC7E' };
+  const FLAME_B = { o: '#F49A3C', m: '#F9C255', i: '#FEEDA6' };
+  // cube fire strength 4 → 1: smaller and duller (core fades out first)
+  const FL_N = { 4: FLAME, 3: { o: '#EE8A36', m: '#F4A84A', i: '#F8CB76' }, 2: { o: '#E68F4C', m: '#EFAA5E', i: '#EFAA5E' }, 1: { o: '#D9976A', m: '#E4AC82', i: '#E4AC82' } };
+  const GLOW_N = { 4: HEAT.core, 3: HEAT.hot, 2: HEAT.crack, 1: '#D9976A' };
+  // lean: tip shifts sideways by lean × height (rolling cube: flames trail, still burn upward)
+  const tongue = (x, y, w, h, pal, lean) => {
+    const L = lean || 0;
+    const f = (W, H, c) => sh(P([[x - W / 2, y - H * 0.2, 0.2], [x - W * 0.36, y - H * 0.58, 0.58], [x - W * 0.06, y - H, 1], [x + W * 0.22, y - H * 0.64, 0.64], [x + W / 2, y - H * 0.24, 0.24], [x + W * 0.26, y, 0], [x - W * 0.26, y, 0]].map(q => [q[0] + L * H * q[2], q[1]])), c);
+    return [f(w, h, pal.o), f(w * 0.66, h * 0.7, pal.m), f(w * 0.34, h * 0.42, pal.i)];
+  };
+  // tongues on the plane at height z: list of [u, v, h]; all stay under one level (30px)
+  const fire = (cx, cy, z, list, pal, wk, lean) => {
+    const out = [];
+    list.slice().sort((a, b) => (a[0] + a[1]) - (b[0] + b[1])).forEach(([u, v, h]) => { const p = pt(cx, cy, u, v, z); out.push(...tongue(p[0], p[1], h * 0.7 * (wk || 1), h, pal || FLAME, lean)); });
+    return out;
+  };
+  const spark = (x, y, s, f) => sh(P([[x, y - s], [x + s * 0.7, y], [x, y + s], [x - s * 0.7, y]]), f);
+  // light instead of flames. ph = flicker phase 0 / 1 / 2 → glow × 1 / 0.8 / 0.92 (one cycle 2.4s). sparks rise 10px and fade over 1.6s, a new one every ~0.9s
+  const PH = [1, 0.8, 0.92];
+  const pool = (cx, cy, z, s, o, f) => [[1, 0.35], [0.74, 0.6], [0.5, 1]].map(([k, a]) => plate(cx, cy - z, s * k, f || HEAT.hot, o * a));
+  const SPK = [[-0.14, -0.08, 0], [0.12, -0.16, 1], [0.04, 0.12, 2], [-0.22, 0.14, 1], [0.24, 0.04, 0], [-0.04, -0.26, 2], [0.2, -0.3, 1], [-0.28, -0.02, 0]];
+  const riseSparks = (cx, cy, z, k, top, ph) => SPK.slice(0, k).map(([u, v, j], i) => { const t = ((j + (ph || 0)) % 3) / 3, p = pt(cx, cy, u, v, z + 3 + t * top); return Object.assign(spark(p[0], p[1], i % 2 ? 1.2 : 1.5, i % 2 ? HEAT.hot : HEAT.core), { o: 1 - t * 0.6 }); });
+  // wall = a low char pile (0.8 of the tile, 22px, under one level): a wide base lump + two smaller lumps on top.
+  // bridge = two split logs lying side by side, told apart by tone only (no drawn lines).
+  // heat 0 → 0.5 → 1: every face blends from char toward ember; upper faces lead (they warm first). no cracks.
+  const PILE = [[[0, 0, 0.8, 0, 13], [-0.13, -0.1, 0.46, 13, 9], [0.17, 0.13, 0.3, 13, 6]], [[0, 0, 0.8, 0, 13], [0.1, -0.14, 0.46, 13, 9], [-0.15, 0.15, 0.3, 13, 6]]];
+  const charTone = t => ({ t: mix(CHAR.t, HEAT.t, t), l: mix(CHAR.l, HEAT.l, t), r: mix(CHAR.r, HEAT.r, t), hi: mix(CHAR.hi, HEAT.hot, t * 0.85), lo: mix(mix(CHAR.t, CHAR.l, 0.45), HEAT.ring, t) });
+  const charLog = (cx, cy, par, heat, isP, G) => {
+    G = G || 1;
+    const k = charTone(heat), out = [];
+    if (!isP) {
+      PILE[par ? 1 : 0].forEach(([u, v, s, z, h], i) => { const p = pt(cx, cy, u, v); out.push(...block(p[0], p[1], s, z, h, i ? k.hi : k.t, k.l, k.r)); });
+      if (heat >= 1) PILE[par ? 1 : 0].forEach(([u, v, s, z, h]) => { const p = pt(cx, cy, u, v, z + h); out.push(plate(p[0], p[1], s * 0.62, HEAT.hot, 0.75 * G), plate(p[0], p[1], s * 0.34, HEAT.core, 0.85 * G)); });
+      return out;
+    }
+    out.push(...prism(cx, cy, 1, TK, k.lo, k.l, k.r));
+    [[-0.5, -0.02], [0.02, 0.5]].forEach(([v0, v1], i) => { const vc = (v0 + v1) / 2; out.push(uvq(cx, cy, -0.5, 0.5, v0 + 0.01, v1 - 0.01, k.t), uvq(cx, cy, -0.5, 0.5, vc - 0.09, vc + 0.04, (i + (par ? 1 : 0)) % 2 ? k.hi : mix(k.t, k.hi, 0.5)));
+      const E = Array.from({ length: 14 }, (_, n) => { const a = n / 14 * Math.PI * 2, p = pt(cx, cy, 0.5, vc + 0.2 * Math.cos(a)); return [p[0], p[1] + TK * 0.5 + TK * 0.32 * Math.sin(a)]; });
+      out.push(sh(P(E), mix(k.r, k.hi, 0.45)));
+      if (heat >= 1) out.push(Object.assign(uvq(cx, cy, -0.42, 0.42, vc - 0.11, vc + 0.06, HEAT.hot), { o: 0.7 * G }), Object.assign(uvq(cx, cy, -0.3, 0.3, vc - 0.07, vc + 0.02, HEAT.core), { o: 0.8 * G })); });
+    return out;
+  };
+  const lumps = (cx, ty, list) => {
+    const out = [];
+    list.slice().sort((a, b) => (a[0] + a[1]) - (b[0] + b[1])).forEach(([u, v, s, h, e]) => {
+      const p = pt(cx, ty, u, v);
+      out.push(...block(p[0], p[1], s, 0, h, e ? HEAT.t : ASH.t, e ? HEAT.l : ASH.l, e ? HEAT.r : ASH.r));
+      if (e) out.push(plate(p[0], p[1] - h, s * 0.42, HEAT.hot, 0.55));
+    });
+    return out;
+  };
+  const BRIDGE_F = [[-0.2, -0.14, 16], [0.17, -0.1, 13], [-0.02, 0.16, 14], [0.22, 0.2, 10]];
+  const BRIDGE_FB = [[-0.22, -0.16, 28], [0.18, -0.12, 24], [-0.04, 0.14, 26], [0.24, 0.2, 19], [-0.26, 0.24, 17], [0.02, -0.3, 21], [0.3, -0.28, 15]];
+  // wall (one level, on the ground) or bridge (16px slab over a pit). st: cold | warm | burn | held | crumble | gone | ghost (o = opacity)
+  const charCell = (cx, cy, cd, par, isP) => {
+    const st = cd.st || 'cold', out = [];
+    if (st === 'gone') { out.push(isP ? plate(cx, cy + D, 0.5, mix((FL && FL.pit) || C.pitFloor, ASH.t, 0.4)) : plate(cx, cy, 0.5, mix(FL ? (par ? FL.b : FL.a) : C.a, ASH.t, 0.4))); return out; }
+    if (st === 'crumble') {
+      if (isP) out.push(...lumps(cx, cy + 12, [[-0.22, -0.2, 0.42, 8, 1], [0.2, -0.06, 0.38, 7, 0], [-0.08, 0.24, 0.32, 6, 0]]));
+      else { out.push(plate(cx, cy, 0.72, mix(FL ? (par ? FL.b : FL.a) : C.a, ASH.t, 0.55))); out.push(...lumps(cx, cy, [[-0.15, -0.12, 0.34, 10, 1], [0.17, -0.08, 0.28, 7, 0], [-0.04, 0.18, 0.28, 5, 1], [0.2, 0.2, 0.18, 4, 0]])); }
+      return out;
+    }
+    const heat = { cold: 0, ghost: 0, warm: 0.5, held: 0.5, burn: 1 }[st] || 0;
+    const G = PH[cd.ph || 0] * (cd.boss ? 1.25 : 1);
+    if (st === 'burn') out.push(...pool(cx, isP ? cy : cy, 0, cd.boss ? 1.75 : 1.35, (cd.boss ? 0.2 : 0.13) * G));
+    let s = charLog(cx, cy, par, heat, isP, Math.min(1, G));
+    if (st === 'ghost') s = s.map(q => Object.assign({}, q, { o: cd.o === undefined ? 0.5 : cd.o }));
+    out.push(...s);
+    if (st === 'burn') { const z = isP ? 0 : 22; if (cd.boss) out.push(...pool(cx, cy, z, 0.7, 0.35 * G, HEAT.core)); out.push(...riseSparks(cx, cy, z, cd.boss ? 7 : isP ? 2 : 2, cd.boss ? 20 : 12, cd.ph)); }
+    return out;
+  };
+  // ember tile (불씨 칸): flush with the floor, an ash bed with one coal. on = bed glows, low flame (12px)
+  const emberTile = (cx, cy, on) => {
+    const out = [plate(cx, cy, 0.6, STOVE.t), plate(cx, cy, 0.48, on ? HEAT.crack : STOVE.bed)];
+    if (on) out.push(plate(cx, cy, 0.34, HEAT.hot));
+    out.push(...block(cx, cy, 0.2, 0, 4, on ? HEAT.core : CHAR.t, on ? HEAT.crack : CHAR.l, on ? HEAT.hot : CHAR.r));
+    if (on) out.push(...pool(cx, cy, 0, 1.05, 0.1), plate(cx, cy - 4, 0.12, HEAT.core, 0.9), ...riseSparks(cx, cy, 4, 1, 9));
+    return out;
+  };
+  // cube heat: no flame shapes. a warm glow laid over / around the cube; the cube faces keep their colour.
+  // strength 4 → 1 = glow opacity and spread. under = drawn before the cube, over = after.
+  const CA = CS / 2, CI = { 4: 1, 3: 0.78, 2: 0.58, 1: 0.38 };
+  const silo = (cx, cy, zb, g) => { const A = CA, c = pt(cx, cy, 0, 0, zb + LV / 2), f = 1 + g / 30;
+    return P([pt(cx, cy, -A, -A, zb + LV), pt(cx, cy, A, -A, zb + LV), pt(cx, cy, A, -A, zb), pt(cx, cy, A, A, zb), pt(cx, cy, -A, A, zb), pt(cx, cy, -A, A, zb + LV)].map(p => [c[0] + (p[0] - c[0]) * f, c[1] + (p[1] - c[1]) * f])); };
+  const tint = (cx, cy, z, f, o) => Object.assign(uvq(cx, cy, -CA, CA, -CA, CA, f, z), { o });
+  // cube holding embers: thin warm light laid over the faces, no halo outside the cube. I = strength; ph 1 at FIRE 1 = flicker dip (× 0.45, 0.8s)
+  const band = (cx, cy, face, z0, z1, f, o) => { const A = CA, Q = face === 'l' ? [[-A, A], [A, A]] : [[A, A], [A, -A]];
+    return Object.assign(sh(P([pt(cx, cy, Q[0][0], Q[0][1], z0), pt(cx, cy, Q[1][0], Q[1][1], z0), pt(cx, cy, Q[1][0], Q[1][1], z1), pt(cx, cy, Q[0][0], Q[0][1], z1)]), f), { o }); };
+  const cubeGlow = (cx, cy, zb, n, mode, lean, ph) => {
+    const I0 = CI[n], under = [], over = []; if (!I0) return { under, over };
+    const I = I0 * (ph ? 0.45 : 1), zt = zb + LV;
+    const lift = (fr, o) => ['l', 'r'].forEach(f => [[1, 0.35], [0.62, 0.6], [0.32, 1]].forEach(([k, a]) => over.push(band(cx, cy, f, zb, zb + LV * fr * k, HEAT.hot, o * a * I))));
+    const one = z => { if (n < 3 || ph) return; const p = pt(cx, cy, 0.04, -0.06, zt + z); over.push(spark(p[0] + (lean || 0) * z, p[1], 1.4, HEAT.core)); };
+    if (mode === 'under') { under.push(...pool(cx, cy, zb, 0.62 + 0.3 * I, 0.22 * I)); lift(0.55, 0.42); one(9); }
+    else if (mode === 'pool') { under.push(...pool(cx, cy, zb, 0.68 + 0.42 * I, 0.3 * I)); ['l', 'r'].forEach(f => over.push(band(cx, cy, f, zb, zb + 4, HEAT.hot, 0.35 * I))); one(9); }
+    else { under.push(...pool(cx, cy, zb, 0.6 + 0.2 * I, 0.14 * I)); lift(0.3, 0.3); const p = pt(cx, cy, 0, 0, zt); over.push(plate(p[0], p[1], CS * 0.62, HEAT.hot, 0.32 * I), plate(p[0], p[1], CS * 0.32, HEAT.core, 0.45 * I)); one(7); }
+    return { under, over };
+  };
+  const numTag = (cx, y, n) => [sh(P([[cx - 11, y - 17], [cx + 11, y - 17], [cx + 11, y + 3], [cx - 11, y + 3]]), '#3A3936'), { d: n0(cx) + ',' + n0(y - 2), txt: String(n), fs: 14, f: '#F7F6F4', o: 1 }];
+  const n0 = v => Math.round(v * 10) / 10;
+  // brazier (화로): raised stone bowl (8px) of coals, always burning (tongues to 28px). rider: the flame moves onto the cube
+  const brazier = (cx, cy, rider) => {
+    const out = block(cx, cy, 0.8, 0, 8, STOVE.t, STOVE.l, STOVE.r);
+    const pre = pool(cx, cy, 0, 1.6, 0.16);
+    out.unshift(...pre);
+    out.push(plate(cx, cy - 8, 0.66, STOVE.coal), ...[[-0.14, -0.1, 0.26], [0.13, -0.06, 0.24], [-0.04, 0.14, 0.22], [0.12, 0.16, 0.16], [-0.18, 0.08, 0.14]].map(([u, v, s]) => { const p = pt(cx, cy, u, v, 9); return plate(p[0], p[1], s, HEAT.hot); }), ...[[-0.14, -0.1, 0.13], [0.13, -0.06, 0.12], [-0.04, 0.14, 0.1]].map(([u, v, s]) => { const p = pt(cx, cy, u, v, 9.5); return plate(p[0], p[1], s, HEAT.core); }), ...pool(cx, cy, 9, 0.62, 0.3, HEAT.core));
+    if (!rider) out.push(...riseSparks(cx, cy, 9, 4, 17));
+    else { const g = cubeGlow(cx, cy, 8, 4, 'under'); out.push(...g.under, ...cube(cx, cy, C.blue, LV, 1, 8), ...g.over); }
+    return out;
+  };
+
   const obj = (o, cx, cy) => {
     switch (o.t) {
+      case 'brazier': return brazier(cx, cy, o.rider);
+      case 'fcube': {
+        const z = (o.z || 0) + (o.roll ? 5 : 0), p = o.roll ? pt(cx, cy, o.roll, 0) : [cx, cy], lean = o.roll ? -0.32 : 0;
+        const g = cubeGlow(p[0], p[1], z, o.n, o.mode || 'under', lean, o.ph), out = g.under.concat(cube(p[0], p[1], C.blue, LV, 1, z), g.over);
+        if (o.num) out.push(...numTag(p[0], p[1] - z - LV - 24, o.n)); return out; }
+      case 'flame': return pool(cx, cy, o.z || 0, 1.2, 0.15).concat(riseSparks(cx, cy, o.z || 0, 3, 14));
       case 'cube': { const p = pt(cx, cy, o.u || 0, o.v || 0); return cube(p[0], p[1], C.blue, LV, o.o, o.z); }
       case 'box': return box(cx, cy, o.z || 0);
       case 'hole': return hole(cx, cy);
@@ -616,19 +760,23 @@
         continue;
       }
       if (isP) {
-        const grown = cd && ((cd.t === 'vine' && cd.st === 'grown') || cd.t === 'filled');
+        const grown = cd && ((cd.t === 'vine' && cd.st === 'grown') || cd.t === 'filled' || (cd.t === 'charbridge' && cd.st !== 'gone' && cd.st !== 'crumble'));
         out.push(...pit(cx, cy, {
           nw: V(c.x - 1, c.y), ne: V(c.x, c.y - 1),
           fl: !grown && V(c.x, c.y + 1) === null, fr: !grown && V(c.x + 1, c.y) === null
         }));
         if (cd && cd.t === 'vine') out.push(...vineCell(cx, cy, cd));
         if (cd && cd.t === 'rail') out.push(...railCell(cx, cy, cd));
+        if (cd && cd.t === 'charbridge') out.push(...charCell(cx, cy, cd, par, true));
         if (cd && cd.t === 'filled') { const k = tone(C.yellow); out.push(...prism(cx, cy, 1, TK, k.t, k.l, k.r)); }
       } else if (cd && cd.t === 'iceland') {
         // CHAPTER 1 ice floor: the whole block is ice (sides down to the base), one gloss line
         const pl = WT ? WT.pal : CH3.mid;
         out.push(...prism(cx, cy, 1, (h - FB) * LV + TK, pl.iceT, pl.iceL, pl.iceR));
         out.push(uvq(cx, cy, -0.34, 0.12, -0.2, -0.165, pl.gloss));
+      } else if (cd && (cd.t === 'charwall' || cd.t === 'ember')) {
+        out.push(...land(cx, cy, h, par));
+        out.push(...(cd.t === 'ember' ? emberTile(cx, cy, cd.on) : charCell(cx, cy, cd, par, false)));
       } else if (cd && cd.t === 'swamp') {
         out.push(...swamp(cx, cy, h, par, cd.st));
       } else if (def.grown && def.grown[key]) {
@@ -681,5 +829,5 @@
     }
   });
 
-  window.CuboundIso = { TW, TH, LV, TK, D, C, mix, tone, side, scene, fit, mixed, wither, MUSH, CH3, STONE, WS, DIP };
+  window.CuboundIso = { TW, TH, LV, TK, D, C, mix, tone, side, scene, fit, mixed, wither, MUSH, CH3, STONE, WS, DIP, CH4, CH2C, FIRE: { CHAR, HEAT, ASH, STOVE, FLAME, FLAME_B, FL_N, GLOW_N } };
 })();

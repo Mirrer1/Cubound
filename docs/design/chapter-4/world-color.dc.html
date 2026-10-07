@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="../cubound-iso.js?v=20261007g"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #E9E7E2; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+</style>
+</helmet>
+<div style="background:#E9E7E2;color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 90px;min-height:100vh">
+  <div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">
+      <span style="white-space:nowrap">CUBOUND · CHAPTER 4 · 151–200</span>
+      <span style="white-space:nowrap">세계 색 · 장 고르기</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:860px">
+      <span style="font-size:34px;font-weight:400;letter-spacing:-0.01em">불을 건너는 길</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.7;word-break:keep-all;text-wrap:pretty">2장 확정값(C)의 열 값(아홉 값 + 구덩이 바닥)마다 oklch 명도는 그대로 두고 색상만 55로 돌렸습니다. 재와 식은 숯 쪽의 붉은 기가 도는 따뜻한 회색입니다(38은 분홍으로 읽혀 55로 올렸습니다). 채도는 옅게 ×0.65, 보통 ×1, 조금 더 ×1.3이고 보통이 2장·3장과 같은 채도입니다. 1장(따뜻한 회색, 노랑 쪽)과는 색상으로, 숯(검정)과 재(밝은 회색)와는 명도로 갈립니다.</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">A</span><span style="font-size:22px;font-weight:400">세계 색 세 안</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));gap:16px">
+        <sc-for list="{{ variants }}" as="v" hint-placeholder-count="3">
+          <div style="background:#F2F1EE;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+              <span style="font-size:17px;font-weight:400">{{ v.name }}</span>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#3A3936">{{ v.tag }}</span>
+            </div>
+            <div style="background:{{ v.bg }};border-radius:14px;padding:14px 16px 22px;display:flex;flex-direction:column;gap:6px;aspect-ratio:16 / 10;box-sizing:border-box">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+                <div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:'IBM Plex Mono', monospace;font-size:8px;letter-spacing:0.2em;color:#8A8781">STAGE 02</span><span style="font-size:13px;color:#8A8781">이름 미정</span></div>
+                <div style="display:flex;gap:14px">
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><span style="font-family:'IBM Plex Mono', monospace;font-size:8px;letter-spacing:0.2em;color:#8A8781">FIRE</span><span style="font-size:16px;font-weight:300">3</span></div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><span style="font-family:'IBM Plex Mono', monospace;font-size:8px;letter-spacing:0.2em;color:#8A8781">MOVES</span><span style="font-size:16px;font-weight:300">5</span></div>
+                </div>
+              </div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:0">
+                <div style="width:70%;display:block;aspect-ratio:{{ v.ar }};background-image:{{ v.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:5px 14px">
+              <sc-for list="{{ v.sw }}" as="s" hint-placeholder-count="10">
+                <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                  <span style="width:16px;height:16px;flex:none;border-radius:4px;border:1px solid rgba(58,57,54,0.1);background:{{ s.hex }}"></span>
+                  <span style="font-size:12px;color:#5F5D59;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.k }}</span>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px">{{ s.hex }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;color:#6E6C68">넓게 깔린 모습 · 실제 게임처럼 배경이 화면 절반을 넘게 덮는 크기</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));gap:14px">
+        <sc-for list="{{ wide }}" as="v" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:{{ v.bg }};border-radius:14px;aspect-ratio:16 / 9;display:flex;align-items:center;justify-content:center">
+              <div style="width:34%;display:block;aspect-ratio:{{ v.ar }};background-image:{{ v.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+            </div>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;color:#6E6C68">{{ v.name }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;color:#6E6C68">1장 · 2장 · 3장 · 4장(호박색) · 실제 게임 값 · 같은 판</span>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:12px">
+        <sc-for list="{{ side }}" as="v" hint-placeholder-count="5">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:{{ v.bg }};border-radius:14px;padding:16px;aspect-ratio:4 / 3;box-sizing:border-box;display:flex;align-items:center;justify-content:center">
+              <div style="width:72%;display:block;aspect-ratio:{{ v.ar }};background-image:{{ v.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+            </div>
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;color:#6E6C68">{{ v.name }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background:#F2F1EE;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;max-width:900px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.18em;color:#3A3936">추천 · 호박색</span>
+        <span style="font-size:14px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">보통(색상 55)은 넓게 깔면 분홍빛으로 읽혀, 같은 채도에서 색상만 72(호박, 숯불 쪽)로 옮긴 안을 더했습니다. 1장(따뜻한 회색)은 색상이 85 안팎이지만 채도가 이 안의 절반 아래라, 나란히 두면 1장은 회색, 4장은 재에 볕이 든 호박빛으로 갈립니다. 옅게는 1장과 거의 같아 장이 바뀐 것이 안 느껴지고, 조금 더는 살굿빛이 짙어 불빛과 섞입니다. 호박색에서는 불빛(색상 40 안팎, 채도가 바탕의 열 배 넘음), 노란 상자(색상 90), 큐브(색상 235)가 모두 바탕과 갈리고, 숯(명도 0.45 안팎)과 재(0.80)가 바닥 윗면(0.92)과 옆면(0.80 안팎) 사이에서 명도로 갈립니다. 재는 옆면과 명도가 가까워 바닥 윗면 위에만 놓이게 했습니다.</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">B</span><span style="font-size:22px;font-weight:400">장 고르기 · 네 장</span></div>
+      <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:860px;word-break:keep-all;text-wrap:pretty">장 들어가는 자리 v2의 확정안(3안, 뒤에 겹친 CHAPTER 판)을 그대로 쓰고, 목록 안에서 카드 격자만 장 카드로 바뀐 모습입니다. 지금 보는 장이 4장이라 화면 전체가 4장 세계 색(보통)이고, 카드 창은 각 장의 실제 세계 색입니다. 넘기는 화살표는 두지 않았습니다. 네 장이 모두 한 화면에 들어갑니다. 4장 월드 이름은 아직 없어 "이름 미정"으로 두었습니다.</span>
+
+      <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#6E6C68">모니터 1920 · 한 줄에 네 장 · 카드 320 × 324 · 60% 축소로 보임</span>
+      <div style="overflow-x:auto;overflow-y:hidden;border-radius:20px">
+        <div style="width:1920px;zoom:0.6;box-sizing:border-box;background:{{ P.bg }};padding:24px">
+          <div style="background:{{ P.panel }};border-radius:28px;padding:36px 40px;display:grid;grid-template-columns:340px minmax(0, 1fr);column-gap:40px;row-gap:16px">
+            <div style="grid-column:2;display:flex;justify-content:flex-end;align-items:center;gap:16px">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.14em;color:#8A8781;white-space:nowrap">0 / 30 ◆</span>
+              <div style="display:flex;gap:8px"><span style="width:44px;height:44px;border-radius:13px;background:{{ P.locked }};display:flex;align-items:center;justify-content:center;font-size:16px">‹</span><span style="width:44px;height:44px;border-radius:13px;background:{{ P.locked }};display:flex;align-items:center;justify-content:center;font-size:16px">›</span></div>
+            </div>
+            <div style="grid-column:1;grid-row:2;align-self:center;display:flex;align-items:center;gap:16px">
+              <span style="width:56px;height:56px;flex:none;border-radius:16px;background:{{ P.locked }};display:flex;align-items:center;justify-content:center;font-size:20px">←</span>
+              <div style="flex:1;min-width:0;border-radius:18px;background:#3A3936;padding:0 5px 5px;display:flex;flex-direction:column">
+                <div style="height:34px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:{{ P.panel }};white-space:nowrap"><span>CHAPTER 4</span><span style="width:8px;height:8px;flex:none;background:{{ P.panel }};transform:translateY(-2px) rotate(-135deg);clip-path:polygon(0 0,100% 0,0 100%)"></span></div>
+                <div style="border-radius:13px;background:{{ P.locked }};padding:10px 16px;display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">WORLD 16</span><span style="font-size:24px;font-weight:400;line-height:1.15;white-space:nowrap;color:#8A8781">이름 미정</span></div>
+              </div>
+            </div>
+            <div style="grid-column:2;grid-row:2;display:grid;grid-template-columns:repeat(4, 320px);gap:20px">
+              <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="4">
+                <div style="height:324px;box-sizing:border-box;border-radius:20px;padding:12px 12px 20px;display:flex;flex-direction:column;gap:16px;background:{{ c.card }};box-shadow:{{ c.ring }}">
+                  <div style="height:164px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:{{ c.win }}">
+                    <div style="width:160px;display:block;aspect-ratio:{{ c.ar }};background-image:{{ c.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                  </div>
+                  <div style="padding:0 8px;display:flex;flex-direction:column;gap:8px;flex:1">
+                    <div style="display:flex;justify-content:space-between;gap:10px;font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em;color:#8A8781"><span>{{ c.label }}</span><span style="letter-spacing:0.08em">{{ c.range }}</span></div>
+                    <span style="font-size:22px;font-weight:400;white-space:nowrap">{{ c.name }}</span>
+                    <div style="margin-top:auto;display:flex;align-items:center;gap:12px">
+                      <div style="flex:1;display:grid;grid-template-columns:repeat(5, 1fr);gap:4px"><sc-for list="{{ c.segs }}" as="s" hint-placeholder-count="5"><span style="height:5px;border-radius:3px;overflow:hidden;display:block;background:{{ c.track }}"><span style="display:block;height:100%;background:#3A3936;width:{{ s.w }}"></span></span></sc-for></div>
+                      <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;color:#8A8781;white-space:nowrap">{{ c.stars }}</span>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#6E6C68">노트북 1280 · 세 장씩 두 줄 · 카드 290 × 304 · 왼쪽 전체(← 포함)가 카드 묶음의 세로 가운데 · 90% 축소로 보임</span>
+      <div style="overflow-x:auto;overflow-y:hidden;border-radius:20px">
+        <div style="width:1280px;zoom:0.9;box-sizing:border-box;background:{{ P.bg }};padding:16px">
+          <div style="background:{{ P.panel }};border-radius:24px;padding:28px 18px;display:grid;grid-template-columns:268px minmax(0, 1fr);column-gap:24px;row-gap:14px">
+            <div style="grid-column:2;display:flex;justify-content:flex-end;align-items:center;gap:14px">
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.14em;color:#8A8781;white-space:nowrap">0 / 30 ◆</span>
+              <div style="display:flex;gap:8px"><span style="width:44px;height:44px;border-radius:13px;background:{{ P.locked }};display:flex;align-items:center;justify-content:center;font-size:16px">‹</span><span style="width:44px;height:44px;border-radius:13px;background:{{ P.locked }};display:flex;align-items:center;justify-content:center;font-size:16px">›</span></div>
+            </div>
+            <div style="grid-column:1;grid-row:2;align-self:center;display:flex;align-items:center;gap:12px">
+              <span style="width:48px;height:48px;flex:none;border-radius:14px;background:{{ P.locked }};display:flex;align-items:center;justify-content:center;font-size:18px">←</span>
+              <div style="flex:1;min-width:0;border-radius:18px;background:#3A3936;padding:0 5px 5px;display:flex;flex-direction:column">
+                <div style="height:32px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:{{ P.panel }};white-space:nowrap"><span>CHAPTER 4</span><span style="width:8px;height:8px;flex:none;background:{{ P.panel }};transform:translateY(-2px) rotate(-135deg);clip-path:polygon(0 0,100% 0,0 100%)"></span></div>
+                <div style="border-radius:13px;background:{{ P.locked }};padding:10px 14px;display:flex;flex-direction:column;gap:5px"><span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781">WORLD 16</span><span style="font-size:22px;font-weight:400;line-height:1.15;white-space:nowrap;color:#8A8781">이름 미정</span></div>
+              </div>
+            </div>
+            <div style="grid-column:2;grid-row:2;display:grid;grid-template-columns:repeat(3, 290px);gap:16px">
+              <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="4">
+                <div style="height:304px;box-sizing:border-box;border-radius:20px;padding:12px 12px 20px;display:flex;flex-direction:column;gap:16px;background:{{ c.card }};box-shadow:{{ c.ring }}">
+                  <div style="height:148px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:{{ c.win }}">
+                    <div style="width:150px;display:block;aspect-ratio:{{ c.ar }};background-image:{{ c.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                  </div>
+                  <div style="padding:0 8px;display:flex;flex-direction:column;gap:8px;flex:1">
+                    <div style="display:flex;justify-content:space-between;gap:10px;font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em;color:#8A8781"><span>{{ c.label }}</span><span style="letter-spacing:0.08em">{{ c.range }}</span></div>
+                    <span style="font-size:22px;font-weight:400;white-space:nowrap">{{ c.name }}</span>
+                    <div style="margin-top:auto;display:flex;align-items:center;gap:12px">
+                      <div style="flex:1;display:grid;grid-template-columns:repeat(5, 1fr);gap:4px"><sc-for list="{{ c.segs }}" as="s" hint-placeholder-count="5"><span style="height:5px;border-radius:3px;overflow:hidden;display:block;background:{{ c.track }}"><span style="display:block;height:100%;background:#3A3936;width:{{ s.w }}"></span></span></sc-for></div>
+                      <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;color:#8A8781;white-space:nowrap">{{ c.stars }}</span>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="width:744px;max-width:100%;box-sizing:border-box;background:{{ P.bg }};border-radius:26px;padding:14px">
+            <div style="background:{{ P.panel }};border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;gap:8px;height:44px">
+                <span style="width:44px;height:44px;flex:none;border-radius:13px;background:{{ P.locked }};display:flex;align-items:center;justify-content:center;font-size:16px">←</span>
+                <span style="flex:1;min-width:0;text-align:right;padding-right:6px;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.12em;color:#8A8781;white-space:nowrap">0 / 30 ◆</span>
+                <span style="width:44px;height:44px;flex:none;border-radius:13px;background:{{ P.locked }};display:flex;align-items:center;justify-content:center;font-size:16px">‹</span>
+                <span style="width:44px;height:44px;flex:none;border-radius:13px;background:{{ P.locked }};display:flex;align-items:center;justify-content:center;font-size:16px">›</span>
+              </div>
+              <div style="border-radius:16px;background:#3A3936;padding:0 4px 4px;display:flex;flex-direction:column">
+                <div style="height:28px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:{{ P.panel }};white-space:nowrap"><span>CHAPTER 4</span><span style="width:7px;height:7px;flex:none;background:{{ P.panel }};transform:translateY(-1px) rotate(-135deg);clip-path:polygon(0 0,100% 0,0 100%)"></span></div>
+                <div style="border-radius:12px;background:{{ P.locked }};padding:8px 12px;display:flex;flex-direction:column;gap:3px">
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">WORLD 16</span>
+                  <span style="font-size:19px;font-weight:400;line-height:1.2;white-space:nowrap;color:#8A8781">이름 미정</span>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px">
+                <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="4">
+                  <div style="min-height:84px;box-sizing:border-box;border-radius:16px;padding:10px 16px 10px 10px;display:flex;align-items:center;gap:14px;background:{{ c.card }};box-shadow:{{ c.ring }}">
+                    <div style="width:64px;height:64px;flex:none;border-radius:12px;display:flex;align-items:center;justify-content:center;background:{{ c.win }}">
+                      <div style="width:54px;display:block;aspect-ratio:{{ c.ar }};background-image:{{ c.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                    </div>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+                      <div style="display:flex;justify-content:space-between;gap:8px;font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781;white-space:nowrap"><span>{{ c.label }}</span><span style="letter-spacing:0.06em">{{ c.range }}</span></div>
+                      <span style="font-size:17px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span>
+                      <div style="display:flex;align-items:center;gap:10px">
+                        <div style="flex:1;display:grid;grid-template-columns:repeat(5, 1fr);gap:3px"><sc-for list="{{ c.segs }}" as="s" hint-placeholder-count="5"><span style="height:3px;border-radius:2px;overflow:hidden;display:block;background:{{ c.track }}"><span style="display:block;height:100%;background:#3A3936;width:{{ s.w }}"></span></span></sc-for></div>
+                        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;white-space:nowrap">{{ c.stars }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#6E6C68">태블릿 768 · 가로 카드 두 칸 · 카드 높이 84, 창 64</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="width:390px;box-sizing:border-box;background:{{ P.bg }};border-radius:26px;overflow:hidden;padding-bottom:12px">
+            <div style="height:30px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px 4px;font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781"><span>9:41</span><span>●●●</span></div>
+            <div style="background:{{ P.panel }};margin:6px 8px 0;border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:6px;height:44px">
+                <span style="width:44px;height:44px;flex:none;border-radius:13px;background:{{ P.locked }};display:flex;align-items:center;justify-content:center;font-size:16px">←</span>
+                <span style="flex:1;min-width:0;text-align:right;padding-right:6px;font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.12em;color:#8A8781;white-space:nowrap">0 / 30 ◆</span>
+                <span style="width:40px;height:40px;flex:none;border-radius:12px;background:{{ P.locked }};display:flex;align-items:center;justify-content:center;font-size:15px">‹</span>
+                <span style="width:40px;height:40px;flex:none;border-radius:12px;background:{{ P.locked }};display:flex;align-items:center;justify-content:center;font-size:15px">›</span>
+              </div>
+              <div style="border-radius:16px;background:#3A3936;padding:0 4px 4px;display:flex;flex-direction:column">
+                <div style="height:26px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:{{ P.panel }};white-space:nowrap"><span>CHAPTER 4</span><span style="width:7px;height:7px;flex:none;background:{{ P.panel }};transform:translateY(-1px) rotate(-135deg);clip-path:polygon(0 0,100% 0,0 100%)"></span></div>
+                <div style="border-radius:12px;background:{{ P.locked }};padding:8px 12px;display:flex;flex-direction:column;gap:3px">
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">WORLD 16</span>
+                  <span style="font-size:18px;font-weight:400;line-height:1.2;white-space:nowrap;color:#8A8781">이름 미정</span>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="4">
+                  <div style="min-height:76px;box-sizing:border-box;border-radius:16px;padding:8px 14px 8px 8px;display:flex;align-items:center;gap:14px;background:{{ c.card }};box-shadow:{{ c.ring }}">
+                    <div style="width:60px;height:60px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;background:{{ c.win }}">
+                      <div style="width:50px;display:block;aspect-ratio:{{ c.ar }};background-image:{{ c.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                    </div>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+                      <div style="display:flex;justify-content:space-between;gap:8px;font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#8A8781;white-space:nowrap"><span>{{ c.label }}</span><span style="letter-spacing:0.06em">{{ c.range }}</span></div>
+                      <span style="font-size:16px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span>
+                      <div style="display:flex;align-items:center;gap:10px">
+                        <div style="flex:1;display:grid;grid-template-columns:repeat(5, 1fr);gap:3px"><sc-for list="{{ c.segs }}" as="s" hint-placeholder-count="5"><span style="height:3px;border-radius:2px;overflow:hidden;display:block;background:{{ c.track }}"><span style="display:block;height:100%;background:#3A3936;width:{{ s.w }}"></span></span></sc-for></div>
+                        <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;color:#8A8781;white-space:nowrap">{{ c.stars }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#6E6C68">폰 390 · 가로 카드 한 줄씩 · 카드 높이 76, 창 60</span>
+        </div>
+      </div>
+
+      <div style="background:#F2F1EE;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;max-width:960px">
+        <sc-for list="{{ dims }}" as="r" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;align-items:baseline">
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#8A8781">{{ r.k }}</span>
+            <span style="font-size:13.5px;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ r.v }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">C</span><span style="font-size:22px;font-weight:400">토큰</span></div>
+      <div style="background:#F2F1EE;border-radius:16px;padding:18px 20px;font-family:'IBM Plex Mono', monospace;font-size:12px;line-height:1.75;display:flex;flex-direction:column">
+        <sc-for list="{{ css }}" as="l" hint-placeholder-count="12"><span style="white-space:pre-wrap">{{ l.s }}</span></sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.wait(); }
+  componentWillUnmount() { clearTimeout(this.tm); }
+  wait() { if (!window.CuboundIso || !window.CuboundIso.CH4) { this.tm = setTimeout(() => this.wait(), 40); return; } this.forceUpdate(); }
+  renderVals() {
+    const K = window.CuboundIso;
+    const empty = { variants: [], wide: [], side: [], chapters: [], P: {}, dims: [], css: [] };
+    if (!K || !K.CH4) return empty;
+    const P4 = K.CH4, mid = P4.amber, P3 = K.CH3.mid;
+    const fl = p => ({ a: p.a, b: p.b, l: p.l, r: p.r, pit: p.pit });
+    const board = { g: [[0, 0, 0, 1, 1], [0, 0, 'p', 'p', 1], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]],
+      cells: { '2,0': { t: 'charwall' }, '2,1': { t: 'charbridge', st: 'burn' }, '3,1': { t: 'charbridge', st: 'warm' }, '0,3': { t: 'ember', on: true }, '3,3': { t: 'charwall', st: 'crumble' } },
+      objs: { '1,1': [{ t: 'box' }], '1,2': [{ t: 'fcube', n: 3 }], '4,3': [{ t: 'hole' }], '4,0': [{ t: 'brazier' }] } };
+    const VN = [['mid', '보통 · 지난 안 (색상 55)', ''], ['amber', '호박색 · 새 안 (색상 72)', '추천'], ['light', '옅게 (색상 55)', ''], ['more', '조금 더 (색상 55)', '']];
+    const swk = [['bg', '화면 배경'], ['panel', '패널 배경'], ['card', '카드 면'], ['locked', '잠긴 카드'], ['hover', '호버'], ['a', '칸 윗면 A'], ['b', '칸 윗면 B'], ['l', '칸 왼쪽면'], ['r', '칸 오른쪽면'], ['pit', '구덩이 바닥']];
+    const variants = VN.map(([k, name, tag]) => { const s = K.scene(Object.assign({ floor: fl(P4[k]) }, board)); return { name, tag, bg: P4[k].bg, shapes: s, vb: K.fit(s, 10), sw: swk.map(([kk, lab]) => ({ k: lab, hex: P4[k][kk] })) }; });
+    const wide = VN.map(([k, name]) => { const s = K.scene(Object.assign({ floor: fl(P4[k]) }, board)); return { name: 'CHAPTER 4 · ' + name, bg: P4[k].bg, shapes: s, vb: K.fit(s, 10) }; });
+    const dry = { g: [[0, 0, 1, 1], [0, 0, 0, 1], [0, 0, 0, 0]], objs: { '1,1': [{ t: 'cube' }], '2,2': [{ t: 'box' }], '3,2': [{ t: 'hole' }] } };
+    const F1 = { a: '#EDEBE6', b: '#E7E5E0', l: '#C6C3BC', r: '#D9D6D0' }, F2 = { a: '#EAEBE0', b: '#E2E5DA', l: '#BFC1B4', r: '#D2D4C8' }, F3 = fl(P3);
+    const side = [['CHAPTER 1', '#E9E7E2', F1], ['CHAPTER 2', '#E2E6DB', F2], ['CHAPTER 3', P3.bg, F3], ['CHAPTER 4 · 호박색', mid.bg, fl(mid)]]
+      .map(([name, bg, f]) => { const s = K.scene(Object.assign({ floor: f }, dry)); return { name, bg, shapes: s, vb: K.fit(s, 10) }; });
+    const winDef = f => ({ floor: f, g: [[0, 0], [0, 0]], objs: { '1,1': [{ t: 'cube' }] } });
+    const seg = arr => arr.map(w => ({ w: w + '%' }));
+    const track = K.mix(mid.locked, '#3A3936', 0.08);
+    const chapters = [
+      ['CHAPTER 1', '1–50', '돌 위의 첫걸음', '#E9E7E2', F1, '150 / 150 ◆', [100, 100, 100, 100, 100], 'none'],
+      ['CHAPTER 2', '51–100', '풀이 우거진 길', '#E2E6DB', F2, '150 / 150 ◆', [100, 100, 100, 100, 100], 'none'],
+      ['CHAPTER 3', '101–150', '물이 차오르는 길', P3.bg, F3, '150 / 150 ◆', [100, 100, 100, 100, 100], 'none'],
+      ['CHAPTER 4', '151–200', '불을 건너는 길', mid.bg, fl(mid), '0 / 150 ◆', [0, 0, 0, 0, 0], 'inset 0 0 0 1.5px #3A3936']
+    ].map(([label, range, name, win, f, stars, sg, ring]) => { const s = K.scene(winDef(f)); return { label, range, name, win, shapes: s, vb: K.fit(s, 8), stars, segs: seg(sg), ring, card: mid.card, track }; });
+    const dims = [
+      ['모니터 ≥1700', '패널 안쪽 여백 36 · 40. 왼쪽 340(← 56 + 틈 16 + 겹친 판), 틈 40, 카드 320 × 324 네 장, 사이 20. 창 164 높이. 별과 ‹ ›는 카드 묶음 위 오른쪽 끝.'],
+      ['노트북 1280', '패널 안쪽 여백 28 · 18. 왼쪽 268(← 48 + 틈 12 + 겹친 판), 틈 24, 카드 290 × 304 세 장 두 줄, 사이 16. 왼쪽 전체가 두 줄 묶음의 세로 가운데(grid align-self: center).'],
+      ['줄 바꿈 기준', '왼쪽 + 카드 네 장(4 × 290 + 48 = 1208)이 패널 안쪽 폭에 들어가면 한 줄, 아니면 세 장씩. 1700 이상은 카드 320(4 × 320 + 60 = 1340).'],
+      ['태블릿 ≤1024', '헤더는 폰과 같은 두 줄(← · 별 · ‹ › / 겹친 판). 가로 카드 두 칸, 높이 84, 창 64, 사이 10.'],
+      ['폰 390', '가로 카드 한 줄씩, 높이 76, 창 60, 사이 8. 네 장이 다 들어가 스크롤 없이 한 화면(76 × 4 + 24 = 328).'],
+      ['화살표', '장을 넘기는 화살표(캐러셀)는 두지 않습니다. ‹ ›는 지금처럼 한 장 안의 월드만 넘깁니다.']
+    ].map(([k, v]) => ({ k, v }));
+    const key = { bg: 'bg', panel: 'panel', card: 'card', locked: 'card-locked', hover: 'hover', a: 'floor-a', b: 'floor-b', l: 'floor-left', r: 'floor-right', pit: 'pit-floor' };
+    const css = ['/* CHAPTER 4 · 호박색 (추천) · 색상 72, 2장과 같은 채도 */']
+      .concat(Object.keys(key).map(k => `--world4-${key[k]}: ${mid[k]};`))
+      .concat(['', '/* 옅게 */'], Object.keys(key).map(k => `--world4-light-${key[k]}: ${P4.light[k]};`))
+      .concat(['', '/* 보통 · 지난 안 (색상 55) */'], Object.keys(key).map(k => `--world4-rose-${key[k]}: ${P4.mid[k]};`))
+      .concat(['', '/* 조금 더 */'], Object.keys(key).map(k => `--world4-more-${key[k]}: ${P4.more[k]};`))
+      .map(s => ({ s }));
+    const toSrc = (shapes, vb) => encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '">' + shapes.map(p => p.txt !== undefined
+      ? '<text x="' + p.d.split(',')[0] + '" y="' + p.d.split(',')[1] + '" font-size="' + p.fs + '" font-family="Jost, Helvetica, Arial, sans-serif" font-weight="500" text-anchor="middle" fill="' + p.f + '">' + p.txt + '</text>'
+      : '<polygon points="' + p.d + '" fill="' + p.f + '"' + (p.o !== 1 ? ' opacity="' + p.o + '"' : '') + '/>').join('') + '</svg>');
+    const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { if (o.shapes && o.vb) { const vbp = o.vb.split(' ');
+        o.bgi = 'url("data:image/svg+xml,' + toSrc(o.shapes, o.vb) + '")'; o.ar = vbp[2] + ' / ' + vbp[3]; delete o.shapes; } Object.values(o).forEach(walk); } };
+    const out = { variants, wide, side, chapters, P: mid, dims, css };
+    walk(out);
+    return out;
+  }
+}
+</script>
+</body>
+</html>

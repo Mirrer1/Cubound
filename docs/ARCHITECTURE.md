@@ -379,7 +379,7 @@ guideText(language, id, touch, n?) // 터치 기기면 guide.<id>.touch를 먼�
 
 ## 디자인 기준값
 
-기준 파일은 `docs/design/Cubound Gameplay.dc.html` (Claude Design에서 내보낸 프로토타입). 모양, 색, 여백은 이 파일을 참고해 옮기고, 게임 로직은 참고하지 않는다. 브라우저로 열어 볼 수 있다.
+기준 파일은 `docs/design/common/ui.dc.html` (Claude Design에서 내보낸 프로토타입). 모양, 색, 여백은 이 파일을 참고해 옮기고, 게임 로직은 참고하지 않는다. 브라우저로 열어 볼 수 있다.
 
 ### 색 토큰
 
@@ -415,7 +415,7 @@ guideText(language, id, touch, n?) // 터치 기기면 guide.<id>.touch를 먼�
 
 **장 카드 색은 `[data-chapter='N']`에 둔다.** 카드 안의 작은 판이 그 장의 세계 색을 쓰도록 `--chapter-win`, `--chapter-a`, `--chapter-b` 셋을 장마다 정의한다.
 
-**지형은 세 가지 장치로만 읽힌다.** 기준 시안은 `docs/design/Cubound Terrain System.dc.html`이고 색과 치수가 코드로 들어 있다.
+**지형은 세 가지 장치로만 읽힌다.** 기준 시안은 `docs/design/common/terrain.dc.html`이고 색과 치수가 코드로 들어 있다.
 
 - **색은 소속.** 땅은 회색, 기계는 땅보다 밝은 회색, 손댈 수 있는 도구는 옐로, 플레이어는 블루. 얼음만 땅의 예외로 옅은 하늘색
 - **높이는 상태.** 칸의 변화는 전부 위아래로 말한다. 승강 발판은 한 층, 스위치는 7px, 무너지는 칸은 닳을수록 0, 4, 9px 내려앉고 옆면이 16에서 11, 8, 5로 얇아진다. **무늬를 더하지 않아서 같은 칸이 붙어 있어도 패턴이 생기지 않는다**
