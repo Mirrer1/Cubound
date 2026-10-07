@@ -761,3 +761,11 @@
 - **연출 지문에 새 값을 더하면 모든 판이 달라진 것으로 나온다.** 새 값은 빼고 견줘야 한다
 
 곁가지: README 오브젝트 표에 물 스위치, 테스트 수 2100여 개. `frame/cellLookFrame.ts`가 500줄, `frame/iceStoneFrame.ts`가 527줄이 되어 다음 작업에서 나눈다.
+
+## cellLookFrame 나누기 (2026-10-07)
+
+**`frame/cellLookFrame.ts`(500줄)에서 큰 묶음 넷을 요소 파일로 옮겼다.** 장치는 `switchFrame`의 `switchLookOf`, 사다리는 `carryFrame`의 `ladderLookOf`, 씨앗은 `seedFrame`의 `seedCellOf`, 덩굴은 `vineFrame`의 `vineCellOf`가 묶음을 만들고, `cellLook`(344줄)은 모으기만 한다. 수위의 `sluiceLookOf`와 같은 꼴이라 새 요소는 `cellLook`에 두 줄만 더한다. 요소 함수는 필드만 든 작은 인터페이스로 받아 `sceneFrame`을 가져오지 않는다. 덩굴과 씨앗은 그 파일에 이미 다른 뜻의 `VineLook`, `SeedLook`이 있어 `VineCell`, `SeedCell`로 지었다. 칸 높이에도 쓰는 값(장치의 `raised`, 씨앗의 `seedHere`)과 둘이 같이 쓰는 값(`pickedHere`)은 `cellLook`에 남겼다. `iceStoneFrame.ts`(527줄)는 얼음 돌 하나만 다뤄 더 커질 일이 적어 사용자와 정해 그대로 두었다.
+
+옮기기만 했다. 본문 안 줄이라 손으로 옮기고 다섯 파일의 줄 묶음을 원본과 견줘 계산 줄과 주석 줄이 하나도 빠지지 않은 것을 봤다. 140판 연출 지문(9만 7천여 장면)을 HEAD와 견줘 모두 같았고, 묶은 속도는 장면 하나 0.31ms로 같았다. 테스트 2195개 그대로다.
+
+옮기다 찾은 것: 얼음 돌이 얹힌 스위치가 규칙으로는 눌리는데 그림은 큐브와 상자만 보고 덜 눌린 모양이었고, 눌리는 때도 돌이 닿는 순간을 몰라 수 처음부터 눌렸다(`touchAt`에 돌의 길). 13-7, 13-10에 그 장면이 있다. 개발용 컨트롤러는 따라가기 말고 재생과 바로 가기도 맡아 `DevFollow`를 `DevController`로 바꿨다(저장 키 `cubound:devFollow`는 그대로).
