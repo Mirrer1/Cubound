@@ -93,7 +93,7 @@ src/
 │   ├── board/             # 필드 그리기 컴포넌트 (Board, BoardCell과 요소마다 Board*)
 │   │   ├── frame/         # 시간에 따라 바뀌는 연출 계산. 요소마다 xxxFrame.ts, 판 전체는 sceneFrame, 칸마다는 cellLookFrame, 가이드 사각형은 guideFrame
 │   │   └── view/          # 시간과 무관한 그림 계산 (큐브 면, 화면 범위, 색 섞기, 칸 치수)
-│   ├── dev/               # 개발 서버 전용 화면 (DevFollow 띠)
+│   ├── dev/               # 개발 서버 전용 화면 (DevController 띠)
 │   ├── guide/             # 스텝 가이드 (GuideOverlay)
 │   └── ui/                # 버튼, 별, 로고, 스테이지 카드, 클리어 카드, 언어 선택, 오류 화면
 ├── screens/               # TitleScreen, StageSelectScreen, PlayScreen
