@@ -80,7 +80,7 @@ export const frozenCells = (state: GameState) => {
 export interface IceCover {
   cover: number // 붙은 쪽 가장자리에서 덮은 정도
   from: Direction // 얼린 돌 쪽
-  gloss: number // 반짝임 줄 진하기, 돌이 떠난 칸은 얼음 연출 끝 무렵부터, 녹는 칸은 0
+  gloss: number // 반짝임 줄 진하기, 돌이 떠난 칸은 얼음 연출 끝 무렵부터, 돌이 떠나 녹는 칸은 0
 }
 
 // 그 순간 언 칸마다 덮인 정도, 돌이 막 들어선 칸은 그 수 동안 덮인 채, 돌이 막 떠난 칸은 처음부터 덮인 채
@@ -96,7 +96,10 @@ export const iceCovers = (before: GameState, game: GameState, phase: number, tha
   was.forEach((from, key) => {
     if (now.has(key)) return
     const entered = game.stones.some((s) => keyOf(s) === key)
-    covers.set(key, { cover: entered ? 1 : 1 - thaw, from, gloss: entered ? 1 : 0 })
+    const [x, y] = key.split('-').map(Number)
+    const stayed = has(game.stones, { x: x + OFFSET[from].x, y: y + OFFSET[from].y })
+    const cover = entered ? 1 : 1 - thaw
+    covers.set(key, { cover, from, gloss: entered ? 1 : stayed ? cover : 0 })
   })
   return covers
 }

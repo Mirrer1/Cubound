@@ -468,6 +468,22 @@ describe('iceCoversAt 수위', () => {
     expect(cover(down, sluiceStart(down.events)! + FREEZE_SECONDS)).toBe(0)
     expect(cover(down, sluiceStart(down.events)!)).toBe(1)
   })
+
+  it('돌은 그대로이고 물이 빠져 녹는 칸은 반짝임 줄이 언 바닥과 같이 옅어진다', () => {
+    const down = lastMove(SLUICE_ICE_STAGE, ['left', 'right'])
+    const at = (seconds: number) =>
+      iceCoversAt(
+        down.prev,
+        down.game,
+        down.events,
+        seconds / durationOf(down.events),
+        NO_SWAMP,
+      ).get('1-1')!
+    const half = at(sluiceStart(down.events)! + FREEZE_SECONDS / 2)
+
+    expect(at(sluiceStart(down.events)!).gloss).toBe(1)
+    expect(half.gloss).toBeCloseTo(half.cover)
+  })
 })
 
 describe('frostPatches', () => {
