@@ -195,7 +195,14 @@ export const sceneFrame = ({
     covers,
     stones: dropping
       ? restartStones(game, t)
-      : stoneFrames({ prev: prevGame, game, events, t, swamp: swampSeconds }),
+      : stoneFrames({
+          prev: prevGame,
+          game,
+          events,
+          t,
+          swamp: swampSeconds,
+          waterAt: sluice.waterAt,
+        }),
     thawing: moving ? thawingBoxes(before, game, iceT) : [],
     lanes: fadeLanes(laneShown(sluice.lanes, before, game, iceT), sluice.laneFade),
   }

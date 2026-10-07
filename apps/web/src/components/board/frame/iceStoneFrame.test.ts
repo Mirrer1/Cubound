@@ -18,13 +18,15 @@ import {
   thawingBoxes,
 } from './iceStoneFrame'
 import { SECONDS } from './pathFrame'
-import { SLUICE_ICE_STAGE, STONE_STAGE, lastMove } from './testStages'
+import { SLUICE_ICE_STAGE, SLUICE_WHIRL_STAGE, STONE_STAGE, lastMove } from './testStages'
 import {
   FREEZE_SECONDS,
   MELT_SECONDS,
+  PULL_SECONDS,
   SLUICE,
   durationOf,
   moveSeconds,
+  pullStart,
   sluiceStart,
 } from './timeFrame'
 import { TILE, toScreen } from '@/game/iso'
@@ -204,6 +206,21 @@ describe('icePhase', () => {
 })
 
 describe('stoneFrames', () => {
+  it('땅에서 떠서 끌릴 돌은 물이 차기 전에는 땅 위에 잠기지 않은 채 있다', () => {
+    const stage: Stage = {
+      ...SLUICE_WHIRL_STAGE,
+      entities: SLUICE_WHIRL_STAGE.entities.map((e) =>
+        e.type === 'box' ? { type: 'iceStone', x: e.x, y: e.y } : e,
+      ),
+    }
+    const { prev, game, events } = lastMove(stage, ['left'])
+    const [pulled] = stoneFrames({ prev, game, events, t: 0.1, swamp: NO_SWAMP, waterAt: () => 1 })
+
+    expect(events.some((e) => e.type === 'stonePulled')).toBe(true)
+    expect(pulled.y).toBeCloseTo(toScreen({ x: 1, y: 1 }, 1).y)
+    expect(pulled.cut).toBe(0)
+  })
+
   it('물로 밀린 돌은 내려앉아 얼음 판 위에 서고 다 앉으면 칸 그림 몫이다', () => {
     const { prev, game, events } = lastMove(STONE_STAGE, ['down'])
     const start = stoneFrames({ prev, game, events, t: 0, swamp: NO_SWAMP })[0]
@@ -448,6 +465,27 @@ describe('restartStones', () => {
 })
 
 describe('iceCoversAt 수위', () => {
+  it('물이 차오르며 떠서 끌리는 돌은 끌리기 전까지 자기 밑 판을 그리고 끌린 뒤 떠난 칸이 언 채 남는다', () => {
+    const stage: Stage = {
+      ...SLUICE_WHIRL_STAGE,
+      entities: SLUICE_WHIRL_STAGE.entities.map((e) =>
+        e.type === 'box' ? { type: 'iceStone', x: e.x, y: e.y } : e,
+      ),
+    }
+    const { prev, game, events } = lastMove(stage, ['left'])
+    const cover = (key: string, seconds: number) =>
+      iceCoversAt(prev, game, events, seconds / durationOf(events), NO_SWAMP).get(key)?.cover ?? 0
+    const before = pullStart(events) - 0.01
+
+    const stone = (seconds: number) =>
+      stoneFrames({ prev, game, events, t: seconds / durationOf(events), swamp: NO_SWAMP })[0]
+
+    expect(stone(before).bare).toBe(false)
+    expect(cover('1-1', before)).toBe(0)
+    expect(stone(pullStart(events) + 0.01).bare).toBe(true)
+    expect(cover('1-1', pullStart(events) + PULL_SECONDS)).toBe(1)
+  })
+
   it('새로 잠긴 칸은 수면이 반쯤 오른 때부터 돌 쪽부터 얼고, 빠지는 수에는 꼭지가 잠기기 시작할 때부터 얼음 녹는 시간에 녹는다', () => {
     const up = lastMove(SLUICE_ICE_STAGE, ['left'])
     const down = lastMove(SLUICE_ICE_STAGE, ['left', 'right'])

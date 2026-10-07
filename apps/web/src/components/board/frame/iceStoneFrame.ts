@@ -1,4 +1,4 @@
-import { CUBE, ICE, type Lane, STONE, floatShownAt, waterLook } from '../view'
+import { CUBE, ICE, type Lane, STONE, type WaterAt, floatShownAt, waterLook } from '../view'
 import { NO_CHAIN, clamp01, easeIn, easeOut, lerp, smooth } from './curveFrame'
 import { type PathEvent, has, same, segmentsOf, stepAt, stonePath, totalSeconds } from './pathFrame'
 import { restartDrop } from './restartFrame'
@@ -151,7 +151,19 @@ export const iceCoversAt = (
   // 물이 바뀌어 얼고 녹는 칸, 녹는 칸은 꼭지가 잠기기 시작할 때부터 얼음 녹는 시간 동안, 어는 칸은 수면이 반쯤 오른 뒤
   if (path.length === 0 && sluiceStart(events) !== null) {
     const flood = sluicePhase(events, t, swamp)
-    return iceCovers(before, game, flood.freeze, flood.thaw)
+    const pulls = events.filter((e): e is StonePulled => e.type === 'stonePulled')
+    if (pulls.length === 0) return iceCovers(before, game, flood.freeze, flood.thaw)
+
+    // 떠서 끌리는 돌은 끌리기 전까지 제자리 기준
+    const risen = {
+      ...game,
+      stones: game.stones.map((s) => pulls.find((e) => same(e.to, s))?.from ?? s),
+    }
+    const start = pullStart(events)
+    if (elapsed >= start)
+      return iceCovers(risen, game, smooth(clamp01((elapsed - start) / PULL_SECONDS)))
+
+    return iceCovers(before, risen, flood.freeze, flood.thaw)
   }
   if (!pull || !pushedTo) {
     const end = Math.max(totalSeconds(segmentsOf(path)), freezeEnd(events))
@@ -220,6 +232,7 @@ interface StoneView {
   events: GameEvent[]
   t: number
   swamp: SwampTime
+  waterAt?: WaterAt // 그 순간 칸의 물 높이, 물이 바뀌는 수에 쓰는 값
 }
 
 const surfaceY = (game: GameState, p: Point) =>
@@ -333,18 +346,24 @@ const pulledFrame = (view: StoneView, event: StonePulled, elapsed: number): Ston
     x: lerp(event.from.x, event.to.x, smooth(p)),
     y: lerp(event.from.y, event.to.y, smooth(p)),
   }
-  const screen = toScreen(at, floatBase(waterLevel(game, event.from)))
+  const levelAt = (cell: Point) => (view.waterAt ? view.waterAt(cell) : waterLevel(game, cell))
+  // 땅에서 뜨는 돌은 수면이 덮은 만큼만 잠기고 들어 올릴 만큼 차야 뜸
+  const level = levelAt(event.from)
+  const floor = game.stage.heights[event.from.y][event.from.x]
+  const screen = toScreen(at, Math.max(floor, floatBase(level)))
+  const cut = Math.min(STONE.floatCut, Math.max(0, (level - floor) * TILE.layer))
+  const afloat = cut / STONE.floatCut
   const r = clamp01((p - SETTLE.from) / (1 - SETTLE.from))
-  const ringAt = toScreen(event.to, floatBase(waterLevel(game, event.to)))
+  const ringAt = toScreen(event.to, floatBase(levelAt(event.to)))
 
   return {
     x: screen.x,
     y: screen.y + PULL_DIP * Math.sin(Math.PI * p),
     scale: 1,
-    cut: STONE.floatCut,
-    slab: 1,
-    bare: true,
-    frost: 0,
+    cut,
+    slab: afloat,
+    bare: elapsed >= start,
+    frost: view.prev && frostGround(view.prev, event.from) ? 1 - afloat : 0,
     opacity: 1,
     pulled: true,
     to: event.to,
