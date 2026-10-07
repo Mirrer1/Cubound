@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { backTarget, controlsOf, nextMove, playStops, stateAt } from './playback'
+import {
+  backTarget,
+  controlsOf,
+  jumpTarget,
+  nextMove,
+  playStops,
+  splitStatus,
+  stateAt,
+} from './playback'
 import { createState, move } from '@/game/rules'
 import type { Direction, Stage } from '@/game/types'
 
@@ -138,5 +146,33 @@ describe('playStops', () => {
     expect(playStops({ ...RUNNING, follow: { kind: 'off', at: 1 } })).toBe(true)
     expect(playStops({ ...RUNNING, follow: { kind: 'on', at: 3 }, expect: 3, moves: 3 })).toBe(true)
     expect(playStops({ ...RUNNING, follow: null })).toBe(true)
+  })
+})
+
+describe('jumpTarget', () => {
+  it('입력한 수로 간다', () => {
+    expect(jumpTarget('2', 3)).toBe(2)
+    expect(jumpTarget(' 0 ', 3)).toBe(0)
+  })
+
+  it('범위 밖은 가까운 끝으로 맞춘다', () => {
+    expect(jumpTarget('99', 3)).toBe(3)
+    expect(jumpTarget('-4', 3)).toBe(0)
+  })
+
+  it('숫자가 아니면 갈 곳이 없다', () => {
+    expect(jumpTarget('', 3)).toBeNull()
+    expect(jumpTarget('1.5', 3)).toBeNull()
+    expect(jumpTarget('a', 3)).toBeNull()
+  })
+})
+
+describe('splitStatus', () => {
+  it('지금 수와 나머지로 가른다', () => {
+    expect(splitStatus(' 7/44')).toEqual([' 7', '/44'])
+  })
+
+  it('수 표시가 아니면 가르지 않는다', () => {
+    expect(splitStatus('풀이 없음')).toBeNull()
   })
 })

@@ -39,3 +39,12 @@ export const playStops = (view: PlayView) =>
   view.moves !== view.expect ||
   view.follow?.kind !== 'on' ||
   view.follow.at >= view.length
+
+// 바로 가기 입력을 수로, 범위 밖은 가까운 끝, 정수가 아니면 null
+export const jumpTarget = (text: string, length: number) =>
+  /^\s*-?\d+\s*$/.test(text) ? Math.min(Math.max(Number(text), 0), length) : null
+
+export const splitStatus = (status: string) => {
+  const slash = status.indexOf('/')
+  return slash < 0 ? null : [status.slice(0, slash), status.slice(slash)]
+}
