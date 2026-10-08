@@ -199,6 +199,18 @@ html[data-cycle='3'] {
   --color-floor-right: #c7d6d7;
 }
 
+html[data-cycle='4'] {
+  --color-page-bg: #efe2d3;
+  --color-base-bg: #f7ede1;
+  --color-surface: #fcf3e9;
+  --color-locked: #f2e7d9;
+  --color-hover: #f1e6d8;
+  --color-floor-top: #f4e8d9;
+  --color-floor-top-alt: #eee1d3;
+  --color-floor-left: #ccbdac;
+  --color-floor-right: #ded0c0;
+}
+
 html,
 body {
   height: 100%;
@@ -286,6 +298,31 @@ body {
     gap: 1.25rem;
     align-content: stretch;
   }
+
+  /* 장이 넷 이상이면 좁은 화면은 한 줄씩, 태블릿과 폰 가로는 두 칸, 넓은 화면은 네 장이 들어가면 한 줄 */
+  &[data-many] {
+    @media (width < 50rem) and (height >= 500px) {
+      gap: 0.5rem;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    @media (50rem <= width < 106.25rem), (height < 500px) {
+      gap: 0.625rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    /* 두 줄이 남은 높이에 들도록 줄이는 줄 높이, 카드 네 장 폭 250 × 4 + 16 × 3이 한 줄 기준 */
+    @media (width >= 60rem) and (width < 106.25rem) and (height >= 500px) {
+      --cols: 2;
+      --rows: 2;
+      gap: 1rem;
+      grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+      grid-auto-rows: min(304px, (100cqh - (var(--rows) - 1) * 1rem) / var(--rows));
+
+      @container (width >= 1048px) {
+        --cols: 4;
+        --rows: 1;
+      }
+    }
+  }
 }
 
 /* 장 고르기 카드의 작은 조각은 그 장의 세계 색으로 칠한다. 지금 보는 사이클과 무관하다 */
@@ -305,6 +342,12 @@ body {
   --chapter-win: #d9e7e8;
   --chapter-a: #dfedee;
   --chapter-b: #d9e7e7;
+}
+
+[data-chapter='4'] {
+  --chapter-win: #efe2d3;
+  --chapter-a: #f4e8d9;
+  --chapter-b: #eee1d3;
 }
 
 @utility stage-grid {

@@ -103,6 +103,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
       state,
     }
   })
+  const many = chapterCards.length >= 4
   const nowChapter = Math.max(
     0,
     chapterCards.findIndex((card) => card.state === 'now'),
@@ -221,6 +222,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
           <motion.div
             key={chapters ? 'chapters' : 'stages'}
             className={chapters ? 'chapter-grid' : 'stage-grid'}
+            data-many={chapters && many ? '' : undefined}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             // 다른 나타남과 같은 시간과 곡선
@@ -231,6 +233,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
                   <ChapterCard
                     key={card.chapter}
                     {...card}
+                    many={many}
                     onSelect={() => handleChapter(card.chapter)}
                   />
                 ))

@@ -9,6 +9,7 @@ interface ChapterCardProps {
   stars: number
   total: number
   state: ChapterCardState
+  many: boolean // 장이 넷 이상인 장 고르기, 남은 높이에 맞춰 줄이는 카드
   onSelect: () => void
 }
 
@@ -34,7 +35,7 @@ const SPOTS = [
   [1, 2],
   [2, 0],
   [3, 1],
-  [0, 3],
+  [1, 3],
   [2, 2],
   [1, 1],
   [3, 0],
@@ -78,7 +79,16 @@ const cubeFaces = (chapter: number) => {
   }
 }
 
-const ChapterCard = ({ chapter, name, range, stars, total, state, onSelect }: ChapterCardProps) => {
+const ChapterCard = ({
+  chapter,
+  name,
+  range,
+  stars,
+  total,
+  state,
+  many,
+  onSelect,
+}: ChapterCardProps) => {
   const locked = state === 'locked'
   const cube = cubeFaces(chapter)
 
@@ -88,14 +98,14 @@ const ChapterCard = ({ chapter, name, range, stars, total, state, onSelect }: Ch
       data-chapter={chapter}
       disabled={locked}
       onClick={onSelect}
-      className={`flex cursor-pointer items-center gap-4 rounded-[20px] border p-4 text-left transition-soft-colors disabled:cursor-default roomy:flex-col roomy:items-stretch roomy:gap-3 roomy:p-5 ${
+      className={`flex cursor-pointer items-center gap-4 rounded-[20px] border ${many ? 'p-2 max-[390px]:gap-3 short:p-2.5 wide:p-2.5' : 'p-4'} text-left transition-soft-colors disabled:cursor-default roomy:flex-col roomy:items-stretch roomy:gap-3 roomy:p-5 ${
         locked
           ? 'border-line bg-locked text-faint'
           : `bg-surface hover:bg-hover ${state === 'now' ? 'border-ink' : 'border-line-strong'}`
       }`}
     >
       <span
-        className="flex h-15 w-15 shrink-0 items-center justify-center overflow-hidden rounded-[11px] bg-(--chapter-win) min-[390px]:w-20 min-[1700px]:aspect-auto! min-[1700px]:min-h-25 min-[1700px]:flex-1 roomy:aspect-2/1 roomy:h-auto roomy:w-full roomy:rounded-[13px]"
+        className={`flex h-15 w-15 shrink-0 items-center justify-center overflow-hidden rounded-[11px] bg-(--chapter-win) min-[390px]:w-20 min-[1700px]:aspect-auto! min-[1700px]:min-h-25 min-[1700px]:flex-1 ${many ? 'max-[390px]:size-12 roomy:min-h-0 roomy:flex-1' : 'roomy:aspect-2/1'} roomy:h-auto roomy:w-full roomy:rounded-[13px]`}
         style={{ opacity: locked ? 0.45 : 1 }}
       >
         <svg viewBox={VIEW} className="w-full roomy:h-[92%] roomy:w-[92%]" aria-hidden="true">
@@ -111,8 +121,16 @@ const ChapterCard = ({ chapter, name, range, stars, total, state, onSelect }: Ch
           <polygon points={cube.right} fill={shade('player', 'right')} />
         </svg>
       </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-1.5 min-[1700px]:flex-none roomy:gap-2.5">
-        <span className="flex items-baseline justify-between gap-2 font-mono text-[10px] tracking-[0.18em] roomy:text-[11px] roomy:tracking-[0.22em]">
+      <span
+        className={`flex min-w-0 flex-1 flex-col ${many ? 'gap-px short:gap-1 wide:gap-1 roomy:flex-none' : 'gap-1.5'} min-[1700px]:flex-none roomy:gap-2.5`}
+      >
+        <span
+          className={
+            many
+              ? 'flex items-baseline justify-between gap-2 font-mono text-[10px] tracking-[0.18em] max-[390px]:gap-1 max-[390px]:tracking-[0.12em] roomy:text-[11px] roomy:tracking-[0.22em]'
+              : 'flex items-baseline justify-between gap-2 font-mono text-[10px] tracking-[0.18em] roomy:text-[11px] roomy:tracking-[0.22em]'
+          }
+        >
           <span className={locked ? '' : 'text-mute'}>
             CHAPTER {chapter} · {range}
           </span>
