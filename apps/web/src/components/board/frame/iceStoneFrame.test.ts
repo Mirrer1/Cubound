@@ -109,8 +109,8 @@ describe('iceCoversAt', () => {
   it('물에 밀자마자 끌리는 돌은 먼저 들어간 자리 둘레가 얼고 끌려가며 얼음이 같이 옮겨 간다', () => {
     const stage = withEntities([stone(2, 1), { type: 'whirlpool', x: 4, y: 2 }])
     const { prev, game, events } = lastMove(stage, ['down'])
-    const pulling = iceCoversAt(prev, game, events, at(events, 0.3), NO_SWAMP)
-    const half = iceCoversAt(prev, game, events, at(events, 0.45), NO_SWAMP)
+    const pulling = iceCoversAt(prev, game, events, at(events, 0.6), NO_SWAMP)
+    const half = iceCoversAt(prev, game, events, at(events, 0.75), NO_SWAMP)
 
     expect(pulling.get('3-2')).toEqual({ cover: 1, from: 'left', gloss: 1 })
     expect(pulling.get('2-3')?.cover).toBe(1)
@@ -120,6 +120,30 @@ describe('iceCoversAt', () => {
       ([key, c]) => c.cover > 0 && key !== '3-2',
     )
     expect(new Map(end)).toEqual(iceCovers(game, game, 1))
+  })
+
+  it('소용돌이에 연달아 끌리는 돌 뒤에서 녹는 칸은 반짝임 줄이 언 바닥보다 빨리 옅어진다', () => {
+    const stage: Stage = {
+      ...STONE_STAGE,
+      heights: [
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1],
+      ],
+      start: { x: 0, y: 0 },
+      goal: { x: 6, y: 3 },
+      entities: [stone(1, 2), { type: 'whirlpool', x: 5, y: 2 }],
+    }
+    const { prev, game, events } = lastMove(stage, ['right', 'right'])
+    const early = iceCoversAt(prev, game, events, 0.15, NO_SWAMP).get('1-2')
+    const half = iceCoversAt(prev, game, events, 0.5, NO_SWAMP).get('1-2')
+
+    expect(prev.stones).toEqual([{ x: 2, y: 2 }])
+    expect(early?.gloss).toBeGreaterThan(0)
+    expect(early?.gloss).toBeLessThan(early?.cover ?? 0)
+    expect(half?.cover).toBeGreaterThan(0)
+    expect(half?.gloss).toBe(0)
   })
 })
 
@@ -262,6 +286,30 @@ describe('stoneFrames', () => {
     }
   })
 
+  it('끌리는 돌은 긴 수에도 끌림 시간 안에 도착해 기다린다', () => {
+    // (0,4) 물에 상자를 띄우는 긴 수 동안 (2,2) 돌이 오른쪽 소용돌이로 끌림
+    const stage: Stage = {
+      ...STONE_STAGE,
+      heights: [
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1],
+        [0, 1, 1, 1, 1, 1, 1],
+      ],
+      start: { x: 2, y: 4 },
+      goal: { x: 6, y: 0 },
+      entities: [stone(2, 2), box(1, 4), { type: 'whirlpool', x: 5, y: 2 }],
+    }
+    const { prev, game, events } = lastMove(stage, ['left'])
+    const arrived = at(events, pullStart(events) + PULL_SECONDS)
+    const x = (t: number) => stoneFrames({ prev, game, events, t, swamp: NO_SWAMP })[0].x
+
+    expect(game.stones).toEqual([{ x: 3, y: 2 }])
+    expect(arrived).toBeLessThan(0.9)
+    expect(x(arrived)).toBeCloseTo(toScreen({ x: 3, y: 2 }, floatBase(1)).x)
+  })
+
   it('밀려 가는 돌에는 서리 판이 붙어 다니지 않는다', () => {
     const { prev, game, events } = lastMove(
       withEntities([stone(1, 1)], { start: { x: 0, y: 1 } }),
@@ -366,17 +414,28 @@ describe('meltDisplay', () => {
     expect(meltDisplay(createState(MELT_STAGE))).toEqual({
       count: 2,
       faint: true,
-      edge: false,
       holding: false,
+      melting: false,
     })
   })
 
-  it('1과 0은 곧 녹는 숫자이고 둘레에 서서 버티는 0은 따로 알린다', () => {
+  it('둘레에 서서 버티는 0은 따로 알린다', () => {
     const one = lastMove(MELT_STAGE, ['down', 'right']).game
     const held = lastMove(MELT_STAGE, ['down', 'right', 'down']).game
 
-    expect(meltDisplay(one)).toMatchObject({ count: 1, faint: false, edge: true, holding: false })
-    expect(meltDisplay(held)).toMatchObject({ count: 0, edge: true, holding: true })
+    expect(meltDisplay(one)).toMatchObject({ count: 1, faint: false, holding: false })
+    expect(meltDisplay(held)).toMatchObject({ count: 0, holding: true })
+  })
+
+  it('돌이 녹는 수의 연출 동안은 0, 끝나면 판 숫자', () => {
+    const { game, events } = lastMove(MELT_STAGE, ['down', 'right', 'up'])
+
+    expect(meltDisplay(game, events, true)).toMatchObject({ count: 0, melting: true })
+    expect(meltDisplay(game, events, false)).toMatchObject({
+      count: 2,
+      faint: true,
+      melting: false,
+    })
   })
 })
 

@@ -376,13 +376,36 @@ describe('pullStart 얼음 돌', () => {
     ],
   }
 
-  it('이 수에 띄운 돌은 물 위로 다 밀려 온 뒤 끌리기 시작한다', () => {
+  it('큐브가 돌이 얼린 칸에서 미끄러져 나가는 수에는 다 지나간 뒤 돌이 끌린다', () => {
+    // (2,2) 뜬 돌 왼쪽 언 칸 (1,2)로 내려서서 (1,3)까지 미끄러짐
+    const stage: Stage = {
+      ...STONE_STAGE,
+      heights: [
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1],
+      ],
+      start: { x: 1, y: 1 },
+      goal: { x: 6, y: 3 },
+      entities: [
+        { type: 'iceStone', x: 2, y: 2 },
+        { type: 'whirlpool', x: 5, y: 2 },
+      ],
+    }
+    const { events } = lastMove(stage, ['down'])
+
+    expect(events.map((e) => e.type)).toEqual(expect.arrayContaining(['slid', 'stonePulled']))
+    expect(pullStart(events)).toBeCloseTo(SECONDS.moved + 0.14)
+  })
+
+  it('이 수에 띄운 돌은 물에 잠겼다 다 떠오른 뒤 끌리기 시작한다', () => {
     const { events } = lastMove(WHIRL_STONE, ['down'])
     const pulled = events.find((e) => e.type === 'stonePulled')
 
     expect(pulled).toEqual({ type: 'stonePulled', from: { x: 2, y: 2 }, to: { x: 3, y: 2 } })
-    expect(pullStart(events)).toBeCloseTo(SECONDS.floated * 0.5)
-    expect(durationOf(events)).toBeCloseTo(SECONDS.floated * 0.5 + PULL_SECONDS)
+    expect(pullStart(events)).toBeCloseTo(SECONDS.floated)
+    expect(durationOf(events)).toBeCloseTo(SECONDS.floated + PULL_SECONDS)
   })
 })
 

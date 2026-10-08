@@ -273,17 +273,10 @@ export const FLOAT_REACH = 0.5
 // 물에 떨어뜨리는 밀기에서 가장 깊이 잠기는 진행도, 아무리 높은 데서 떨어져도 수면에 닿는 때
 export const FLOAT_RISE = 0.75
 
-// 그 자리 배가 떠나도 되는 때, 이 수에 띄운 배는 물에 다 내려앉은 뒤, 띄운 돌은 물 위로 다 밀려 온 뒤, 큐브가 내린 배는 큐브가 반쯤 굴러 나간 뒤
+// 그 자리 배가 떠나도 되는 때, 이 수에 띄운 배와 돌은 물에 다 내려앉은 뒤, 큐브가 내린 배는 큐브가 반쯤 굴러 나간 뒤
 const freeAt = (events: GameEvent[], from: Point) => {
-  const paths = [
-    { path: segmentsOf(boxPath(events)), reach: 1 },
-    { path: segmentsOf(stonePath(events)), reach: FLOAT_REACH },
-  ]
-  for (const { path, reach } of paths) {
-    const last = path.at(-1)
-    if (!last || !same(last.event.to, from)) continue
-    const floated = last.event.type === 'pushed' && last.event.result === 'floated'
-    return totalSeconds(path) - (floated ? last.seconds * (1 - reach) : 0)
+  for (const path of [segmentsOf(boxPath(events)), segmentsOf(stonePath(events))]) {
+    if (path.length > 0 && same(path[path.length - 1].event.to, from)) return totalSeconds(path)
   }
 
   let start = 0
@@ -322,13 +315,29 @@ const sluiceAfloat = (events: GameEvent[]) => {
   return at === null ? 0 : at + tapSeconds(events) + SLUICE.level * SLUICE.afloat
 }
 
+// 큐브가 돌 옆 언 칸에서 미끄러져 다 나가는 때, 그 전에 돌이 떠나면 큐브 밑 얼음이 녹는 탓
+const slidOff = (events: GameEvent[], stone: Point) => {
+  let start = 0
+  let end = 0
+  for (const { event, seconds } of playerSegments(events)) {
+    const next = Math.abs(event.from.x - stone.x) + Math.abs(event.from.y - stone.y) === 1
+    if (event.type === 'slid' && next) end = start + seconds
+    start += seconds
+  }
+  return end
+}
+
 // 끌린 배가 혼자 출발할 수 있는 때, 물이 바뀌는 수는 수면이 반쯤 움직인 뒤
 const freeToPull = (events: GameEvent[], pulled: Pulled) => {
   // 잠기는 땅에서 이 수에 새로 뜬 배는 수면이 다 오른 뒤
   const lifted = events.some(
     (e) => e.type === 'sluice' && e.up && e.cells.some((cell) => same(cell, pulled.from)),
   )
-  return Math.max(freeAt(events, pulled.from), lifted ? sluiceEnd(events) : sluiceAfloat(events))
+  return Math.max(
+    freeAt(events, pulled.from),
+    lifted ? sluiceEnd(events) : sluiceAfloat(events),
+    pulled.type === 'stonePulled' ? slidOff(events, pulled.from) : 0,
+  )
 }
 
 // 이 수에 끌리는 배와 돌이 같이 출발하는 때, 가장 늦게 풀려나는 것 기준

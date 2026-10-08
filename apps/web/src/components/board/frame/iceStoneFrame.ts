@@ -84,7 +84,13 @@ export interface IceCover {
 }
 
 // 그 순간 언 칸마다 덮인 정도, 돌이 막 들어선 칸은 그 수 동안 덮인 채, 돌이 막 떠난 칸은 처음부터 덮인 채
-export const iceCovers = (before: GameState, game: GameState, phase: number, thaw = phase) => {
+export const iceCovers = (
+  before: GameState,
+  game: GameState,
+  phase: number,
+  thaw = phase,
+  pulledFrom: Point[] = [],
+) => {
   const was = frozenCells(before)
   const now = frozenCells(game)
   const covers = new Map<string, IceCover>()
@@ -97,9 +103,15 @@ export const iceCovers = (before: GameState, game: GameState, phase: number, tha
     if (now.has(key)) return
     const entered = game.stones.some((s) => keyOf(s) === key)
     const [x, y] = key.split('-').map(Number)
-    const stayed = has(game.stones, { x: x + OFFSET[from].x, y: y + OFFSET[from].y })
+    const toward = { x: x + OFFSET[from].x, y: y + OFFSET[from].y }
     const cover = entered ? 1 : 1 - thaw
-    covers.set(key, { cover, from, gloss: entered ? 1 : stayed ? cover : 0 })
+    // 끌려 나간 돌 뒤는 녹기 시작하고 첫 3분의 1 동안만 남는 줄
+    const gloss = has(game.stones, toward)
+      ? cover
+      : has(pulledFrom, toward)
+        ? clamp01(cover * 3 - 2)
+        : 0
+    covers.set(key, { cover, from, gloss: entered ? 1 : gloss })
   })
   return covers
 }
@@ -148,6 +160,7 @@ export const iceCoversAt = (
   const entry = floatEntry(before, events)
   const elapsed = elapsedAt(events, swamp, t)
   const phase = icePhase(events, t, swamp)
+  const pulledFrom = events.flatMap((e) => (e.type === 'stonePulled' ? [e.from] : []))
   // 물이 바뀌어 얼고 녹는 칸, 녹는 칸은 꼭지가 잠기기 시작할 때부터 얼음 녹는 시간 동안, 어는 칸은 수면이 반쯤 오른 뒤
   if (path.length === 0 && sluiceStart(events) !== null) {
     const flood = sluicePhase(events, t, swamp)
@@ -160,14 +173,17 @@ export const iceCoversAt = (
       stones: game.stones.map((s) => pulls.find((e) => same(e.to, s))?.from ?? s),
     }
     const start = pullStart(events)
-    if (elapsed >= start)
-      return iceCovers(risen, game, smooth(clamp01((elapsed - start) / PULL_SECONDS)))
+    if (elapsed >= start) {
+      const pulling = smooth(clamp01((elapsed - start) / PULL_SECONDS))
+      return iceCovers(risen, game, pulling, pulling, pulledFrom)
+    }
 
     return iceCovers(before, risen, flood.freeze, flood.thaw)
   }
   if (!pull || !pushedTo) {
     const end = Math.max(totalSeconds(segmentsOf(path)), freezeEnd(events))
-    return iceCovers(before, game, entry === null ? phase : fromEntry(elapsed, entry, end), phase)
+    const covering = entry === null ? phase : fromEntry(elapsed, entry, end)
+    return iceCovers(before, game, covering, phase, pulledFrom)
   }
 
   const mid = {
@@ -178,7 +194,7 @@ export const iceCoversAt = (
   const toPull = smooth(clamp01(elapsed / Math.max(start, 1e-6)))
   return elapsed < start
     ? iceCovers(before, mid, entry === null ? toPull : fromEntry(elapsed, entry, start), toPull)
-    : iceCovers(mid, game, smooth(clamp01((elapsed - start) / PULL_SECONDS)))
+    : iceCovers(mid, game, smooth(clamp01((elapsed - start) / PULL_SECONDS)), undefined, pulledFrom)
 }
 
 // 얼음이 덮이고 물러나는 진행도, 돌이 밀리거나 끌리거나 녹는 동안
@@ -338,10 +354,9 @@ type StonePulled = Extract<GameEvent, { type: 'stonePulled' }>
 
 // 소용돌이에 한 칸 끌려가는 뜬 돌, 끌린 배와 같은 결
 const pulledFrame = (view: StoneView, event: StonePulled, elapsed: number): StoneFrame => {
-  const { game, events, swamp } = view
+  const { game, events } = view
   const start = pullStart(events)
-  const end = moveSeconds(events, swamp) - swamp.lead
-  const p = clamp01((elapsed - start) / Math.max(end - start, 1e-6))
+  const p = clamp01((elapsed - start) / PULL_SECONDS)
   const at = {
     x: lerp(event.from.x, event.to.x, smooth(p)),
     y: lerp(event.from.y, event.to.y, smooth(p)),
@@ -509,16 +524,22 @@ export const laneShown = (
   return shown
 }
 
-// 녹는 판의 화면 위 숫자, faint는 뜬 돌이 없어 판 숫자를 보이는 때, edge는 곧 녹는 1과 0, holding은 큐브가 둘레에 서서 0에 버티는 때
-export const meltDisplay = (game: GameState | null) => {
+// 녹는 판의 화면 위 숫자, faint는 뜬 돌이 없어 판 숫자를 보이는 때, holding은 큐브가 둘레에 서서 0에 버티는 때
+// melting은 돌이 녹는 수의 연출 동안 보이는 0
+export const meltDisplay = (
+  game: GameState | null,
+  events: GameEvent[] = [],
+  animating = false,
+) => {
   const rule = game?.stage.rules?.melt
   if (!game || rule === undefined) return null
 
+  const melting = animating && events.some((e) => e.type === 'melted')
   return {
-    count: game.melt ?? rule,
-    faint: game.melt === null,
-    edge: game.melt !== null && game.melt <= 1,
+    count: melting ? 0 : (game.melt ?? rule),
+    faint: !melting && game.melt === null,
     holding: game.melt === 0,
+    melting,
   }
 }
 
