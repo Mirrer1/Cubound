@@ -76,6 +76,7 @@ export const en = {
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',
   'chapter.3': 'The Rising Water Path',
+  'chapter.4': 'The Path Across Fire',
 
   'world.1': 'Land of Low Steps',
   'world.1.note': 'Ten stages to learn stepping up and down, one tile at a time.',
@@ -228,6 +229,8 @@ export const en = {
     'Raise the water and the boats rise with it, but the low ground sinks. Count the paths you gain and the ones you lose.',
   'world.15': 'Land of Tides',
   'world.15.note': 'Every form of water meets in one sea. Follow the tides home.',
+  'world.16': 'Land of Spreading Fire',
+  'world.16.note': 'Charcoal burns when fire reaches it. When to light the fire is the answer.',
   'stage.12-1': 'Swept Along',
   'stage.12-2': 'Reeling In',
   'stage.12-3': 'In Line',
@@ -268,6 +271,16 @@ export const en = {
   'stage.15-8': 'Water Handed Over',
   'stage.15-9': 'The Last Shore',
   'stage.15-10': 'Ebb and Flow',
+  'stage.16-1': 'First Ember',
+  'stage.16-2': 'Charcoal Bridge',
+  'stage.16-3': 'Burning Wall',
+  'stage.16-4': 'Two Branches',
+  'stage.16-5': 'Ahead of the Flames',
+  'stage.16-6': 'Ash Road',
+  'stage.16-7': 'Firebreak',
+  'stage.16-8': 'Trailing Fire',
+  'stage.16-9': 'Charcoal Hill',
+  'stage.16-10': 'Chasing Fire',
 }
 
 export type Texts = typeof en

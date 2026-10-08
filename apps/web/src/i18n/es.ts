@@ -83,6 +83,7 @@ export const es: Partial<Texts> = {
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',
   'chapter.3': 'El Camino del Agua Creciente',
+  'chapter.4': 'El Camino a Través del Fuego',
 
   'world.1': 'Tierra de Escalones Bajos',
   'world.1.note': 'Diez niveles para aprender a subir y bajar, una casilla cada vez.',
@@ -237,6 +238,8 @@ export const es: Partial<Texts> = {
   'world.15': 'Tierra de mareas',
   'world.15.note':
     'Todas las formas del agua se reúnen en un mismo mar. Sigue las mareas hasta casa.',
+  'world.16': 'Tierra del fuego que se extiende',
+  'world.16.note': 'El carbón arde cuando lo alcanza el fuego. La respuesta es cuándo encenderlo.',
   'stage.12-1': 'Arrastre',
   'stage.12-2': 'Atraer',
   'stage.12-3': 'En fila',
@@ -277,4 +280,14 @@ export const es: Partial<Texts> = {
   'stage.15-8': 'El agua relevada',
   'stage.15-9': 'La última orilla',
   'stage.15-10': 'Pleamar y bajamar',
+  'stage.16-1': 'Primera brasa',
+  'stage.16-2': 'Puente de carbón',
+  'stage.16-3': 'Muro en llamas',
+  'stage.16-4': 'Dos ramales',
+  'stage.16-5': 'Delante de las llamas',
+  'stage.16-6': 'Camino de ceniza',
+  'stage.16-7': 'Cortafuegos',
+  'stage.16-8': 'El fuego que sigue',
+  'stage.16-9': 'Colina de carbón',
+  'stage.16-10': 'El fuego que persigue',
 }
