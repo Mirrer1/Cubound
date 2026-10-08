@@ -23,13 +23,13 @@ import {
   thawingBoxes,
 } from './iceStoneFrame'
 import { mushroomFrames } from './mushroomFrame'
-import { cellsOf, has, playerPath, same } from './pathFrame'
+import { cellsOf, has, playerPath, same, totalSeconds } from './pathFrame'
 import { restartDrop } from './restartFrame'
 import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFrame'
 import { fadeLanes, sluiceScene, tapFronts } from './sluiceFrame'
 import { boxSink, swampFrame } from './swampFrame'
 import { moorLooks, tetherFrames } from './tetherFrame'
-import { type SwampTime, elapsedAt, pullStart, stepProgress } from './timeFrame'
+import { type SwampTime, elapsedAt, playerSegments, pullStart, stepProgress } from './timeFrame'
 import { tramFramesOf, tramProgress } from './tramFrame'
 import { vineFrames } from './vineFrame'
 import { rippleOf } from './waterFrame'
@@ -241,8 +241,19 @@ export const sceneFrame = ({
     ),
   ])
 
+  // 집에 드는 때, 물이 바뀌어도 집 칸이 그대로인 수는 큐브가 닿자마자 물은 클리어 카드 뒤에서 이어짐
+  const flood = events.find((e) => e.type === 'sluice')
+  const early = flood?.type === 'sluice' && !flood.cells.some((p) => same(p, stage.goal))
+  const home =
+    game.cleared &&
+    (!moving ||
+      (early &&
+        elapsedAt(events, swampSeconds, t) >=
+          totalSeconds(playerSegments(events)) + swampSeconds.tail))
+
   return {
     moving,
+    home,
     before,
     dropping,
     progress,

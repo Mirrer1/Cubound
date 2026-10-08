@@ -5,6 +5,7 @@ import { movingBox } from './boxFrame'
 import { playerFrame } from './cubeFrame'
 import { NO_CHAIN } from './curveFrame'
 import { guideRect } from './guideFrame'
+import { SECONDS } from './pathFrame'
 import { restartDrop } from './restartFrame'
 import { sceneFrame } from './sceneFrame'
 import { swampTime } from './swampFrame'
@@ -209,5 +210,40 @@ describe('sceneFrame 수위', () => {
     expect(
       sceneOf(createState(SLUICE_STAGE), null, [], 1, { guideCell: { x: 0, y: 0 } }).lockGuide,
     ).toBeNull()
+  })
+})
+
+describe('sceneFrame 집', () => {
+  // 높이 2 길 끝 (4,0) 집, 아래 줄은 잠기는 줄이라 넷째 수에 밀물이 참
+  const TIDE_HOME: Stage = {
+    ...BOX_STAGE,
+    heights: [
+      [2, 2, 2, 2, 2],
+      [1, 1, 1, 1, 1],
+    ],
+    water: 1,
+    rules: { tide: true },
+    start: { x: 0, y: 0 },
+    goal: { x: 4, y: 0 },
+    entities: [],
+  }
+
+  it('집에 닿는 수에 물이 바뀌어도 집이 안 잠기면 큐브는 닿자마자 집에 든다', () => {
+    const { prev, game, events } = lastMove(TIDE_HOME, ['right', 'right', 'right', 'right'])
+    const at = (seconds: number) => seconds / durationOf(events)
+
+    expect(game.cleared).toBe(true)
+    expect(events.some((e) => e.type === 'sluice')).toBe(true)
+    expect(sceneOf(game, prev, events, at(SECONDS.moved / 2)).home).toBe(false)
+    expect(sceneOf(game, prev, events, at(SECONDS.moved + 0.02)).home).toBe(true)
+    expect(sceneOf(game, prev, events, at(SECONDS.moved + 0.02)).moving).toBe(true)
+  })
+
+  it('물이 그대로인 수는 수가 다 끝난 뒤 집에 든다', () => {
+    const { prev, game, events } = lastMove(BOX_STAGE, ['right', 'right', 'right', 'right'])
+
+    expect(game.cleared).toBe(true)
+    expect(sceneOf(game, prev, events, 0.99).home).toBe(false)
+    expect(sceneOf(game, prev, events, 1).home).toBe(true)
   })
 })
