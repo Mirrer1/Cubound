@@ -29,7 +29,7 @@ export const checkEntities = ({
   vineRoots,
   targetIds,
 }: CheckContext) => {
-  const occupied = new Set<string>()
+  const occupied = new Map<string, string[]>()
   const reserved = new Set([data.start, data.goal].filter(isFloor).map(key))
   const iceRows = Array.isArray(data.ice) ? (data.ice as string[]) : []
   const warpCells = new Map<string, { x: number; y: number }[]>()
@@ -44,10 +44,13 @@ export const checkEntities = ({
       add(`entities[${i}]이 바닥 칸이 아니다`)
       return
     }
-    if (occupied.has(key(entity))) add(`entities[${i}]이 다른 오브젝트와 같은 칸에 있다`)
-    if (reserved.has(key(entity))) add(`entities[${i}]이 시작이나 목표 칸에 있다`)
-    // 밀려 다니는 상자와 얼음 돌은 무너지는 칸에서 시작해도 되는 예외
+    // 밀려 다니는 상자와 얼음 돌은 무너지는 칸과 스위치 위에서 시작해도 되는 예외
     const pushable = entity.type === 'box' || entity.type === 'iceStone'
+    const kind = pushable ? 'pushable' : entity.type === 'switch' ? 'switch' : 'other'
+    const here = occupied.get(key(entity))
+    const pressed = here?.length === 1 && [here[0], kind].sort().join() === 'pushable,switch'
+    if (here && !pressed) add(`entities[${i}]이 다른 오브젝트와 같은 칸에 있다`)
+    if (reserved.has(key(entity))) add(`entities[${i}]이 시작이나 목표 칸에 있다`)
     if (!pushable && crackCells.has(key(entity))) {
       add(`entities[${i}]이 무너지는 칸에 있다`)
     }
@@ -58,7 +61,7 @@ export const checkEntities = ({
     if (entity.type === 'whirlpool' && !isWaterCell(entity)) {
       add(`entities[${i}]의 소용돌이가 물 칸에 있지 않다`)
     }
-    occupied.add(key(entity))
+    occupied.set(key(entity), [...(here ?? []), kind])
 
     if (entity.type === 'door' || entity.type === 'lift') {
       const label = entity.type === 'door' ? '문' : '발판'

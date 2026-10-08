@@ -29,6 +29,29 @@ describe('checkEntities', () => {
     )
   })
 
+  it('상자와 얼음 돌은 스위치 위에서 시작할 수 있고 둘이 한 스위치에 겹칠 수는 없다', () => {
+    const onSwitch = (list: unknown[]) =>
+      errorsOf({ ...VALID, entities: [...VALID.entities.slice(1), ...list] })
+
+    expect(onSwitch([{ type: 'box', x: 0, y: 1 }])).toEqual([])
+    expect(onSwitch([{ type: 'iceStone', x: 0, y: 1 }])).toEqual([])
+    expect(
+      onSwitch([
+        { type: 'box', x: 0, y: 1 },
+        { type: 'iceStone', x: 0, y: 1 },
+      ]),
+    ).toContain('entities[3]이 다른 오브젝트와 같은 칸에 있다')
+    expect(
+      errorsOf({
+        ...VALID,
+        entities: [{ type: 'box', x: 0, y: 1 }, ...VALID.entities.slice(1)],
+      }),
+    ).toEqual([])
+    expect(onSwitch([{ type: 'ladder', x: 0, y: 1 }])).toContain(
+      'entities[2]이 다른 오브젝트와 같은 칸에 있다',
+    )
+  })
+
   it('스위치는 있는 문이나 발판을 가리키고 문 id는 겹치지 않는다', () => {
     expect(
       errorsOf({ ...VALID, entities: [{ type: 'switch', x: 0, y: 1, target: 'b' }] }),
