@@ -5,9 +5,11 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
+import devSolutions from 'virtual:dev-solutions'
 
 import { loadCollapsed, loadShown, saveCollapsed } from '@/dev/controllerStorage'
 import {
@@ -32,10 +34,11 @@ import {
   splitStatus,
   stateAt,
 } from '@/dev/playback'
+import { type SolutionEntry, pickSolution } from '@/dev/solutionCache'
 import SolveWorker from '@/dev/solveWorker?worker'
 import { toSession } from '@/game/session'
 import type { SolveResult } from '@/game/solver'
-import type { Direction, GameState } from '@/game/types'
+import type { Direction, GameState, Stage } from '@/game/types'
 import { directionFromKey } from '@/platform/input'
 import { localSessionStorage } from '@/platform/storage'
 import { useGameStore } from '@/store/gameStore'
@@ -59,6 +62,14 @@ const VIEWPORT = 'width=device-width, initial-scale=1.0, viewport-fit=cover'
 const TAP =
   'pointer-events-auto relative cursor-pointer transition-soft after:absolute hover:bg-hover'
 
+const SOLUTION_EVENT = 'cubound:solution'
+
+// 개발 서버가 새로 구해 보내는 풀이까지 받아 두는 판별 풀이, 지금 안 보는 판 포함
+const solutions: Record<string, SolutionEntry> = { ...devSolutions }
+import.meta.hot?.on(SOLUTION_EVENT, ({ id, entry }: { id: string; entry: SolutionEntry }) => {
+  solutions[id] = entry
+})
+
 const MARK_CLASS: Record<FollowMark, string> = {
   done: 'text-faint',
   next: 'text-ink underline decoration-2 underline-offset-[5px]',
@@ -67,8 +78,7 @@ const MARK_CLASS: Record<FollowMark, string> = {
 }
 
 const DevController = ({ game }: DevControllerProps) => {
-  const [result, setResult] = useState<SolveResult | null>(null)
-  const [trace, setTrace] = useState<string[] | null>(null)
+  const [found, setFound] = useState<{ stage: Stage; result: SolveResult } | null>(null)
   const [seen, setSeen] = useState<{ key: string; follow: Follow | null }>({
     key: '',
     follow: null,
@@ -83,6 +93,15 @@ const DevController = ({ game }: DevControllerProps) => {
   const restarting = useGameStore((s) => s.restarting)
   const guideOpen = useGameStore((s) => s.guideStep !== null)
   const move = useGameStore((s) => s.move)
+  const cached = useMemo(
+    () => (shown ? pickSolution(game.stage, solutions[game.stage.id]) : null),
+    [game.stage, shown],
+  )
+  const result = cached ?? (found?.stage === game.stage ? found.result : null)
+  const trace = useMemo(
+    () => (result?.status === 'solved' ? tracePath(game.stage, result.path) : null),
+    [game.stage, result],
+  )
 
   // 수가 바뀔 때마다 렌더 중에 한 번 맞춰 보는 따라가기, 벗어난 자리를 기억하는 상태
   const key = sessionKey(game)
@@ -192,16 +211,25 @@ const DevController = ({ game }: DevControllerProps) => {
     return () => clearTimeout(timer)
   }, [next, game.moves, move])
 
+  // 저장된 풀이가 없으면 직접 풀고, 개발 서버가 먼저 구해 보내면 그쪽 사용
   useEffect(() => {
-    if (!shown) return
+    if (!shown || cached) return
+    const stage = game.stage
     const worker = new SolveWorker()
-    worker.onmessage = (e: MessageEvent<SolveResult>) => {
-      setResult(e.data)
-      if (e.data.status === 'solved') setTrace(tracePath(game.stage, e.data.path))
+    worker.onmessage = (e: MessageEvent<SolveResult>) => setFound({ stage, result: e.data })
+    worker.postMessage(stage)
+    const onSolution = ({ id, entry }: { id: string; entry: SolutionEntry }) => {
+      const picked = id === stage.id ? pickSolution(stage, entry) : null
+      if (!picked) return
+      worker.terminate()
+      setFound({ stage, result: picked })
     }
-    worker.postMessage(game.stage)
-    return () => worker.terminate()
-  }, [game.stage, shown])
+    import.meta.hot?.on(SOLUTION_EVENT, onSolution)
+    return () => {
+      worker.terminate()
+      import.meta.hot?.off(SOLUTION_EVENT, onSolution)
+    }
+  }, [game.stage, shown, cached])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -284,7 +312,7 @@ const DevController = ({ game }: DevControllerProps) => {
                 )
               ) : (
                 // 개발 전용이라 useLoop 대신 쓴 CSS 회전
-                <span className="size-4 animate-spin rounded-full border-2 border-line-strong border-t-ink" />
+                <span className="mr-2.5 -ml-1 size-4 animate-spin rounded-full border-2 border-line-strong border-t-ink" />
               ))}
           </span>
           {!collapsed && result && (
