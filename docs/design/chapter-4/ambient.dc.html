@@ -35,9 +35,9 @@
       <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
         <div style="width:{{ live.w }};max-width:100%;aspect-ratio:{{ live.ar }};background-image:{{ live.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
         <div style="display:flex;flex-direction:column;gap:6px;min-width:420px;max-width:100%;flex:1">
-          <div style="display:grid;grid-template-columns:28px minmax(84px,1.6fr) 72px 56px minmax(120px,2fr);gap:10px;font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781;padding:0 0 6px;border-bottom:1px solid rgba(58,57,54,0.1)"><span>#</span><span>연출</span><span>시작</span><span>길이</span><span>자리</span></div>
-          <sc-for list="{{ seq }}" as="r" hint-placeholder-count="4">
-            <div style="display:grid;grid-template-columns:28px minmax(84px,1.6fr) 72px 56px minmax(120px,2fr);gap:10px;font-size:13px;line-height:1.5;padding:4px 0;word-break:keep-all"><span style="font-family:'IBM Plex Mono', monospace;color:#8A8781">{{ r.n }}</span><span>{{ r.name }}</span><span style="font-family:'IBM Plex Mono', monospace">{{ r.s }}</span><span style="font-family:'IBM Plex Mono', monospace">{{ r.len }}</span><span style="color:#5F5D59">{{ r.where }}</span></div>
+          <div style="display:grid;grid-template-columns:40px minmax(84px,1.6fr) 72px 56px minmax(120px,2fr);gap:10px;font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781;padding:0 0 6px;border-bottom:1px solid rgba(58,57,54,0.1)"><span>#</span><span>연출</span><span>시작</span><span>길이</span><span>자리</span></div>
+          <sc-for list="{{ seq }}" as="r" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:40px minmax(84px,1.6fr) 72px 56px minmax(120px,2fr);gap:10px;font-size:13px;line-height:1.5;padding:4px 0;word-break:keep-all"><span style="font-family:'IBM Plex Mono', monospace;color:#8A8781">{{ r.n }}</span><span>{{ r.name }}</span><span style="font-family:'IBM Plex Mono', monospace">{{ r.s }}</span><span style="font-family:'IBM Plex Mono', monospace">{{ r.len }}</span><span style="color:#5F5D59">{{ r.where }}</span></div>
           </sc-for>
         </div>
       </div>
@@ -146,7 +146,7 @@ class Component extends DCLogic {
     const K = window.CuboundIso;
     if (!K || !K.FIRE) return { opts: [], seq: [], css: [], cmp: [], cmp2: [], live: {}, still: {}, phone: {}, head: {}, P: { bg: '#E9E7E2', panel: '#F2F1EE', card: '#F7F6F4' } };
     if (this.cache) return this.cache;
-    const T = 20, E = this.engine(K, T), M = K.CH4.amber, H = K.FIRE.HEAT, iso = E.iso;
+    const T = 26.1, E = this.engine(K, T), M = K.CH4.amber, H = K.FIRE.HEAT, iso = E.iso;
     const def = { floor: { a: M.a, b: M.b, l: M.l, r: M.r, pit: M.pit },
       g: [[0, 0, 0, 0, 0, 0], [0, 0, 'p', 'p', 0, 0], [0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0]],
       cells: { '2,1': { t: 'charbridge', st: 'cold' }, '3,1': { t: 'charbridge', st: 'cold' }, '4,2': { t: 'charwall', st: 'cold' }, '3,0': { t: 'ember', on: false } },
@@ -159,34 +159,53 @@ class Component extends DCLogic {
     const spark = (s, x0, d, f) => E.fx('circle', { r: 2.2, fill: f }, [[0, { cx: x0, cy: -12, opacity: 0 }], [0.18, { cx: x0 + d * 0.5, cy: -22, opacity: 1 }], [0.9, { cx: x0 + d, cy: -27, opacity: 0 }]], s);
     // unlit ember tile: one faint grey thread, low, spreading sideways. no red, no flame shape
     const esm = (s, dx) => E.fx('ellipse', { fill: ES }, [[0, { cx: 0, cy: -3, rx: 2.5, ry: 2.5, opacity: 0 }], [0.5, { cx: dx * 0.2, cy: -7, rx: 5, ry: 3.5, opacity: 0.45 }], [2.0, { cx: dx * 0.7, cy: -13, rx: 12, ry: 6, opacity: 0.28 }], [3.0, { cx: dx, cy: -16, rx: 16, ry: 7, opacity: 0 }]], s);
-    const items = [{ cell: '3,0', fx: [esm(0, 18), esm(0.8, -16)] },
-      { cell: '4,4', fx: [puff(7, 16), puff(8.1, -14), spark(14, 5, 13, H.core), spark(14.25, -5, -12, H.hot), spark(14.5, 10, 14, H.hot), spark(14.75, -9, -15, H.core)] }];
-    const b = iso(4, 4, 0), e = iso(3, 0, 0);
+    // floor: ash. a flat grey flake flutters down from 26px onto an empty cell, then settles into a soft dust smudge that spreads and fades. falls, never rises; cool grey, no light
+    const AS = '#8E8A84', AD = '#9E9A93';
+    const flake = (s, x0, dx, y0) => E.fx('ellipse', { fill: AS }, [[0, { cx: x0, cy: y0, rx: 4.5, ry: 2.6, opacity: 0 }], [0.3, { cx: x0 + dx * 0.15, cy: y0 + 2, rx: 4.5, ry: 1.4, opacity: 0.85 }], [0.8, { cx: x0 + dx * 0.55, cy: y0 * 0.55, rx: 4.5, ry: 2.6, opacity: 0.85 }], [1.3, { cx: x0 + dx * 0.8, cy: y0 * 0.2, rx: 4.5, ry: 1.4, opacity: 0.85 }], [1.7, { cx: x0 + dx, cy: 0, rx: 4.5, ry: 2.2, opacity: 0.85 }], [2.8, { cx: x0 + dx, cy: 0, rx: 3.5, ry: 1.8, opacity: 0 }]], s);
+    const dia2 = k => { const w = Math.round(52 * k * 100) / 100, hh = Math.round(26 * k * 100) / 100; return 'M0,' + (-hh) + 'L' + w + ',0L0,' + hh + 'L' + (-w) + ',0Z'; };
+    // dust is a flat iso diamond inside the cell top (0.62 tile max), so the cell in front never clips it
+    const dust = s => E.fx('path', { fill: AD }, [[0, { k: 0.15, opacity: 0 }], [1.7, { k: 0.15, opacity: 0 }], [1.8, { k: 0.2, opacity: 0.55 }], [2.4, { k: 0.5, opacity: 0.38 }], [2.9, { k: 0.62, opacity: 0 }]], s, o => ({ d: dia2(o.k), opacity: o.opacity }));
+    const ash = s => [dust(s), flake(s, 10, -10, -26)];
+    const ashes = s => [flake(s, -2, -14, -24), flake(s + 0.35, 12, 6, -26), flake(s + 0.7, -8, 22, -22)];
+    const items = [{ cell: '1,2', fx: ash(0) }, { cell: '3,0', fx: [esm(4.35, 18), esm(5.15, -16)] }, { cell: '5,0', fx: ash(8.7) },
+      { cell: '4,4', fx: [puff(13.05, 16), puff(14.15, -14)] }, { cell: '0,1', fx: ash(17.4) },
+      { cell: '4,4', fx: [spark(21.75, 5, 13, H.core), spark(22, -5, -12, H.hot), spark(22.25, 10, 14, H.hot), spark(22.5, -9, -15, H.core)] }];
+    const itemsB = [{ cell: '1,2', fx: ashes(0) }];
+    const b = iso(4, 4, 0), e = iso(3, 0, 0), f = iso(1, 2, 0);
     const opts = [
-      { id: 'amb-ember', badge: '1', title: '꺼진 불씨 칸 연기', at: e, crop: [-56, -36, 112, 60], s: 0, peak: 2.2,
+      { id: 'amb-ash', badge: '바닥 · 가 · 추천', title: '재 한 송이', at: f, crop: [-56, -36, 112, 60], s: 0, peak: 2.15,
+        note: '빈 바닥 칸 위 26px에서 납작한 잿빛 송이 하나가 뒤집히듯 하늘거리며 내려앉고, 닿는 순간 그 자리에 옅은 재 먼지가 칸 윗면 꼴(마름모) 그대로 칸 폭 0.62배까지 번지며 스러집니다. 먼지는 칸 윗면 안에만 그려져 앞 칸에 잘리지 않습니다. 위에서 아래로 내려앉아 오르는 연기와 방향이 반대이고, 색도 불씨 칸 연기(따뜻한 회갈색)보다 차가운 회색입니다. 주황, 노랑, 빛은 쓰지 않고 바닥 색도 바뀌지 않습니다. 먼지가 번질 때 크기가 잔물결과 비슷해 폰에서도 보입니다.',
+        shots: [[0.3, '0.3초 · 시작'], [1.0, '1.0초 · 가운데'], [2.15, '2.15초 · 먼지 번짐'], [2.7, '2.7초 · 가장 넓음, 사라짐']],
+        vals: '한 번 2.9초 (내려앉음 1.7 · 먼지 번짐 1.1)\n송이 --color-amb-ash #8E8A84 · 9 × 5.2px (뒤집힐 때 높이 2.8px) · 진하기 0 → 0.85 → 0 · 26px 위에서 바닥까지 · 옆으로 12px\n먼지 --color-amb-ash-dust #9E9A93 · 칸 윗면 꼴 마름모 0.2 → 0.5 → 0.62 tile (21 × 10 → 64 × 32px) · 진하기 0.55 → 0.38 → 0 (1.8 → 2.4 → 2.9초) · 높이 0' },
+      { id: 'amb-ashes', badge: '바닥 · 나', title: '재 세 송이', at: f, crop: [-56, -36, 112, 60], items: itemsB, s: 0, peak: 2.1,
+        note: '송이 셋이 0.35초 차로 내려앉아 칸 위 세 군데에 흩어졌다 스러집니다. 흩어지는 폭 48px(0.46배). 먼지가 없어 더 조용하지만, 폰에서는 작은 점 셋이라 잔물결보다 확실히 덜 보이고, 점 셋이 칸 위에 동시에 놓이는 순간 무언가가 떨어진 물건처럼 읽힐 수 있어 고르지 않았습니다.',
+        shots: [[0.35, '0.35초 · 시작'], [1.2, '1.2초 · 가운데'], [2.1, '2.1초 · 셋 다 앉음'], [3.2, '3.2초 · 사라짐']],
+        vals: '한 번 3.5초 (송이마다 2.8초, 0.35초씩 늦게)\n송이 #8E8A84 · 9 × 5.2px · 진하기 0.85 → 0 · 흩어짐 48px (0.46 tile)' },
+      { id: 'amb-ember', badge: '1', title: '꺼진 불씨 칸 연기', at: e, crop: [-56, -36, 112, 60], s: 4.35, peak: 6.55,
         note: '꺼진 불씨 칸 가운데서 아주 옅은 회갈색 연기 두 줄기가 0.8초 차로 피어올라 양옆으로 퍼지며 사라집니다. 16월드부터 있는 요소라 화로 없는 판에도 움직이는 것이 하나 생깁니다. 불씨 칸은 지나갈 수 있는 바닥이라 "타서 못 들어가는 칸"과 헷갈리지 않고, 붉은 빛과 불꽃 모양은 없습니다. 켜진 불씨 칸(밟은 수)에서는 나오지 않습니다.',
-        shots: [[0.5, '0.5초'], [1.4, '1.4초 · 둘째 줄기'], [2.2, '2.2초 · 가장 넓음'], [3.4, '3.4초 · 사라짐']],
+        shots: [[4.85, '0.5초'], [5.75, '1.4초 · 둘째 줄기'], [6.55, '2.2초 · 가장 넓음'], [7.75, '3.4초 · 사라짐']],
         vals: '한 번 3.8초 (줄기마다 3초, 둘째 0.8초 늦게)\n연기 #A99D90 진하기 0.45 → 0 (화로 연기 0.5보다 옅음) · 5 × 5 → 32 × 14px · 양옆으로 퍼짐 66px · 꼭대기 23px' },
-      { id: 'amb-smoke', badge: '2', title: '화로 연기', at: b, crop: [-56, -44, 112, 64], s: 7, peak: 9.5,
+      { id: 'amb-smoke', badge: '2', title: '화로 연기', at: b, crop: [-56, -44, 112, 64], s: 13.05, peak: 15.55,
         note: '화로 그릇 뒤 테에서 잿빛 연기 두 덩이가 1.1초 차로 올라 양옆으로 갈라져 퍼지며 사라집니다. 퍼지는 폭 72px(칸 폭 0.69배). 큐브가 화로에 올라서 있는 동안은 건너뜁니다.',
-        shots: [[7.5, '0.5초'], [8.6, '1.6초 · 둘째 덩이'], [9.5, '2.5초 · 가장 넓음'], [10.6, '3.6초 · 사라짐']],
+        shots: [[13.55, '0.5초'], [14.65, '1.6초 · 둘째 덩이'], [15.55, '2.5초 · 가장 넓음'], [16.65, '3.6초 · 사라짐']],
         vals: '한 번 4.3초 (덩이마다 3.2초, 둘째 1.1초 늦게)\n연기 #C8BDB0 진하기 0.5 → 0 · 8 × 7 → 40 × 16px · 양옆으로 ±15px · 꼭대기 30px' },
-      { id: 'amb-spark', badge: '3', title: '화로 불티 · 화로 칸 안에서만', at: b, crop: [-56, -44, 112, 64], s: 14, peak: 14.9,
+      { id: 'amb-spark', badge: '3', title: '화로 불티 · 화로 칸 안에서만', at: b, crop: [-56, -44, 112, 64], s: 21.75, peak: 22.65,
         note: '불티 넷이 0.25초 차로 화로 위로 튀어 오르며 조금씩 벌어지다 사라집니다. 벌어지는 폭은 화로 그릇(칸 폭 0.8배) 안인 ±24px까지라 옆 칸 위로 가지 않습니다.',
-        shots: [[14.15, '0.15초 · 튐'], [14.55, '0.55초'], [14.9, '0.9초 · 가장 넓음'], [15.4, '1.4초 · 옅어짐']],
+        shots: [[21.9, '0.15초 · 튐'], [22.3, '0.55초'], [22.65, '0.9초 · 가장 넓음'], [23.15, '1.4초 · 옅어짐']],
         vals: '한 번 1.65초 (불티마다 0.9초, 0.25초씩 늦게)\n불티 --color-heat-core / --color-heat-hot 지름 4.4px 진하기 1 → 0 · 위로 15px · 벌어짐 48px (그릇 안) · 꼭대기 27px' }];
     const rest = { refFirst: true,
-      seq: [{ n: '1', name: '불씨 칸 연기', s: '0초', len: '3.8초', where: '꺼진 불씨 칸 하나 (여럿이면 바퀴마다 다른 칸)' }, { n: '2', name: '화로 연기', s: '7초', len: '4.3초', where: '화로 하나' },
-        { n: '3', name: '화로 불티', s: '14초', len: '1.65초', where: '2와 같은 화로' }],
-      head: { tag: 'CUBOUND · CHAPTER 4 · AMBIENT', title: '불을 건너는 길 · 분위기 연출', cycle: '20초',
-        note: '꺼진 불씨 칸 연기, 화로 연기, 화로 불티 셋을 씁니다. 셋은 같이 일어나지 않고 한 바퀴 안에서 차례로 하나씩 일어납니다. 셋 다 3장 물 잔물결(칸 폭 0.84배까지)에 맞춰, 퍼지는 폭이 칸 폭의 0.46~0.69배가 되게 키웠습니다. 위로 솟지 않고 옆으로 퍼지며 한 층(30px)을 넘지 않습니다. 바탕은 4장 세계 색 "호박색"입니다.',
-        order: '큰 판은 실제 한 바퀴(20초)를 그대로 돕니다. 16월드처럼 화로가 없는 판에서는 2와 3의 차례가 쉼이 되어 불씨 칸 연기만 20초마다 오릅니다. 불씨 칸이 다 켜졌거나 없으면 1이 쉼입니다.',
-        phone: '판 전체를 담아 칸 폭이 52px(데스크톱의 절반)인 폰 크기입니다. 오른쪽은 같은 크기로 자른 장면들이고, 맨 앞이 3장 물 잔물결(게임)입니다.',
+      seq: [{ n: '바닥', name: '재 한 송이', s: '0초', len: '2.9초', where: '빈 바닥 칸 (큐브 칸과 상하좌우 제외)' }, { n: '1', name: '불씨 칸 연기', s: '4.35초', len: '3.8초', where: '꺼진 불씨 칸 하나 (여럿이면 바퀴마다 다른 칸)' },
+        { n: '바닥', name: '재 한 송이', s: '8.7초', len: '2.9초', where: '다른 빈 바닥 칸' }, { n: '2', name: '화로 연기', s: '13.05초', len: '4.3초', where: '화로 하나' },
+        { n: '바닥', name: '재 한 송이', s: '17.4초', len: '2.9초', where: '다른 빈 바닥 칸' }, { n: '3', name: '화로 불티', s: '21.75초', len: '1.65초', where: '2와 같은 화로' }],
+      head: { tag: 'CUBOUND · CHAPTER 4 · AMBIENT', title: '불을 건너는 길 · 분위기 연출', cycle: '26.1초 (4.35초 × 6)',
+        note: '바닥 연출 재 한 송이와 요소 연출 셋(꺼진 불씨 칸 연기, 화로 연기, 화로 불티)을 씁니다. 넷은 같이 일어나지 않고, 게임과 같이 4.35초마다 하나씩 바닥과 요소를 번갈아 일어납니다. 재는 불이 아니라 내려앉는 잿빛 송이와 먼지뿐이고, 요소 연출 셋은 그대로입니다. 모두 3장 물 잔물결(칸 폭 0.84배까지)에 맞춰, 퍼지는 폭이 칸 폭의 0.46~0.69배입니다. 위로 솟지 않고 옆으로 퍼지며 한 층(30px)을 넘지 않습니다. 바탕은 4장 세계 색 "호박색"입니다.',
+        order: '큰 판은 실제 한 바퀴(26.1초)를 그대로 돕니다. 4.35초마다 하나씩, 바닥 → 요소 → 바닥 → 요소로 번갈아 갑니다. 16월드처럼 화로가 없는 판에서는 요소 차례가 불씨 칸 연기 하나뿐이라 재 → 불씨 칸 연기 → 재 → 불씨 칸 연기로 돕니다. 불씨 칸이 다 켜져 요소 연출이 하나도 없으면 요소 차례는 쉼이 되고, 재만 8.7초마다 내려앉아 판이 완전히 멈추지 않습니다.',
+        phone: '판 전체를 담아 칸 폭이 52px(데스크톱의 절반)인 폰 크기입니다. 오른쪽은 같은 크기로 자른 장면들이고, 맨 앞이 3장 물 잔물결(게임)입니다. 재는 호박색 바닥 위에서 송이 진하기 0.85, 먼지 0.55 → 0.38로 맞췄습니다. 송이는 폰에서 4.5px 점이지만 내려앉아 번지는 먼지가 32px까지 퍼져 잔물결과 비슷하게 보입니다.',
         still: '분위기 연출을 아예 그리지 않습니다. 화로는 원래 그림(빛나는 숯불, 둘레 빛, 멈춘 불티 넷)만으로 "늘 타는 장치"가 읽히고, 멈춘 연기 덩이는 얼룩처럼 보여서 남기지 않습니다. 타는 숯의 일렁임(2.4초)도 이 설정에서는 세기 1에 멈춥니다.' } };
     const P = { bg: M.bg, panel: M.panel, card: M.card };
-    const css = ['/* 한 바퀴 20s · 동시에 하나만 */', '0s 불씨 칸 연기 3.8s → 7s 화로 연기 4.3s → 14s 화로 불티 1.65s → 20s 다시',
-      '', '--color-amb-ember-smoke: #A99D90;   /* 꺼진 불씨 칸 연기 · 바닥보다 짙은 재 회갈색 */', '--color-amb-smoke: #C8BDB0;         /* 화로 연기 · 숯불보다 밝고 바닥보다 짙은 잿빛 */', '불티: --color-heat-core / --color-heat-hot',
-      '', '/* 크기 (칸 폭 104 기준 · 폰에서는 절반) */', 'ember smoke: 2 threads · 5 × 5 → 32 × 14px · spread 66px (0.63 tile) · opacity 0.45 → 0 · top 23px',
+    const css = ['/* 한 바퀴 26.1s · 4.35s마다 하나 · 바닥과 요소 번갈아 */', '0s 재 2.9s → 4.35s 불씨 칸 연기 3.8s → 8.7s 재 → 13.05s 화로 연기 4.3s → 17.4s 재 → 21.75s 화로 불티 1.65s → 26.1s 다시', '화로 없는 판: 재 → 불씨 칸 연기 → 재 → … · 요소 연출이 없으면 요소 차례는 쉼',
+      '', '--color-amb-ash: #8E8A84;           /* 재 송이 · 차가운 회색, 불씨 연기보다 짙고 덜 붉음 */', '--color-amb-ash-dust: #9E9A93;      /* 내려앉은 재 먼지 */', '--color-amb-ember-smoke: #A99D90;   /* 꺼진 불씨 칸 연기 · 바닥보다 짙은 재 회갈색 */', '--color-amb-smoke: #C8BDB0;         /* 화로 연기 · 숯불보다 밝고 바닥보다 짙은 잿빛 */', '불티: --color-heat-core / --color-heat-hot',
+      '', '/* 크기 (칸 폭 104 기준 · 폰에서는 절반) */', 'ash: flake 9 × 5.2px (flutter 2.8px) · falls 26px → 0, drift 12px · opacity 0.85 → 0 · dust iso diamond 0.2 → 0.5 → 0.62 tile (64 × 32px), opacity 0.55 → 0.38 → 0 at 1.8 / 2.4 / 2.9s · 2.9s', 'ember smoke: 2 threads · 5 × 5 → 32 × 14px · spread 66px (0.63 tile) · opacity 0.45 → 0 · top 23px',
       'brazier smoke: 2 puffs · 8 × 7 → 40 × 16px · spread 72px (0.69 tile) · opacity 0.5 → 0 · top 30px', 'sparks: 4 × Ø 4.4px · stagger 0.25s · spread 48px (0.46 tile, inside the bowl) · top 27px',
       '참고 · 물 잔물결 (게임 값): ring 0.18 → 0.84 tile · rim 0.06 · opacity 0.9 → 0 · 1.6s',
       '', 'prefers-reduced-motion: reduce → 분위기 연출을 그리지 않음 · 타는 숯 일렁임은 세기 1에 멈춤'];
@@ -195,9 +214,9 @@ class Component extends DCLogic {
     out.live = { bgi: E.url(vb, E.build(def, items, 'live')), w: LW + 'px', ar };
     out.still = { bgi: E.url(vb, E.build(def, items, 'none')), w: LW + 'px', ar };
     out.phone = { bgi: out.live.bgi, w: Math.round(vb[2] / 2) + 'px', ar };
-    out.opts = opts.map(o => ({ id: o.id, badge: o.badge, title: o.title, note: o.note, vals: o.vals, frames: o.shots.map(([t, cap]) => E.shot(def, items, o.at, o.crop, t, 2, cap)) }));
-    out.cmp = (rest.refFirst ? [E.refShot(0.5)] : []).concat(opts.map(o => E.shot(def, items, o.at, o.crop, o.peak, 0.5, o.title + ' · ' + (o.peak - o.s).toFixed(1) + '초')));
-    out.cmp2 = (rest.refFirst ? [E.refShot(1)] : []).concat(opts.map(o => E.shot(def, items, o.at, o.crop, o.peak, 1, o.title)));
+    out.opts = opts.map(o => ({ id: o.id, badge: o.badge, title: o.title, note: o.note, vals: o.vals, frames: o.shots.map(([t, cap]) => E.shot(def, o.items || items, o.at, o.crop, t, 2, cap)) }));
+    out.cmp = (rest.refFirst ? [E.refShot(0.5)] : []).concat(opts.map(o => E.shot(def, o.items || items, o.at, o.crop, o.peak, 0.5, o.title + ' · ' + (o.peak - o.s).toFixed(1) + '초')));
+    out.cmp2 = (rest.refFirst ? [E.refShot(1)] : []).concat(opts.map(o => E.shot(def, o.items || items, o.at, o.crop, o.peak, 1, o.title)));
     this.cache = out; return out;
   }
 }
