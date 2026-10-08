@@ -98,7 +98,7 @@ $ pnpm stage:check src/stages/world-1/10.json
 | 상태          | Zustand                                                                                    |
 | 스타일        | Tailwind CSS v4                                                                            |
 | 영속화        | localStorage 키 `cubound:progress`, `cubound:session`, `cubound:language`, `cubound:world` |
-| 테스트        | Vitest 순수 함수 2100여 개 + Playwright 스모크와 화면 캡처                                 |
+| 테스트        | Vitest 순수 함수 2300여 개 + Playwright 스모크와 화면 캡처                                 |
 | 코드 퀄리티   | oxlint + Prettier + Husky + lint-staged                                                    |
 | 호스팅        | Vercel                                                                                     |
 

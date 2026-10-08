@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="../cubound-iso.js?v=20261007i"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #E9E7E2; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+</style>
+</helmet>
+<div style="background:{{ P.bg }};color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 90px;min-height:100vh">
+  <div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">
+      <span style="white-space:nowrap">{{ head.tag }}</span>
+      <span style="white-space:nowrap">분위기 연출</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:860px">
+      <span style="font-size:34px;font-weight:400;letter-spacing:-0.01em">{{ head.title }}</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.7;word-break:keep-all;text-wrap:pretty">{{ head.note }}</span>
+    </div>
+
+    <div style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">ORDER</span><span style="font-size:22px;font-weight:400">한 바퀴 · {{ head.cycle }}</span></div>
+      <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ head.order }}</span>
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+        <div style="width:{{ live.w }};max-width:100%;aspect-ratio:{{ live.ar }};background-image:{{ live.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:420px;max-width:100%;flex:1">
+          <div style="display:grid;grid-template-columns:28px minmax(84px,1.6fr) 72px 56px minmax(120px,2fr);gap:10px;font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781;padding:0 0 6px;border-bottom:1px solid rgba(58,57,54,0.1)"><span>#</span><span>연출</span><span>시작</span><span>길이</span><span>자리</span></div>
+          <sc-for list="{{ seq }}" as="r" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:28px minmax(84px,1.6fr) 72px 56px minmax(120px,2fr);gap:10px;font-size:13px;line-height:1.5;padding:4px 0;word-break:keep-all"><span style="font-family:'IBM Plex Mono', monospace;color:#8A8781">{{ r.n }}</span><span>{{ r.name }}</span><span style="font-family:'IBM Plex Mono', monospace">{{ r.s }}</span><span style="font-family:'IBM Plex Mono', monospace">{{ r.len }}</span><span style="color:#5F5D59">{{ r.where }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">PHONE</span><span style="font-size:22px;font-weight:400">폰 390 × 844 · 판 전체 · 칸 폭 52px</span></div>
+      <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ head.phone }}</span>
+      <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+        <div style="width:390px;height:844px;max-width:100%;border-radius:40px;background:{{ P.bg }};box-shadow:0 0 0 8px #3A3936;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+          <div style="width:{{ phone.w }};max-width:100%;aspect-ratio:{{ phone.ar }};background-image:{{ phone.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;flex:1;min-width:260px">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;color:#8A8781">같은 크기 · 가장 크게 퍼진 때 · 실제 폰 픽셀</span>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">
+            <sc-for list="{{ cmp }}" as="f" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="width:{{ f.w }};aspect-ratio:{{ f.ar }};background-color:{{ f.bg }};border-radius:6px;background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.1em;color:#6E6C68;max-width:120px">{{ f.cap }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;color:#8A8781;padding-top:10px">같은 장면 × 2</span>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end">
+            <sc-for list="{{ cmp2 }}" as="f" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="width:{{ f.w }};aspect-ratio:{{ f.ar }};background-color:{{ f.bg }};border-radius:8px;background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.1em;color:#6E6C68">{{ f.cap }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <sc-for list="{{ opts }}" as="o" hint-placeholder-count="3">
+      <div id="{{ o.id }}" style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">{{ o.badge }}</span><span style="font-size:22px;font-weight:400">{{ o.title }}</span></div>
+        <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ o.note }}</span>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+          <sc-for list="{{ o.frames }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="width:{{ f.w }};max-width:100%;aspect-ratio:{{ f.ar }};background-color:{{ P.bg }};border-radius:10px;background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#6E6C68">{{ f.cap }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11.5px;line-height:1.7;color:#3A3936;white-space:pre-wrap">{{ o.vals }}</span>
+      </div>
+    </sc-for>
+
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:860px;padding-top:12px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">PAIR MARK</span><span style="font-size:22px;font-weight:400">짝 구분 · 한 판에 짝이 둘일 때</span></div>
+      <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty">앞 테두리의 점 셋은 뺐습니다. 짝이 하나뿐인 판은 표시 없이 지금 모습 그대로이고, 짝이 둘인 판에서만 둘째 짝이 달라집니다. 세 안 모두 새 색을 쓰지 않고 짝 칸에 이미 있는 색(우묵면, 판 옆면, 틀)만 씁니다. 추천은 가입니다. 폰 크기에서 가장 잘 갈리고, 숨 쉴 때 빛도 같은 꼴을 따라 밝아집니다.</span>
+    </div>
+    <sc-for list="{{ marks }}" as="o" hint-placeholder-count="3">
+      <div id="{{ o.id }}" style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">{{ o.badge }}</span><span style="font-size:22px;font-weight:400">{{ o.title }}</span></div>
+        <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ o.note }}</span>
+        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+          <sc-for list="{{ o.frames }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="width:{{ f.w }};max-width:100%;aspect-ratio:{{ f.ar }};background-color:{{ f.bg }};border-radius:10px;background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#6E6C68">{{ f.cap }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+
+    <div style="background:{{ P.panel }};border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">REDUCED MOTION</span><span style="font-size:22px;font-weight:400">움직임 줄이기 · 정지 모습</span></div>
+      <span style="font-size:13.5px;color:#5F5D59;line-height:1.65;word-break:keep-all;text-wrap:pretty;max-width:860px">{{ head.still }}</span>
+      <div style="width:{{ still.w }};max-width:100%;aspect-ratio:{{ still.ar }};background-image:{{ still.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">VALUES</span><span style="font-size:22px;font-weight:400">값</span></div>
+      <div style="background:{{ P.card }};border-radius:16px;padding:18px 20px;font-family:'IBM Plex Mono', monospace;font-size:12px;line-height:1.75;display:flex;flex-direction:column">
+        <sc-for list="{{ css }}" as="l" hint-placeholder-count="12"><span style="white-space:pre-wrap">{{ l.s }}</span></sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.wait(); }
+  componentWillUnmount() { clearTimeout(this.tm); }
+  wait() { if (!window.CuboundIso || !window.CuboundIso.CH3) { this.tm = setTimeout(() => this.wait(), 40); return; } this.forceUpdate(); }
+  engine(K, T) {
+    const r2 = v => Math.round(v * 100) / 100;
+    // keys: [[seconds from start, {numeric attrs}]], s = start inside the chapter cycle T. derive maps numbers to svg attrs
+    const fx = (tag, base, keys, s, derive) => { const k = [], rows = [];
+      const push = (t, o) => { k.push(+(t / T).toFixed(5)); rows.push(o); };
+      if (s + keys[0][0] > 0) { const hold = Object.assign({}, keys[0][1], { opacity: 0 }); push(0, hold); if (s + keys[0][0] > 0.02) push(s + keys[0][0] - 0.01, hold); }
+      keys.forEach(([t, o]) => push(s + t, o));
+      if (s + keys[keys.length - 1][0] < T) push(T, keys[keys.length - 1][1]);
+      return { tag, base, k, rows, names: Object.keys(keys[0][1]), derive: derive || (o => o) }; };
+    const at = (sp, t) => { const ph = (t % T) / T; let i = 0; while (i < sp.k.length - 2 && ph > sp.k[i + 1]) i++;
+      const u = Math.min(1, Math.max(0, (ph - sp.k[i]) / ((sp.k[i + 1] - sp.k[i]) || 1))), o = {};
+      sp.names.forEach(n => o[n] = r2(sp.rows[i][n] + (sp.rows[i + 1][n] - sp.rows[i][n]) * u)); return sp.derive(o); };
+    const A = o => Object.keys(o).map(n => ' ' + n + '="' + o[n] + '"').join('');
+    const live = sp => { const D = sp.rows.map(sp.derive), names = Object.keys(D[0]);
+      return '<' + sp.tag + A(Object.assign({}, sp.base, D[0])) + '>' + names.map(n => '<animate attributeName="' + n + '" values="' + D.map(d => d[n]).join(';') + '" keyTimes="' + sp.k.join(';') + '" dur="' + T + 's" repeatCount="indefinite"/>').join('') + '</' + sp.tag + '>'; };
+    const still = (sp, t) => '<' + sp.tag + A(Object.assign({}, sp.base, at(sp, t))) + '/>';
+    const dia = s => { const w = r2(52 * s), h = r2(26 * s); return 'M0,' + (-h) + 'L' + w + ',0L0,' + h + 'L' + (-w) + ',0Z'; };
+    // the game's water ripple, values as in the game: ring 0.18 → 0.84 of the tile, rim 0.06, opacity 0.9 → 0 over 1.6s
+    const ripple = (s, fill) => fx('path', { fill, 'fill-rule': 'evenodd' }, [[0, { s: 0.18, opacity: 0.9 }], [1.6, { s: 0.84, opacity: 0 }]], s, o => ({ d: dia(o.s) + dia(Math.max(0.02, o.s - 0.06)), opacity: o.opacity }));
+    const draw = sh => sh.map(p => p.raw !== undefined ? p.raw : '<polygon points="' + p.d + '" fill="' + p.f + '"' + (p.o !== 1 ? ' opacity="' + p.o + '"' : '') + '/>').join('');
+    const url = (box, body) => 'url("data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + box.join(' ') + '">' + body + '</svg>') + '")';
+    // each overlay is placed in its cell's paint order, so taller cells in front cover it
+    const build = (def, items, mode, t) => { const d = Object.assign({}, def, { objs: Object.assign({}, def.objs) });
+      if (mode !== 'none') items.forEach(it => { d.objs[it.cell] = (d.objs[it.cell] || []).concat([{ t: 'raw', raw: it.fx.map(sp => mode === 'live' ? live(sp) : still(sp, t)).join('') + (it.after || '') }]); });
+      return draw(K.scene(d)); };
+    const iso = (x, y, h) => [(x - y) * 52, (x + y) * 26 - h * 30];
+    const shot = (def, items, anchor, crop, t, sc, cap) => { const c = [anchor[0] + crop[0], anchor[1] + crop[1], crop[2], crop[3]];
+      return { cap, bg: '#E9E7E2', bgi: url(c, build(def, items, 'still', t)), w: Math.round(c[2] * sc) + 'px', ar: c[2] + ' / ' + c[3] }; };
+    // game ripple on a CHAPTER 3 water cell, for size comparison
+    const wdef = { W: 0, base: -1, pal: 'mid', g: [[-1, -1, -1]] }, wa = iso(1, 0, 0);
+    const refShot = sc => shot(wdef, [{ cell: '1,0', fx: [ripple(0, K.CH3.mid.refl)] }], [wa[0], wa[1] + 6], [-56, -32, 112, 64], 0.8, sc, '물 잔물결 (게임) · 0.8초');
+    return { fx, build, url, ripple, iso, shot, refShot };
+  }
+  renderVals() {
+    const K = window.CuboundIso;
+    if (!K || !K.CH3) return { marks: [], opts: [], seq: [], css: [], cmp: [], cmp2: [], live: {}, still: {}, phone: {}, head: {}, P: { bg: '#E9E7E2', panel: '#F2F1EE', card: '#F7F6F4' } };
+    if (this.cache) return this.cache;
+    const T = 36, E = this.engine(K, T), iso = E.iso, r2 = v => Math.round(v * 100) / 100;
+    const F1 = { a: '#EDEBE6', b: '#E7E5E0', l: '#C6C3BC', r: '#D9D6D0', pit: '#B5B2AB' };
+    const dia = (s, y) => { const w = r2(52 * s), hh = r2(26 * s); y = y || 0; return 'M0,' + r2(y - hh) + 'L' + w + ',' + y + 'L0,' + r2(y + hh) + 'L' + (-w) + ',' + y + 'Z'; };
+    const poly = (pts, f) => '<polygon points="' + pts.map(p => r2(p[0]) + ',' + r2(p[1])).join(' ') + '" fill="' + f + '"/>';
+    // CHAPTER 1 pair cell (warp), same parts as common/terrain: machine frame, raised plate, recessed dish, pips
+    // CHAPTER 1 pair cell (warp): machine frame, raised plate, recessed dish. mark = how the second pair differs (only when a board has two pairs)
+    const warpRaw = mark => { const a = 43.68, b = 21.84, out = [poly([[0, -26], [52, 0], [0, 26], [-52, 0]], '#E5E2DB'),
+        poly([[-a, -4], [0, b - 4], [0, b], [-a, 0]], '#D3CFC7'), poly([[0, b - 4], [a, -4], [a, 0], [0, b]], '#EAE7E0'), poly([[0, -b - 4], [a, -4], [0, b - 4], [-a, -4]], '#F7F5F0')];
+      if (mark === 'round') out.push('<ellipse cx="0" cy="-1" rx="23.92" ry="11.96" fill="#DEDAD2"/>');
+      else out.push(poly([[0, -12.96], [23.92, -1], [0, 10.96], [-23.92, -1]], '#DEDAD2'));
+      if (mark === 'step') out.push(poly([[0, -6.2], [12.4, 0], [0, 6.2], [-12.4, 0]], '#D3CFC7'));
+      if (mark === 'notch') { const k = 0.3; out.push(poly([[-a, -4], [-a * (1 - k), -4 - b * k], [-a * (1 - k), -4 + b * k]], '#E5E2DB'), poly([[a, -4], [a * (1 - k), -4 - b * k], [a * (1 - k), -4 + b * k]], '#E5E2DB')); }
+      return out.join(''); };
+    const def = { floor: F1, g: [[1, 1, 0, 0, 0], [1, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]],
+      cells: { '3,1': { t: 'iceland' }, '4,1': { t: 'iceland' }, '3,2': { t: 'iceland' } },
+      objs: { '1,0': [{ t: 'raw', raw: warpRaw() }], '4,4': [{ t: 'raw', raw: warpRaw() }], '0,4': [{ t: 'hole' }], '2,3': [{ t: 'box' }], '3,3': [{ t: 'sw' }], '1,2': [{ t: 'cube' }] } };
+    const vb = K.fit(K.scene(def), 16).split(' ').map(Number);
+    const LT = '#FFFFFF';
+    // 가 · motes: three soft specks rise 14–17px from the floor and drift apart to 56px
+    const mote = (x0, dx, s) => E.fx('circle', { r: 3.6, fill: LT }, [[0, { cx: x0, cy: 2, opacity: 0 }], [0.4, { cx: x0 + dx * 0.15, cy: -2, opacity: 0.6 }], [2.0, { cx: x0 + dx, cy: -14, opacity: 0.4 }], [2.6, { cx: x0 + dx * 1.1, cy: -17, opacity: 0 }]], s);
+    const motes = s => [mote(-6, -22, s), mote(5, 22, s + 0.3), mote(0, 3, s + 0.6)];
+    // 나 · light patch: a soft bright diamond swells on the floor and fades
+    const patch = s => [E.fx('path', { fill: LT }, [[0, { s: 0.5, opacity: 0 }], [1.0, { s: 0.68, opacity: 0.5 }], [2.4, { s: 0.8, opacity: 0 }]], s, o => ({ d: dia(o.s), opacity: o.opacity }))];
+    // 다 · breeze: a flat light band skims along the cell's long axis
+    const band = a => { const p = (u, v) => [(u - v) * 52, (u + v) * 26]; return 'M' + [p(a - 0.3, -0.06), p(a + 0.3, -0.06), p(a + 0.3, 0.06), p(a - 0.3, 0.06)].map(q => r2(q[0]) + ',' + r2(q[1])).join('L') + 'Z'; };
+    const breeze = s => [E.fx('path', { fill: LT }, [[0, { a: -0.25, opacity: 0 }], [0.8, { a: -0.05, opacity: 0.7 }], [2.2, { a: 0.25, opacity: 0 }]], s, o => ({ d: band(o.a), opacity: o.opacity }))];
+    // pair cell breath: the dish brightens and the light swells to 0.7 of the tile, one slow breath
+    // pair cell breath: the dish lightens, and a light ring swells over the machine frame to 0.98 of the tile. both cells of a pair breathe together
+    const breath = s => [E.fx('path', { fill: LT }, [[0, { opacity: 0 }], [1.4, { opacity: 0.85 }], [3.2, { opacity: 0 }]], s, o => ({ d: dia(0.46, -1), opacity: o.opacity })),
+      E.fx('path', { fill: LT, 'fill-rule': 'evenodd' }, [[0, { s: 0.86, opacity: 0 }], [1.4, { s: 0.93, opacity: 0.7 }], [3.2, { s: 0.98, opacity: 0 }]], s, o => ({ d: dia(o.s) + dia(o.s - 0.05), opacity: o.opacity }))];
+    // home rim (candidate): one faint ring leaves the hole's edge
+    const rim = s => [E.fx('path', { fill: LT, 'fill-rule': 'evenodd' }, [[0, { s: 0.62, opacity: 0 }], [0.3, { s: 0.66, opacity: 0.4 }], [2.0, { s: 0.86, opacity: 0 }]], s, o => ({ d: dia(o.s) + dia(o.s - 0.06), opacity: o.opacity }))];
+    const items = [{ cell: '4,3', fx: motes(0) }, { cell: '1,0', fx: breath(12) }, { cell: '4,4', fx: breath(12) }, { cell: '2,1', fx: motes(24) }];
+    const a43 = iso(4, 3, 0), a10 = iso(1, 0, 1);
+    const opts = [
+      { id: 'amb-mote', badge: '1 · 가 · 추천', title: '빛 알갱이', at: a43, crop: [-56, -36, 112, 60], items, s: 0, peak: 2.0,
+        note: '빈 바닥 칸에서 흰 알갱이 셋이 0.3초 차로 떠올라 천천히 벌어지며 사라집니다. 떠오르는 높이 14~17px, 벌어지는 폭 56px(칸 폭 0.54배). 칸 바닥에 아무 흔적이 안 남아 칸의 상태로 읽히지 않고, 테마 없이 "공기 속 먼지에 빛이 닿은" 정도입니다. 2장 포자(버섯에서, 0.85)보다 크고 옅고(0.6) 느립니다. 이 장면은 스위치와 짝 칸 옆 칸입니다.',
+        shots: [[0.5, '0.5초'], [1.2, '1.2초'], [2.0, '2.0초 · 가장 넓음'], [2.9, '2.9초 · 사라짐']],
+        vals: '한 번 3.2초 (알갱이마다 2.6초, 0.3초씩 늦게)\n#FFFFFF 지름 7.2px · 진하기 0.6 → 0 · 높이 2 → 17px · 벌어짐 56px (0.54 tile)\n칸: 아무것도 없는 보통 땅 · 큐브와 상하좌우로 맞닿지 않음 · 얼음바닥, 짝 칸, 스위치, 집 위는 제외 (옆 칸은 됨)' },
+      { id: 'amb-patch', badge: '나', title: '빛 고임', at: iso(2, 0, 0), crop: [-56, -36, 112, 60], items: [{ cell: '2,0', fx: patch(0) }], s: 0, peak: 1.0,
+        note: '빈 칸 바닥에 옅은 빛 마름모가 칸 폭 0.5배에서 0.8배로 부풀며 사라집니다. 폰에서 가장 잘 보이지만, 칸 윗면 전체가 잠깐 밝아져 "이 칸이 바뀌었나"(얼음바닥 반짝임, 짝 칸)로 읽힐 수 있어 고르지 않았습니다.',
+        shots: [[0.4, '0.4초'], [1.0, '1.0초 · 가장 밝음'], [1.7, '1.7초'], [2.2, '2.2초']],
+        vals: '한 번 2.4초\n#FFFFFF 마름모 0.5 → 0.8 tile · 진하기 0 → 0.5 → 0 · 높이 0' },
+      { id: 'amb-breeze', badge: '다', title: '바람 자락', at: iso(2, 0, 0), crop: [-56, -36, 112, 60], items: [{ cell: '2,0', fx: breeze(0) }], s: 0, peak: 0.8,
+        note: '칸 길이 방향으로 납작한 빛 띠(칸 폭 0.6배)가 바닥을 스치며 미끄러져 사라집니다. 바람만 있는 느낌은 가장 잘 나오지만, 움직이는 방향이 생겨 "이쪽으로 미끄러진다"(얼음바닥)나 이동 힌트로 읽힐 수 있어 고르지 않았습니다.',
+        shots: [[0.3, '0.3초'], [0.8, '0.8초 · 가장 진함'], [1.4, '1.4초'], [2.0, '2.0초']],
+        vals: '한 번 2.2초\n#FFFFFF 띠 0.6 × 0.12 tile · 진하기 0 → 0.7 → 0 · 칸 안에서 0.5 tile 이동' },
+      { id: 'amb-warp', badge: '2 · 추천', title: '짝 칸 숨', at: a10, crop: [-56, -32, 112, 56], items, s: 12, peak: 13.4,
+        note: '짝 칸 가운데 우묵면이 한 번 숨 쉬듯 밝아지고, 같은 때 기계 틀 위로 옅은 빛 테가 칸 폭 0.86배에서 0.98배로 번졌다 사라집니다. 흰 판 위는 흰빛이 안 보여서, 대비가 있는 우묵면(#DEDAD2)과 틀(#E5E2DB)에서 숨 쉬게 했습니다. 짝 칸은 늘 켜져 있는 요소라 상태로 읽히지 않습니다. 한 짝의 두 칸은 한 요소라 같이 숨 쉬고, 같이 밝아지는 것으로 어느 둘이 짝인지 드러납니다. 이 장면은 앞쪽 칸이고, 뒤쪽 짝(4,4)도 같은 때 숨 쉽니다.',
+        shots: [[12.6, '0.6초'], [13.4, '1.4초 · 가장 밝음'], [14.3, '2.3초'], [15.0, '3.0초']],
+        vals: '한 번 3.2초 (들숨 1.4 · 날숨 1.8)\n우묵면: #FFFFFF 0.46 tile · 진하기 0 → 0.85 → 0 (우묵면 꼴을 그대로 따름: 마름모 / 둥근 꼴)\n틀 위 빛 테: #FFFFFF 0.86 → 0.93 → 0.98 tile · 테 폭 0.05 tile · 진하기 0 → 0.7 → 0\n한 짝의 두 칸이 같이 · 짝이 둘이면 바퀴마다 다른 짝 · 큐브가 선 짝 칸도 같이 숨 쉼 (큐브에 가린 우묵면 대신 틀 빛 테만 보임)' }];
+    // CHAPTER 2 butterfly, same code as chapter-2/ambient, for weight comparison
+    const BT = [[0, 34, -24, 5, 0], [0.25, 28, -21, 2, 0.9], [0.5, 21, -16, 5, 0.9], [0.75, 13, -11, 2, 0.9], [1.0, 6, -6, 5, 0.9], [1.2, 0, -3, 5, 0.9], [1.7, 0, -3, 5, 0.9], [1.8, 0, -3, 1.4, 0.9], [2.0, 0, -3, 5, 0.9], [2.3, -7, -7, 2, 0.9], [2.6, -14, 1, 5, 0.9], [3.1, -14, 1, 5, 0.9], [4.4, -34, -25, 5, 0]];
+    const wing = (sg, f) => E.fx('ellipse', { ry: 4, fill: f }, BT.map(([t, x, y, rx, o]) => [t, { cx: x + sg * rx, cy: y, rx, opacity: o }]), 0);
+    const F2 = K.CH2C, def2 = { floor: { a: F2.a, b: F2.b, l: F2.l, r: F2.r, pit: F2.pit }, g: [[0, 0, 0], [0, 0, 0], [0, 0, 0]], objs: {} };
+    const bfly = sc => Object.assign(E.shot(def2, [{ cell: '1,1', fx: [wing(-1, '#C9C0AD'), wing(1, '#D9D1C0')] }], iso(1, 1, 0), [-56, -32, 112, 60], 1.2, sc, '비교 · 2장 나비 · 1.2초'), { bg: F2.bg });
+    const rest = {
+      seq: [{ n: '1', name: '빛 알갱이', s: '0초', len: '3.2초', where: '빈 보통 땅 한 칸 (무작위)' }, { n: '2', name: '짝 칸 숨', s: '12초', len: '3.2초', where: '한 짝의 두 칸이 같이 (짝이 둘이면 바퀴마다 번갈아)' },
+        { n: '3', name: '빛 알갱이', s: '24초', len: '3.2초', where: '1과 다른 빈 칸' }],
+      head: { tag: 'CUBOUND · CHAPTER 1 · AMBIENT', title: '돌 위의 첫걸음 · 분위기 연출', cycle: '36초',
+        note: '바닥의 빛 알갱이 하나와 짝 칸 숨 하나를 씁니다. 화면에 늘 하나만 움직이되, 짝 칸 숨은 한 짝의 두 칸이 한 요소라 같이 움직입니다. 2~4장보다 드물게(36초에 세 번, 사이 8.8초 이상) 일어나고, 진하기는 바닥 알갱이 0.6으로 2~4장(0.7~0.9)보다 낮습니다. 크기는 게임 물 잔물결에 맞춰 칸 폭의 0.54~0.98배까지 퍼지고 한 층(30px)을 넘지 않습니다. 색은 테마 없이 흰빛 하나뿐이고, 큐브와 상태가 바뀌는 요소(스위치, 무너지는 칸, 문, 얼음바닥)에는 붙지 않습니다. 바탕은 1장 실제 바닥 값입니다.',
+        order: '큰 판은 실제 한 바퀴(36초)를 그대로 돕니다. 짝 칸이 없는 판에서는 2의 차례가 쉼이 됩니다. 1장의 첫 판들은 짝 칸이 없어 빛 알갱이만 18초 간격으로 일어납니다.',
+        phone: '판 전체를 담아 칸 폭이 52px(데스크톱의 절반)인 폰 크기입니다. 오른쪽은 같은 크기로 자른 장면들입니다. 맨 앞은 게임 물 잔물결이고 맨 끝은 2장 나비입니다. 흰빛이 밝은 바닥 위에 얹혀, 잔물결과 비슷한 폭으로 퍼지되 나비보다 확실히 옅습니다.',
+        still: '분위기 연출을 아예 그리지 않습니다. 멈춘 알갱이는 먼지 얼룩으로, 밝아진 우묵면은 짝 칸이 켜진 상태로 읽혀서입니다. 요소 그림은 평소와 같습니다.' } };
+    const P = { bg: '#E9E7E2', panel: '#F2F1EE', card: '#F7F6F4' };
+    const css = ['/* 한 바퀴 36s · 동시에 하나만 */', '0s 빛 알갱이 3.2s → 12s 짝 칸 숨 3.2s → 24s 빛 알갱이 3.2s → 36s 다시',
+      '', '--color-amb-light: #FFFFFF;   /* 1장 연출은 이 흰빛 하나 · 진하기로만 조절 */',
+      '', '/* 크기 (칸 폭 104 기준 · 폰에서는 절반) */', 'mote: 3 × Ø 7.2px · stagger 0.3s · rise 14–17px · spread 56px (0.54 tile) · opacity 0.6 → 0',
+      'warp breath (both cells of the pair): dish 0.46 tile opacity 0 → 0.85 → 0 · frame ring 0.86 → 0.98 tile, rim 0.05, opacity 0 → 0.7 → 0 · 1.4s in / 1.8s out',
+      '참고 · 물 잔물결 (게임 값): ring 0.18 → 0.84 tile · rim 0.06 · opacity 0.9 → 0 · 1.6s',
+      '참고 · 2장: 30s에 4번, 진하기 0.7–0.9 / 1장: 36s에 3번, 진하기 0.5–0.6',
+      '', '/* 짝 구분 (한 판에 짝이 둘일 때만 · 둘째 짝에만) · 새 색 없음 */', '첫째 짝: 마름모 우묵면 #DEDAD2 0.46 tile (짝이 하나뿐인 판과 같음)',
+      '가 · 추천: 둘째 짝 우묵면을 둥근 꼴로 · iso 타원 rx 23.92 ry 11.96 (0.46 tile 마름모에 내접하지 않고 같은 폭) · #DEDAD2',
+      '나: 둘째 짝 우묵면 안에 한 단 더 · 마름모 0.24 tile · #D3CFC7 (판 왼쪽 옆면 색)', '다: 둘째 짝 판 좌우 모서리 홈 · 판 0.84 tile 꼭짓점에서 0.3만큼 · #E5E2DB (틀 색)',
+      '점(핍) 표시는 뺌', '', 'prefers-reduced-motion: reduce → 분위기 연출을 그리지 않음'];
+    const out = Object.assign({ css: css.map(s => ({ s })), P }, rest);
+    const pairDef = mark => ({ floor: F1, g: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], objs: { '0,0': [{ t: 'raw', raw: warpRaw() }], '3,2': [{ t: 'raw', raw: warpRaw() }], '3,0': [{ t: 'raw', raw: warpRaw(mark) }], '0,2': [{ t: 'raw', raw: warpRaw(mark) }], '1,1': [{ t: 'cube' }] } });
+    const pairShot = (mark, sc, cap) => { const d = pairDef(mark), v = K.fit(K.scene(d), 10).split(' ').map(Number); return { cap, bg: '#E9E7E2', bgi: E.url(v, E.build(d, [], 'none')), w: Math.round(v[2] * sc) + 'px', ar: v[2] + ' / ' + v[3] }; };
+    const tileShot = (mark, sc, cap) => { const d = { floor: F1, g: [[0]], objs: { '0,0': [{ t: 'raw', raw: warpRaw(mark) }] } }; return E.shot(d, [], [0, 0], [-60, -34, 120, 68], 0, sc, cap); };
+    out.marks = [
+      { id: 'mark-shape', badge: '가 · 추천', title: '우묵면 꼴 · 마름모와 둥근 꼴', note: '둘째 짝의 우묵면만 둥근 꼴로 바꿉니다. 색, 크기, 깊이는 그대로라 같은 요소로 읽히고, 꼴이 다른 것은 큐브가 칸 가운데를 덮어도 테두리 쪽에서 보입니다. 폰 크기에서 셋 중 가장 또렷하게 갈립니다.', mk: 'round' },
+      { id: 'mark-step', badge: '나', title: '우묵면 한 단 더', note: '둘째 짝은 우묵면 안이 한 단 더 파입니다(판 옆면 색). "더 깊은 짝"으로 읽힙니다. 데스크톱에서는 분명하지만, 폰에서는 작은 점처럼 보여 빼 달라고 하신 점 표시와 가까워집니다. 큐브가 서면 가운데라 가려집니다.', mk: 'step' },
+      { id: 'mark-notch', badge: '다', title: '판 모서리 홈', note: '둘째 짝은 판 좌우 모서리가 비스듬히 깎여 틀이 드러납니다. 큐브가 서도 가리지 않는 자리입니다. 다만 흰 판 위의 흰 틀이라 대비가 가장 약해, 폰 크기에서 겨우 읽힙니다.', mk: 'notch' }
+    ].map(m => ({ id: m.id, badge: m.badge, title: m.title, note: m.note,
+      frames: [tileShot(undefined, 2, '첫째 짝'), tileShot(m.mk, 2, '둘째 짝'), pairShot(m.mk, 1, '한 판에 짝 둘 · 데스크톱'), pairShot(m.mk, 0.5, '폰 · 칸 폭 52px')] }));
+    const LW = Math.min(vb[2], 560), ar = vb[2] + ' / ' + vb[3];
+    out.live = { bgi: E.url(vb, E.build(def, items, 'live')), w: LW + 'px', ar };
+    out.still = { bgi: E.url(vb, E.build(def, items, 'none')), w: LW + 'px', ar };
+    out.phone = { bgi: out.live.bgi, w: Math.round(vb[2] / 2) + 'px', ar };
+    out.opts = opts.map(o => ({ id: o.id, badge: o.badge, title: o.title, note: o.note, vals: o.vals, frames: o.shots.map(([t, cap]) => E.shot(def, o.items, o.at, o.crop, t, 2, cap)) }));
+    const pick = opts.filter(o => o.id === 'amb-mote' || o.id === 'amb-warp');
+    out.cmp = [E.refShot(0.5)].concat(pick.map(o => E.shot(def, o.items, o.at, o.crop, o.peak, 0.5, o.title + ' · ' + (o.peak - o.s).toFixed(1) + '초')), [bfly(0.5)]);
+    out.cmp2 = [E.refShot(1)].concat(pick.map(o => E.shot(def, o.items, o.at, o.crop, o.peak, 1, o.title)), [bfly(1)]);
+    this.cache = out; return out;
+  }
+}
+</script>
+</body>
+</html>
