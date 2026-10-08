@@ -92,3 +92,12 @@ export {
   stoneSteps,
   type StoneTone,
 } from './iceStoneView'
+export {
+  AMBIENT,
+  type AmbientKind,
+  type AmbientPlan,
+  type AmbientShape,
+  ambientCells,
+  ambientLoops,
+  ambientPlan,
+} from './ambientView'

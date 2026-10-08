@@ -57,6 +57,7 @@ const looks = (
   events: GameEvent[] = [],
   t = 1,
   restarting = false,
+  ambient: Parameters<typeof cellLook>[0]['ambient'] = null,
 ) => {
   const trams = game.stage.entities.filter((e): e is Tram => e.type === 'tram')
   const swampSeconds = swampTime(restarting ? null : prevGame, game)
@@ -85,6 +86,7 @@ const looks = (
     fillingKey,
     railDirs,
     scene,
+    ambient,
   })
   return new Map(cells.map((cell) => [cell.key, lookOf(cell)]))
 }
@@ -179,6 +181,26 @@ describe('cellLook', () => {
     expect(cells.get('3-1')!.look.tether.range).toBe(0)
     expect(cells.get('5-2')!.look.tether.range).toBe(-1)
     expect(cells.get('2-0')!.look.tether.post).toBeGreaterThan(0)
+  })
+
+  it('분위기 연출은 고른 칸에만 종류와 시작을 두고 다른 칸은 없는 값', () => {
+    const ambient = { kind: 'mote' as const, cells: [{ x: 3, y: 0 }], at: 24000, cycle: 36000 }
+    const cells = looks(createState(FILL_STAGE), null, [], 1, false, ambient)
+    expect(cells.get('3-0')!.look.ambient).toEqual({
+      kind: 'mote',
+      at: 24000,
+      cycle: 36000,
+      near: false,
+    })
+    expect(cells.get('4-0')!.look.ambient).toEqual({ kind: null, at: 0, cycle: 0, near: false })
+  })
+
+  it('분위기 연출 칸 옆에 큐브가 오면 near', () => {
+    const ambient = { kind: 'butterfly' as const, cells: [{ x: 4, y: 0 }], at: 0, cycle: 5800 }
+    const far = looks(createState(FILL_STAGE), null, [], 1, false, ambient)
+    expect(far.get('4-0')!.look.ambient.near).toBe(false)
+    const game = { ...createState(FILL_STAGE), player: { x: 3, y: 0 } }
+    expect(looks(game, null, [], 1, false, ambient).get('4-0')!.look.ambient.near).toBe(true)
   })
 })
 

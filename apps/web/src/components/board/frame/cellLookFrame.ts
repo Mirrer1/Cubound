@@ -1,4 +1,4 @@
-import { ICE, idleRipples, postBands, rippleCycle, waterLook } from '../view'
+import { type AmbientKind, ICE, idleRipples, postBands, rippleCycle, waterLook } from '../view'
 import { type LadderLook, ladderLookOf } from './carryFrame'
 import type { boardCells } from './cellFrame'
 import { crackFrame, crackLeft, sinkAt } from './crackFrame'
@@ -18,10 +18,12 @@ import { type VineCell, vineCellOf } from './vineFrame'
 import { leanOf, whirlLook } from './whirlpoolFrame'
 import { TILE } from '@/game/iso'
 import { isIce } from '@/game/rules'
-import type { Direction, GameEvent, GameState, Stage } from '@/game/types'
+import type { Direction, GameEvent, GameState, Point, Stage } from '@/game/types'
 
 // 재시작에 메운 바닥이 사라지는 진행도
 const RESTORE_FADE = 0.25
+
+const NO_AMBIENT = { kind: null, at: 0, cycle: 0, near: false }
 
 export interface CellLook {
   x: number
@@ -104,6 +106,12 @@ export interface CellLook {
   ladder: LadderLook
   vine: VineCell
   seed: SeedCell
+  ambient: {
+    kind: AmbientKind | null // 이 칸에서 이번 차례에 일어나는 분위기 연출
+    at: number // 바퀴 안에서 시작하는 ms
+    cycle: number
+    near: boolean // 큐브가 이 칸이나 상하좌우 칸에 선 상태
+  }
 }
 
 interface CellLookView {
@@ -115,6 +123,7 @@ interface CellLookView {
   fillingKey: string | null
   railDirs: Map<string, string>
   scene: ReturnType<typeof sceneFrame>
+  ambient: { kind: AmbientKind; cells: Point[]; at: number; cycle: number } | null
 }
 
 // 칸 하나에 넘길 값, over는 칸 위에 얹어 그릴 것
@@ -127,6 +136,7 @@ export const cellLook = ({
   fillingKey,
   railDirs,
   scene,
+  ambient,
 }: CellLookView) => {
   const { heights, boxes } = game
   const walls = { heights, before: scene.before, fillingKey, vineFrame: scene.vineFrame, railDirs }
@@ -141,6 +151,7 @@ export const cellLook = ({
 
   return (cell: ReturnType<typeof boardCells>[number]) => {
     const capHere = scene.caps.find((capFrame) => same(capFrame.cell, cell.p))
+    const ambientHere = ambient && has(ambient.cells, cell.p) ? ambient : null
     const water = waterLook(stage, cell.p, scene.sluice.waterAt)
     const rippleHere = scene.ripple && same(scene.ripple.at, cell.p) ? scene.ripple : null
     const swampHere = (stage.swamp?.[cell.p.y]?.[cell.p.x] ?? '.') !== '.'
@@ -180,7 +191,7 @@ export const cellLook = ({
     const pitShown = cell.pit || (vine?.kind === 'grown' && vine.rise < 1)
 
     const tram = scene.tramFrames.find((frame) => same(frame.cell, cell.p)) ?? null
-    const drawCube = same(scene.cube.cell, cell.p) && !(game.cleared && !scene.moving)
+    const drawCube = same(scene.cube.cell, cell.p) && !scene.home
     const drawBoxes = scene.boxFrames.filter((frame) => same(frame.cell, cell.p))
     const whirlBoxes = scene.whirl.boxes.filter((frame) => same(frame.cell, cell.p))
     const stones = scene.iceStone.stones.filter((frame) => same(frame.cell, cell.p))
@@ -194,7 +205,7 @@ export const cellLook = ({
       scene.whirl.boxes.some((frame) => same(frame.to, cell.p)) ||
       scene.iceStone.stones.some((frame) => same(frame.to, cell.p))
     const lane = scene.lanes.get(cell.key)
-    const goalEffect = same(cell.p, stage.goal) && game.cleared && !scene.moving
+    const goalEffect = same(cell.p, stage.goal) && scene.home
     const droppingBox = scene.dropping ? boxes.findIndex((b) => same(b, cell.p)) : -1
     const boxDrop =
       droppingBox >= 0 ? restartDrop(t, droppingBox + 1, boxes.length, game.stones.length) : null
@@ -303,6 +314,14 @@ export const cellLook = ({
       ladder: ladderLookOf(scene, game, back, cell, pickedHere),
       vine: vineCellOf(vine),
       seed: seedCellOf(scene, game, cell, seedHere, pickedHere),
+      ambient: ambientHere
+        ? {
+            kind: ambientHere.kind,
+            at: ambientHere.at,
+            cycle: ambientHere.cycle,
+            near: Math.abs(cell.p.x - game.player.x) + Math.abs(cell.p.y - game.player.y) <= 1,
+          }
+        : NO_AMBIENT,
     }
 
     return {

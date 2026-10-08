@@ -27,12 +27,24 @@ import {
   vineLooks,
   waterAtOf,
 } from './frame'
-import { LEAN_LOOP, WATER, leanShift, pullLanes, shade } from './view'
+import {
+  type AmbientKind,
+  LEAN_LOOP,
+  type ViewBox,
+  WATER,
+  ambientCells,
+  ambientPlan,
+  leanShift,
+  pullLanes,
+  shade,
+} from './view'
 import { TILE } from '@/game/iso'
 import type { GameEvent, GameState, Point } from '@/game/types'
+import { useAmbient } from '@/hooks/useAmbient'
 import { useBoardAnimation } from '@/hooks/useBoardAnimation'
 import { useBoardCamera } from '@/hooks/useBoardCamera'
 import { useLoop } from '@/hooks/useLoop'
+import { cycleOf, parseStageId } from '@/stages'
 
 interface BoardProps {
   game: GameState
@@ -123,7 +135,22 @@ const Board = ({
     [heights, scene.before.heights, railDirs, vines, fillingKey],
   )
 
-  const lookOf = cellLook({ stage, game, events, t, swampSeconds, fillingKey, railDirs, scene })
+  const plan = useMemo(() => ambientPlan(stage, cycleOf(parseStageId(stage.id).world)), [stage])
+  const pickAmbient = (kind: AmbientKind, round: number, slot: number, last: Point[]) =>
+    ambientCells(game, kind, round, slot, last, viewBox.split(' ').map(Number) as ViewBox)
+  const ambient = useAmbient(stage.id, plan, pickAmbient)
+
+  const lookOf = cellLook({
+    stage,
+    game,
+    events,
+    t,
+    swampSeconds,
+    fillingKey,
+    railDirs,
+    scene,
+    ambient,
+  })
   // 물에 잠긴 골, 앞줄 칸이 자기 수면 위에 다시 비추는 자리
   const goalCell = cells.find((cell) => same(cell.p, stage.goal))
   const goalLook = goalCell ? lookOf(goalCell).look : null

@@ -1,5 +1,6 @@
 import { type CSSProperties, type ReactNode, memo } from 'react'
 
+import BoardAmbient from './BoardAmbient'
 import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
 import BoardGoal from './BoardGoal'
@@ -46,6 +47,7 @@ import {
   waterTone,
 } from './view'
 import { TILE, blockFaces } from '@/game/iso'
+import { useFade } from '@/hooks/useFade'
 import { useLoop } from '@/hooks/useLoop'
 
 // 왼쪽 위 모서리와 나란하게 누운 얼음 윗면의 광택 면
@@ -106,6 +108,7 @@ const BoardCell = ({
   ladder,
   vine,
   seed,
+  ambient,
   children,
 }: BoardCellProps) => {
   const icy = ice.on && !goal && !ground.filled
@@ -149,7 +152,8 @@ const BoardCell = ({
   const shards = crackShards(x, y, crack.broken, depth)
   const ladders = leaningOf(ladder.leaning)
   // 큐브를 가리는 칸 위 상자도 칸과 같이 흐리는 투명도
-  const fade = { opacity: faded ? 0.5 : 1, transition: 'opacity 320ms var(--ease-soft)' }
+  const fade = { opacity: faded ? 0.5 : 1 }
+  const fadeRef = useFade(fade.opacity)
   const mudY = y + MUD.drop
   const sunk = swamp.deep > 0
   // 단계마다 정해진 깊이까지 칸째로 내려가는 큐브, 가라앉는 상자는 Board 몫
@@ -179,7 +183,7 @@ const BoardCell = ({
         />
       )}
       {!pit && !hidden && (
-        <g style={fade}>
+        <g ref={fadeRef} style={fade}>
           {crack.shadow > 0 && (
             <polygon
               points={blockFaces(x, y - crack.fall, TILE.width, 0).top}
@@ -377,10 +381,12 @@ const BoardCell = ({
               swampDeep={swamp.deep}
               collar={collar}
             />
+            {ambient.kind === 'bubble' && <BoardAmbient x={x} y={y} {...ambient} kind="bubble" />}
             {mushroom.on && (
               <BoardMushroom x={x} y={y} press={mushroom.press} wither={mushroom.wither} />
             )}
             {(device.lift || device.warp) && <BoardPlate x={x} y={y} warp={device.warp} />}
+            {ambient.kind === 'warp' && <BoardAmbient x={x} y={y} {...ambient} kind="warp" />}
             {tether.post > 0 && <BoardTether part="post" x={x} y={y} bands={tether.post} />}
             {icy && (
               <polygon
@@ -492,9 +498,12 @@ const BoardCell = ({
         </g>
       )}
       {(seed.tree > 0 || seed.treeNext > 0) && (
-        <g style={fade}>
+        <g ref={fadeRef} style={fade}>
           <BoardSeed x={x} y={y} part="tree" from={seed.tree} to={seed.treeNext} p={seed.treeP} />
         </g>
+      )}
+      {(ambient.kind === 'mote' || ambient.kind === 'spore' || ambient.kind === 'butterfly') && (
+        <BoardAmbient x={x} y={y} {...ambient} kind={ambient.kind} />
       )}
       {sunk ? (
         <>
@@ -509,7 +518,7 @@ const BoardCell = ({
         children
       )}
       {(seed.stakes > 0 || seed.stakesNext > 0) && (
-        <g style={fade}>
+        <g ref={fadeRef} style={fade}>
           <BoardSeed
             x={x}
             y={y}
