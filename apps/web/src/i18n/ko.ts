@@ -260,7 +260,7 @@ export const ko: Partial<Texts> = {
   'stage.15-5': '돌아갈 길',
   'stage.15-6': '무너진 둑',
   'stage.15-7': '먼 물가',
-  'stage.15-8': '가라앉은 집',
+  'stage.15-8': '넘겨받은 물',
   'stage.15-9': '마지막 물가',
   'stage.15-10': '밀물과 썰물',
 }

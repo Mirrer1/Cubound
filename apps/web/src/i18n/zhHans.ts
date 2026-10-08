@@ -259,7 +259,7 @@ export const zhHans: Partial<Texts> = {
   'stage.15-5': '回去的路',
   'stage.15-6': '崩塌的堤',
   'stage.15-7': '远岸',
-  'stage.15-8': '水底之家',
+  'stage.15-8': '接力之水',
   'stage.15-9': '最后的岸',
   'stage.15-10': '涨潮与退潮',
 }

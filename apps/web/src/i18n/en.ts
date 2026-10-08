@@ -265,7 +265,7 @@ export const en = {
   'stage.15-5': 'The Way Back',
   'stage.15-6': 'Broken Bank',
   'stage.15-7': 'Distant Shore',
-  'stage.15-8': 'Drowned Home',
+  'stage.15-8': 'Water Handed Over',
   'stage.15-9': 'The Last Shore',
   'stage.15-10': 'Ebb and Flow',
 }

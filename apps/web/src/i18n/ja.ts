@@ -260,7 +260,7 @@ export const ja: Partial<Texts> = {
   'stage.15-5': '帰り道',
   'stage.15-6': '崩れた土手',
   'stage.15-7': '遠い岸',
-  'stage.15-8': '水底の家',
+  'stage.15-8': '受け継ぐ水',
   'stage.15-9': '最後の岸',
   'stage.15-10': '満ち潮と引き潮',
 }

@@ -274,7 +274,7 @@ export const es: Partial<Texts> = {
   'stage.15-5': 'El camino de vuelta',
   'stage.15-6': 'Dique roto',
   'stage.15-7': 'Orilla lejana',
-  'stage.15-8': 'Casa bajo las aguas',
+  'stage.15-8': 'El agua relevada',
   'stage.15-9': 'La última orilla',
   'stage.15-10': 'Pleamar y bajamar',
 }
