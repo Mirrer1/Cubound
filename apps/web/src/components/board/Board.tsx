@@ -1,8 +1,9 @@
 import { type CSSProperties, useMemo } from 'react'
 
 import BoardBox from './BoardBox'
-import BoardCell, { type BehindGoal } from './BoardCell'
+import BoardCell from './BoardCell'
 import BoardClear from './BoardClear'
+import { type BehindGoal } from './BoardFloor'
 import BoardIceStone from './BoardIceStone'
 import BoardLadder from './BoardLadder'
 import BoardSeed from './BoardSeed'
