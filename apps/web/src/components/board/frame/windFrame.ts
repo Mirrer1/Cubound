@@ -50,8 +50,7 @@ interface WindView {
 export const windDisplay = ({ game, prevGame, events, animating }: WindView) => {
   const gustAt = game && prevGame ? windSeconds(events, swampTime(prevGame, game)) : null
   const wind = game ? windLeft(gustAt === null || !animating ? game : (prevGame ?? game)) : null
-  const blew = gustAt !== null && !animating
-  return { gustAt, wind, blew }
+  return { gustAt, wind }
 }
 
 // 바람에 밀리거나 기대는 동안은 구르지 않고 큐브와 같이 기우는 머리 위 물건

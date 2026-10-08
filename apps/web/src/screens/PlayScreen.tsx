@@ -26,6 +26,7 @@ import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
 import RestartCard from '@/components/ui/RestartCard'
 import { climbsLeft, dirLeft, movesLeft, pushesLeft, ridesLeft } from '@/game/rules'
+import type { GameState } from '@/game/types'
 import { useLoop } from '@/hooks/useLoop'
 import { useText } from '@/hooks/useText'
 import { stageTextKey } from '@/i18n'
@@ -48,18 +49,30 @@ const DevController = import.meta.env.DEV
 // 녹을 0에서 큐브가 둘레에 서서 버티는 동안 숫자가 옅어졌다 돌아오는 한 바퀴
 const MELT_HOLD: Keyframe[] = [{ opacity: 1 }, { opacity: 0.3 }, { opacity: 1 }]
 
-// 보스 제약에 막힌 수의 숫자 깜빡임, hit은 이어서 막혀도 다시 깜빡이는 막힌 수의 차례
-const LimitCount = ({ hit, children }: { hit: number | null; children: ReactNode }) => (
-  <motion.span
-    key={hit ?? 'idle'}
-    animate={
-      hit === null ? { opacity: 1, scale: 1 } : { opacity: [1, 0.3, 1], scale: [1, 1.12, 1] }
-    }
-    transition={{ duration: 0.28, ease: 'easeOut' }}
-    className="text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]"
-  >
-    {children}
-  </motion.span>
+// 보스 숫자를 좌우로 흔드는 자리 px와 초
+const SHAKE = { x: [0, -3.5, 3.5, -2.5, 2.5, -1, 0], duration: 0.4 }
+
+// 보스 제약에 막히거나 곧 바뀌는 수의 숫자 흔들림, hit은 이어서 막혀도 다시 흔드는 그 수의 차례
+// alert는 다음 수에 바뀌는 제약을 미리 알리는 경고색, 흔들 때 새로 그려져도 이어지게 바깥 몫
+const LimitCount = ({
+  hit,
+  alert = false,
+  children,
+}: {
+  hit: number | null
+  alert?: boolean
+  children: ReactNode
+}) => (
+  <span className={alert ? 'text-alert' : undefined}>
+    <motion.span
+      key={hit ?? 'idle'}
+      animate={{ x: hit === null ? 0 : SHAKE.x }}
+      transition={{ duration: SHAKE.duration, ease: 'easeOut' }}
+      className="inline-block text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]"
+    >
+      {children}
+    </motion.span>
+  </span>
 )
 
 const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
@@ -109,6 +122,11 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const climbsOver = game ? climbsLeft(game) : null
   const ridesOver = game ? ridesLeft(game) : null
   const dirOver = game ? dirLeft(game) : null
+  // 이 수에 다 써서 0이 된 숫자, 막혔을 때처럼 그 수에 흔듦
+  const emptied = (leftOf: (state: GameState) => number | null) =>
+    game !== null && prevGame !== null && leftOf(prevGame) !== 0 && leftOf(game) === 0
+  const shakeOf = (limit: string, leftOf: (state: GameState) => number | null) =>
+    limited === limit || emptied(leftOf) ? turn : null
   const passed = passedAt.turn === turn ? passedAt.passed : 0
   const countView = { game, prevGame, events, animating, passed }
   const { at: mudAt, count: mudSinks } = mudDisplay(countView)
@@ -118,10 +136,10 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const nextCountAt = countAt[passed] ?? null
   const lastCountAt = countAt[passed - 1] ?? 0
   const reduced = useReducedMotion()
-  const { gustAt, wind, blew } = windDisplay({ game, prevGame, events, animating })
+  const { gustAt, wind } = windDisplay({ game, prevGame, events, animating })
   const gusting = gustAt !== null && gustTurn === turn && animating
-  const melt = meltDisplay(game)
-  const tide = tideDisplay(game)
+  const melt = meltDisplay(game, events, animating)
+  const tide = tideDisplay(game, events, animating)
   const meltHold = useLoop(MELT_HOLD, 600)
   const limitedDir = game?.stage.rules?.dirLimit?.dir
   const limited = events.flatMap((e) => (e.type === 'limit' ? [e.limit] : []))[0]
@@ -257,10 +275,14 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                     data-guide="pushes"
                     className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                   >
-                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
+                    <span
+                      className={`font-mono text-[10px] tracking-[0.22em] ${pushesOver === 0 ? 'text-alert' : 'text-mute'}`}
+                    >
                       PUSHES
                     </span>
-                    <LimitCount hit={limited === 'pushes' ? turn : null}>{pushesOver}</LimitCount>
+                    <LimitCount hit={shakeOf('pushes', pushesLeft)} alert={pushesOver === 0}>
+                      {pushesOver}
+                    </LimitCount>
                   </div>
                 )}
                 {climbsOver !== null && (
@@ -268,10 +290,14 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                     data-guide="climbs"
                     className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                   >
-                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
+                    <span
+                      className={`font-mono text-[10px] tracking-[0.22em] ${climbsOver === 0 ? 'text-alert' : 'text-mute'}`}
+                    >
                       CLIMBS
                     </span>
-                    <LimitCount hit={limited === 'climbs' ? turn : null}>{climbsOver}</LimitCount>
+                    <LimitCount hit={shakeOf('climbs', climbsLeft)} alert={climbsOver === 0}>
+                      {climbsOver}
+                    </LimitCount>
                   </div>
                 )}
                 {ridesOver !== null && (
@@ -279,8 +305,14 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                     data-guide="rides"
                     className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                   >
-                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">RIDES</span>
-                    <LimitCount hit={limited === 'rides' ? turn : null}>{ridesOver}</LimitCount>
+                    <span
+                      className={`font-mono text-[10px] tracking-[0.22em] ${ridesOver === 0 ? 'text-alert' : 'text-mute'}`}
+                    >
+                      RIDES
+                    </span>
+                    <LimitCount hit={shakeOf('rides', ridesLeft)} alert={ridesOver === 0}>
+                      {ridesOver}
+                    </LimitCount>
                   </div>
                 )}
                 {dirOver !== null && limitedDir && (
@@ -288,10 +320,14 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                     data-guide="dir"
                     className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                   >
-                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">
+                    <span
+                      className={`font-mono text-[10px] tracking-[0.22em] ${dirOver === 0 ? 'text-alert' : 'text-mute'}`}
+                    >
                       {limitedDir.toUpperCase()}
                     </span>
-                    <LimitCount hit={limited === 'dir' ? turn : null}>{dirOver}</LimitCount>
+                    <LimitCount hit={shakeOf('dir', dirLeft)} alert={dirOver === 0}>
+                      {dirOver}
+                    </LimitCount>
                   </div>
                 )}
                 {mudSinks !== null && (
@@ -317,27 +353,30 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                     data-guide="wind"
                     className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                   >
-                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">WIND</span>
+                    <span
+                      className={`font-mono text-[10px] tracking-[0.22em] ${gusting ? 'text-alert' : 'text-mute'}`}
+                    >
+                      WIND
+                    </span>
                     {gusting ? (
-                      <motion.span
-                        key={`gust-${turn}`}
-                        animate={reduced ? { x: 0 } : { x: [0, -3, 3, -2, 2, 0] }}
-                        transition={{ duration: 0.3, ease: 'easeInOut' }}
-                        className="text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]"
-                      >
+                      <LimitCount hit={turn} alert>
                         0
-                      </motion.span>
+                      </LimitCount>
                     ) : (
-                      <LimitCount hit={blew ? turn : null}>{wind}</LimitCount>
+                      <LimitCount hit={null}>{wind}</LimitCount>
                     )}
                   </div>
                 )}
                 {melt && (
                   <div
                     data-guide="melt"
-                    className={`flex flex-col items-end gap-0.5 rounded-md outline outline-offset-4 transition-soft-colors short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2 ${melt.edge ? 'outline-ink' : 'outline-transparent'}`}
+                    className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                   >
-                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">MELT</span>
+                    <span
+                      className={`font-mono text-[10px] tracking-[0.22em] ${melt.holding || melt.melting ? 'text-alert' : 'text-mute'}`}
+                    >
+                      MELT
+                    </span>
                     <span
                       key={melt.holding ? 'hold' : 'count'}
                       ref={melt.holding ? meltHold : undefined}
@@ -345,21 +384,37 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                         melt.faint ? 'text-faint transition-soft-colors' : 'transition-soft-colors'
                       }
                     >
-                      <LimitCount hit={null}>{melt.count}</LimitCount>
+                      <LimitCount
+                        hit={melt.melting || (melt.holding && prevGame?.melt !== 0) ? turn : null}
+                        alert={melt.holding || melt.melting}
+                      >
+                        {melt.count}
+                      </LimitCount>
                     </span>
                   </div>
                 )}
                 {tide && (
                   <div
                     data-guide="tide"
-                    className={`flex flex-col items-end gap-0.5 rounded-md outline outline-offset-4 transition-soft-colors short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2 ${tide.edge ? 'outline-ink' : 'outline-transparent'}`}
+                    className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                   >
-                    <span className="font-mono text-[10px] tracking-[0.22em] text-mute">TIDE</span>
+                    <span
+                      className={`font-mono text-[10px] tracking-[0.22em] ${tide.turning ? 'text-alert' : 'text-mute'}`}
+                    >
+                      TIDE
+                    </span>
                     <span className="flex items-center gap-1.5 narrow:gap-1">
-                      <span className="text-[11px] text-ink narrow:text-[9px]">
+                      <span
+                        className={`text-[11px] narrow:text-[9px] ${tide.turning ? 'text-alert' : 'text-ink'}`}
+                      >
                         {tide.up ? '▲' : '▼'}
                       </span>
-                      <LimitCount hit={limited === 'tide' ? turn : null}>{tide.left}</LimitCount>
+                      <LimitCount
+                        hit={limited === 'tide' || tide.turning ? turn : null}
+                        alert={tide.turning}
+                      >
+                        {tide.left}
+                      </LimitCount>
                     </span>
                   </div>
                 )}
@@ -367,8 +422,12 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                   data-guide="moves"
                   className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
                 >
-                  <span className="font-mono text-[10px] tracking-[0.22em] text-mute">MOVES</span>
-                  <LimitCount hit={limited === 'moves' ? turn : null}>
+                  <span
+                    className={`font-mono text-[10px] tracking-[0.22em] ${left === 0 ? 'text-alert' : 'text-mute'}`}
+                  >
+                    MOVES
+                  </span>
+                  <LimitCount hit={shakeOf('moves', movesLeft)} alert={left === 0}>
                     {left ?? game.moves}
                   </LimitCount>
                 </div>

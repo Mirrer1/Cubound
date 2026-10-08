@@ -3,12 +3,13 @@ import { clamp01, lerp, smooth } from './curveFrame'
 import { same } from './pathFrame'
 import { TILE } from '@/game/iso'
 import { tideLeft } from '@/game/rules'
-import type { GameState, Point } from '@/game/types'
+import type { GameEvent, GameState, Point } from '@/game/types'
 
-// TIDE 숫자와 방향, edge는 1일 때 테두리, 밀물 판이 아니면 null
-export const tideDisplay = (game: GameState | null) => {
+// TIDE 숫자와 방향, 물때가 바뀌는 수의 연출 동안은 0, 밀물 판이 아니면 null
+export const tideDisplay = (game: GameState | null, events: GameEvent[], animating: boolean) => {
   const tide = game ? tideLeft(game) : null
-  return tide && { ...tide, edge: tide.left === 1 }
+  const turning = animating && events.some((e) => e.type === 'sluice' && e.tide === true)
+  return tide && { left: turning ? 0 : tide.left, up: tide.up, turning }
 }
 
 export interface TideLook {

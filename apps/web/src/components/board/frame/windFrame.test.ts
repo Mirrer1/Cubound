@@ -44,16 +44,14 @@ describe('windDisplay', () => {
     expect(shown.gustAt).toBe(windSeconds(events, swampTime(prev, game)))
     expect(shown.gustAt).not.toBeNull()
     expect(shown.wind).toBe(windLeft(prev))
-    expect(shown.blew).toBe(false)
   })
 
-  it('바람이 분 수의 연출이 끝나면 다음 숫자로 바뀌고 깜빡일 차례다', () => {
+  it('바람이 분 수의 연출이 끝나면 다음 숫자로 바뀐다', () => {
     const { prev, game, events } = gust()
     const shown = windDisplay({ game, prevGame: prev, events, animating: false })
 
     expect(shown.wind).toBe(windLeft(game))
     expect(shown.wind).not.toBe(windLeft(prev))
-    expect(shown.blew).toBe(true)
   })
 
   it('바람이 안 분 수는 연출 중에도 지금 숫자를 보인다', () => {
@@ -61,7 +59,7 @@ describe('windDisplay', () => {
     const { state: game, events } = move(prev, 'up')
     const shown = windDisplay({ game, prevGame: prev, events, animating: true })
 
-    expect(shown).toEqual({ gustAt: null, wind: windLeft(game), blew: false })
+    expect(shown).toEqual({ gustAt: null, wind: windLeft(game) })
   })
 
   it('앞 상태가 없으면 바람 시각이 없고 판이 없으면 숫자도 없다', () => {
@@ -70,12 +68,10 @@ describe('windDisplay', () => {
     expect(windDisplay({ game, prevGame: null, events: [], animating: false })).toEqual({
       gustAt: null,
       wind: windLeft(game),
-      blew: false,
     })
     expect(windDisplay({ game: null, prevGame: null, events: [], animating: false })).toEqual({
       gustAt: null,
       wind: null,
-      blew: false,
     })
   })
 })

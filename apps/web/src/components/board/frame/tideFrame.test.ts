@@ -14,19 +14,34 @@ const look = (
 ) => tideLookOf({ before, moving, dropping, sluice: { phase: { level } } }, { game, t })
 
 describe('tideDisplay', () => {
-  it('남은 수와 방향, 1일 때 테두리', () => {
+  it('남은 수와 방향', () => {
     const start = createState(TIDE_STAGE)
-    const three = lastMove(TIDE_STAGE, SHUTTLE.slice(0, 3)).game
-    const five = lastMove(TIDE_STAGE, [...SHUTTLE, 'right']).game
+    const three = lastMove(TIDE_STAGE, SHUTTLE.slice(0, 3))
+    const five = lastMove(TIDE_STAGE, [...SHUTTLE, 'right'])
 
-    expect(tideDisplay(start)).toEqual({ left: 4, up: true, edge: false })
-    expect(tideDisplay(three)).toEqual({ left: 1, up: true, edge: true })
-    expect(tideDisplay(five)).toEqual({ left: 3, up: false, edge: false })
+    expect(tideDisplay(start, [], false)).toEqual({ left: 4, up: true, turning: false })
+    expect(tideDisplay(three.game, three.events, true)).toEqual({
+      left: 1,
+      up: true,
+      turning: false,
+    })
+    expect(tideDisplay(five.game, five.events, true)).toEqual({
+      left: 3,
+      up: false,
+      turning: false,
+    })
+  })
+
+  it('물때가 바뀌는 수의 연출 동안은 0, 끝나면 다음 숫자', () => {
+    const { game, events } = lastMove(TIDE_STAGE, SHUTTLE)
+
+    expect(tideDisplay(game, events, true)).toEqual({ left: 0, up: false, turning: true })
+    expect(tideDisplay(game, events, false)).toEqual({ left: 4, up: false, turning: false })
   })
 
   it('밀물 판이 아니면 null', () => {
-    expect(tideDisplay(createState({ ...TIDE_STAGE, rules: undefined }))).toBeNull()
-    expect(tideDisplay(null)).toBeNull()
+    expect(tideDisplay(createState({ ...TIDE_STAGE, rules: undefined }), [], false)).toBeNull()
+    expect(tideDisplay(null, [], false)).toBeNull()
   })
 })
 

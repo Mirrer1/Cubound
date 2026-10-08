@@ -23,6 +23,7 @@
   --color-line-strong: #cfccc6;
   --color-ink: #3a3936;
   --color-mute: #8a8781;
+  --color-alert: #c2654a;
   --color-faint: #a9a6a0;
   --color-floor-top: #edebe6;
   --color-floor-top-alt: #e7e5e0;
@@ -38,6 +39,11 @@
   --color-machine-left: #dfdbd3;
   --color-machine-right: #f3f1eb;
   --color-machine-dish: #dedad2;
+  --color-amb-light: #ffffff;
+  --color-amb-mud: #c3c1ab;
+  --color-amb-spore: #fbf8f2;
+  --color-amb-wing: #c9c0ad;
+  --color-amb-wing-2: #d9d1c0;
   --color-tram-top: #fcfbf8;
   --color-tram-left: #dfdbd3;
   --color-tram-right: #f3f1eb;
