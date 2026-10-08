@@ -101,6 +101,24 @@ describe('movingBox 미끄러짐', () => {
     expect(movingBox(prev, state, events, 0.7)?.x).toBeGreaterThan(3)
     expect(movingBox(prev, state, events, 0.7)?.to).toEqual({ x: 5, y: 0 })
   })
+
+  it('여러 칸 미끄러지는 상자는 도착 칸이 아니라 지금 걸친 두 칸 중 앞 칸 순서로 그린다', () => {
+    const stage: Stage = {
+      ...ICE_STAGE,
+      heights: [[0, 0, 0, 0, 0, 0, 0]],
+      ice: ['..###..'],
+      goal: { x: 6, y: 0 },
+      entities: [{ type: 'box', x: 1, y: 0 }],
+    }
+    const prev = createState(stage)
+    const { state, events } = move(prev, 'right')
+    const early = [0.3, 0.4, 0.5].map((t) => movingBox(prev, state, events, t))
+
+    for (const frame of early) {
+      expect(frame?.cell.x).toBeLessThan(5)
+      expect(frame?.cell.x).toBe(Math.ceil(frame?.x ?? 0))
+    }
+  })
 })
 
 // 상자를 발판 위로 밀어 넣는 판

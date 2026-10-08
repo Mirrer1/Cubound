@@ -1,6 +1,6 @@
 import { PIT_FLOOR } from '../view'
 import { lerp, smooth } from './curveFrame'
-import { SECONDS, same } from './pathFrame'
+import { type PathEvent, SECONDS, same } from './pathFrame'
 import {
   NO_SWAMP,
   type SwampTime,
@@ -23,6 +23,14 @@ export const tramProgress = (events: GameEvent[], t: number, swamp: SwampTime = 
 
 // 뒤쪽 칸 블록에 덮이지 않는 앞쪽 칸
 export const frontOf = (a: Point, b: Point) => (a.x + a.y >= b.x + b.y ? a : b)
+
+// 출발 칸에서 k칸 미끄러진 자리가 걸친 두 칸 중 앞 칸
+export const slideFront = (event: PathEvent, k: number) => {
+  const dx = Math.sign(event.to.x - event.from.x)
+  const dy = Math.sign(event.to.y - event.from.y)
+  const at = (n: number) => ({ x: event.from.x + dx * n, y: event.from.y + dy * n })
+  return frontOf(at(Math.floor(k)), at(Math.ceil(k)))
+}
 
 // 덮이는 순서가 맞게 발판과 그 위에 탄 것을 함께 그리는 칸
 export const slidingCell = (from: Point, to: Point, p: number) =>

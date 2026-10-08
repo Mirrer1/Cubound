@@ -19,7 +19,7 @@ import { seedLift } from './seedFrame'
 import { type BoxSinkFrame, boxSink, swampTime } from './swampFrame'
 import { ridePhase } from './switchFrame'
 import { elapsedAt } from './timeFrame'
-import { carriedBy, carryOf, frontOf, slidingCell, tramProgress } from './tramFrame'
+import { carriedBy, carryOf, frontOf, slideFront, slidingCell, tramProgress } from './tramFrame'
 import { floatGone, floatLevel } from './waterFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { standHeight, waterLevel } from '@/game/rules'
@@ -124,7 +124,9 @@ export const movingBox = (
         ? to
         : carry && ride > 0
           ? slidingCell(carry.from, carry.to, ride)
-          : frontOf(event.from, event.to),
+          : event.type === 'slid' && cells > 1
+            ? slideFront(event, gone * cells)
+            : frontOf(event.from, event.to),
   }
 }
 

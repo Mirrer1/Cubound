@@ -24,7 +24,7 @@ import { PLANT_SEED, seedLift } from './seedFrame'
 import { inSwamp, swampTime } from './swampFrame'
 import { ridePhase } from './switchFrame'
 import { WARP, elapsedAt, playerSegments, riseProgress, rises, warpAt } from './timeFrame'
-import { carriedBy, carryOf, frontOf, slidingCell, tramProgress } from './tramFrame'
+import { carriedBy, carryOf, frontOf, slideFront, slidingCell, tramProgress } from './tramFrame'
 import { windLean, windSpan } from './windFrame'
 import { TILE } from '@/game/iso'
 import { standHeight } from '@/game/rules'
@@ -50,14 +50,6 @@ export interface CubeFrame {
 
 const levelAfter = (level: number, event: PathEvent) =>
   event.type === 'fell' ? level - event.drop : event.type === 'climbed' ? level + 1 : level
-
-// 출발 칸에서 k칸 미끄러진 자리가 걸친 두 칸 중 앞 칸
-const slideFront = (event: PathEvent, k: number) => {
-  const dx = Math.sign(event.to.x - event.from.x)
-  const dy = Math.sign(event.to.y - event.from.y)
-  const at = (n: number) => ({ x: event.from.x + dx * n, y: event.from.y + dy * n })
-  return frontOf(at(Math.floor(k)), at(Math.ceil(k)))
-}
 
 // 큐브가 제 힘으로 간 몫만 그린 프레임, 발판에 실린 몫은 playerFrame 몫
 const pathFrame = (
