@@ -109,6 +109,22 @@ describe('solve', () => {
 
     expect(solve(limited)).toEqual(solve(STAGE))
   })
+
+  it('불 상태가 다르면 다른 상태로 보고 숯 벽이 재가 되기를 기다린다', () => {
+    const stage: Stage = {
+      ...STAGE,
+      heights: [[0, 0, 0, 0]],
+      fire: ['.*#.'],
+      start: { x: 0, y: 0 },
+      goal: { x: 3, y: 0 },
+    }
+
+    expect(solve(stage)).toEqual({
+      status: 'solved',
+      moves: 5,
+      path: ['right', 'left', 'right', 'right', 'right'],
+    })
+  })
 })
 
 describe('moveLimit', () => {

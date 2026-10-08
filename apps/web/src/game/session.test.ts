@@ -25,6 +25,9 @@ const MID = {
   iced: [],
   melt: null,
   cracks: [],
+  sparks: [],
+  burning: [],
+  ashes: [],
   trams: [],
   swamps: [],
   mushrooms: [],
@@ -734,5 +737,48 @@ describe('restoreSession 밀물', () => {
       type: 'limit',
       limit: 'tide',
     })
+  })
+})
+
+describe('restoreSession 번지는 불', () => {
+  // 불씨 (1,1)에서 숯 벽 (2,1)과 숯 다리 (3,1), (4,1)로 이어진 판
+  const FIRE_STAGE: Stage = {
+    version: 1,
+    id: '16-1',
+    heights: [
+      [0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0],
+    ],
+    fire: ['......', '.*#==.'],
+    start: { x: 1, y: 0 },
+    goal: { x: 5, y: 0 },
+    entities: [],
+  }
+  const burnt = played(FIRE_STAGE, ['down', 'up', 'down'])
+
+  it('켠 불씨와 불붙은 숯과 재를 그대로 이어간다', () => {
+    expect(burnt.sparks).toEqual([])
+    expect(burnt.burning).toEqual([{ x: 4, y: 1 }])
+    expect(burnt.heights[1][3]).toBe(-1)
+    expect(restoreSession(toSession(burnt), FIRE_STAGE)).toEqual(burnt)
+  })
+
+  it('불이 없던 때 저장한 것은 판의 처음 불씨로 읽는다', () => {
+    const session = {
+      ...toSession(createState(FIRE_STAGE)),
+      sparks: undefined,
+      burning: undefined,
+      ashes: undefined,
+    }
+
+    expect(restoreSession(session, FIRE_STAGE)).toEqual(createState(FIRE_STAGE))
+  })
+
+  it('판에 없는 불씨나 숯 칸은 버린다', () => {
+    const session = toSession(burnt)
+
+    expect(restoreSession({ ...session, sparks: [{ x: 2, y: 1 }] }, FIRE_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, burning: [{ x: 1, y: 1 }] }, FIRE_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, ashes: [{ x: 0, y: 0 }] }, FIRE_STAGE)).toBeNull()
   })
 })

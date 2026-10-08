@@ -1,5 +1,6 @@
 import type { Direction, GameState, Point } from '../types'
 import { hasBox, same, step } from './cellRule'
+import { isFireBlocked } from './fireRule'
 import { floorAt } from './stateRule'
 import { isClosedDoor } from './switchRule'
 import { walk } from './walkRule'
@@ -29,7 +30,7 @@ export const hop = (
     // 사이 칸은 높이 무관, 벽과 구덩이 모두 통과
     const to = step(step(at, direction), direction)
     const floor = floorAt(state, to)
-    if (floor === null || isClosedDoor(state, to)) return stopped
+    if (floor === null || isClosedDoor(state, to) || isFireBlocked(state, to)) return stopped
 
     const height = floor + (hasBox(state, to) ? 1 : 0)
     if (height > level + 1) return stopped

@@ -41,6 +41,7 @@ export interface StageRules {
   melt?: number // 물에 뜬 얼음 돌이 녹기까지의 수
   lock?: Point // 갑문 판의 가 웅덩이 칸, 수위 장치가 비면 물이 높은 쪽
   tide?: boolean // 4수마다 판 전체 물이 차고 빠지는 판
+  chase?: boolean // 불이 큐브와 가까워지는 숯으로만 번지는 판
 }
 
 export interface Stage {
@@ -53,6 +54,7 @@ export interface Stage {
   mushroom?: string[] // heights와 같은 모양, '#'이 버섯 칸
   cracks?: string[] // heights와 같은 모양, 1~9는 무너지기까지 견디는 횟수
   water?: number // 물 높이, 이보다 낮은 바닥 칸이 물 칸
+  fire?: string[] // heights와 같은 모양, '*' 불씨 칸, '#' 숯 벽, '=' 숯 다리
   start: Point
   goal: Point
   entities: Entity[]
@@ -126,6 +128,9 @@ export interface GameState {
   iced: Point[] // 언 칸 위에 올라선 상자, 얼어붙은 배는 제외
   melt: number | null // 물에 뜬 얼음 돌이 녹기까지 남은 수, 녹는 판이 아니거나 뜬 돌이 없으면 null
   cracks: Crack[]
+  sparks: Point[] // 아직 안 켜진 불씨 칸
+  burning: Point[] // 불붙은 숯, 이번 수 동안 통행 불가
+  ashes: Point[] // 재가 된 숯, 숯 다리 자리는 바닥 없는 칸
   trams: TramSpot[]
   swamps: Point[] // 남아 있는 늪 칸, 상자가 가라앉은 칸은 제외
   mushrooms: Point[] // 남아 있는 버섯 칸, 시드는 판에서 밟힌 칸은 제외
@@ -173,6 +178,9 @@ export type GameEvent =
   | { type: 'melted'; at: Point } // 녹아 사라진 얼음 돌
   | { type: 'froze'; cells: Point[] } // 이번 수에 언 물 칸
   | { type: 'thawed'; cells: Point[] } // 이번 수에 녹아 물로 돌아간 칸
+  | { type: 'kindled'; at: Point } // 큐브가 밟아 켜진 불씨 칸
+  | { type: 'caught'; from: Point; to: Point } // from에서 번져 불붙은 숯 to
+  | { type: 'ashed'; cells: Point[] } // 재가 된 숯
   | { type: 'tram'; id: string; from: Point; to: Point }
   | { type: 'grew'; id: string; at: Point } // 덩굴이 한 칸 뻗어 메운 칸
   | { type: 'planted'; at: Point; direction: Direction } // direction은 턱 쪽으로 민 방향

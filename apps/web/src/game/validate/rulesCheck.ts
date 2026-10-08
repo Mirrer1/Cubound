@@ -7,7 +7,8 @@ export const checkRules = ({ data, add }: CheckContext) => {
     if (!isObject(data.rules)) add('rules가 객체가 아니다')
     else {
       const { moveLimit, pushLimit, climbLimit, rideLimit, dirLimit } = data.rules
-      const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, tide } = data.rules
+      const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, tide, chase } =
+        data.rules
       if (moveLimit !== undefined) {
         if (!(isInt(moveLimit) && moveLimit > 0)) add('rules.moveLimit은 양의 정수여야 한다')
         else if (isInt(data.best) && moveLimit < data.best) add('rules.moveLimit이 best보다 작다')
@@ -51,6 +52,9 @@ export const checkRules = ({ data, add }: CheckContext) => {
       }
       if (tide !== undefined && typeof tide !== 'boolean') {
         add('rules.tide는 참이나 거짓이어야 한다')
+      }
+      if (chase !== undefined && typeof chase !== 'boolean') {
+        add('rules.chase는 참이나 거짓이어야 한다')
       }
     }
   }

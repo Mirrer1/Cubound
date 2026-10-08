@@ -1,5 +1,6 @@
 import type { Crack, Entity, GameState, Point, Stage } from '../types'
 import { hasBox, isFrozen, isIced, isOpenWater, isWater, same } from './cellRule'
+import { readSparks } from './fireRule'
 import { waterLevel } from './sluiceRule'
 import { isLiftRaised } from './switchRule'
 import { isPost, posts } from './tetherRule'
@@ -66,6 +67,9 @@ export const createState = (stage: Stage): GameState => ({
   iced: [],
   melt: startMelt(stage),
   cracks: readCracks(stage),
+  sparks: readSparks(stage),
+  burning: [],
+  ashes: [],
   trams: trams(stage).map(({ id, cells, dir, x, y }) => ({
     id,
     at: cells.findIndex((cell) => same(cell, { x, y })),

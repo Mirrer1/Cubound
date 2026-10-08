@@ -1,6 +1,7 @@
 import type { Stage } from '../types'
 import { checkCracks } from './crackCheck'
 import { checkEntities } from './entityCheck'
+import { checkFire } from './fireCheck'
 import { checkGuides } from './guideCheck'
 import { checkIce } from './iceCheck'
 import { checkIceStones } from './iceStoneCheck'
@@ -43,6 +44,7 @@ export const validateStage = (data: unknown): ValidateResult => {
   checkWhirlpools(ctx)
   checkIceStones(ctx)
   checkSluices(ctx)
+  checkFire(ctx)
   checkBest(ctx)
   checkRules(ctx)
   checkGuides(ctx)

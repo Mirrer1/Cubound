@@ -25,6 +25,9 @@ export interface Session {
   iced?: Point[] // 예전 저장에는 없는 값
   melt?: number | null // 예전 저장에는 없는 값
   cracks: Crack[]
+  sparks?: Point[] // 예전 저장에는 없는 값
+  burning?: Point[] // 예전 저장에는 없는 값
+  ashes?: Point[] // 예전 저장에는 없는 값
   trams: TramSpot[]
   swamps?: Point[] // 예전 저장에는 없는 값
   mushrooms?: Point[] // 예전 저장에는 없는 값
@@ -65,6 +68,9 @@ export const toSession = (game: GameState): Session => ({
   iced: game.iced,
   melt: game.melt,
   cracks: game.cracks,
+  sparks: game.sparks,
+  burning: game.burning,
+  ashes: game.ashes,
   trams: game.trams,
   swamps: game.swamps,
   mushrooms: game.mushrooms,
@@ -176,6 +182,15 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   }
 
   const crackKeys = new Set(cracks.map(({ x, y }) => `${x},${y}`))
+  const fireKeys = (chars: string) =>
+    new Set(
+      (stage.fire ?? []).flatMap((row, y) =>
+        [...row].flatMap((c, x) => (chars.includes(c) ? [`${x},${y}`] : [])),
+      ),
+    )
+  const sparkKeys = fireKeys('*')
+  const charKeys = fireKeys('#=')
+  const bridgeKeys = fireKeys('=')
   const seedCount = countOf(stage, 'seed')
   const rows = saved.heights
   const sameShape =
@@ -190,7 +205,8 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
           (h, x) =>
             h === stage.heights[y][x] ||
             (stage.heights[y][x] < 0 && isCount(h)) ||
-            (crackKeys.has(`${x},${y}`) && (h === -1 || isCount(h))) ||
+            ((crackKeys.has(`${x},${y}`) || bridgeKeys.has(`${x},${y}`)) &&
+              (h === -1 || isCount(h))) ||
             (seedCount > 0 && isCount(h) && h > stage.heights[y][x]),
         ),
     )
@@ -257,13 +273,25 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     isObject(value) && (boxes ?? []).some(({ x, y }) => x === value.x && y === value.y)
   const iced = saved.iced === undefined ? [] : listOf(saved.iced, isBox, boxCount)
   const melt = saved.melt === undefined ? start.melt : saved.melt
+  const inKeys =
+    (keys: Set<string>) =>
+    (value: unknown): value is Point =>
+      isObject(value) && keys.has(`${value.x},${value.y}`)
+  const sparks =
+    saved.sparks === undefined
+      ? start.sparks
+      : listOf(saved.sparks, inKeys(sparkKeys), sparkKeys.size)
+  const burning =
+    saved.burning === undefined ? [] : listOf(saved.burning, inKeys(charKeys), charKeys.size)
+  const ashes =
+    saved.ashes === undefined ? [] : listOf(saved.ashes, inKeys(charKeys), charKeys.size)
   const mostMelt = stage.rules?.melt ?? -1
   if (melt !== null && !(isCount(melt) && (melt as number) <= mostMelt)) return null
 
   if (!boxes || !ladders || !leaningLadders || !seeds || !planted || !tethered || !plugged) {
     return null
   }
-  if (!stones || !iced) return null
+  if (!stones || !iced || !sparks || !burning || !ashes) return null
   if (new Set(plugged.map(({ x, y }) => `${x},${y}`)).size !== plugged.length) return null
   const tiedToBox = (boat: Point) => boxes.some(({ x, y }) => x === boat.x && y === boat.y)
   if (tethered.length !== stagePosts.length || !tethered.every(tiedToBox)) return null
@@ -286,6 +314,9 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     iced: iced.map(({ x, y }) => ({ x, y })),
     melt: melt as number | null,
     cracks: (savedCracks as Crack[]).map(({ x, y, left }) => ({ x, y, left })),
+    sparks: sparks.map(({ x, y }) => ({ x, y })),
+    burning: burning.map(({ x, y }) => ({ x, y })),
+    ashes: ashes.map(({ x, y }) => ({ x, y })),
     trams: (savedTrams as TramSpot[]).map(({ id, at, dir }) => ({ id, at, dir })),
     swamps:
       savedSwamps === undefined ? swamps : (savedSwamps as Point[]).map(({ x, y }) => ({ x, y })),

@@ -1,5 +1,6 @@
 import type { Direction, GameEvent, GameState, MoveResult, Point } from '../types'
 import { hasBox, hasStone, isFrozen, isOpenWater, same, step } from './cellRule'
+import { isFireBlocked } from './fireRule'
 import { isIce } from './iceRule'
 import { isMushroom, wither } from './mushroomRule'
 import { floorAt, rawHeight } from './stateRule'
@@ -23,6 +24,7 @@ export const boxLanding = (state: GameState, p: Point, level: number): number | 
     state.seeds.some((s) => same(s, p)) ||
     same(p, state.stage.goal) ||
     isClosedDoor(state, p) ||
+    isFireBlocked(state, p) ||
     (isWhirlpool(state, p) && !state.stage.rules?.plug)
   )
     return null

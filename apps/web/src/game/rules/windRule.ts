@@ -1,5 +1,6 @@
 import type { Direction, GameState, MoveResult } from '../types'
 import { hasBox, hasStone, step } from './cellRule'
+import { isFireBlocked } from './fireRule'
 import { hop, isMushroom, spring } from './mushroomRule'
 import { floorAt, standHeight } from './stateRule'
 import { isSwamp } from './swampRule'
@@ -19,7 +20,13 @@ const windStep = (state: GameState, direction: Direction): MoveResult | null => 
 
   const to = step(from, direction)
   const toFloor = floorAt(state, to)
-  if (toFloor === null || isClosedDoor(state, to) || hasStone(state, to)) return null
+  if (
+    toFloor === null ||
+    isClosedDoor(state, to) ||
+    isFireBlocked(state, to) ||
+    hasStone(state, to)
+  )
+    return null
   // 기댈 자리인 상자, 상자 위에 선 큐브만 같은 높이의 이웃 상자 윗면으로 이동
   if (hasBox(state, to)) {
     return hasBox(state, from) && toFloor + 1 === standHeight(state, from)

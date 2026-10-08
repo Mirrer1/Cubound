@@ -2,6 +2,7 @@ import type { Direction, GameEvent, GameState, MoveResult } from '../types'
 import { pushBox } from './boxRule'
 import { hasBox, hasStone, isOpenWater, isWater, step } from './cellRule'
 import { crumble } from './crackRule'
+import { burnFire, isFireBlocked } from './fireRule'
 import { meltStones, pushStone, settleIce } from './iceStoneRule'
 import { climbOrPlaceLadder } from './ladderRule'
 import { climbsLeft, dirLeft, limitBlocked, movesLeft, pushesLeft, ridesLeft } from './limitRule'
@@ -43,7 +44,7 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
       ? row(state, to, direction)
       : blocked
   }
-  if (toFloor === null || isClosedDoor(state, to)) return blocked
+  if (toFloor === null || isClosedDoor(state, to) || isFireBlocked(state, to)) return blocked
 
   if (!hasBox(state, to)) {
     if (toFloor <= fromHeight) {
@@ -83,11 +84,10 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
   const { state: pulled, events: pullEvents } = pullBoats(seeded)
   const { state: melted, events: meltEvents } = meltStones(before, pulled)
   const { state: settled, events: iceEvents } = settleIce(before, melted)
+  const { state: burnt, events: fireEvents } = burnFire(settled)
   // 물에 잠긴 골은 언 칸이나 배로 올라서도 못 들어가는 집
   const moved =
-    settled.cleared && isWater(settled, settled.stage.goal)
-      ? { ...settled, cleared: false }
-      : settled
+    burnt.cleared && isWater(burnt, burnt.stage.goal) ? { ...burnt, cleared: false } : burnt
 
   const doorEvents: GameEvent[] = doors(before.stage)
     .map((door) => ({
@@ -114,6 +114,7 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
       ...pullEvents,
       ...meltEvents,
       ...iceEvents,
+      ...fireEvents,
       ...doorEvents,
       ...liftEvents,
       ...sluiceEvents(before, moved),

@@ -15,16 +15,25 @@ const points = (list: Point[]) =>
     .sort()
     .join(' ')
 
-// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개와 녹는 얼음과 갑문과 밀물은 유지
+// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개와 녹는 얼음과 갑문과 밀물과 쫓아오는 불은 유지
 // 제한이 너무 작을 때도 진짜 최소 이동 수를 얻는 방법
 const forSearch = (stage: Stage): Stage => {
-  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock, tide } =
+  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock, tide, chase } =
     stage.rules ?? {}
   return {
     ...stage,
     rules:
-      swampDeepen || mushroomWither || vineStop || seedGrow || wind || plug || melt || lock || tide
-        ? { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock, tide }
+      swampDeepen ||
+      mushroomWither ||
+      vineStop ||
+      seedGrow ||
+      wind ||
+      plug ||
+      melt ||
+      lock ||
+      tide ||
+      chase
+        ? { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock, tide, chase }
         : undefined,
   }
 }
@@ -78,6 +87,8 @@ const stateKey = (state: GameState, deep = true) => {
       ? [points(state.stones), points(state.iced)]
       : []),
     ...(state.stage.rules?.melt ? [`${state.melt}`] : []),
+    // 같은 자리라도 켠 불씨와 불붙은 숯과 재가 다르면 다른 상태
+    ...(state.stage.fire ? [points(state.sparks), points(state.burning), points(state.ashes)] : []),
     ...(state.trams.length > 0
       ? [state.trams.map(({ at, dir }) => `${at}${dir > 0 ? '+' : '-'}`).join(' ')]
       : []),

@@ -1,5 +1,6 @@
 import type { Direction, GameState, Point } from '../types'
 import { hasBox, hasStone, isFrozen, same, step } from './cellRule'
+import { isFireBlocked } from './fireRule'
 import { floorAt } from './stateRule'
 import { isClosedDoor } from './switchRule'
 
@@ -27,7 +28,8 @@ export const slidePlayer = (
       floor > level ||
       hasBox(state, next) ||
       hasStone(state, next) ||
-      isClosedDoor(state, next)
+      isClosedDoor(state, next) ||
+      isFireBlocked(state, next)
     ) {
       return { rest: at, landed: null }
     }
