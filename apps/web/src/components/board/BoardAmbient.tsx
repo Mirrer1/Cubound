@@ -10,8 +10,9 @@ const MUD_FILL = { fill: 'var(--color-amb-mud)' }
 // 짝 칸 틀 빛 테 두께 px, 칸 폭 배수 테 폭을 비스듬한 변에 수직으로 잰 값
 const RIM_STROKE = ((TILE.width * AMBIENT.warp.rim) / 2) * Math.sin(Math.atan(0.5))
 
-// 큐브가 옆 칸에 온 나비가 날아가는 ms
+// 큐브가 옆 칸에 온 나비가 날아가는 ms, 찬 김이 옅어지는 ms
 const FLEE = 600
+const FADE = 300
 
 interface AmbientPieceProps {
   shape: AmbientShape
@@ -78,6 +79,16 @@ const AmbientPiece = ({ shape, x, y, keyframes, cycle, delay }: AmbientPieceProp
       opacity={0}
       style={{ fill: 'var(--color-amb-spore)' }}
     />
+  ) : shape === 'wisp' || shape === 'sheetLeft' || shape === 'sheetRight' ? (
+    <ellipse
+      ref={loop}
+      cx={x}
+      cy={y}
+      rx={shape === 'wisp' ? AMBIENT.mist.wisp.rx : AMBIENT.mist.sheet.rx}
+      ry={shape === 'wisp' ? AMBIENT.mist.wisp.ry : AMBIENT.mist.sheet.ry}
+      opacity={0}
+      style={{ fill: 'var(--color-amb-mist)', ...origin }}
+    />
   ) : (
     <ellipse
       ref={loop}
@@ -100,26 +111,29 @@ interface BoardAmbientProps {
   y: number // 칸 윗면 중심
   at: number // 바퀴 안에서 시작하는 ms
   cycle: number
-  near: boolean // 큐브가 이 칸이나 상하좌우 칸에 선 상태
+  leave: boolean // 거두는 때
 }
 
-const BoardAmbient = ({ kind, x, y, at, cycle, near }: BoardAmbientProps) => {
+const BoardAmbient = ({ kind, x, y, at, cycle, leave }: BoardAmbientProps) => {
   const loops = useMemo(() => ambientLoops(kind, cycle), [kind, cycle])
   const group = useRef<SVGGElement>(null)
   const fled = useRef(false)
 
-  // 앉아 있는 동안 큐브가 옆 칸에 오면 왼쪽 위로 날아가는 나비
+  // 왼쪽 위로 날아가는 나비, 옅어지는 찬 김
   useEffect(() => {
-    if (kind !== 'butterfly' || !near || fled.current || !group.current) return
+    if ((kind !== 'butterfly' && kind !== 'mist') || !leave || fled.current || !group.current)
+      return
     fled.current = true
     group.current.animate(
-      [
-        { opacity: 1, transform: 'translate(0px, 0px)' },
-        { opacity: 0, transform: 'translate(-34px, -25px)' },
-      ],
-      { duration: FLEE, easing: 'ease-in', fill: 'forwards' },
+      kind === 'butterfly'
+        ? [
+            { opacity: 1, transform: 'translate(0px, 0px)' },
+            { opacity: 0, transform: 'translate(-34px, -25px)' },
+          ]
+        : [{ opacity: 1 }, { opacity: 0 }],
+      { duration: kind === 'butterfly' ? FLEE : FADE, easing: 'ease-in', fill: 'forwards' },
     )
-  }, [kind, near])
+  }, [kind, leave])
 
   return (
     <g ref={group}>

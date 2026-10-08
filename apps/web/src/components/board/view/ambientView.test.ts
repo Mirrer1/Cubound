@@ -38,6 +38,28 @@ const MEADOW: Stage = {
   mushroom: ['.....', '#....', '.....', '...#.'],
 }
 
+// 물 높이 1, 맨 아래 줄이 물, 얼음 돌 넷 중 (1,3)은 물에 뜬 돌
+const ICY: Stage = {
+  ...STAGE,
+  id: '13-1',
+  heights: [
+    [1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1],
+    [0, 0, 0, 0, 0],
+  ],
+  water: 1,
+  goal: { x: 4, y: 0 },
+  entities: [
+    { type: 'iceStone', x: 1, y: 0 },
+    { type: 'iceStone', x: 3, y: 1 },
+    { type: 'iceStone', x: 1, y: 2 },
+    { type: 'iceStone', x: 1, y: 3 },
+    { type: 'warp', id: 'a', x: 4, y: 2 },
+    { type: 'warp', id: 'a', x: 0, y: 2 },
+  ],
+}
+
 const key = ({ x, y }: { x: number; y: number }) => `${x}-${y}`
 
 describe('ambientPlan', () => {
@@ -67,8 +89,18 @@ describe('ambientPlan', () => {
     expect(ambientPlan(STAGE, 2)).toEqual({ cycle: 5800, slots: [{ at: 0, kind: 'butterfly' }] })
   })
 
-  it('바닥 연출이 없는 장은 그 자리를 4.35초 비우고 요소 연출만', () => {
-    expect(ambientPlan(PAIRS, 3)).toEqual({ cycle: 8350, slots: [{ at: 4350, kind: 'warp' }] })
+  it('얼음 돌 판은 장과 무관하게 찬 김, 짝 칸과 함께면 번갈아', () => {
+    expect(ambientPlan(ICY, 3)).toEqual({
+      cycle: 2000 + 2550 + 1400 + 2600 + 1400,
+      slots: [
+        { at: 2000, kind: 'mist' },
+        { at: 2000 + 2550 + 1400, kind: 'warp' },
+      ],
+    })
+  })
+
+  it('바닥 연출이 없는 장은 그 자리를 2초 비우고 요소 연출만', () => {
+    expect(ambientPlan(PAIRS, 3)).toEqual({ cycle: 6000, slots: [{ at: 2000, kind: 'warp' }] })
   })
 
   it('바닥 연출도 요소 연출도 없는 판은 null', () => {
@@ -76,7 +108,7 @@ describe('ambientPlan', () => {
   })
 
   it('연출이 끝나고 1.4초 넘게 쉰 뒤 다음 차례, 한 번에 하나', () => {
-    for (const stage of [STAGE, PAIRS, MEADOW]) {
+    for (const stage of [STAGE, PAIRS, MEADOW, ICY]) {
       for (const chapter of [1, 2, 3]) {
         const plan = ambientPlan(stage, chapter)
         plan?.slots.forEach((slot, i) => {
@@ -174,6 +206,21 @@ describe('ambientCells', () => {
     expect(ambientCells({ ...game, mushrooms: [] }, 'spore', 0, 0)).toEqual([])
   })
 
+  it('찬 김은 땅 위 돌과 물에 뜬 돌 하나, 큐브 옆 돌과 소용돌이에 끌려갈 돌도 후보', () => {
+    const game = createState(ICY)
+    const picks = (state: typeof game) =>
+      [
+        ...new Set(
+          Array.from({ length: 30 }, (_, round) => key(ambientCells(state, 'mist', round, 0)[0])),
+        ),
+      ].sort()
+    expect(picks(game)).toEqual(['1-0', '1-2', '1-3', '3-1'])
+    // 땅 돌 (1,2)를 빼 물이 얼지 않아 (1,3)이 다음 수에 끌려가는 물길
+    const lane = ICY.entities.filter((e) => !(e.type === 'iceStone' && e.x === 1 && e.y === 2))
+    const whirled = createState({ ...ICY, entities: [...lane, { type: 'whirlpool', x: 4, y: 3 }] })
+    expect(picks(whirled)).toEqual(['1-0', '1-3', '3-1'])
+  })
+
   it('나비는 빛 알갱이처럼 빈 땅 한 칸', () => {
     const game = createState(MEADOW)
     for (let round = 0; round < 20; round++) {
@@ -234,6 +281,22 @@ describe('ambientLoops', () => {
       expect(keyframes.at(-2)!.offset).toBeCloseTo(4400 / 36000)
       expect(keyframes.at(-1)!.opacity).toBe(0)
     }
+  })
+
+  it('찬 김은 발치 김 둘과 윗단 김 하나가 2.4초에 사라짐, 오른쪽 발치는 0.15초 늦게', () => {
+    const loops = ambientLoops('mist', 36000)
+    expect(loops.map((loop) => [loop.shape, loop.delay])).toEqual([
+      ['wisp', 0],
+      ['sheetLeft', 0],
+      ['sheetRight', 150],
+    ])
+    for (const { keyframes } of loops) {
+      expect(keyframes[0].opacity).toBe(0)
+      expect(keyframes.at(-2)!.offset).toBeCloseTo(2400 / 36000)
+      expect(keyframes.at(-1)!.opacity).toBe(0)
+    }
+    expect(Math.max(...loops[0].keyframes.map((k) => Number(k.opacity)))).toBe(0.5)
+    expect(Math.max(...loops[1].keyframes.map((k) => Number(k.opacity)))).toBe(0.45)
   })
 
   it('짝 칸 숨은 우묵면과 틀 빛 테가 1.1초에 가장 밝고 2.6초에 꺼짐', () => {

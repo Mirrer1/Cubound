@@ -502,8 +502,16 @@ const BoardCell = ({
           <BoardSeed x={x} y={y} part="tree" from={seed.tree} to={seed.treeNext} p={seed.treeP} />
         </g>
       )}
-      {(ambient.kind === 'mote' || ambient.kind === 'spore' || ambient.kind === 'butterfly') && (
-        <BoardAmbient x={x} y={y} {...ambient} kind={ambient.kind} />
+      {(ambient.kind === 'mote' ||
+        ambient.kind === 'spore' ||
+        ambient.kind === 'butterfly' ||
+        ambient.kind === 'mist') && (
+        <BoardAmbient
+          x={x}
+          y={ambient.kind === 'mist' ? Math.min(y, iceTop) : y}
+          {...ambient}
+          kind={ambient.kind}
+        />
       )}
       {sunk ? (
         <>

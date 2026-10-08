@@ -190,17 +190,25 @@ describe('cellLook', () => {
       kind: 'mote',
       at: 24000,
       cycle: 36000,
-      near: false,
+      leave: false,
     })
-    expect(cells.get('4-0')!.look.ambient).toEqual({ kind: null, at: 0, cycle: 0, near: false })
+    expect(cells.get('4-0')!.look.ambient).toEqual({ kind: null, at: 0, cycle: 0, leave: false })
   })
 
-  it('분위기 연출 칸 옆에 큐브가 오면 near', () => {
+  it('나비는 옆 칸에 큐브가 오면 leave', () => {
     const ambient = { kind: 'butterfly' as const, cells: [{ x: 4, y: 0 }], at: 0, cycle: 5800 }
     const far = looks(createState(FILL_STAGE), null, [], 1, false, ambient)
-    expect(far.get('4-0')!.look.ambient.near).toBe(false)
+    expect(far.get('4-0')!.look.ambient.leave).toBe(false)
     const game = { ...createState(FILL_STAGE), player: { x: 3, y: 0 } }
-    expect(looks(game, null, [], 1, false, ambient).get('4-0')!.look.ambient.near).toBe(true)
+    expect(looks(game, null, [], 1, false, ambient).get('4-0')!.look.ambient.leave).toBe(true)
+  })
+
+  it('찬 김은 돌이 그 칸을 떠나면 leave', () => {
+    const ambient = { kind: 'mist' as const, cells: [{ x: 4, y: 0 }], at: 0, cycle: 6000 }
+    const game = { ...createState(FILL_STAGE), stones: [{ x: 4, y: 0 }], player: { x: 3, y: 0 } }
+    expect(looks(game, null, [], 1, false, ambient).get('4-0')!.look.ambient.leave).toBe(false)
+    const moved = { ...game, stones: [{ x: 3, y: 0 }] }
+    expect(looks(moved, null, [], 1, false, ambient).get('4-0')!.look.ambient.leave).toBe(true)
   })
 })
 

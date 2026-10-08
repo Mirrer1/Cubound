@@ -23,7 +23,7 @@ import type { Direction, GameEvent, GameState, Point, Stage } from '@/game/types
 // 재시작에 메운 바닥이 사라지는 진행도
 const RESTORE_FADE = 0.25
 
-const NO_AMBIENT = { kind: null, at: 0, cycle: 0, near: false }
+const NO_AMBIENT = { kind: null, at: 0, cycle: 0, leave: false }
 
 export interface CellLook {
   x: number
@@ -110,7 +110,7 @@ export interface CellLook {
     kind: AmbientKind | null // 이 칸에서 이번 차례에 일어나는 분위기 연출
     at: number // 바퀴 안에서 시작하는 ms
     cycle: number
-    near: boolean // 큐브가 이 칸이나 상하좌우 칸에 선 상태
+    leave: boolean // 거둘 때, 나비는 큐브가 이 칸이나 옆 칸에 온 때, 찬 김은 돌이 칸을 떠난 때
   }
 }
 
@@ -319,7 +319,10 @@ export const cellLook = ({
             kind: ambientHere.kind,
             at: ambientHere.at,
             cycle: ambientHere.cycle,
-            near: Math.abs(cell.p.x - game.player.x) + Math.abs(cell.p.y - game.player.y) <= 1,
+            leave:
+              ambientHere.kind === 'mist'
+                ? !has(game.stones, cell.p)
+                : Math.abs(cell.p.x - game.player.x) + Math.abs(cell.p.y - game.player.y) <= 1,
           }
         : NO_AMBIENT,
     }

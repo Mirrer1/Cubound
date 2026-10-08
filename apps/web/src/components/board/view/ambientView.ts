@@ -3,10 +3,20 @@ import { TILE, toScreen } from '@/game/iso'
 import { isIce, same } from '@/game/rules'
 import type { GameState, Point, Stage } from '@/game/types'
 
-export type AmbientKind = 'mote' | 'warp' | 'bubble' | 'spore' | 'butterfly'
+export type AmbientKind = 'mote' | 'warp' | 'bubble' | 'spore' | 'butterfly' | 'mist'
 
 export type AmbientShape =
-  'mote' | 'dish' | 'ring' | 'bubble' | 'disk' | 'spore' | 'wingLeft' | 'wingRight'
+  | 'mote'
+  | 'dish'
+  | 'ring'
+  | 'bubble'
+  | 'disk'
+  | 'spore'
+  | 'wingLeft'
+  | 'wingRight'
+  | 'wisp'
+  | 'sheetLeft'
+  | 'sheetRight'
 
 // 한 번 일어나는 ms와 크기 px, 칸 폭 배수
 export const AMBIENT = {
@@ -15,11 +25,12 @@ export const AMBIENT = {
   bubble: { life: 1600, size: 5, disk: 30 },
   spore: { life: 2700, size: 2.2 },
   butterfly: { life: 4400, wing: 5, height: 4 },
+  mist: { life: 2550, sheet: { rx: 20, ry: 8 }, wisp: { rx: 9, ry: 5 } },
 }
 
 // 한 번 끝난 뒤 쉬는 ms, 바닥 연출이 없는 장에서 그 자리를 비우는 ms
 const REST = 1400
-const GAP = 4350
+const GAP = 2000
 
 // 장마다 빈 바닥에 일어나는 연출
 const FLOOR: Partial<Record<number, AmbientKind>> = { 1: 'mote', 2: 'butterfly' }
@@ -76,6 +87,20 @@ const marked = (rows: string[] | undefined, { x, y }: Point) => (rows?.[y]?.[x] 
 
 const anyMarked = (rows: string[] | undefined) => rows?.some((row) => /[^.]/.test(row)) ?? false
 
+// 찬 김 조각의 칸 윗면 가운데 기준 자리와 크기, ms마다 x, y, rx, ry, 진하기
+const SHEET: [number, number, number, number, number, number][] = [
+  [0, 8, 10, 6, 3, 0],
+  [400, 14, 11, 10, 4.5, 0.45],
+  [1600, 26, 12, 18, 7, 0.22],
+  [2400, 30, 12, 20, 8, 0],
+]
+const WISP: [number, number, number, number, number, number][] = [
+  [0, -1, -30, 3, 3, 0],
+  [400, -4, -31, 5, 3.6, 0.5],
+  [1600, -10, -32.5, 8, 4.6, 0.22],
+  [2400, -12, -33, 9, 5, 0],
+]
+
 // 판의 한 바퀴 차례, 바닥 연출 다음 그 판의 요소 연출, 한 번에 하나, 끝나고 REST 쉼
 // 바닥 연출은 그 장만, 요소 연출은 그 요소가 있는 모든 판, 둘 다 없으면 null
 export const ambientPlan = (stage: Stage, chapter: number): AmbientPlan | null => {
@@ -83,6 +108,7 @@ export const ambientPlan = (stage: Stage, chapter: number): AmbientPlan | null =
   const elements: AmbientKind[] = [
     ...(anyMarked(stage.swamp) ? ['bubble' as const] : []),
     ...(anyMarked(stage.mushroom) ? ['spore' as const] : []),
+    ...(stage.entities.some((e) => e.type === 'iceStone') ? ['mist' as const] : []),
     ...(stage.entities.some((e) => e.type === 'warp') ? ['warp' as const] : []),
   ]
   if (!floor && elements.length === 0) return null
@@ -146,17 +172,19 @@ const isBare = (game: GameState, p: Point) => {
   )
 }
 
-// 연출이 일어날 수 있는 칸, 큐브 칸과 상하좌우 칸 제외
+// 연출이 일어날 수 있는 칸, 큐브 칸과 상하좌우 칸 제외, 찬 김은 모든 얼음 돌
 const candidates = (game: GameState, kind: AmbientKind) => {
   const cells =
     kind === 'bubble'
       ? game.swamps
       : kind === 'spore'
         ? game.mushrooms
-        : game.stage.heights.flatMap((row, y) =>
-            row.flatMap((_, x) => (isBare(game, { x, y }) ? [{ x, y }] : [])),
-          )
-  return cells.filter((p) => apart(p, game.player))
+        : kind === 'mist'
+          ? game.stones
+          : game.stage.heights.flatMap((row, y) =>
+              row.flatMap((_, x) => (isBare(game, { x, y }) ? [{ x, y }] : [])),
+            )
+  return kind === 'mist' ? cells : cells.filter((p) => apart(p, game.player))
 }
 
 // 이번 차례에 연출이 일어나는 칸, 짝 칸 숨은 한 짝의 두 칸, 고를 칸이 없으면 빈 목록
@@ -276,6 +304,26 @@ export const ambientLoops = (kind: AmbientKind, cycle: number): AmbientLoop[] =>
     return [
       { shape: 'wingLeft', delay: 0, keyframes },
       { shape: 'wingRight', delay: 0, keyframes },
+    ]
+  }
+  if (kind === 'mist') {
+    const { sheet, wisp } = AMBIENT.mist
+    const puff = (
+      frames: typeof SHEET,
+      base: { rx: number; ry: number },
+      side: number,
+    ): Keyframe[] => {
+      const steps = frames.map(([ms, x, y, rx, ry, opacity]) => ({
+        offset: at(ms, cycle),
+        opacity,
+        transform: `${move(side * x, y)} scale(${rx / base.rx}, ${ry / base.ry})`,
+      }))
+      return [...steps, { ...steps.at(-1)!, offset: 1 }]
+    }
+    return [
+      { shape: 'wisp', delay: 0, keyframes: puff(WISP, wisp, 1) },
+      { shape: 'sheetLeft', delay: 0, keyframes: puff(SHEET, sheet, -1) },
+      { shape: 'sheetRight', delay: 150, keyframes: puff(SHEET, sheet, 1) },
     ]
   }
   const { ring, rim } = AMBIENT.warp
