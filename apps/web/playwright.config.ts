@@ -16,5 +16,6 @@ export default defineConfig({
     command: `pnpm exec vite --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: true,
+    env: { CUBOUND_E2E: '1' },
   },
 })
