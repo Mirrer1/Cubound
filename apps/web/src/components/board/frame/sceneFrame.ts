@@ -31,7 +31,7 @@ import { fadeLanes, sluiceScene, tapFronts } from './sluiceFrame'
 import { boxSink, swampFrame } from './swampFrame'
 import { moorLooks, tetherFrames } from './tetherFrame'
 import { type SwampTime, elapsedAt, playerSegments, pullStart, stepProgress } from './timeFrame'
-import { tramFramesOf, tramProgress } from './tramFrame'
+import { behindCube, tramBeside, tramFramesOf, tramProgress } from './tramFrame'
 import { vineFrames } from './vineFrame'
 import { rippleOf } from './waterFrame'
 import { leanOf, pulledBeside, whirlFrames } from './whirlpoolFrame'
@@ -146,7 +146,10 @@ export const sceneFrame = ({
 
   const cubeDrop = dropping ? restartDrop(t, 0, boxes.length, game.stones.length) : null
   const tramPhase = moving ? tramProgress(events, t, swampSeconds) : 1
-  const tramFrames = tramFramesOf({ trams, before, game, tramPhase, fade: cubeDrop?.opacity ?? 1 })
+  const tramFrames = behindCube(
+    tramFramesOf({ trams, before, game, tramPhase, fade: cubeDrop?.opacity ?? 1 }),
+    cube.cell,
+  )
   const nextRails = new Set(tramFrames.map((frame) => `${frame.next.x}-${frame.next.y}`))
 
   const cubeLevel = cube.level + (cubeDrop?.lift ?? 0)
@@ -276,9 +279,11 @@ export const sceneFrame = ({
     crackPhase,
     tramPhase,
     // 같은 깊이 옆 칸으로 끌려가는 배와 돌이 큐브 아래를 덮지 않는 순서
-    cube: pulledBeside([...whirl.boxes, ...iceStone.stones.filter((s) => s.pulled)], cube.cell)
-      ? { ...cube, last: true }
-      : cube,
+    cube:
+      pulledBeside([...whirl.boxes, ...iceStone.stones.filter((s) => s.pulled)], cube.cell) ||
+      tramBeside(tramFrames, cube.cell)
+        ? { ...cube, last: true }
+        : cube,
     cubeCell,
     cubeLean,
     rowLean,

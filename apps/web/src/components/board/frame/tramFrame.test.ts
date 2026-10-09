@@ -4,8 +4,10 @@ import { PIT_FLOOR } from '../view'
 import { playerFrame } from './cubeFrame'
 import { board, ride } from './testStages'
 import {
+  behindCube,
   railDirsOf,
   slidingCell,
+  tramBeside,
   tramFacing,
   tramFramesOf,
   tramNext,
@@ -140,5 +142,25 @@ describe('발판 그리기', () => {
 
     expect(start.cell).toEqual({ x: 0, y: 0 })
     expect({ dx: start.dx, dy: start.dy }).toEqual({ dx: 1, dy: 0 })
+  })
+})
+
+describe('behindCube', () => {
+  it('큐브가 서 있던 칸에서 떠나는 발판은 그 칸 순서로 그린다', () => {
+    const frame = { from: { x: 4, y: 1 }, cell: { x: 4, y: 2 } }
+    expect(behindCube([frame], { x: 4, y: 1 })[0].cell).toEqual({ x: 4, y: 1 })
+  })
+
+  it('큐브와 무관한 발판은 그대로 둔다', () => {
+    const frame = { from: { x: 2, y: 1 }, cell: { x: 2, y: 2 } }
+    expect(behindCube([frame], { x: 4, y: 1 })[0].cell).toEqual({ x: 2, y: 2 })
+  })
+})
+
+describe('tramBeside', () => {
+  it('큐브 옆 같은 깊이 칸의 발판만 참이다', () => {
+    expect(tramBeside([{ cell: { x: 4, y: 2 } }], { x: 5, y: 1 })).toBe(true)
+    expect(tramBeside([{ cell: { x: 4, y: 3 } }], { x: 5, y: 1 })).toBe(false)
+    expect(tramBeside([{ cell: { x: 5, y: 1 } }], { x: 5, y: 1 })).toBe(false)
   })
 })

@@ -99,9 +99,24 @@ export const tramFramesOf = ({ trams, before, game, tramPhase, fade }: TramView)
       depth: PIT_FLOOR + tram.level * TILE.layer,
       dx: facing.x,
       dy: facing.y,
+      from,
       to,
       cell: slidingCell(from, to, tramPhase),
       next: tramNext(tram, spot),
       opacity: before.trams[i].at === game.trams[i].at ? 1 : fade,
     }
   })
+
+// 큐브가 떠나는 발판은 떠나는 칸 순서, 앞 칸으로 미끄러지는 발판이 큐브 위에 그려지는 것 방지
+export const behindCube = <T extends { from: Point; cell: Point }>(frames: T[], cube: Point) =>
+  frames.map((frame) => (same(frame.from, cube) ? { ...frame, cell: frame.from } : frame))
+
+// 큐브 옆 같은 깊이 칸을 지나는 발판, 큐브를 같은 깊이 칸 중 맨 나중에 그려야 하는 경우
+export const tramBeside = (frames: { cell: Point }[], cube: Point) =>
+  frames.some(
+    ({ cell }) =>
+      !same(cell, cube) &&
+      Math.abs(cell.x - cube.x) <= 1 &&
+      Math.abs(cell.y - cube.y) <= 1 &&
+      cell.x + cell.y === cube.x + cube.y,
+  )
