@@ -17,6 +17,11 @@ import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
 import PlayCounts from '@/components/ui/PlayCounts'
 import RestartCard from '@/components/ui/RestartCard'
+import ExpandIcon from '@/components/ui/icons/ExpandIcon'
+import GuideIcon from '@/components/ui/icons/GuideIcon'
+import MenuIcon from '@/components/ui/icons/MenuIcon'
+import RestartIcon from '@/components/ui/icons/RestartIcon'
+import ShrinkIcon from '@/components/ui/icons/ShrinkIcon'
 import { movesLeft } from '@/game/rules'
 import { useText } from '@/hooks/useText'
 import { stageTextKey } from '@/i18n'
@@ -31,8 +36,6 @@ interface PlayScreenProps {
 }
 
 const ASK_FROM_MOVES = 5 // 재시작 전에 묻기 시작하는 이동 수
-const OVERVIEW_OUT = 'M14 10l6-6M14 4h6v6M10 14l-6 6M4 14v6h6' // 바깥을 가리키는 두 화살표, 전체 보기
-const OVERVIEW_IN = 'M20 4l-6 6M14 4v6h6M4 20l6-6M10 20v-6H4' // 가운데를 가리키는 두 화살표, 확대로 돌아가기
 
 // 개발 서버 전용 개발용 컨트롤러, 배포 빌드에서 빠지는 동적 import
 const DevController = import.meta.env.DEV
@@ -223,23 +226,16 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                     aria-pressed={overview}
                     strong={overview}
                   >
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="size-4.5"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.8}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden
-                    >
-                      <path d={overview ? OVERVIEW_IN : OVERVIEW_OUT} />
-                    </svg>
+                    {overview ? (
+                      <ShrinkIcon className="size-4.5" />
+                    ) : (
+                      <ExpandIcon className="size-4.5" />
+                    )}
                   </Button>
                 )}
                 {hasGuide && (
                   <Button variant="icon" onClick={handleOpenGuide} title={t('play.guide')}>
-                    ?
+                    <GuideIcon />
                   </Button>
                 )}
                 <Button
@@ -249,10 +245,10 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                   title={t('play.restart')}
                   data-guide="restart"
                 >
-                  ↺
+                  <RestartIcon />
                 </Button>
                 <Button variant="icon" onClick={handleSelect} title={t('play.select')}>
-                  ≡
+                  <MenuIcon />
                 </Button>
               </div>
             </div>

@@ -156,7 +156,7 @@ test.describe('모바일', () => {
     await expect(page.getByText(/GUIDE/)).toBeHidden()
 
     const moves = page.getByText('MOVES').locator('..')
-    const box = await page.getByRole('button', { name: '↺' }).boundingBox()
+    const box = await page.getByRole('button', { name: '다시 하기 (R)' }).boundingBox()
     const x = box!.x + box!.width / 2
     const y = box!.y + box!.height / 2
 

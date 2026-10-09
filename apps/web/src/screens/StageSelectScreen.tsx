@@ -5,6 +5,9 @@ import Button from '@/components/ui/Button'
 import ChapterCard, { type ChapterCardState } from '@/components/ui/ChapterCard'
 import ChapterTab from '@/components/ui/ChapterTab'
 import StageCard, { type StageCardState } from '@/components/ui/StageCard'
+import BackIcon from '@/components/ui/icons/BackIcon'
+import ChevronIcon from '@/components/ui/icons/ChevronIcon'
+import StarIcon from '@/components/ui/icons/StarIcon'
 import { isUnlocked, isWorldUnlocked, totalStars } from '@/game/progress'
 import { useText } from '@/hooks/useText'
 import { chapterTextKey, sentencesOf, worldNoteKey, worldTextKey } from '@/i18n'
@@ -166,7 +169,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
             aria-label={t('select.back')}
             className="min-[1700px]:size-13 narrow:size-8.5"
           >
-            ←
+            <BackIcon />
           </Button>
           <ChapterTab
             chapter={chapter}
@@ -181,7 +184,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
             <span className="min-[1700px]:text-[30px] min-[1700px]:text-ink">
               {totalStars(progress, ids)}
             </span>{' '}
-            / {ids.length * 3} ◆
+            / {ids.length * 3} <StarIcon className="inline-block size-[1em] align-[-0.1em]" />
           </span>
           {/* 월드가 하나뿐인 장에서도 남기는 자리, 장을 넘길 때 왼쪽 흔들림 방지 */}
           <span className="flex items-center gap-1 min-[1700px]:order-4">
@@ -193,7 +196,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
               aria-label={t('select.previousWorld')}
               className="min-[1700px]:size-13 narrow:size-8.5"
             >
-              ‹
+              <ChevronIcon />
             </Button>
             <Button
               variant="ghost"
@@ -202,7 +205,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
               aria-label={t('select.nextWorld')}
               className="min-[1700px]:size-13 narrow:size-8.5"
             >
-              ›
+              <ChevronIcon className="size-[1em] rotate-180" />
             </Button>
           </span>
           <span className="hidden text-sm break-keep text-mute min-[1700px]:order-2 min-[1700px]:block">

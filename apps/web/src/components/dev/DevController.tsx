@@ -11,6 +11,11 @@ import {
 } from 'react'
 import devSolutions from 'virtual:dev-solutions'
 
+import PauseIcon from '@/components/ui/icons/PauseIcon'
+import PlayIcon from '@/components/ui/icons/PlayIcon'
+import SkipBackIcon from '@/components/ui/icons/SkipBackIcon'
+import SkipForwardIcon from '@/components/ui/icons/SkipForwardIcon'
+import TriangleIcon from '@/components/ui/icons/TriangleIcon'
 import { loadCollapsed, loadShown, saveCollapsed } from '@/dev/controllerStorage'
 import {
   type Follow,
@@ -246,7 +251,11 @@ const DevController = ({ game }: DevControllerProps) => {
   // 화면 탭으로 재생 정지와 다시 재생, 탭으로 멈춘 재생만 다시 켬
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      if ((e.target as Element).closest('button, a, input')) return
+      // 누른 순간의 경로, 재생 버튼 아이콘이 갈아 끼워져 문서에서 떨어진 경우 대비
+      const onControl = e
+        .composedPath()
+        .some((node) => node instanceof Element && node.matches('button, a, input'))
+      if (onControl) return
       const direction = nextMove(path, follow)
       if (playing) {
         setPlay(null)
@@ -270,7 +279,9 @@ const DevController = ({ game }: DevControllerProps) => {
         <div className="relative flex min-w-0 items-center gap-x-2.5 rounded-[13px] border border-line bg-surface/85 py-1 pr-1.5 pl-1 font-mono text-[13px] text-mute @max-[21rem]:gap-x-2 @max-[21rem]:pr-1 wide:text-sm">
           <span className="flex min-w-0 items-center gap-2">
             <button type="button" onClick={toggle} title="풀이 띠 접기 (`)" className={BUTTON}>
-              {collapsed ? '▸' : '▾'}
+              <TriangleIcon
+                className={`h-[0.36em] w-[0.43em] ${collapsed ? 'rotate-90' : 'rotate-180'}`}
+              />
             </button>
             {!collapsed &&
               (result ? (
@@ -356,10 +367,7 @@ const DevController = ({ game }: DevControllerProps) => {
                 title="뒤로"
                 className={BUTTON}
               >
-                <svg viewBox="0 0 12 12" className="size-3.5 fill-current narrow:size-4">
-                  <rect x="1" y="2" width="2" height="8" />
-                  <path d="M11 2v8L4 6z" />
-                </svg>
+                <SkipBackIcon className="size-3.5 narrow:size-4" />
               </button>
               <button
                 type="button"
@@ -368,7 +376,11 @@ const DevController = ({ game }: DevControllerProps) => {
                 title={playing ? '정지' : '재생'}
                 className={BUTTON}
               >
-                {playing ? '❚❚' : '▶'}
+                {playing ? (
+                  <PauseIcon className="size-3.5 narrow:size-4" />
+                ) : (
+                  <PlayIcon className="size-3.5 narrow:size-4" />
+                )}
               </button>
               <button
                 type="button"
@@ -377,10 +389,7 @@ const DevController = ({ game }: DevControllerProps) => {
                 title="앞으로"
                 className={BUTTON}
               >
-                <svg viewBox="0 0 12 12" className="size-3.5 fill-current narrow:size-4">
-                  <path d="M1 2v8l7-4z" />
-                  <rect x="9" y="2" width="2" height="8" />
-                </svg>
+                <SkipForwardIcon className="size-3.5 narrow:size-4" />
               </button>
             </span>
           )}

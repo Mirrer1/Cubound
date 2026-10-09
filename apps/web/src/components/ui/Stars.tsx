@@ -1,3 +1,4 @@
+import StarIcon from '@/components/ui/icons/StarIcon'
 import { useText } from '@/hooks/useText'
 
 interface StarsProps {
@@ -9,8 +10,8 @@ interface StarsProps {
 
 const Stars = ({ count, size, tone = 'light', className = '' }: StarsProps) => {
   const t = useText()
-  const filled = tone === 'light' ? 'var(--color-ink)' : 'var(--color-base-bg)'
-  const empty = tone === 'light' ? 'var(--color-line-strong)' : 'var(--color-mute)'
+  const filled = tone === 'light' ? 'text-ink' : 'text-base-bg'
+  const empty = tone === 'light' ? 'text-line-strong' : 'text-mute'
 
   return (
     <span
@@ -19,12 +20,11 @@ const Stars = ({ count, size, tone = 'light', className = '' }: StarsProps) => {
       aria-label={t('stars.label', count)}
     >
       {[0, 1, 2].map((i) => (
-        <svg key={i} viewBox="0 0 10 10" className="size-[1em]">
-          <polygon
-            points="5,0.5 9.5,5 5,9.5 0.5,5"
-            style={i < count ? { fill: filled } : { fill: 'none', stroke: empty, strokeWidth: 0.8 }}
-          />
-        </svg>
+        <StarIcon
+          key={i}
+          empty={i >= count}
+          className={`size-[1em] ${i < count ? filled : empty}`}
+        />
       ))}
     </span>
   )

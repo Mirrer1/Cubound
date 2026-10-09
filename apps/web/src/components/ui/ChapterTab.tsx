@@ -1,5 +1,7 @@
 import { motion } from 'motion/react'
 
+import TriangleIcon from '@/components/ui/icons/TriangleIcon'
+
 interface ChapterTabProps {
   chapter: number
   world: number
@@ -43,7 +45,7 @@ const ChapterTab = ({
           transition={{ duration: 0.2, ease: [0.37, 0, 0.63, 1] }}
           aria-hidden="true"
         >
-          ▲
+          <TriangleIcon className="block h-[0.56em] w-[1em]" />
         </motion.span>
       </span>
       <span className="flex min-w-0 flex-col gap-0.5 rounded-[15px] border border-line-strong bg-surface px-3 py-2 min-[1700px]:gap-1.5 min-[1700px]:px-5 min-[1700px]:py-4 narrow:gap-0 narrow:px-2.5 narrow:py-1.5">

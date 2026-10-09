@@ -12,7 +12,13 @@ const KEYS = {
 
 // 브라우저 언어로 고른 화면 문구
 const LABELS = {
-  ko: { start: '시작', skip: '건너뛰기', select: '목록', next: '다음 스테이지' },
+  ko: {
+    start: '시작',
+    skip: '건너뛰기',
+    select: '목록',
+    next: '다음 스테이지',
+    guide: '가이드 다시 보기',
+  },
   en: { start: 'Start', skip: 'Skip', select: 'All stages' },
 }
 
@@ -663,7 +669,7 @@ for (const size of SIZES) {
       await page.getByText('STAGE 01').waitFor()
       await shot(page, `size-${size.name}-play`)
 
-      await page.getByRole('button', { name: /^\?/ }).click()
+      await page.getByRole('button', { name: LABELS.ko.guide }).click()
       await page.getByText('GUIDE 1 / 2').waitFor()
       await shot(page, `size-${size.name}-guide`)
 

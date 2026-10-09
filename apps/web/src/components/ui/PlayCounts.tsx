@@ -9,6 +9,7 @@ import {
   vinesDisplay,
   windDisplay,
 } from '@/components/board/frame'
+import TriangleIcon from '@/components/ui/icons/TriangleIcon'
 import { climbsLeft, dirLeft, movesLeft, pushesLeft, ridesLeft } from '@/game/rules'
 import type { GameEvent, GameState } from '@/game/types'
 import { useLoop } from '@/hooks/useLoop'
@@ -230,7 +231,7 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
             <span
               className={`text-[11px] narrow:text-[9px] ${tide.turning ? 'text-alert' : 'text-ink'}`}
             >
-              {tide.up ? '▲' : '▼'}
+              <TriangleIcon className={`block h-[0.73em] w-[1em] ${tide.up ? '' : 'rotate-180'}`} />
             </span>
             <LimitCount hit={limited === 'tide' || tide.turning ? turn : null} alert={tide.turning}>
               {tide.left}

@@ -1,4 +1,5 @@
 import { shade } from '@/components/board/view'
+import StarIcon from '@/components/ui/icons/StarIcon'
 
 export type ChapterCardState = 'locked' | 'open' | 'now'
 
@@ -145,7 +146,7 @@ const ChapterCard = ({
             />
           </span>
           <span className="font-mono text-[10px] whitespace-nowrap text-faint roomy:text-[11px]">
-            {stars} / {total} ◆
+            {stars} / {total} <StarIcon className="inline-block size-[1em] align-[-0.1em]" />
           </span>
         </span>
       </span>
