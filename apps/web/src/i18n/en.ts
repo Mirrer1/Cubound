@@ -234,6 +234,9 @@ export const en = {
   'world.15.note': 'Every form of water meets in one sea. Follow the tides home.',
   'world.16': 'Land of Spreading Fire',
   'world.16.note': 'Charcoal burns when fire reaches it. When to light the fire is the answer.',
+  'world.17': 'Land of Carried Embers',
+  'world.17.note':
+    'Step on a brazier and the cube catches fire. Where to set it within four moves is the answer.',
   'stage.12-1': 'Swept Along',
   'stage.12-2': 'Reeling In',
   'stage.12-3': 'In Line',
@@ -284,6 +287,16 @@ export const en = {
   'stage.16-8': 'Trailing Fire',
   'stage.16-9': 'Charcoal Hill',
   'stage.16-10': 'Chasing Fire',
+  'stage.17-1': 'First Brazier',
+  'stage.17-2': 'Light Across',
+  'stage.17-3': 'Drifting Fire',
+  'stage.17-4': 'Closed Path',
+  'stage.17-5': 'Four Steps',
+  'stage.17-6': 'Spreading Bridge',
+  'stage.17-7': 'Back to the Brazier',
+  'stage.17-8': 'Caught Fire',
+  'stage.17-9': 'Two Walls',
+  'stage.17-10': 'Burning Cargo',
 }
 
 export type Texts = typeof en
