@@ -79,6 +79,10 @@ export const es: Partial<Texts> = {
     'Mientras algo mantiene pulsado el interruptor de agua, el agua pasa al otro estanque',
   'guide.tide':
     'El agua sube y baja cada cuatro movimientos, así que sal a tiempo del suelo mojado',
+  'guide.spark': 'Pisa una casilla de brasa y allí se enciende el fuego',
+  'guide.charcoal':
+    'En cada movimiento el fuego pasa al carbón que toca y el carbón quemado desaparece',
+  'guide.chase': 'El fuego solo pasa al carbón del lado más cercano, como si persiguiera',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',

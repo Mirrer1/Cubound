@@ -2,6 +2,7 @@ import { type CSSProperties, type ReactNode, memo } from 'react'
 
 import BoardAmbient from './BoardAmbient'
 import BoardBox from './BoardBox'
+import BoardFire from './BoardFire'
 import BoardFloor, { type BehindGoal } from './BoardFloor'
 import BoardIceStone from './BoardIceStone'
 import BoardLadder from './BoardLadder'
@@ -69,6 +70,7 @@ const BoardCell = ({
   tide,
   pit: pitLook,
   ladder,
+  fire,
   vine,
   seed,
   ambient,
@@ -169,6 +171,9 @@ const BoardCell = ({
             iceTop={iceTop}
             mudY={mudY}
           />
+          {fire.kind && (
+            <BoardFire part="floor" x={x} y={y} parity={parity} {...fire} kind={fire.kind} />
+          )}
         </g>
       )}
       {device.entity && (
@@ -185,6 +190,9 @@ const BoardCell = ({
       )}
       {sluice.device && (
         <BoardSluice part="tap" x={x} y={y} open={sluice.open} turn={sluice.turn} />
+      )}
+      {fire.kind === 'wall' && (
+        <BoardFire part="pile" x={x} y={y} parity={parity} {...fire} kind={fire.kind} />
       )}
       {box && (
         <g>
@@ -251,7 +259,9 @@ const BoardCell = ({
       {(ambient.kind === 'mote' ||
         ambient.kind === 'spore' ||
         ambient.kind === 'butterfly' ||
-        ambient.kind === 'mist') && (
+        ambient.kind === 'mist' ||
+        ambient.kind === 'ash' ||
+        ambient.kind === 'emberSmoke') && (
         <BoardAmbient
           x={x}
           y={ambient.kind === 'mist' ? Math.min(y, iceTop) : y}

@@ -4,6 +4,7 @@ import type { boardCells } from './cellFrame'
 import { crackFrame, crackLeft, sinkAt } from './crackFrame'
 import { clamp01, smooth } from './curveFrame'
 import { wallHeight } from './fillFrame'
+import { type FireLook, NO_FIRE, fireLookOf } from './fireFrame'
 import { frostAt } from './iceFrame'
 import { frostGround, frostPatches } from './iceStoneFrame'
 import { has, same } from './pathFrame'
@@ -104,13 +105,14 @@ export interface CellLook {
     wallRight: number // 0 이상이면 왼 칸 쪽에 세우는 구덩이 벽, -1이면 벽 없는 칸
   }
   ladder: LadderLook
+  fire: FireLook
   vine: VineCell
   seed: SeedCell
   ambient: {
     kind: AmbientKind | null // 이 칸에서 이번 차례에 일어나는 분위기 연출
     at: number // 바퀴 안에서 시작하는 ms
     cycle: number
-    leave: boolean // 거둘 때, 나비는 큐브가 이 칸이나 옆 칸에 온 때, 찬 김은 돌이 칸을 떠난 때
+    leave: boolean // 거둘 때, 나비는 큐브가 이 칸이나 옆 칸에 온 때, 찬 김은 돌이 칸을 떠난 때, 불씨 칸 연기는 켜진 때
   }
 }
 
@@ -164,9 +166,12 @@ export const cellLook = ({
     const was = crackLeft(scene.before, cell.p)
     // 상자가 만든 바닥, 처음부터 구멍이던 칸과 무너진 뒤 메워진 칸
     const wasCrack = (stage.cracks?.[cell.p.y]?.[cell.p.x] ?? '.') !== '.'
+    const fire = fireLookOf(scene.fire, cell.p)
     const isFilled =
       game.heights[cell.p.y][cell.p.x] >= 0 &&
-      (stage.heights[cell.p.y][cell.p.x] < 0 || (wasCrack && left < 0))
+      (stage.heights[cell.p.y][cell.p.x] < 0 ||
+        (wasCrack && left < 0) ||
+        (fire.kind === 'bridge' && has(game.ashes, cell.p)))
     const crumble = crackFrame(was, left, scene.crackPhase)
     const { raised, device } = deviceAt(cell)
     const crackFall = crumble.fall * TILE.layer
@@ -237,12 +242,15 @@ export const cellLook = ({
         filled:
           (isFilled || (restored > 0 && stage.heights[cell.p.y][cell.p.x] < 0)) &&
           vine?.kind !== 'grown',
+        // 숯 다리 칸은 땅 블록 대신 장작 판
         blockOpacity:
-          restored > 0
-            ? 1 - smooth(clamp01(t / RESTORE_FADE))
-            : restored < 0
-              ? (scene.cubeDrop?.opacity ?? 1)
-              : crumble.opacity,
+          fire.kind === 'bridge' && !isFilled
+            ? 0
+            : restored > 0
+              ? 1 - smooth(clamp01(t / RESTORE_FADE))
+              : restored < 0
+                ? (scene.cubeDrop?.opacity ?? 1)
+                : crumble.opacity,
       },
       ice: {
         on: isIce(game, cell.p),
@@ -312,6 +320,7 @@ export const cellLook = ({
         wallRight: pitShown ? wallHeight(walls, cell.p.x - 1, cell.p.y) : -1,
       },
       ladder: ladderLookOf(scene, game, back, cell, pickedHere),
+      fire: isFilled ? NO_FIRE : fire,
       vine: vineCellOf(vine),
       seed: seedCellOf(scene, game, cell, seedHere, pickedHere),
       ambient: ambientHere
@@ -322,7 +331,9 @@ export const cellLook = ({
             leave:
               ambientHere.kind === 'mist'
                 ? !has(game.stones, cell.p)
-                : Math.abs(cell.p.x - game.player.x) + Math.abs(cell.p.y - game.player.y) <= 1,
+                : ambientHere.kind === 'emberSmoke'
+                  ? !has(game.sparks, cell.p)
+                  : Math.abs(cell.p.x - game.player.x) + Math.abs(cell.p.y - game.player.y) <= 1,
           }
         : NO_AMBIENT,
     }

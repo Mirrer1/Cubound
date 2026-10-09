@@ -1,4 +1,5 @@
 import { clamp01, smooth } from './curveFrame'
+import { fireEnd } from './fireFrame'
 import {
   type PathEvent,
   SECONDS,
@@ -393,6 +394,7 @@ export const moveSeconds = (events: GameEvent[], swamp: SwampTime) =>
     pullEnd(events),
     plugEnd(events),
     sluiceEnd(events),
+    fireEnd(events, playerSegments(events), swamp.tail),
     ...events.map((e) =>
       e.type === 'blocked' || e.type === 'placed' || e.type === 'planted' ? SECONDS[e.type] : 0,
     ),

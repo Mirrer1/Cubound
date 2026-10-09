@@ -60,6 +60,13 @@ const ICY: Stage = {
   ],
 }
 
+// 불씨 둘과 숯 벽, 숯 다리, 큐브는 (0,0)
+const EMBERS: Stage = {
+  ...STAGE,
+  id: '16-1',
+  fire: ['..*..', '.#=..', '....*', '.....'],
+}
+
 const key = ({ x, y }: { x: number; y: number }) => `${x}-${y}`
 
 describe('ambientPlan', () => {
@@ -99,6 +106,17 @@ describe('ambientPlan', () => {
     })
   })
 
+  it('4장은 재 한 송이 다음 꺼진 불씨 칸 연기 차례, 불씨 칸 없는 판은 재만', () => {
+    expect(ambientPlan(EMBERS, 4)).toEqual({
+      cycle: 9550,
+      slots: [
+        { at: 0, kind: 'ash' },
+        { at: 4350, kind: 'emberSmoke' },
+      ],
+    })
+    expect(ambientPlan(STAGE, 4)).toEqual({ cycle: 4350, slots: [{ at: 0, kind: 'ash' }] })
+  })
+
   it('바닥 연출이 없는 장은 그 자리를 2초 비우고 요소 연출만', () => {
     expect(ambientPlan(PAIRS, 3)).toEqual({ cycle: 6000, slots: [{ at: 2000, kind: 'warp' }] })
   })
@@ -108,8 +126,8 @@ describe('ambientPlan', () => {
   })
 
   it('연출이 끝나고 1.4초 넘게 쉰 뒤 다음 차례, 한 번에 하나', () => {
-    for (const stage of [STAGE, PAIRS, MEADOW, ICY]) {
-      for (const chapter of [1, 2, 3]) {
+    for (const stage of [STAGE, PAIRS, MEADOW, ICY, EMBERS]) {
+      for (const chapter of [1, 2, 3, 4]) {
         const plan = ambientPlan(stage, chapter)
         plan?.slots.forEach((slot, i) => {
           const next = plan.slots[i + 1]?.at ?? plan.cycle + plan.slots[0].at
@@ -242,7 +260,63 @@ describe('ambientCells', () => {
   })
 })
 
+describe('ambientCells 불', () => {
+  it('재 한 송이는 불 칸을 뺀 빈 땅 한 칸', () => {
+    const game = createState(EMBERS)
+    const fire = ['2-0', '1-1', '2-1', '4-2']
+    for (let round = 0; round < 40; round++) {
+      const [p] = ambientCells(game, 'ash', round, 0)
+      expect(fire).not.toContain(key(p))
+    }
+  })
+
+  it('꺼진 불씨 칸 연기는 아직 안 켠 불씨 칸 하나, 큐브 칸과 상하좌우 칸 제외', () => {
+    const game = createState(EMBERS)
+    const picked = new Set(
+      Array.from({ length: 20 }, (_, round) => key(ambientCells(game, 'emberSmoke', round, 1)[0])),
+    )
+    expect(picked).toEqual(new Set(['2-0', '4-2']))
+    expect(ambientCells({ ...game, sparks: [{ x: 4, y: 2 }] }, 'emberSmoke', 0, 1)).toEqual([
+      { x: 4, y: 2 },
+    ])
+    expect(
+      ambientCells(
+        { ...game, player: { x: 4, y: 1 }, sparks: [{ x: 4, y: 2 }] },
+        'emberSmoke',
+        0,
+        1,
+      ),
+    ).toEqual([])
+  })
+})
+
 describe('ambientLoops', () => {
+  it('재 한 송이는 송이가 1.7초에 내려앉고 먼지가 2.9초까지 번지며 사라짐', () => {
+    const loops = ambientLoops('ash', 9550)
+    expect(loops.map((loop) => loop.shape)).toEqual(['dust', 'flake'])
+    for (const { keyframes } of loops) {
+      expect(keyframes[0].opacity).toBe(0)
+      expect(keyframes.at(-1)!.opacity).toBe(0)
+    }
+    expect(loops[1].keyframes.at(-2)!.offset).toBeCloseTo(2800 / 9550)
+    expect(loops[0].keyframes.at(-2)!.offset).toBeCloseTo(2900 / 9550)
+    expect(Math.max(...loops[1].keyframes.map((k) => Number(k.opacity)))).toBe(0.85)
+  })
+
+  it('꺼진 불씨 칸 연기는 두 가닥이 0.8초 어긋나 3초에 걸쳐 오르며 사라짐', () => {
+    const loops = ambientLoops('emberSmoke', 9550)
+    expect(loops.map((loop) => [loop.shape, loop.delay])).toEqual([
+      ['smoke', 0],
+      ['smoke', 800],
+    ])
+    for (const { keyframes } of loops) {
+      expect(keyframes[0].opacity).toBe(0)
+      expect(keyframes.at(-2)!.offset).toBeCloseTo(3000 / 9550)
+      expect(keyframes.at(-1)!.opacity).toBe(0)
+    }
+    expect(Math.max(...loops[0].keyframes.map((k) => Number(k.opacity)))).toBe(0.45)
+  })
+
   it('빛 알갱이 셋은 0.35초씩 늦게, 한 바퀴 안에서 끝나는 키프레임', () => {
     const loops = ambientLoops('mote', 36000)
     expect(loops.map((loop) => loop.delay)).toEqual([0, 350, 700])

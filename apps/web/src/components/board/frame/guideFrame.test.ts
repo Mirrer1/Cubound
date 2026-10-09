@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { PIT_FLOOR, PLATE } from '../view'
+import { PIT_FLOOR, PLATE, pileReach } from '../view'
 import { TAP } from '../view'
 import { guideRect, lockFocus, lockRect } from './guideFrame'
 import { LOCK_STAGE, SLUICE_STAGE, WHIRL_STAGE } from './testStages'
@@ -31,6 +31,30 @@ const spanOf = (game: GameState, p: Point, surface = 0) => {
 }
 
 describe('guideRect', () => {
+  it('서 있는 숯 벽 칸은 숯 더미 맨 위까지 위로 넓히고 재가 되면 빈 칸과 같다', () => {
+    const stage = { ...FLAT, fire: ['.*.', '.#.', '...'] }
+    const flat = spanOf(createState(FLAT), MID)
+
+    expect(spanOf(createState(stage), MID).above).toBe(flat.above + pileReach() - TILE.width / 4)
+    expect(spanOf({ ...createState(stage), ashes: [MID] }, MID).above).toBe(flat.above)
+  })
+
+  it('숯 다리 칸은 장작 판 두께만 옆면으로 넣는다', () => {
+    const stage = {
+      ...FLAT,
+      heights: [
+        [0, 0, 0],
+        [0, 1, -1],
+        [0, -1, -1],
+      ],
+      fire: ['.*.', '.=.', '...'],
+    }
+
+    expect(spanOf(createState(stage), MID, TILE.layer).below).toBe(
+      spanOf(createState(FLAT), MID).below + TILE.lip,
+    )
+  })
+
   it('빈 칸은 윗면 마름모에 사방 같은 여백을 둔다', () => {
     const rect = guideRect(createState(FLAT), MID)
     const center = toScreen(MID, 0)

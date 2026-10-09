@@ -71,6 +71,9 @@ export const zhHans: Partial<Texts> = {
   'guide.sluice': '有东西压着水开关时，水会涨高一层',
   'guide.lock': '有东西压着水开关时，水会流到对面的水池',
   'guide.tide': '水每四步涨落一次，要提前离开湿掉的地面',
+  'guide.spark': '踩上火种格，火就从那里点燃',
+  'guide.charcoal': '火每走一步就烧到相邻的炭，烧完的炭会消失',
+  'guide.chase': '火像追来一样，只烧向较近一侧的炭',
 
   'chapter.1': '踏石之路',
   'chapter.2': '草木丛生之路',

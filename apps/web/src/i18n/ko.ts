@@ -71,6 +71,9 @@ export const ko: Partial<Texts> = {
   'guide.sluice': '물 스위치를 누르는 동안 물이 한 층 차올라요',
   'guide.lock': '물 스위치를 누르는 동안 물이 건너편 웅덩이로 넘어가요',
   'guide.tide': '물은 4수마다 차오르고 빠지니 젖은 땅에서 미리 벗어나요',
+  'guide.spark': '불씨 칸을 밟으면 거기서 불이 켜져요',
+  'guide.charcoal': '불은 한 수마다 맞닿은 숯으로 번지고 탄 숯은 사라져요',
+  'guide.chase': '불은 쫓아오듯 가까운 쪽 숯으로만 번져요',
 
   'chapter.1': '돌 위의 첫걸음',
   'chapter.2': '풀이 우거진 길',

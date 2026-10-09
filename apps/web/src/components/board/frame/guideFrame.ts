@@ -7,10 +7,12 @@ import {
   TAP,
   WATER,
   channelCells,
+  pileReach,
   stoneSteps,
   surfaceRise,
   waterLook,
 } from '../view'
+import { fireKindAt } from './fireFrame'
 import { MUSHROOM_STAND, mushroomPose } from './mushroomFrame'
 import { has, same } from './pathFrame'
 import { TILE, toScreen } from '@/game/iso'
@@ -44,6 +46,7 @@ const reachOf = (game: GameState, p: Point, floating: boolean) => {
   const entity = game.stage.entities.find((e) => same(e, p))
 
   if (boxed) reaches.push(boxTop + cube)
+  if (fireKindAt(game.stage, p) === 'wall' && !has(game.ashes, p)) reaches.push(pileReach())
   if (mushroom) {
     const pose = mushroomPose(player ? 2 : 0, has(game.mushrooms, p) ? 0 : 1)
     reaches.push(pose.stem + pose.thick + halfTop(TILE.width * pose.cap))
@@ -101,7 +104,14 @@ export const guideRect = (game: GameState, p: Point) => {
 
   const top = y - reach - GUIDE_MARGIN
   const drop =
-    surface === null ? dropOf(game, p, 0, PIT_FLOOR) : dropOf(game, p, surface, surface + TILE.lip)
+    surface === null
+      ? dropOf(game, p, 0, PIT_FLOOR)
+      : dropOf(
+          game,
+          p,
+          surface,
+          fireKindAt(game.stage, p) === 'bridge' ? TILE.lip : surface + TILE.lip,
+        )
   const bottom = y + TILE.height / 2 + drop + GUIDE_MARGIN
 
   return { x, y: top, width, height: bottom - top }

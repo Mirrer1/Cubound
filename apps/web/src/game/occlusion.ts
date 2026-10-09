@@ -59,6 +59,14 @@ export const fadedCells = (
       ),
     ),
     ...filled.flatMap((p) => occludingCells(shown, p, shown[p.y][p.x], boxes)),
+    // 큐브에서 멀리 서 있는 숯 벽
+    ...(game.stage.fire ?? []).flatMap((row, y) =>
+      [...row].flatMap((c, x) =>
+        c === '#' && !game.ashes.some((a) => same(a, { x, y }))
+          ? occludingCells(shown, { x, y }, shown[y][x] + 1, boxes)
+          : [],
+      ),
+    ),
     // 큐브에서 멀면 저 혼자 벽에 묻히는 씨앗과 심은 칸의 나무와 말뚝
     ...[...game.seeds, ...game.planted].flatMap((p) =>
       occludingCells(shown, p, shown[p.y][p.x], boxes),

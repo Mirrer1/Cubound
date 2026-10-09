@@ -79,6 +79,33 @@ const AmbientPiece = ({ shape, x, y, keyframes, cycle, delay }: AmbientPieceProp
       opacity={0}
       style={{ fill: 'var(--color-amb-spore)' }}
     />
+  ) : shape === 'dust' ? (
+    <polygon
+      ref={loop}
+      points={blockFaces(x, y, TILE.width * AMBIENT.ash.dust, 0).top}
+      opacity={0}
+      style={{ fill: 'var(--color-amb-ash-dust)', ...origin }}
+    />
+  ) : shape === 'flake' ? (
+    <ellipse
+      ref={loop}
+      cx={x}
+      cy={y}
+      rx={AMBIENT.ash.flake.rx}
+      ry={AMBIENT.ash.flake.ry}
+      opacity={0}
+      style={{ fill: 'var(--color-amb-ash)', ...origin }}
+    />
+  ) : shape === 'smoke' ? (
+    <ellipse
+      ref={loop}
+      cx={x}
+      cy={y}
+      rx={AMBIENT.emberSmoke.rx}
+      ry={AMBIENT.emberSmoke.ry}
+      opacity={0}
+      style={{ fill: 'var(--color-amb-ember-smoke)', ...origin }}
+    />
   ) : shape === 'wisp' || shape === 'sheetLeft' || shape === 'sheetRight' ? (
     <ellipse
       ref={loop}
@@ -119,9 +146,14 @@ const BoardAmbient = ({ kind, x, y, at, cycle, leave }: BoardAmbientProps) => {
   const group = useRef<SVGGElement>(null)
   const fled = useRef(false)
 
-  // 왼쪽 위로 날아가는 나비, 옅어지는 찬 김
+  // 왼쪽 위로 날아가는 나비, 옅어지는 찬 김과 불씨 칸 연기
   useEffect(() => {
-    if ((kind !== 'butterfly' && kind !== 'mist') || !leave || fled.current || !group.current)
+    if (
+      (kind !== 'butterfly' && kind !== 'mist' && kind !== 'emberSmoke') ||
+      !leave ||
+      fled.current ||
+      !group.current
+    )
       return
     fled.current = true
     group.current.animate(

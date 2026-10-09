@@ -72,6 +72,9 @@ export const en = {
   'guide.lock':
     'While something holds the water switch down, the water flows over to the other pool',
   'guide.tide': 'The water rises and falls every four moves, so get off the wet ground in time',
+  'guide.spark': 'Step on an ember tile and a fire starts there',
+  'guide.charcoal': 'Each move, fire spreads to the charcoal it touches and burnt charcoal is gone',
+  'guide.chase': 'The fire spreads only to the nearer charcoal, as if giving chase',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',

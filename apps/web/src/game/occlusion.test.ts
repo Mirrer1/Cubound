@@ -227,6 +227,16 @@ describe('fadedCells', () => {
     })
   })
 
+  it('큐브에서 먼 서 있는 숯 벽도 상자처럼 가리는 앞 칸을 모으고 재가 되면 뺀다', () => {
+    const state = createState({ ...STAGE, fire: ['.*..', '....', '..#.', '....'] })
+    const heights = raise([[3, 2, 2]])
+
+    expect(fadedCells(heights, { x: 0, y: 0 }, 0, state, [])).toContainEqual({ x: 3, y: 2 })
+    expect(
+      fadedCells(heights, { x: 0, y: 0 }, 0, { ...state, ashes: [{ x: 2, y: 2 }] }, []),
+    ).not.toContainEqual({ x: 3, y: 2 })
+  })
+
   it('물에 뜬 상자는 수면 높이로 재서 같은 높이 둑은 가리지 않는다', () => {
     // 물 높이 2, (0,0) 물 칸의 배 오른쪽 (1,0)이 높이 2 둑이고 그 위에 상자
     const heights = [

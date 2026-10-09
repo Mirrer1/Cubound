@@ -31,6 +31,27 @@ export {
 export { CUBE, type CubeFace, rollingCubeFaces, tiltOnTop, type TopTilt } from './cubeView'
 export { blend, checker, darken, dim, shade } from './shadeView'
 export {
+  ASH_LUMPS,
+  ASH_MARK,
+  bridgePieces,
+  CHAR_WALL,
+  charTone,
+  EMBER_SPOTS,
+  emberKeyframes,
+  EMBER_LIFE,
+  fireStyle,
+  FLICKER,
+  FLICKER_MS,
+  glowOf,
+  isoPoint,
+  logQuads,
+  lumpTops,
+  pileLumps,
+  pileReach,
+  uvQuad,
+  wallCrumble,
+} from './fireView'
+export {
   bankPoints,
   boatLook,
   COLLAR,

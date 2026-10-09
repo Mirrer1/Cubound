@@ -3,7 +3,8 @@ import { TILE, toScreen } from '@/game/iso'
 import { isIce, same } from '@/game/rules'
 import type { GameState, Point, Stage } from '@/game/types'
 
-export type AmbientKind = 'mote' | 'warp' | 'bubble' | 'spore' | 'butterfly' | 'mist'
+export type AmbientKind =
+  'mote' | 'warp' | 'bubble' | 'spore' | 'butterfly' | 'mist' | 'ash' | 'emberSmoke'
 
 export type AmbientShape =
   | 'mote'
@@ -17,6 +18,9 @@ export type AmbientShape =
   | 'wisp'
   | 'sheetLeft'
   | 'sheetRight'
+  | 'dust'
+  | 'flake'
+  | 'smoke'
 
 // 한 번 일어나는 ms와 크기 px, 칸 폭 배수
 export const AMBIENT = {
@@ -26,6 +30,8 @@ export const AMBIENT = {
   spore: { life: 2700, size: 2.2 },
   butterfly: { life: 4400, wing: 5, height: 4 },
   mist: { life: 2550, sheet: { rx: 20, ry: 8 }, wisp: { rx: 9, ry: 5 } },
+  ash: { life: 2950, flake: { rx: 4.5, ry: 2.6 }, dust: 0.62 },
+  emberSmoke: { life: 3800, rx: 16, ry: 7 },
 }
 
 // 한 번 끝난 뒤 쉬는 ms, 바닥 연출이 없는 장에서 그 자리를 비우는 ms
@@ -33,7 +39,7 @@ const REST = 1400
 const GAP = 2000
 
 // 장마다 빈 바닥에 일어나는 연출
-const FLOOR: Partial<Record<number, AmbientKind>> = { 1: 'mote', 2: 'butterfly' }
+const FLOOR: Partial<Record<number, AmbientKind>> = { 1: 'mote', 2: 'butterfly', 4: 'ash' }
 
 // 빛 알갱이 셋의 늦는 ms, 칸 가운데에서 떠나는 자리와 벌어지는 거리 px
 const MOTES = [
@@ -101,6 +107,37 @@ const WISP: [number, number, number, number, number, number][] = [
   [2400, -12, -33, 9, 5, 0],
 ]
 
+// 재 송이의 칸 윗면 가운데 기준 ms마다 x, y, rx, ry, 진하기, 뒤집히듯 오가는 ry
+const FLAKE: [number, number, number, number, number, number][] = [
+  [0, 10, -26, 4.5, 2.6, 0],
+  [300, 8.5, -24, 4.5, 1.4, 0.85],
+  [800, 4.5, -14.3, 4.5, 2.6, 0.85],
+  [1300, 2, -5.2, 4.5, 1.4, 0.85],
+  [1700, 0, 0, 4.5, 2.2, 0.85],
+  [2800, 0, 0, 3.5, 1.8, 0],
+]
+
+// 재 먼지의 ms마다 칸 폭 배수와 진하기
+const DUST: [number, number, number][] = [
+  [0, 0.15, 0],
+  [1700, 0.15, 0],
+  [1800, 0.2, 0.55],
+  [2400, 0.5, 0.38],
+  [2900, 0.62, 0],
+]
+
+// 꺼진 불씨 칸 연기 한 가닥의 ms마다 옆으로 간 몫, y, rx, ry, 진하기와 두 가닥의 늦는 ms, 옆으로 가는 px
+const SMOKE: [number, number, number, number, number, number][] = [
+  [0, 0, -3, 2.5, 2.5, 0],
+  [500, 0.2, -7, 5, 3.5, 0.45],
+  [2000, 0.7, -13, 12, 6, 0.28],
+  [3000, 1, -16, 16, 7, 0],
+]
+const THREADS = [
+  { delay: 0, dx: 18 },
+  { delay: 800, dx: -16 },
+]
+
 // 판의 한 바퀴 차례, 바닥 연출 다음 그 판의 요소 연출, 한 번에 하나, 끝나고 REST 쉼
 // 바닥 연출은 그 장만, 요소 연출은 그 요소가 있는 모든 판, 둘 다 없으면 null
 export const ambientPlan = (stage: Stage, chapter: number): AmbientPlan | null => {
@@ -110,6 +147,7 @@ export const ambientPlan = (stage: Stage, chapter: number): AmbientPlan | null =
     ...(anyMarked(stage.mushroom) ? ['spore' as const] : []),
     ...(stage.entities.some((e) => e.type === 'iceStone') ? ['mist' as const] : []),
     ...(stage.entities.some((e) => e.type === 'warp') ? ['warp' as const] : []),
+    ...(stage.fire?.some((row) => row.includes('*')) ? ['emberSmoke' as const] : []),
   ]
   if (!floor && elements.length === 0) return null
   const slots: AmbientSlot[] = []
@@ -168,6 +206,7 @@ const isBare = (game: GameState, p: Point) => {
     !marked(stage.swamp, p) &&
     !marked(stage.mushroom, p) &&
     !marked(stage.cracks, p) &&
+    !marked(stage.fire, p) &&
     !things.some((thing) => same(thing, p))
   )
 }
@@ -181,9 +220,11 @@ const candidates = (game: GameState, kind: AmbientKind) => {
         ? game.mushrooms
         : kind === 'mist'
           ? game.stones
-          : game.stage.heights.flatMap((row, y) =>
-              row.flatMap((_, x) => (isBare(game, { x, y }) ? [{ x, y }] : [])),
-            )
+          : kind === 'emberSmoke'
+            ? game.sparks
+            : game.stage.heights.flatMap((row, y) =>
+                row.flatMap((_, x) => (isBare(game, { x, y }) ? [{ x, y }] : [])),
+              )
   return kind === 'mist' ? cells : cells.filter((p) => apart(p, game.player))
 }
 
@@ -325,6 +366,34 @@ export const ambientLoops = (kind: AmbientKind, cycle: number): AmbientLoop[] =>
       { shape: 'sheetLeft', delay: 0, keyframes: puff(SHEET, sheet, -1) },
       { shape: 'sheetRight', delay: 150, keyframes: puff(SHEET, sheet, 1) },
     ]
+  }
+  if (kind === 'ash') {
+    const { flake } = AMBIENT.ash
+    const dust = DUST.map(([ms, k, opacity]) => ({
+      offset: at(ms, cycle),
+      opacity,
+      transform: `scale(${k / AMBIENT.ash.dust})`,
+    }))
+    const fall = FLAKE.map(([ms, x, y, rx, ry, opacity]) => ({
+      offset: at(ms, cycle),
+      opacity,
+      transform: `${move(x, y)} scale(${rx / flake.rx}, ${ry / flake.ry})`,
+    }))
+    return [
+      { shape: 'dust', delay: 0, keyframes: [...dust, { ...dust.at(-1)!, offset: 1 }] },
+      { shape: 'flake', delay: 0, keyframes: [...fall, { ...fall.at(-1)!, offset: 1 }] },
+    ]
+  }
+  if (kind === 'emberSmoke') {
+    const { rx: baseX, ry: baseY } = AMBIENT.emberSmoke
+    return THREADS.map(({ delay, dx }) => {
+      const steps = SMOKE.map(([ms, side, y, rx, ry, opacity]) => ({
+        offset: at(ms, cycle),
+        opacity,
+        transform: `${move(dx * side, y)} scale(${rx / baseX}, ${ry / baseY})`,
+      }))
+      return { shape: 'smoke', delay, keyframes: [...steps, { ...steps.at(-1)!, offset: 1 }] }
+    })
   }
   const { ring, rim } = AMBIENT.warp
   // 테 가운데 선 크기, 가장 클 때를 1로

@@ -11,6 +11,7 @@ import {
 import { crackProgress, standSink } from './crackFrame'
 import { SLIDE_DEG, playerFrame, squashTransform } from './cubeFrame'
 import { type Chain, smooth } from './curveFrame'
+import { fireScene } from './fireFrame'
 import { guideRect, lockRect } from './guideFrame'
 import {
   iceCovers,
@@ -185,6 +186,18 @@ export const sceneFrame = ({
 
   const crackPhase = moving ? crackProgress(events, stepT) : 1
   const crackView = { game, before, crackPhase }
+  const fire = fireScene({
+    before,
+    game,
+    events,
+    moving,
+    dropping,
+    t,
+    elapsed: moving ? elapsedAt(events, swampSeconds, t) : 0,
+    segments: playerSegments(events),
+    tail: swampSeconds.tail,
+    stepT,
+  })
 
   // 돌이 밀리고 끌리고 녹는 동안 얼고 녹는 칸, 그 위에 선 큐브가 얼음 판 높이로 내려앉는 거리
   const iceT = moving ? icePhase(events, t, swampSeconds) : 1
@@ -297,6 +310,7 @@ export const sceneFrame = ({
     lanes: sluice.lanes,
     sluice,
     crackView,
+    fire,
     seedFrame,
     faded,
     vineFrame,
