@@ -192,7 +192,9 @@ const BoardCell = ({
         <BoardSluice part="tap" x={x} y={y} open={sluice.open} turn={sluice.turn} />
       )}
       {fire.kind === 'wall' && (
-        <BoardFire part="pile" x={x} y={y} parity={parity} {...fire} kind={fire.kind} />
+        <g ref={fadeRef} style={fade}>
+          <BoardFire part="pile" x={x} y={y} parity={parity} {...fire} kind={fire.kind} />
+        </g>
       )}
       {box && (
         <g>
