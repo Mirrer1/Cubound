@@ -15,6 +15,7 @@ export const es: Partial<Texts> = {
 
   'play.guide': 'Ver la guía otra vez',
   'play.restart': 'Reiniciar (R)',
+  'play.overview': 'Ver todo el mapa (Z)',
   'play.select': 'Elegir nivel',
   'play.restartAsk': '¿Empezar este nivel de nuevo?',
   'play.restartKeep': 'Continuar',

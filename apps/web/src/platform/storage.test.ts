@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   localLanguageStorage,
+  localOverviewStorage,
   localProgressStorage,
   localSessionStorage,
   localWorldStorage,
@@ -151,5 +152,24 @@ describe('localSessionStorage', () => {
     expect(localSessionStorage.load()).toBeNull()
     expect(() => localSessionStorage.save(SESSION)).not.toThrow()
     expect(() => localSessionStorage.clear()).not.toThrow()
+  })
+})
+
+describe('localOverviewStorage', () => {
+  it('전체 보기를 고른 상태를 다시 읽는다', () => {
+    expect(localOverviewStorage.load()).toBe(false)
+
+    localOverviewStorage.save(true)
+    expect(localOverviewStorage.load()).toBe(true)
+
+    localOverviewStorage.save(false)
+    expect(localOverviewStorage.load()).toBe(false)
+  })
+
+  it('저장소가 막혀도 기본 화면으로 시작한다', () => {
+    vi.stubGlobal('localStorage', brokenStorage)
+
+    expect(() => localOverviewStorage.save(true)).not.toThrow()
+    expect(localOverviewStorage.load()).toBe(false)
   })
 })

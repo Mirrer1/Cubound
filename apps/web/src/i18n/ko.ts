@@ -15,6 +15,7 @@ export const ko: Partial<Texts> = {
 
   'play.guide': '가이드 다시 보기',
   'play.restart': '다시 하기 (R)',
+  'play.overview': '전체 보기 (Z)',
   'play.select': '스테이지 선택',
   'play.restartAsk': '처음부터 다시 할까요?',
   'play.restartKeep': '계속하기',

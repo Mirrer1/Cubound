@@ -15,6 +15,7 @@ export const zhHant: Partial<Texts> = {
 
   'play.guide': '再看一次指引',
   'play.restart': '重新開始 (R)',
+  'play.overview': '查看全圖 (Z)',
   'play.select': '選擇關卡',
   'play.restartAsk': '要重新開始這一關嗎',
   'play.restartKeep': '繼續玩',

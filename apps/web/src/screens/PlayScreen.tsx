@@ -20,7 +20,8 @@ import RestartCard from '@/components/ui/RestartCard'
 import { movesLeft } from '@/game/rules'
 import { useText } from '@/hooks/useText'
 import { stageTextKey } from '@/i18n'
-import { directionFromKey, directionFromSwipe, isRestartKey } from '@/platform/input'
+import { directionFromKey, directionFromSwipe, isOverviewKey, isRestartKey } from '@/platform/input'
+import { localOverviewStorage } from '@/platform/storage'
 import { goTo } from '@/routes/route'
 import { STAGES, nextStageId, parseStageId } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
@@ -30,6 +31,8 @@ interface PlayScreenProps {
 }
 
 const ASK_FROM_MOVES = 5 // 재시작 전에 묻기 시작하는 이동 수
+const OVERVIEW_OUT = 'M14 10l6-6M14 4h6v6M10 14l-6 6M4 14v6h6' // 바깥을 가리키는 두 화살표, 전체 보기
+const OVERVIEW_IN = 'M20 4l-6 6M14 4v6h6M4 20l6-6M10 20v-6H4' // 가운데를 가리키는 두 화살표, 확대로 돌아가기
 
 // 개발 서버 전용 개발용 컨트롤러, 배포 빌드에서 빠지는 동적 import
 const DevController = import.meta.env.DEV
@@ -55,6 +58,8 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const nextGuide = useGameStore((s) => s.nextGuide)
   const closeGuide = useGameStore((s) => s.closeGuide)
   const [asking, setAsking] = useState(false)
+  const [overview, setOverview] = useState(localOverviewStorage.load)
+  const [showsAll, setShowsAll] = useState(true)
   const sectionRef = useRef<HTMLElement>(null)
   const swipeStart = useRef<{ x: number; y: number } | null>(null)
   const swiped = useRef(false)
@@ -93,6 +98,14 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     if (guideStep === null && (game?.moves ?? 0) >= ASK_FROM_MOVES) setAsking(true)
     else restart()
   }, [game, guideStep, restart])
+  const toggleOverview = useCallback(() => {
+    setOverview(!overview)
+    localOverviewStorage.save(!overview)
+  }, [overview])
+  const handleOverview = (e: MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.blur()
+    toggleOverview()
+  }
   const handleKeep = () => setAsking(false)
   const handleRestart = () => {
     setAsking(false)
@@ -150,6 +163,8 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
         move(direction)
       } else if (isRestartKey(e.key)) {
         askOrRestart()
+      } else if (isOverviewKey(e.key) && !showsAll) {
+        toggleOverview()
       } else if (e.key === 'Escape' && guideStep === null) {
         goTo({ screen: 'select', world })
       }
@@ -157,7 +172,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [move, askOrRestart, asking, guideStep, world])
+  }, [move, askOrRestart, toggleOverview, showsAll, asking, guideStep, world])
 
   return (
     <main
@@ -199,6 +214,29 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
               />
               {/* 320px에서 버튼과 긴 이름이 한 줄에 들어가는 폰 세로 전용 작은 버튼 */}
               <div className="flex gap-2.5 narrow:gap-1.5 narrow:[&>button]:size-8.5">
+                {!showsAll && (
+                  <Button
+                    variant="icon"
+                    onClick={handleOverview}
+                    title={t('play.overview')}
+                    aria-label={t('play.overview')}
+                    aria-pressed={overview}
+                    strong={overview}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="size-4.5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.8}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden
+                    >
+                      <path d={overview ? OVERVIEW_IN : OVERVIEW_OUT} />
+                    </svg>
+                  </Button>
+                )}
                 {hasGuide && (
                   <Button variant="icon" onClick={handleOpenGuide} title={t('play.guide')}>
                     ?
@@ -231,6 +269,8 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
               chained={chained}
               restarting={restarting}
               guideCell={guideCell}
+              overview={overview && !showsAll}
+              onShowsAll={setShowsAll}
             />
           </div>
           <AnimatePresence>

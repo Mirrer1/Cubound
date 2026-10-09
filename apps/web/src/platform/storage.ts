@@ -6,6 +6,7 @@ const KEY = 'cubound:progress'
 const LANGUAGE_KEY = 'cubound:language'
 const SESSION_KEY = 'cubound:session'
 const WORLD_KEY = 'cubound:world'
+const OVERVIEW_KEY = 'cubound:overview'
 
 export interface ProgressStorage {
   load: () => Progress
@@ -21,6 +22,11 @@ export interface LanguageStorage {
 export interface WorldStorage {
   load: (all: boolean) => number | undefined
   save: (all: boolean, world: number) => void
+}
+
+export interface OverviewStorage {
+  load: () => boolean
+  save: (overview: boolean) => void
 }
 
 export interface SessionStorage {
@@ -118,6 +124,24 @@ export const localSessionStorage: SessionStorage = {
       localStorage.removeItem(SESSION_KEY)
     } catch {
       // 지우지 못해도 다음 저장이 덮어쓰는 값
+    }
+  },
+}
+
+// 판 전체를 한 화면에 담는 보기를 고른 상태
+export const localOverviewStorage: OverviewStorage = {
+  load: () => {
+    try {
+      return localStorage.getItem(OVERVIEW_KEY) === 'true'
+    } catch {
+      return false
+    }
+  },
+  save: (overview) => {
+    try {
+      localStorage.setItem(OVERVIEW_KEY, String(overview))
+    } catch {
+      // 이번 세션 진행과 무관한 저장 실패
     }
   },
 }

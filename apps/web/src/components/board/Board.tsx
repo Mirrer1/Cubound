@@ -1,4 +1,4 @@
-import { type CSSProperties, useMemo } from 'react'
+import { type CSSProperties, useEffect, useMemo } from 'react'
 
 import BoardBox from './BoardBox'
 import BoardCell from './BoardCell'
@@ -57,6 +57,8 @@ interface BoardProps {
   chained: boolean // 앞 이동에서 바로 이어지는 이동
   restarting: boolean // 처음 자리로 내려앉는 연출 중
   guideCell?: Point // 가이드가 비추는 칸
+  overview: boolean // 판 전체를 한 화면에 담는 보기
+  onShowsAll: (showsAll: boolean) => void // 평소 화면에 판 전체가 들어오는지 알림
 }
 
 const Board = ({
@@ -69,6 +71,8 @@ const Board = ({
   chained,
   restarting,
   guideCell,
+  overview,
+  onShowsAll,
 }: BoardProps) => {
   const restartSeconds = restarting ? restartDuration(game.boxes.length, game.stones.length) : 0
   // 늪에 드나드는 이동은 뽑혀 나오고 가라앉는 만큼 긴 연출
@@ -111,7 +115,12 @@ const Board = ({
     guideCell,
   })
   // 카메라가 따라가는 지금 그려지는 자리, 순간이동은 나온 뒤
-  const { ref, viewBox } = useBoardCamera(game, guideCell ?? scene.cubeCell)
+  const { ref, viewBox, showsAll } = useBoardCamera(
+    game,
+    guideCell ?? scene.cubeCell,
+    overview,
+    guideCell ? undefined : scene.cube,
+  )
   const leanLoop = useLoop(LEAN_LOOP, 1600)
   const cubeLean = scene.cubeLean
     ? (leanShift(scene.cubeLean.toward, scene.cubeLean.amp) as CSSProperties)
@@ -176,6 +185,8 @@ const Board = ({
     const device = cells.find((cell) => same(cell.p, tap.device))
     return device ? [{ ...tap, look: lookOf(device).look }] : []
   })
+
+  useEffect(() => onShowsAll(showsAll), [showsAll, onShowsAll])
 
   return (
     <svg ref={ref} viewBox={viewBox} className="h-full w-full">

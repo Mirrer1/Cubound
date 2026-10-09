@@ -15,6 +15,7 @@ export const ja: Partial<Texts> = {
 
   'play.guide': 'ガイドをもう一度見る',
   'play.restart': 'やり直す (R)',
+  'play.overview': '全体を見る (Z)',
   'play.select': 'ステージ選択',
   'play.restartAsk': 'このステージを最初からやり直しますか',
   'play.restartKeep': '続ける',

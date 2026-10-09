@@ -13,6 +13,7 @@ export const en = {
 
   'play.guide': 'Show guide again',
   'play.restart': 'Restart (R)',
+  'play.overview': 'Whole map (Z)',
   'play.select': 'Stage select',
   'play.restartAsk': 'Start this stage over?',
   'play.restartKeep': 'Keep playing',

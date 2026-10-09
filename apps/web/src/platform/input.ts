@@ -39,3 +39,5 @@ export const directionFromSwipe = (dx: number, dy: number, ended = false): Direc
 export const isRestartKey = (key: string) => key === 'r' || key === 'R'
 
 export const isTouchDevice = () => window.matchMedia('(pointer: coarse)').matches
+
+export const isOverviewKey = (key: string) => key === 'z' || key === 'Z'
