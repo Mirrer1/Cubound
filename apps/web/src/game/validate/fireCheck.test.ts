@@ -97,6 +97,20 @@ describe('checkFire', () => {
     )
   })
 
+  it('맞닿은 불씨와 숯은 높이 차 한 층까지 둘 수 있다', () => {
+    const steep = '맞닿은 불씨나 숯 (1,0)과 (2,0)의 높이 차가 두 층 이상이다'
+    const raise = (h: number) => ({
+      ...FIRE_VALID,
+      heights: [
+        [0, 0, h, 0],
+        [0, 0, 0, 0],
+      ],
+    })
+
+    expect(errorsOf(raise(1))).toEqual([])
+    expect(errorsOf(raise(2))).toContain(steep)
+  })
+
   it('불씨 칸 없이 숯만 있는 판은 실패한다', () => {
     expect(errorsOf({ ...FIRE_VALID, fire: ['..#.', '..=.'] })).toContain('불씨 칸 없이 숯이 있다')
   })
