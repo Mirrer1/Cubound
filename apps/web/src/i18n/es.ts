@@ -247,6 +247,9 @@ export const es: Partial<Texts> = {
   'world.17': 'Tierra de brasas llevadas',
   'world.17.note':
     'Al pisar el brasero, el cubo se enciende. La respuesta es dónde prender el fuego en cuatro movimientos.',
+  'world.18': 'Tierra que estalla',
+  'world.18.note':
+    'El barril de pólvora estalla cuando lo alcanza el fuego y rebaja el suelo de alrededor. La respuesta es dónde hacerlo estallar.',
   'stage.12-1': 'Arrastre',
   'stage.12-2': 'Atraer',
   'stage.12-3': 'En fila',
@@ -307,4 +310,14 @@ export const es: Partial<Texts> = {
   'stage.17-8': 'Fuego prendido',
   'stage.17-9': 'Dos muros',
   'stage.17-10': 'Carga en llamas',
+  'stage.18-1': 'Primera explosión',
+  'stage.18-2': 'Un nivel más abajo',
+  'stage.18-3': 'El lugar elegido',
+  'stage.18-4': 'Fin de la plataforma',
+  'stage.18-5': 'Barril lejano',
+  'stage.18-6': 'Carga hundida',
+  'stage.18-7': 'Reacción en cadena',
+  'stage.18-8': 'Onda expansiva',
+  'stage.18-9': 'Fuego traído',
+  'stage.18-10': 'Mecha',
 }

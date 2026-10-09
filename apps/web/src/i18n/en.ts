@@ -237,6 +237,9 @@ export const en = {
   'world.17': 'Land of Carried Embers',
   'world.17.note':
     'Step on a brazier and the cube catches fire. Where to set it within four moves is the answer.',
+  'world.18': 'Land of Blasted Ground',
+  'world.18.note':
+    'A powder keg bursts when fire reaches it and cuts the ground around it. Where to set it off is the answer.',
   'stage.12-1': 'Swept Along',
   'stage.12-2': 'Reeling In',
   'stage.12-3': 'In Line',
@@ -297,6 +300,16 @@ export const en = {
   'stage.17-8': 'Caught Fire',
   'stage.17-9': 'Two Walls',
   'stage.17-10': 'Burning Cargo',
+  'stage.18-1': 'First Blast',
+  'stage.18-2': 'One Level Down',
+  'stage.18-3': 'Chosen Spot',
+  'stage.18-4': 'End of the Platform',
+  'stage.18-5': 'Distant Keg',
+  'stage.18-6': 'Sunken Load',
+  'stage.18-7': 'Chain Blast',
+  'stage.18-8': 'Blast Wave',
+  'stage.18-9': 'Carried Fire',
+  'stage.18-10': 'Fuse',
 }
 
 export type Texts = typeof en
