@@ -654,12 +654,14 @@
   // cube holding embers: thin warm light laid over the faces, no halo outside the cube. I = strength; ph 1 at FIRE 1 = flicker dip (× 0.45, 0.8s)
   const band = (cx, cy, face, z0, z1, f, o) => { const A = CA, Q = face === 'l' ? [[-A, A], [A, A]] : [[A, A], [A, -A]];
     return Object.assign(sh(P([pt(cx, cy, Q[0][0], Q[0][1], z0), pt(cx, cy, Q[1][0], Q[1][1], z0), pt(cx, cy, Q[1][0], Q[1][1], z1), pt(cx, cy, Q[0][0], Q[0][1], z1)]), f), { o }); };
-  const cubeGlow = (cx, cy, zb, n, mode, lean, ph) => {
-    const I0 = CI[n], under = [], over = []; if (!I0) return { under, over };
+  // I1 = strength override (refill / dying), fr = glow height × (sinks as it dies), spk = one last ember above the top (px)
+  const cubeGlow = (cx, cy, zb, n, mode, lean, ph, I1, fr, spk) => {
+    const I0 = I1 !== undefined ? I1 : CI[n], under = [], over = []; if (!I0) return { under, over };
+    if (spk) { const p = pt(cx, cy, 0.04, -0.06, zb + LV + spk); over.push(Object.assign(spark(p[0], p[1], 1.4, HEAT.hot), { o: 0.7 })); }
     const I = I0 * (ph ? 0.45 : 1), zt = zb + LV;
     const lift = (fr, o) => ['l', 'r'].forEach(f => [[1, 0.35], [0.62, 0.6], [0.32, 1]].forEach(([k, a]) => over.push(band(cx, cy, f, zb, zb + LV * fr * k, HEAT.hot, o * a * I))));
     const one = z => { if (n < 3 || ph) return; const p = pt(cx, cy, 0.04, -0.06, zt + z); over.push(spark(p[0] + (lean || 0) * z, p[1], 1.4, HEAT.core)); };
-    if (mode === 'under') { under.push(...pool(cx, cy, zb, 0.62 + 0.3 * I, 0.22 * I)); lift(0.55, 0.42); one(9); }
+    if (mode === 'under') { under.push(...pool(cx, cy, zb, 0.62 + 0.3 * I, 0.22 * I)); lift(0.55 * (fr === undefined ? 1 : fr), 0.42); if (I1 === undefined) one(9); }
     else if (mode === 'pool') { under.push(...pool(cx, cy, zb, 0.68 + 0.42 * I, 0.3 * I)); ['l', 'r'].forEach(f => over.push(band(cx, cy, f, zb, zb + 4, HEAT.hot, 0.35 * I))); one(9); }
     else { under.push(...pool(cx, cy, zb, 0.6 + 0.2 * I, 0.14 * I)); lift(0.3, 0.3); const p = pt(cx, cy, 0, 0, zt); over.push(plate(p[0], p[1], CS * 0.62, HEAT.hot, 0.32 * I), plate(p[0], p[1], CS * 0.32, HEAT.core, 0.45 * I)); one(7); }
     return { under, over };
@@ -667,24 +669,43 @@
   const numTag = (cx, y, n) => [sh(P([[cx - 11, y - 17], [cx + 11, y - 17], [cx + 11, y + 3], [cx - 11, y + 3]]), '#3A3936'), { d: n0(cx) + ',' + n0(y - 2), txt: String(n), fs: 14, f: '#F7F6F4', o: 1 }];
   const n0 = v => Math.round(v * 10) / 10;
   // brazier (화로): raised stone bowl (8px) of coals, always burning (tongues to 28px). rider: the flame moves onto the cube
-  const brazier = (cx, cy, rider) => {
+  const brazier = (cx, cy, rider, I, fr, flash) => {
     const out = block(cx, cy, 0.8, 0, 8, STOVE.t, STOVE.l, STOVE.r);
     const pre = pool(cx, cy, 0, 1.6, 0.16);
     out.unshift(...pre);
     out.push(plate(cx, cy - 8, 0.66, STOVE.coal), ...[[-0.14, -0.1, 0.26], [0.13, -0.06, 0.24], [-0.04, 0.14, 0.22], [0.12, 0.16, 0.16], [-0.18, 0.08, 0.14]].map(([u, v, s]) => { const p = pt(cx, cy, u, v, 9); return plate(p[0], p[1], s, HEAT.hot); }), ...[[-0.14, -0.1, 0.13], [0.13, -0.06, 0.12], [-0.04, 0.14, 0.1]].map(([u, v, s]) => { const p = pt(cx, cy, u, v, 9.5); return plate(p[0], p[1], s, HEAT.core); }), ...pool(cx, cy, 9, 0.62, 0.3, HEAT.core));
     if (!rider) out.push(...riseSparks(cx, cy, 9, 4, 17));
-    else { const g = cubeGlow(cx, cy, 8, 4, 'under'); out.push(...g.under, ...cube(cx, cy, C.blue, LV, 1, 8), ...g.over); }
+    else { if (flash) out.push(...pool(cx, cy, 9, 1.1, 0.22, HEAT.core)); const g = cubeGlow(cx, cy, 8, 4, 'under', 0, 0, I, fr); out.push(...g.under, ...cube(cx, cy, C.blue, LV, 1, 8), ...g.over); }
+    return out;
+  };
+
+  // boss 170 burning box. st: cold | hint (faint heat while the cube holds fire) | warm | burn | crumble | gone | ghost (o). same steps as the char wall
+  const ashBox = (cx, cy, o) => {
+    const st = o.st || 'cold', p = pt(cx, cy, o.u || 0, 0), X = p[0], Y = p[1], out = [], fa = FL ? FL.a : C.a;
+    if (st === 'gone') return [plate(X, Y, 0.5, mix(fa, ASH.t, 0.4), o.o === undefined ? 1 : o.o)];
+    if (st === 'crumble') { out.push(plate(X, Y, 0.72, mix(fa, ASH.t, 0.55))); out.push(...lumps(X, Y, [[-0.15, -0.12, 0.36, 12, 1], [0.17, -0.08, 0.3, 8, 0], [-0.04, 0.18, 0.28, 6, 1], [0.2, 0.2, 0.2, 4, 0]])); out.push(...riseSparks(X, Y, 10, 2, 12, 1)); return out; }
+    const k = tone(C.yellow), h = { warm: 0.5, burn: 1 }[st] || 0;
+    if (st === 'ghost') return block(X, Y, CS, 0, LV, k.t, k.l, k.r, o.o === undefined ? 0.5 : o.o);
+    if (st === 'burn') out.push(...pool(X, Y, 0, 1.35, 0.13));
+    if (st === 'warm') out.push(...pool(X, Y, 0, 1.1, 0.07));
+    if (st === 'hint') out.push(...pool(X, Y, 0, 0.92, 0.06));
+    out.push(...block(X, Y, CS, 0, LV, mix(k.t, HEAT.hi, h * 0.75), mix(k.l, HEAT.l, h * 0.8), mix(k.r, HEAT.r, h * 0.8)));
+    const bandUp = (H, a) => ['l', 'r'].forEach(f => [[1, 0.35], [0.62, 0.6], [0.32, 1]].forEach(([q, b]) => out.push(band(X, Y, f, 0, H * q, HEAT.hot, a * b))));
+    if (st === 'hint') bandUp(12, 0.2);
+    if (st === 'warm') bandUp(LV * 0.6, 0.4);
+    if (st === 'burn') { bandUp(LV, 0.5); const t = pt(X, Y, 0, 0, LV); out.push(plate(t[0], t[1], CS * 0.62, HEAT.hot, 0.7), plate(t[0], t[1], CS * 0.34, HEAT.core, 0.8), ...riseSparks(X, Y, LV, 2, 12)); }
     return out;
   };
 
   const obj = (o, cx, cy) => {
     switch (o.t) {
-      case 'brazier': return brazier(cx, cy, o.rider);
+      case 'brazier': return brazier(cx, cy, o.rider, o.I, o.fr, o.flash);
+      case 'abox': return ashBox(cx, cy, o);
       // ambient overlay drawn in this cell's paint order (so walls in front cover it). raw = svg markup in cell-local coords
       case 'raw': return [{ d: n0(cx) + ',' + n0(cy), f: 'none', o: 0, raw: '<g transform="translate(' + n0(cx) + ',' + n0(cy) + ')">' + o.raw + '</g>' }];
       case 'fcube': {
         const z = (o.z || 0) + (o.roll ? 5 : 0), p = o.roll ? pt(cx, cy, o.roll, 0) : [cx, cy], lean = o.roll ? -0.32 : 0;
-        const g = cubeGlow(p[0], p[1], z, o.n, o.mode || 'under', lean, o.ph), out = g.under.concat(cube(p[0], p[1], C.blue, LV, 1, z), g.over);
+        const g = cubeGlow(p[0], p[1], z, o.n, o.mode || 'under', lean, o.ph, o.I, o.fr, o.spk), out = g.under.concat(cube(p[0], p[1], C.blue, LV, 1, z), g.over);
         if (o.num) out.push(...numTag(p[0], p[1] - z - LV - 24, o.n)); return out; }
       case 'flame': return pool(cx, cy, o.z || 0, 1.2, 0.15).concat(riseSparks(cx, cy, o.z || 0, 3, 14));
       case 'cube': { const p = pt(cx, cy, o.u || 0, o.v || 0); return cube(p[0], p[1], C.blue, LV, o.o, o.z); }

@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<script src="../cubound-iso.js?v=20261007g"></script>
+<script src="../cubound-iso.js?v=20261009a"></script>
 <style>
   html, body { margin: 0; padding: 0; background: #E9E7E2; }
   a { color: #3A3936; }
@@ -126,6 +126,43 @@
       </div>
     </sc-for>
 
+    <sc-for list="{{ S3 }}" as="sec" hint-placeholder-count="5">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">{{ sec.id }}</span><span style="font-size:22px;font-weight:400">{{ sec.title }}</span></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(380px, 1fr));gap:16px">
+          <sc-for list="{{ sec.groups }}" as="g" hint-placeholder-count="2">
+            <div style="background:{{ P.bg }};border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><span style="font-size:13px;color:#5F5D59;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span></div>
+              <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+                <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
+                  <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                    <div style="width:{{ f.w }};max-width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                    <sc-if value="{{ f.hasHud }}" hint-placeholder-val="{{ false }}">
+                      <div style="align-self:flex-start;background:{{ P.panel }};border-radius:12px;padding:8px 12px;display:flex;gap:14px;align-items:flex-start;box-shadow:{{ f.hring }}">
+                        <sc-if value="{{ f.hon }}" hint-placeholder-val="{{ true }}">
+                          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;opacity:{{ f.hop }}"><span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">FIRE</span><span style="font-size:22px;font-weight:300;line-height:1">{{ f.hn }}</span></div>
+                        </sc-if>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">MOVES</span><span style="font-size:22px;font-weight:300;line-height:1">{{ f.hm }}</span></div>
+                      </div>
+                    </sc-if>
+                    <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#6E6C68">{{ f.cap }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding-top:8px;border-top:1px solid rgba(58,57,54,0.08)">
+                <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
+                  <div style="width:{{ f.w60 }};display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ g.hasPick }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size:13px;color:#3A3936;line-height:1.6;word-break:keep-all;text-wrap:pretty;background:{{ P.card }};border-radius:10px;padding:10px 12px">{{ g.pick }}</span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+
     <div style="display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">H</span><span style="font-size:22px;font-weight:400">토큰과 치수</span></div>
       <div style="background:#F2F1EE;border-radius:16px;padding:18px 20px;font-family:'IBM Plex Mono', monospace;font-size:12px;line-height:1.75;display:flex;flex-direction:column">
@@ -142,7 +179,7 @@ class Component extends DCLogic {
   wait() { if (!window.CuboundIso || !window.CuboundIso.FIRE) { this.tm = setTimeout(() => this.wait(), 40); return; } this.forceUpdate(); }
   renderVals() {
     const K = window.CuboundIso;
-    if (!K || !K.FIRE) return { S1: [], S2: [], tagA: [], hud: [], P: {}, css: [] };
+    if (!K || !K.FIRE) return { S1: [], S2: [], S3: [], tagA: [], hud: [], P: {}, css: [] };
     const mid = K.CH4.amber, FR = K.FIRE, floor = { a: mid.a, b: mid.b, l: mid.l, r: mid.r, pit: mid.pit };
     const frames = (defs, caps) => {
       const S = defs.map(d => K.scene(Object.assign({ floor }, d))), vb = K.fit([].concat(...S), 14), w = +vb.split(' ')[2];
@@ -243,6 +280,46 @@ class Component extends DCLogic {
         '숯 벽과 숯 다리는 판 위에서 가장 어두운 면이라 명도로 먼저 갈립니다(무너지는 칸의 금은 밝은 바닥 위 가는 금, 높은 땅은 밝은 바닥색). 덩굴은 갈색 줄기와 잎이 흙빛 판 위에 서고, 숯은 잎 없는 회갈색 더미와 장작입니다. 씨앗 나무는 초록 잎, 불씨 칸과 화로는 주황 불빛과 회색 돌 테로 갈립니다. 노란색은 스위치와 상자에만 남습니다.')
     ] };
 
+    // hud per frame: [fire n or null, moves, fire opacity]
+    const GH = (title, note, defs, caps, huds, pick) => { const g = G(title, note, defs, caps, pick); g.frames.forEach((f, i) => { const h = huds && huds[i]; f.hasHud = !!h; f.hon = !!h && h[0] !== null; f.hn = h ? h[0] : ''; f.hm = h ? h[1] : ''; f.hop = h && h[2] !== undefined ? h[2] : 1; f.hring = h && h[0] === 1 ? 'inset 0 0 0 1.5px #3A3936' : 'none'; }); return g; };
+    const onBraz = (cube, bz) => ({ g: [[0, 0]], objs: cube ? { '1,0': [{ t: 'brazier' }, cube] } : { '1,0': [Object.assign({ t: 'brazier', rider: true }, bz)] } });
+    const R1 = { id: 'E-2', title: '화로를 다시 밟음 · 4로 참', groups: [
+      GH('가 · 꺼진 큐브가 다시 밟음', '한 수 0.24초를 세 컷으로. 0.08초 굴러 올라서는 동안 큐브는 아직 빛이 없습니다. 0.16초 올라선 순간 화로 숯불이 한 번 밝아지고(속불빛 1.1배, 0.22) 큐브 옆면 아래에 빛이 절반 높이·절반 세기로 들어오며, FIRE 4가 이때 나타납니다. 0.24초에 빛이 위로 다 차 가 안 4와 같아집니다.',
+        [onBraz({ t: 'fcube', n: 4, I: 0, roll: -0.5, z: 4 }), onBraz(null, { I: 0.5, fr: 0.45, flash: true }), onBraz(null, {})],
+        ['0.08초 · 올라서는 중', '0.16초 · 빛이 들어옴', '0.24초 · FIRE 4'], [[null, 6], [4, 5], [4, 5]]),
+      GH('나 · FIRE 2인 채 밟음', '2의 빛(세기 0.58)을 지닌 채 굴러 올라서고, 0.16초에 화로가 밝아지며 빛이 0.8 세기·0.75 높이로 올라갑니다. 숫자는 이 컷에서 2 → 4로 바로 바뀝니다(FIRE 숫자 모양 그대로, 따로 움직임 없음). 0.24초에 4로 다 찹니다.',
+        [onBraz({ t: 'fcube', n: 2, roll: -0.5, z: 4 }), onBraz(null, { I: 0.8, fr: 0.75, flash: true }), onBraz(null, {})],
+        ['0.08초 · 2인 채 올라섬', '0.16초 · 다시 차오름', '0.24초 · FIRE 4'], [[2, 6], [4, 5], [4, 5]],
+        '빛은 늘 아래에서 위로 찹니다. 꺼진 큐브든 2인 큐브든 같은 길을 밟아 4에 닿으니, 화로가 "다시 채우는 곳"으로 읽힙니다. 숫자는 큐브가 올라선 컷에서 한 번에 바꾸고, 차오르는 일은 빛이 맡습니다.')
+    ] };
+    const roll1 = (I, fr, roll, spk) => ({ g: [[0, 0]], objs: { '1,0': [{ t: 'fcube', n: 1, I, fr, roll: roll - 1, spk }] } });
+    const R2 = { id: 'E-3', title: '불이 꺼짐 · FIRE 1 → 0', groups: [
+      GH('사그라드는 세 컷', '1(세기 0.38)에서 구르기 시작한 수 안에서 빛이 아래로 내려앉습니다. 0.08초 세기 0.24·높이 0.6, 0.16초 세기 0.1·높이 0.25에 윗면 위로 마지막 불티 하나(8px, 0.7), 0.24초 도착과 함께 꺼집니다. 발밑 빛도 같은 비율로 줄어듭니다.',
+        [fc(1, 'under'), roll1(0.24, 0.6, 0.33), roll1(0.1, 0.25, 0.67, 8), { g: [[0, 0]], objs: { '1,0': [{ t: 'cube' }] } }],
+        ['출발 · 1', '0.08초', '0.16초 · 마지막 불티', '0.24초 · 꺼짐'], [[1, 4], [1, 4], [1, 4], [0, 3, 0.4]],
+        '추천 · FIRE 숫자는 지웁니다. 수가 끝날 때 0으로 바뀌고 0.2초 페이드로 빠집니다(위 마지막 컷이 페이드 중간). 불이 없을 때 숫자가 없는 것은 판을 처음 시작할 때와 같은 상태이고, WIND · TIDE · MELT도 쓰는 동안만 보입니다. 0을 남기면 화로가 없는 판에서도 빈 칸이 계속 자리를 차지합니다.')
+    ] };
+    const pushB = (st, cubeN) => ({ g: [[0, 0, 0, 0]], objs: { '2,0': [cubeN ? { t: 'fcube', n: cubeN } : { t: 'cube' }], '3,0': [{ t: 'abox', st }] } });
+    const R3 = { id: 'F-2', title: '보스 170 · 타는 짐', groups: [
+      GH('상자가 밀린 칸에서 재가 됨', '불 붙은 큐브가 상자를 밀면 상자는 보통처럼 한 칸 밀리고, 밀린 칸에서 숯 벽과 같은 차례로 탑니다. 0.12초 달아오름(면이 숯불빛 쪽으로 50%, 옆면 아래 빛), 0.25초 불붙음(윗면 속불빛, 불티 둘, 둘레 빛 1.35배), 0.38초 재 덩이 넷(12 · 8 · 6 · 4px)으로 무너짐, 0.5초 재 자국. 큐브 불은 그대로 남고 수만 하나 줍니다.',
+        [{ g: [[0, 0, 0, 0]], objs: { '1,0': [{ t: 'fcube', n: 3 }], '2,0': [{ t: 'box' }] } }, pushB('warm', 2), pushB('burn', 2), pushB('crumble', 2), pushB('gone', 2)],
+        ['밀기 전 · FIRE 3', '0.12초 · 달아오름', '0.25초 · 불붙음', '0.38초 · 무너짐', '0.5초 · 재 자국'], [[3, 5], [2, 4], [2, 4], [2, 4], [2, 4]],
+        '추천 · 재 자국을 남깁니다. 숯 벽이 사라진 자리와 같은 값(칸 폭 0.5배, 바닥 A와 재 40%)이라 "무언가 탄 자리, 이제 지나갈 수 있음"으로 한 가지 뜻이 됩니다. 자국이 없으면 상자가 판에서 사라진 일이 정지 화면에 남지 않아, 막힌 뒤 왜 막혔는지 되짚을 단서가 없습니다.')
+    ] };
+    const hintB = (n, st) => ({ g: [[0, 0, 0]], objs: { '1,0': [n ? { t: 'fcube', n } : { t: 'cube' }], '2,0': [{ t: 'abox', st }] } });
+    const R4 = { id: 'F-3', title: '170 · "지금 밀면 탄다" 미리 알림', groups: [
+      G('가 · 표시 없음', '상자는 큐브에 불이 있든 없든 같은 노란 상자입니다. 처음 밀어 본 뒤에야 알게 됩니다.',
+        [hintB(3, 'cold'), hintB(0, 'cold')], ['불 있음', '불 없음']),
+      G('나 · 상자에 옅은 열빛', '큐브에 불이 붙어 있는 동안 판의 모든 상자 옆면 아래 12px에 옅은 빛(0.2)이 비치고 발밑에 작은 빛(0.92배, 0.06)이 고입니다. 상자 색은 그대로이고, FIRE 수와 상관없이 세기는 같으며, 불이 꺼지면 함께 사라집니다.',
+        [hintB(3, 'hint'), hintB(1, 'hint'), hintB(0, 'cold')], ['불 있음 · 3', '불 있음 · 1', '불 없음'],
+        '추천 · 나. 보통 판에서는 불 붙은 채 밀어도 상자가 안 타기 때문에, 170에서만 상자가 사라지는 일은 미리 보이지 않으면 실수가 아니라 속임처럼 느껴집니다.')
+    ] };
+    const rs = (st, o, mark) => ({ g: [[0, 0, 0, 0]], objs: Object.assign({ '1,0': [{ t: 'cube' }] }, st ? { '2,0': [{ t: 'abox', st, o }] } : {}, mark !== null ? { '3,0': [{ t: 'abox', st: 'gone', o: mark }] } : {}) });
+    const R5 = { id: 'F-4', title: '재시작 · 탄 상자가 되살아남', groups: [
+      G('처음 자리에서 차오름', '숯 재시작과 같은 결로 0.24초 안의 세 컷. 상자는 처음 자리에서 0.35 → 0.7 → 1로 차오르고, 밀린 칸의 재 자국은 같은 박자로 0.6 → 0.3 → 0으로 옅어집니다.',
+        [rs(null, null, 1), rs('ghost', 0.35, 0.6), rs('ghost', 0.7, 0.3), rs('cold', null, null)], ['재 자국', '0.35', '0.7', '되살아남'])
+    ] };
+
     const mx = K.mix;
     const css = ['/* 숯 (선 없음 · 면 명암만) */', `--color-char-top: ${FR.CHAR.t};   /* 밑 덩이 윗면 · 장작 */`, `--color-char-hi: ${FR.CHAR.hi};   /* 위 덩이 윗면 · 밝은 장작 결 */`, `--color-char-low: ${mx(FR.CHAR.t, FR.CHAR.l, 0.45)};   /* 장작 사이 골 */`, `--color-char-left: ${FR.CHAR.l};`, `--color-char-right: ${FR.CHAR.r};`, '/* 숯 더미: 0.8 × 13px + 0.46 × 9px + 0.3 × 6px = 꼭대기 22px */',
       '', '/* 달아오름 · 불붙음: 위 면 전체를 숯 → 숯불빛으로 섞음 (달아오름 50%, 불붙음 100%) · 위 덩이는 --color-heat-hot 쪽으로 85% */', `--color-heat-top: ${FR.HEAT.t};`, `--color-heat-left: ${FR.HEAT.l};`, `--color-heat-right: ${FR.HEAT.r};`, `--color-heat-hot: ${FR.HEAT.hot};   /* 불티 · 큐브 빛 */`, `--color-heat-core: ${FR.HEAT.core};   /* 불티 속 · 큐브 윗면 빛 */`,
@@ -251,14 +328,16 @@ class Component extends DCLogic {
             '', '/* 빛과 움직임 */', '빛 고임: --color-heat-hot 세 겹 (1 / 0.74 / 0.5배, 진하기 0.35 / 0.6 / 1 × 기준)', '타는 숯 0.13 × 1.35배 · 불씨 칸 0.1 × 1.05배 · 화로 0.16 × 1.6배 · 보스 0.2 × 1.75배 + 칸 위 --color-heat-core 0.35 × 0.7배', '일렁임 2.4초 · 1 → 0.8 → 0.92 → 1 · 불티 1.6초 상승 10–20px, 0.9초 간격 (보스 0.45초) · FIRE 1 깜빡임 0.8초',
       '', '/* 불씨 칸 · 화로 */', `--color-stove-top: ${FR.STOVE.t};   /* 불씨 칸 테 0.6 · 화로 그릇 0.8 × 8px */`, `--color-stove-left: ${FR.STOVE.l};`, `--color-stove-right: ${FR.STOVE.r};`, `--color-stove-bed: ${FR.STOVE.bed};   /* 꺼진 재 바닥 0.48 */`, `--color-stove-coal: ${FR.STOVE.coal};   /* 화로 숯 0.64 */`,
       '', '/* 치수 */', '숯 더미 0.8배 · 22px · 숯 다리 16px · 부서진 다리 조각 12px 내려앉음', '구르는 중: 반 칸, 5px 들림, 빛은 큐브와 함께 · 불티만 진행 반대쪽으로 처짐',
-      '불꽃 모양 없음 · 불티 꼭대기 < 30px (놓인 면 기준)'].map(s => ({ s }));
+      '불꽃 모양 없음 · 불티 꼭대기 < 30px (놓인 면 기준)',
+      '', '/* 화로 다시 밟음 · 꺼짐 (한 수 0.24초) */', '다시 참: 0.16초 세기 0.5 높이 0.45 (꺼짐에서) · 0.8 / 0.75 (2에서) + 화로 속불빛 --color-heat-core 1.1배 0.22 → 0.24초 4', '꺼짐: 0.08초 0.24 / 0.6 · 0.16초 0.1 / 0.25 + 불티 하나 8px 0.7 · 0.24초 0 · FIRE 0 → 0.2초 페이드로 지움',
+      '', '/* 170 타는 상자 (숯 벽과 같은 차례, 0.5초) */', '달아오름: 면 노랑 → 숯불빛 50% (윗면 --color-heat-hi 쪽 × 0.75) · 옆면 아래 0.6층 빛 0.4 · 둘레 1.1배 0.07', '불붙음: 100% · 윗면 --color-heat-hot 0.62배 0.7 · --color-heat-core 0.34배 0.8 · 불티 둘 12px · 둘레 1.35배 0.13', '무너짐: 재 덩이 12 · 8 · 6 · 4px (둘은 숯불빛) · 재 자국 = 숯 벽 자국 (0.5배)', '미리 알림: 옆면 아래 12px --color-heat-hot 0.2 · 발밑 0.92배 0.06 · 큐브에 불이 있는 동안만', '재시작: 상자 0.35 → 0.7 → 1 · 재 자국 0.6 → 0.3 → 0'].map(s => ({ s }));
 
     const toSrc = (shapes, vb) => encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '">' + shapes.map(p => p.txt !== undefined
       ? '<text x="' + p.d.split(',')[0] + '" y="' + p.d.split(',')[1] + '" font-size="' + p.fs + '" font-family="Jost, Helvetica, Arial, sans-serif" font-weight="500" text-anchor="middle" fill="' + p.f + '">' + p.txt + '</text>'
       : '<polygon points="' + p.d + '" fill="' + p.f + '"' + (p.o !== 1 ? ' opacity="' + p.o + '"' : '') + '/>').join('') + '</svg>');
     const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { if (o.shapes && o.vb) { const vbp = o.vb.split(' ');
         o.bgi = 'url("data:image/svg+xml,' + toSrc(o.shapes, o.vb) + '")'; o.ar = vbp[2] + ' / ' + vbp[3]; delete o.shapes; } Object.values(o).forEach(walk); } };
-    const out = { S1: [A, B, C, D, MV], S2: [E, F, Gs], tagA, hud, P: mid, css };
+    const out = { S1: [A, B, C, D, MV], S2: [E, F, Gs], S3: [R1, R2, R3, R4, R5], tagA, hud, P: mid, css };
     walk(out);
     return out;
   }
