@@ -54,7 +54,7 @@ const PAUSE = 300
 const ARROW = 'w-[1.05em] shrink-0 text-center'
 
 const BUTTON =
-  'pointer-events-auto flex size-8 shrink-0 @max-[21rem]:size-7 cursor-pointer items-center justify-center rounded-[9px] text-mute transition-soft hover:bg-hover disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent'
+  'pointer-events-auto flex size-9 shrink-0 text-sm narrow:size-10 narrow:text-base @max-[21rem]:size-9 cursor-pointer items-center justify-center rounded-[9px] text-mute transition-soft hover:bg-hover disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent'
 
 const VIEWPORT = 'width=device-width, initial-scale=1.0, viewport-fit=cover'
 
@@ -356,7 +356,7 @@ const DevController = ({ game }: DevControllerProps) => {
                 title="뒤로"
                 className={BUTTON}
               >
-                <svg viewBox="0 0 12 12" className="size-3 fill-current">
+                <svg viewBox="0 0 12 12" className="size-3.5 fill-current narrow:size-4">
                   <rect x="1" y="2" width="2" height="8" />
                   <path d="M11 2v8L4 6z" />
                 </svg>
@@ -377,7 +377,7 @@ const DevController = ({ game }: DevControllerProps) => {
                 title="앞으로"
                 className={BUTTON}
               >
-                <svg viewBox="0 0 12 12" className="size-3 fill-current">
+                <svg viewBox="0 0 12 12" className="size-3.5 fill-current narrow:size-4">
                   <path d="M1 2v8l7-4z" />
                   <rect x="9" y="2" width="2" height="8" />
                 </svg>
