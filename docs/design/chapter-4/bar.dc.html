@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="../cubound-iso.js?v=20261010d"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #E9E7E2; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+</style>
+</helmet>
+<div style="background:#E9E7E2;color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 90px;min-height:100vh">
+  <div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">
+      <span style="white-space:nowrap">CUBOUND · CHAPTER 4 · WORLD 19</span>
+      <span style="white-space:nowrap">쇠막대 · 검토용</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:860px">
+      <span style="font-size:34px;font-weight:400;letter-spacing:-0.01em">불을 건너는 길 · 쇠막대</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.7;word-break:keep-all;text-wrap:pretty">쇠막대는 두 칸에 걸쳐 누운 낮은 블록입니다. 길이 방향으로 밀면 한 칸 밀리고, 옆에서 한쪽 끝을 밀면 반대쪽 끝 칸을 축으로 90도 돕니다. 두 칸 구덩이에 빠지면 구덩이 위에 걸쳐 놓인 다리가 됩니다.</span>
+      <span style="font-size:13px;color:#7A7771;line-height:1.6;word-break:keep-all">모든 그림은 4장 세계 색 위에 칠했습니다. 각 칸 아래 작은 줄은 칸 폭 60px 축소판입니다. 돌기 장면에서 바닥에 옅게 칠한 칸은 막대가 쓸고 지나가는 자리를 보여 주는 시안용 표시이고, 게임에는 없습니다.</span>
+    </div>
+
+    <sc-for list="{{ S }}" as="sec" hint-placeholder-count="5">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">{{ sec.id }}</span><span style="font-size:22px;font-weight:400">{{ sec.title }}</span></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(380px, 1fr));gap:16px">
+          <sc-for list="{{ sec.groups }}" as="g" hint-placeholder-count="2">
+            <div style="grid-column:{{ g.span }};background:{{ P.bg }};border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;flex-direction:column;gap:4px;max-width:900px"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><span style="font-size:13px;color:#5F5D59;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span></div>
+              <div style="display:flex;flex-wrap:{{ g.wrap }};gap:16px;align-items:flex-end">
+                <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
+                  <div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:0 1 {{ f.w }}">
+                    <div style="width:{{ f.w }};max-width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                    <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#6E6C68">{{ f.cap }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding-top:8px;border-top:1px solid rgba(58,57,54,0.08)">
+                <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
+                  <div style="width:{{ f.w60 }};display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ g.hasPick }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size:13px;color:#3A3936;line-height:1.6;word-break:keep-all;text-wrap:pretty;background:{{ P.card }};border-radius:10px;padding:10px 12px">{{ g.pick }}</span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">J</span><span style="font-size:22px;font-weight:400">토큰과 치수</span></div>
+      <div style="background:#F2F1EE;border-radius:16px;padding:18px 20px;font-family:'IBM Plex Mono', monospace;font-size:12px;line-height:1.75;display:flex;flex-direction:column">
+        <sc-for list="{{ css }}" as="l" hint-placeholder-count="14"><span style="white-space:pre-wrap">{{ l.s }}</span></sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.wait(); }
+  componentWillUnmount() { clearTimeout(this.tm); }
+  wait() { if (!window.CuboundIso || !window.CuboundIso.BAR || !window.CuboundIso.BAR.ironK) { this.tm = setTimeout(() => this.wait(), 40); return; } this.forceUpdate(); }
+  renderVals() {
+    const K = window.CuboundIso;
+    if (!K || !K.BAR) return { S: [], P: {}, css: [] };
+    const mid = K.CH4.amber, floor = { a: mid.a, b: mid.b, l: mid.l, r: mid.r, pit: mid.pit };
+    const frames = (defs, caps, wide) => {
+      const S = defs.map(d => K.scene(Object.assign({ floor }, d))), vb = K.fit([].concat(...S), 14), w = +vb.split(' ')[2];
+      const n = S.length, wf = (n >= 4 || wide) ? Math.min(w, (1130 - 16 * (n - 1)) / n) : w;
+      return S.map((s, i) => ({ cap: caps[i] || '', shapes: s, vb, w: wf.toFixed(1) + 'px', w60: (w * 60 / 104).toFixed(1) + 'px' }));
+    };
+    const G = (title, note, defs, caps, pick, wide) => ({ title, note, pick: pick || '', hasPick: !!pick, span: wide || defs.length >= 4 ? '1 / -1' : 'auto', wrap: wide || defs.length >= 4 ? 'nowrap' : 'wrap', frames: frames(defs, caps || [], wide) });
+    const L = (w, h, v) => Array.from({ length: h }, () => Array(w).fill(v));
+    const set = (g, m) => { const c = g.map(r => r.slice()); for (const k in m) { const [x, y] = k.split(',').map(Number); c[y][x] = m[k]; } return c; };
+    const BS = 'stack';
+    // bar with one end on pivot cell (px, py), pointing at ang degrees (0 = +x, 90 = +y, 180 = -x, 270 = -y). drawn right after the frontmost cell it covers
+    // ex.n = cells (2, 3, or 2 → 3 while growing in boss 190)
+    const bar = (def, px, py, ang, ex) => {
+      const n = (ex && ex.n) || 2, off = (n - 1) / 2, a = ang * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), X = px + off * c, Y = py + off * s, cells = new Set(), hl = off + 0.32;
+      if (n !== 2) ex = Object.assign({}, ex, { len: n - 1 + 0.64 });
+      for (let t = -hl; t <= hl + 0.001; t += 0.1) for (const w of [-0.18, 0, 0.18]) cells.add(Math.round(X + t * c - w * s) + ',' + Math.round(Y + t * s + w * c));
+      const ok = [...cells].filter(k => { const [x, y] = k.split(',').map(Number); return def.g[y] && def.g[y][x] !== undefined && def.g[y][x] !== null; })
+        .sort((A, B) => { const [ax, ay] = A.split(',').map(Number), [bx, by] = B.split(',').map(Number); return (ax + ay) - (bx + by) || ax - bx; });
+      (def.late = def.late || []).push({ after: ok[ok.length - 1], x: X, y: Y, h: (ex && ex.h) || 0, o: Object.assign({ t: 'ibar', ang, style: BS }, ex || {}) });
+      return def;
+    };
+    const markF = K.mix(mid.a, K.BAR.IRON, 0.2);
+    const mk = (objs, keys) => { keys.forEach(k => (objs[k] = objs[k] || []).unshift({ t: 'mark', f: markF })); return objs; };
+
+    // A · colour
+    const one = col => bar({ g: [[0, 0]] }, 0, 0, 0, { col });
+    const row = col => bar({ g: [[0, 0, 0, 0, 0, 0]], cells: { '2,0': { t: 'charwall' } }, objs: { '0,0': [{ t: 'box' }], '1,0': [{ t: 'keg', fuse: 4 }], '3,0': [{ t: 'brazier' }] } }, 4, 0, 0, { col });
+    const A = { id: 'A', title: '생김새 · 쇠빛', groups: [
+      G('가 · 흑철', '받침 + 몸 모양은 그대로(받침 1.64 × 0.36배 × 4px, 몸 1.5 × 0.24배 × 9px). 몸을 차가운 어두운 회색으로 칠하고, 몸 맨 위 2px 띠와 윗면만 한 단계 밝게 해 윗모서리에 쇠 광택이 서게 했습니다. 받침은 몸보다 한 단계(−18%) 짙습니다.',
+        [one('a'), row('a')], ['쇠막대', '상자 · 화약통(심지) · 숯 벽 · 화로 · 쇠막대'],
+        '추천 · 가. 숯 더미(따뜻한 회갈색)와 심지(숯빛)보다 한 단계 어둡고 색이 차가워, 60px 칸에서도 숯은 밝은 갈색 덩이로, 쇠막대는 밝은 윗줄이 선 짙은 막대로 갈립니다. 판 위에서 가장 어두운 물건이라 무거운 쇠로 읽히고, 광택 띠가 있어 숯처럼 거칠어 보이지 않습니다.'),
+      G('나 · 청회 무쇠', '같은 모양을 조금 밝고 푸른 회색으로. 쇠로는 더 맑게 읽히지만 숯 더미 윗면과 밝기가 가까워, 작은 크기에서는 색의 차고 따뜻함으로만 갈립니다.',
+        [one('b'), row('b')], ['쇠막대', '나란히'])
+    ] };
+
+    // B · push along length
+    const gx = L(5, 1, 0), gy = L(1, 4, 0);
+    const B = { id: 'B', title: '길이 방향으로 밀기', groups: [
+      G('x 방향', '상자와 같이 한 수(0.24초)에 한 칸. 막대 전체가 미끄러지듯 움직이고 구르지 않습니다.',
+        [bar({ g: gx, objs: { '0,0': [{ t: 'cube' }] } }, 1, 0, 0), bar({ g: gx, objs: { '0,0': [{ t: 'cube', u: 0.5 }] } }, 1.5, 0, 0), bar({ g: gx, objs: { '1,0': [{ t: 'cube' }] } }, 2, 0, 0)],
+        ['밀기 전', '0.12초', '0.24초 · 한 칸']),
+      G('y 방향', '반대 축도 같습니다.',
+        [bar({ g: gy, objs: { '0,0': [{ t: 'cube' }] } }, 0, 1, 90), bar({ g: gy, objs: { '0,0': [{ t: 'cube', v: 0.5 }] } }, 0, 1.5, 90), bar({ g: gy, objs: { '0,1': [{ t: 'cube' }] } }, 0, 2, 90)],
+        ['밀기 전', '0.12초', '0.24초'])
+    ] };
+
+    // C · rotate: pivot (1,1), end (2,1) pushed toward -y by the cube from (2,2). swept (2,0), target (1,0)
+    const gr = L(4, 3, 0);
+    const rot = (ang, cv, cell, marks) => bar({ g: gr, objs: mk({ [cell || '2,2']: [{ t: 'cube', v: cv || 0 }] }, marks ? ['2,0', '1,0'] : []) }, 1, 1, ang);
+    const C = { id: 'C', title: '돌기', groups: [
+      G('끝을 밀어 90도', '큐브가 오른쪽 끝을 뒤로 밀면 왼쪽 끝 칸이 축이 되어 그 자리에서 돌고, 오른쪽 끝은 축 칸 뒤 칸으로 갑니다. 한 수 0.24초를 30°씩 세 컷으로 나누면 막대 끝이 대각선 칸(옅게 칠한 오른쪽 뒤)을 지나 축 칸 뒤(옅게 칠한 왼쪽 뒤)에 닿습니다. 큐브는 막대가 비운 칸으로 한 칸 들어섭니다. 축이 되는 끝은 제자리에서 돌 뿐이라 움직이지 않는 끝이 그림으로 읽힙니다.',
+        [rot(0, 0, '2,2', true), rot(-30, -0.33, '2,2', true), rot(-60, -0.67, '2,2', true), rot(-90, 0, '2,1')],
+        ['밀기 전 · 쓸 자리 둘', '0.08초 · 30°', '0.16초 · 60°', '0.24초 · 90°'])
+    ] };
+
+    // D · blocked
+    const blk = (extra, ang, cv) => bar(Object.assign({ g: extra.g || gr, objs: Object.assign({ '2,2': [{ t: 'cube', v: cv || 0 }] }, extra.objs || {}) }), 1, 1, ang);
+    const D = { id: 'D', title: '막혀서 못 돎', groups: [
+      G('쓸 자리에 상자', '대각선 칸에 상자가 있으면 돌지 않습니다. 큐브가 0.1칸 다가가는 동안 막대 끝이 5° 들렸다가 돌아오고(벽을 민 것과 같은 박자), 수는 쓰지 않습니다.',
+        [blk({ objs: { '2,0': [{ t: 'box' }] } }, 0, 0), blk({ objs: { '2,0': [{ t: 'box' }] } }, -5, -0.1), blk({ objs: { '2,0': [{ t: 'box' }] } }, 0, 0)],
+        ['밀기 전', '밀어 봄 · 5°', '돌아옴']),
+      G('갈 자리에 벽', '축 칸 뒤가 벽(한 층 높은 땅)이어도 같습니다. 쓸 자리와 갈 자리 둘 다 비어야 돕니다.',
+        [blk({ g: set(gr, { '1,0': 1 }) }, 0, 0), blk({ g: set(gr, { '1,0': 1 }) }, -5, -0.1), blk({ g: set(gr, { '1,0': 1 }) }, 0, 0)],
+        ['밀기 전', '밀어 봄 · 5°', '돌아옴'])
+    ] };
+
+    // E · narrow ㄱ path. row y=2 (x 0..3) turns up along x=3 (y 0..3). back walls h1, front edge open void
+    const path = open21 => { const g = L(5, 5, null), w = { '0,1': 1, '1,1': 1, '2,0': 1, '2,1': open21 ? 0 : 1, '1,0': null, '4,0': null };
+      ['0,2', '1,2', '2,2', '3,2', '3,1', '3,0', '3,3', '2,3'].forEach(k => { const [x, y] = k.split(',').map(Number); g[y][x] = 0; });
+      for (const k in w) { if (w[k] === null) continue; const [x, y] = k.split(',').map(Number); g[y][x] = w[k]; }
+      return g; };
+    const gp = path(true), gb = path(false);
+    const pf = (g, cube, px, py, ang, marks, cu, cv) => bar({ g, objs: mk({ [cube]: [{ t: 'cube', u: cu || 0, v: cv || 0 }] }, marks || []) }, px, py, ang);
+    const E = { id: 'E', title: '좁은 길 옮기기 · ㄱ자', groups: [
+      G('가 · 돌릴 자리가 있음', '한 칸 폭 길이 오른쪽 끝에서 뒤로 꺾입니다. 꺾이는 안쪽 모서리 칸이 비어 있어, 막대를 모서리까지 밀어 온 뒤 큐브가 앞으로 돌아가 왼쪽 끝을 뒤로 밀면 오른쪽 끝을 축으로 돌아 세로 길에 들어섭니다. 그다음 큐브가 아래로 돌아가 길이 방향으로 밀어 올립니다.',
+        [pf(gp, '1,2', 2, 2, 0), pf(gp, '2,3', 3, 2, 210, ['2,1', '3,1'], 0, -0.33), pf(gp, '2,3', 3, 2, 240, ['2,1', '3,1'], 0, -0.67), pf(gp, '2,2', 3, 2, 270), pf(gp, '3,2', 3, 1, 270)],
+        ['① 모서리까지 밂', '② 돌림 30° · 안쪽 모서리를 쓸고 감', '③ 돌림 60°', '④ 세로가 됨', '⑤ 밀어 올림']),
+      G('나 · 돌릴 자리가 없음', '같은 길에서 안쪽 모서리 칸만 벽입니다. 막대는 모서리까지는 오지만 돌 수 없어 세로 길에 들어가지 못하고, 다른 끝을 축으로 돌려도 뒤쪽 모서리가 같은 벽이라 막힙니다. 길은 이어져 있어도 막대는 지나가지 못하는 것이 한 장에 보입니다.',
+        [pf(gb, '1,2', 2, 2, 0), pf(gb, '2,3', 3, 2, 185, [], 0, -0.1), pf(gb, '2,3', 3, 2, 180)],
+        ['① 모서리까지 밂', '② 밀어 봄 · 막힘', '③ 못 지나감'],
+        '가와 나는 칸 하나만 다릅니다. 판을 짤 때 이 칸 하나로 "지나감 / 막힘"을 정할 수 있어 소파 옮기기 고민이 칸 단위로 또렷합니다. 다만 쓸 자리는 판 위에 따로 보이지 않으니, 플레이어는 대각선 칸을 직접 보고 판단해야 합니다(위 옅은 칸은 시안 표시).', true)
+    ] };
+
+    // F · both cells over pits → bridge. pit part 2.0 long, top at floor (z −13); 0.14 lips lie on both rims
+    const gpit = [[0, 0, 'p', 'p', 0]];
+    const bridge = (dd, ex) => { ex = ex || {}; const o = ex.o, roll = ex.roll; dd.late = dd.late || [];
+      dd.late.push({ after: '3,0', x: 2.5, y: 0, o: { t: 'ibar', len: 2.0, full: true, z: -13, o, roll } }, { after: '3,0', x: 1.46, y: 0, o: { t: 'ibar', style: 'lip', len: 0.2, o } });
+      if (ex.cube !== undefined) dd.late.push({ after: '3,0', x: ex.cube, y: 0, o: { t: 'rcube', roll } });
+      dd.late.push({ after: '4,0', x: 3.54, y: 0, o: { t: 'ibar', style: 'lip', len: 0.2, o } });
+      return dd; };
+    const F = { id: 'F', title: '두 칸 구덩이에 걸쳐 다리가 됨', groups: [
+      G('빠져서 걸쳐짐', '두 칸이 다 구덩이 위에 오면 그 수 끝에 내려앉습니다. 막대 윗면이 바닥 높이에 닿을 때까지 7px → 13px 내려가고, 닿는 순간 양 끝이 0.14배씩 늘어 구덩이 가장자리 땅 위에 얹힙니다. 얹힌 끝은 막대 윗면과 같은 폭·같은 색으로 바닥 높이에 이어져, 땅 → 구덩이 → 땅으로 윗면이 끊김 없이 한 줄로 이어집니다(받침 폭만큼 짙은 자리가 땅 위에 깔림). 모양과 두께는 그대로라 막대가 사라지지 않고, 폭이 0.36배라 양옆으로 구덩이가 그대로 보여 다리로 읽힙니다.',
+        [bar({ g: gpit, objs: { '0,0': [{ t: 'cube' }] } }, 1, 0, 0), bar({ g: gpit, objs: { '1,0': [{ t: 'cube' }] } }, 2, 0, 0), bar({ g: gpit, objs: { '1,0': [{ t: 'cube' }] } }, 2, 0, 0, { z: -7 }), bridge({ g: gpit, objs: { '1,0': [{ t: 'cube' }] } })],
+        ['밀기 전', '두 칸 다 구덩이 위', '내려앉는 중 · 7px', '걸쳐짐 · 다리']),
+      G('큐브가 건넘 · 한 칸 0.24초', '큐브가 막대 위를 한 칸 건너는 동안 막대와 큐브가 한 몸으로 긴 축을 따라 살짝 흔들립니다. 0.08초 4°(앞으로 기욺), 0.16초 −2°, 0.24초 도착과 함께 0°. 큐브 윗면이 2px 남짓 움직이는 정도라 과장되지 않고, 땅 위로는 흔들리지 않으니 "가는 쇠 위를 걷는다"는 것만 전합니다.',
+        [bridge({ g: gpit }, { cube: 2 }), bridge({ g: gpit }, { cube: 2.33, roll: 4 }), bridge({ g: gpit }, { cube: 2.67, roll: -2 }), bridge({ g: gpit }, { cube: 3 })],
+        ['출발', '0.08초 · 4°', '0.16초 · −2°', '0.24초 · 0°'],
+        '추천 · 흔들림 4°. 2°는 60px 칸에서 보이지 않고, 6°를 넘으면 큐브가 떨어질 것처럼 보여 위험한 칸으로 오해됩니다. 4°는 폰에서 겨우 보일 정도라 매 수 거슬리지 않습니다.')
+    ] };
+
+    // G · one cell over pit. x: cells 1 (ground) + 2 (pit), centre on the rim. y: cells 2 (ground) + 1 (pit)
+    const gx1 = [[0, 0, 'p', 0]], gy1 = [[0], ['p'], [0], [0]], TIP = 6;
+    // contact under the tipped bar: a soft shadow under the lifted ground half + a darker strip where the bar sits on the rim corner
+    const shF = K.mix(mid.a, '#3A3936', 0.14), ctF = K.mix(mid.a, K.BAR.IRONS.a, 0.55);
+    const rest = (dd, ax, sh) => { dd.late = dd.late || []; const it = ax === 'x' ? (u, L, f, o) => ({ after: '1,0', x: u, y: 0, o: { t: 'shade', L, W: 0.36, f, o } }) : (v, L, f, o) => ({ after: '0,2', x: 0, y: v, o: { t: 'shade', L, W: 0.36, ang: 90, f, o } });
+      if (ax === 'x') { if (sh) dd.late.push(it(1.09, 0.82, shF, sh)); dd.late.push(it(1.46, 0.08, ctF, 1)); } else { if (sh) dd.late.push(it(1.91, 0.82, shF, sh)); dd.late.push(it(1.54, 0.08, ctF, 1)); }
+      return dd; };
+    const G1 = { id: 'G', title: '한 칸만 구덩이 위', groups: [
+      G('가 · 수평으로 걸침', '막대는 판의 두 칸을 그대로 차지하고 수평으로 걸쳐, 구덩이 쪽 끝이 바닥 높이에 그대로 떠 있습니다. 다시 밀 수 있습니다.',
+        [bar({ g: gx1, objs: { '0,0': [{ t: 'cube' }] } }, 1, 0, 0), bar({ g: gy1, objs: { '0,3': [{ t: 'cube' }] } }, 0, 2, 270)],
+        ['x 방향', 'y 방향']),
+      G('나 · 구덩이 쪽 끝이 처짐', '같은 두 칸에서 막대가 구덩이 가장자리 모서리를 받침으로 6° 기웁니다. 구덩이 쪽 끝은 4~5px 내려가고, 땅 쪽 끝은 그만큼 들립니다. 막대가 모서리에 닿는 자리에 짙은 띠(막대 색 55%)가, 들린 땅 쪽 절반 밑에 옅은 그늘이 깔려 모서리 하나에 기대 버티는 것이 보입니다. 바닥 높이로 내려앉아 수평인 다리(F)와 높이도 기울기도 달라 올라설 수 없는 상태로 읽힙니다.',
+        [bar(rest({ g: gx1, objs: { '0,0': [{ t: 'cube' }] } }, 'x', 1), 1, 0, 0, { pitch: -TIP }), bar(rest({ g: gy1, objs: { '0,3': [{ t: 'cube' }] } }, 'y', 1), 0, 2, 270, { tipv: TIP })],
+        ['x 방향', 'y 방향'],
+        '추천 · 나. 처진 끝이 "받쳐지지 않았다"를 말해 줘서, 수평으로 놓인 다리(F)와 정지 화면에서도 갈리고 올라설 수 없다는 것이 읽힙니다.'),
+      G('나 · 밀어 빼내면 처짐이 풀림', '구덩이 건너편에서 큐브가 밀어 막대를 땅 두 칸으로 빼내는 한 수(0.24초). 0.12초에 받침 모서리를 지나며 기울기가 3°로 줄고(그늘도 절반), 두 칸이 다 땅 위에 오는 0.24초에 수평으로 돌아옵니다.',
+        [bar(rest({ g: gx1, objs: { '3,0': [{ t: 'cube' }] } }, 'x', 1), 1, 0, 0, { pitch: -TIP }), bar(rest({ g: gx1, objs: { '3,0': [{ t: 'cube', u: -0.5 }] } }, 'x', 0.5), 0.5, 0, 0, { pitch: -TIP / 2, pu: 0.5 }), bar({ g: gx1, objs: { '2,0': [{ t: 'cube' }] } }, 0, 0, 0)],
+        ['밀기 전 · 6°', '0.12초 · 3°', '0.24초 · 수평'])
+    ] };
+
+    // H · two switches
+    const gs = L(5, 1, 0), sw = (a, b) => ({ '3,0': [{ t: 'sw', pressed: a }], '4,0': [{ t: 'sw', pressed: b }] });
+    const Hs = { id: 'H', title: '스위치 둘을 한 번에', groups: [
+      G('걸쳐서 누름', '스위치 위에 놓인 끝마다 그 스위치를 누릅니다. 두 스위치에 걸치면 한 수에 둘을 함께 누르고, 막대는 눌린 스위치 높이(1px)에 얹힙니다.',
+        [bar({ g: gs, objs: Object.assign({ '0,0': [{ t: 'cube' }] }, sw(false, false)) }, 1, 0, 0), bar({ g: gs, objs: Object.assign({ '1,0': [{ t: 'cube' }] }, sw(true, false)) }, 2, 0, 0, { h: 0, z: 1 }), bar({ g: gs, objs: Object.assign({ '2,0': [{ t: 'cube' }] }, sw(true, true)) }, 3, 0, 0, { z: 1 })],
+        ['둘 다 안 눌림', '하나 눌림', '둘 다 눌림'])
+    ] };
+
+    // I · restart
+    const rf = (fo, bo) => { const dd = { g: gpit }; if (fo) bridge(dd, { o: fo }); return bo ? bar(dd, 1, 0, 0, { o: bo }) : dd; };
+    const I = { id: 'I', title: '재시작 · 되돌아옴', groups: [
+      G('처음 자리에서 차오름', '숯·화약통 재시작과 같은 결로 0.24초 안의 세 컷. 구덩이에 걸친 막대는 1 → 0.6 → 0.3 → 0으로 옅어지고, 막대는 처음 자리에서 0.35 → 0.7 → 1로 차오릅니다. 돌았던 막대도 돌아가는 움직임 없이 처음 방향으로 그 자리에서 차오릅니다.',
+        [rf(1, 0), rf(0.6, 0.35), rf(0.3, 0.7), rf(0, 1)], ['걸쳐진 뒤', '0.08초', '0.16초', '0.24초 · 되돌아옴'])
+    ] };
+
+    // ---- added: rules settled ----
+    const restAt = (dd, after, x, y, h, L, ang, f, o) => { (dd.late = dd.late || []).push({ after, x, y, h, o: { t: 'shade', L, W: 0.36, ang, f, o } }); return dd; };
+    // K · lower ground
+    const gK = [[1, 1, 1, 0, 0]];
+    const Kk = { id: 'K', title: '낮은 땅 위로', groups: [
+      G('가 · 한 칸만 낮은 땅 위 · 수평', '두 칸이 같은 높이에 받쳐지지 않으면 높은 쪽 칸에 얹혀 버팁니다. G절 가와 같은 모습.',
+        [bar({ g: gK, objs: { '1,0': [{ t: 'cube' }] } }, 2, 0, 0, { h: 1 })], ['버팀']),
+      G('나 · 한 칸만 낮은 땅 위 · 처짐', 'G절 나와 같이 높은 칸 모서리를 받침으로 6° 처지고, 닿는 띠와 그늘이 깔립니다.',
+        [bar(restAt(restAt({ g: gK, objs: { '1,0': [{ t: 'cube' }] } }, '2,0', 2.09, 0, 1, 0.82, 0, shF, 1), '2,0', 2.46, 0, 1, 0.08, 0, ctF, 1), 2, 0, 0, { h: 1, pitch: -TIP })], ['버팀']),
+      G('두 칸 다 낮은 땅 위 · 떨어짐', '한 번 더 밀어 두 칸이 다 낮은 땅 위에 오면 그 수 끝에 상자처럼 한 층 떨어집니다. 0.12초 반 층, 0.24초 바닥에 닿음. 기울지 않고 수평으로 내려옵니다.',
+        [bar({ g: gK, objs: { '2,0': [{ t: 'cube' }] } }, 3, 0, 0, { h: 1 }), bar({ g: gK, objs: { '2,0': [{ t: 'cube' }] } }, 3, 0, 0, { h: 1, z: -15 }), bar({ g: gK, objs: { '2,0': [{ t: 'cube' }] } }, 3, 0, 0)],
+        ['두 칸 다 낮은 땅 위', '0.12초 · 반 층', '0.24초 · 한 층 아래'])
+    ] };
+
+    // L · sweep over a pit
+    const gL = set(gr, { '2,0': 'p' });
+    const rotL = (ang, cv, cell) => bar({ g: gL, objs: { [cell || '2,2']: [{ t: 'cube', v: cv || 0 }] } }, 1, 1, ang);
+    const Ll = { id: 'L', title: '구덩이 위로 쓸고 돌기', groups: [
+      G('쓸 자리가 구덩이', '대각선 칸이 구덩이면 막대 끝이 구덩이 위를 바닥 높이 그대로 스쳐 지나가 돕니다(C절과 같은 30°씩 세 컷). 갈 자리(축 칸 뒤)는 땅이어야 합니다.',
+        [rotL(0, 0), rotL(-30, -0.33), rotL(-60, -0.67), rotL(-90, 0, '2,1')], ['밀기 전', '0.08초 · 30°', '0.16초 · 60° · 구덩이 위', '0.24초 · 90°'])
+    ] };
+
+    // M · on a two-cell char bridge (ends on ground). fire passes under the bar; the bar stays
+    const gM = [[0, 0, 'p', 'p', 0, 0]];
+    const mC = (w1, b2, b3, w4) => ({ '1,0': { t: 'charwall', st: w1 }, '2,0': { t: 'charbridge', st: b2 }, '3,0': { t: 'charbridge', st: b3 }, '4,0': { t: 'charwall', st: w4 } });
+    const mS = (w1, b2, b3, w4) => bar({ g: gM, cells: mC(w1, b2, b3, w4) }, 2, 0, 0);
+    const Mm = { id: 'M', title: '숯 다리 위', groups: [
+      G('불이 막대 밑을 지나감', '두 칸 숯 다리(양 끝이 땅) 위에 막대를 올려 둔 판. 왼쪽 숯 벽의 불이 다리로 번지면 막대 밑 장작도 한 칸씩 타서 무너지고, 불은 막대를 지나 오른쪽 숯 벽까지 이어집니다. 막대는 쇠라 타지 않고 그 자리에 남습니다. 한 칸만 무너진 동안은 남은 칸에 얹혀 버티고(G절), 두 칸이 다 사라지는 수 끝에 걸친 쇠 다리(F절)로 내려앉습니다.',
+        [mS('burn', 'cold', 'cold', 'cold'), mS('crumble', 'burn', 'cold', 'cold'), mS('gone', 'crumble', 'burn', 'cold'), mS('gone', 'gone', 'crumble', 'burn'), bridge({ g: gM, cells: mC('gone', 'gone', 'gone', 'crumble') })],
+        ['숯 벽 탐', '1수 · 막대 밑 첫 칸', '2수 · 둘째 칸 · 첫 칸 무너짐', '3수 · 불이 지나감 · 버팀', '4수 · 걸친 쇠 다리']),
+      G('큐브가 건넘', '장작이 다 사라진 뒤 막대는 F절 다리와 같습니다. 탄 숯 벽 자리를 지나 다리 위를 한 칸 건너며 4° → −2° → 0으로 흔들립니다.',
+        [bridge({ g: gM, cells: mC('gone', 'gone', 'gone', 'gone'), objs: { '1,0': [{ t: 'cube' }] } }), bridge({ g: gM, cells: mC('gone', 'gone', 'gone', 'gone') }, { cube: 2.33, roll: 4 }), bridge({ g: gM, cells: mC('gone', 'gone', 'gone', 'gone') }, { cube: 2.67, roll: -2 }), bridge({ g: gM, cells: mC('gone', 'gone', 'gone', 'gone') }, { cube: 3 })],
+        ['건너기 전', '0.08초 · 4°', '0.16초 · −2°', '0.24초 · 0°'])
+    ] };
+
+    // N · keg blast under the bar
+    const gN = L(4, 3, 1);
+    const nS = (kegs, cuts, ph, bx, bex, pre) => { const g = gN.map(r => r.slice()), objs = {}, over = [], s2 = { before: 0, flash: 1, after: 2 }[ph];
+      kegs.forEach(([x, y]) => { if (!s2) objs[x + ',' + y] = [{ t: 'keg' }]; else { objs[x + ',' + y] = [{ t: 'abox', st: 'gone' }]; if (s2 === 1) over.push({ x, y, o: { t: 'burst', ph: 'flash' } }); } });
+      cuts.forEach(k => { const [x, y] = k.split(',').map(Number); if (s2) g[y][x] = s2 === 1 ? 0.5 : 0; if (s2 === 1) { const kk = kegs.find(q => Math.abs(q[0] - x) + Math.abs(q[1] - y) === 1); over.push({ x, y, h: 0.5, o: { t: 'dust', ph: 'rise', du: x - kk[0], dv: y - kk[1] } }); } });
+      const dd = { g, objs, over }; if (pre) pre(dd); return bar(dd, bx[0], bx[1], 0, bex); };
+    const k2 = [[1, 1], [2, 1]], c2 = ['0,1', '3,1', '1,2', '2,2', '1,0', '2,0'], k1 = [[2, 1]], c1 = ['1,1', '3,1', '2,2', '2,0'];
+    const pre1 = dd => { restAt(dd, '3,0', 2.91, 0, 1, 0.82, 0, shF, 1); restAt(dd, '3,0', 2.54, 0, 1, 0.08, 0, ctF, 1); };
+    const Nn = { id: 'N', title: '화약통 폭발 아래', groups: [
+      G('두 칸 다 깎임 · 같이 내려앉음', '이어서 터진 화약통 둘의 둘레가 막대 밑 두 칸을 함께 깎습니다. 막대는 깎이는 땅에 실린 채 반 층(0.16초) → 한 층(0.28초) 수평으로 내려앉습니다.',
+        [nS(k2, c2, 'before', [1, 0], { h: 1 }), nS(k2, c2, 'flash', [1, 0], { h: 0.5 }), nS(k2, c2, 'after', [1, 0], { h: 0 })], ['전', '0.16초', '뒤 · 한 층 아래']),
+      G('한 칸만 깎임 · 높은 쪽에 얹혀 버팀', '막대 밑 한 칸만 깎이면 다른 칸에 얹혀 제 높이에 남습니다. 끝 모습은 G절 가 / 나를 따릅니다.',
+        [nS(k1, c1, 'before', [2, 0], { h: 1 }), nS(k1, c1, 'flash', [2, 0], { h: 1 }), nS(k1, c1, 'after', [2, 0], { h: 1 }), nS(k1, c1, 'after', [2, 0], { h: 1, pitch: TIP }, pre1)], ['전', '0.16초', '뒤 · 가', '뒤 · 나'])
+    ] };
+
+    // O · boss 190
+    const gO = L(5, 1, 0), cwO = { '0,0': { t: 'charwall', st: 'burn' } };
+    const o1 = (heat, n) => bar({ g: gO, cells: cwO }, 1, 0, 0, { heat, n });
+    const gO2 = L(5, 3, 0), cwO2 = { '0,1': { t: 'charwall', st: 'burn' } };
+    const gO3 = L(5, 4, 0);
+    const rot3 = (ang, cv, cell, marks) => bar({ g: gO3, objs: mk({ [cell || '3,3']: [{ t: 'cube', v: cv || 0 }] }, marks ? ['2,1', '3,1', '2,0', '1,1', '1,0'] : []) }, 1, 2, ang, { n: 3 });
+    const gO4 = [[0, 0, 'p', 'p', 'p', 0]];
+    const bridgeN = (dd, x0, n, ex) => { ex = ex || {}; const o = ex.o, roll = ex.roll, last = (x0 + n - 1) + ',0'; dd.late = dd.late || [];
+      dd.late.push({ after: last, x: x0 + (n - 1) / 2, y: 0, o: { t: 'ibar', len: n, full: true, z: -13, o, roll } }, { after: last, x: x0 - 0.54, y: 0, o: { t: 'ibar', style: 'lip', len: 0.2, o } });
+      if (ex.cube !== undefined) dd.late.push({ after: last, x: ex.cube, y: 0, o: { t: 'rcube', roll } });
+      dd.late.push({ after: (x0 + n) + ',0', x: x0 + n - 0.46, y: 0, o: { t: 'ibar', style: 'lip', len: 0.2, o } });
+      return dd; };
+    const Oo = { id: 'O', title: '보스 190 · 달군 쇠', groups: [
+      G('달궈져 늘어남 · 한 수 0.3초', '불붙은 숯과 맞닿은 수에 0.1초 동안 숯불빛이 쇠에 스밉니다(몸 50%, 광택 띠 60%, 칸마다 발밑 빛 0.1). 0.2초부터 불에서 먼 끝이 같은 굵기로 미끄러져 나와 0.3초에 한 칸을 다 채웁니다. 늘어난 뒤 다음 수에 걸쳐 원래 쇠빛으로 식습니다.',
+        [o1(0), o1(0.6), o1(1, 2.5), o1(1, 3), o1(0, 3)], ['0초 · 닿음', '0.1초 · 달궈짐', '0.2초 · 자라 나옴', '0.3초 · 세 칸', '다음 수 · 식음'],
+        '추천 · 0.3초, 늘어난 뒤 식음. 한 수(0.24초)보다 조금 길어 "자라 나온다"가 읽히고, 다음 입력을 오래 붙잡지 않습니다. 달궈진 빛은 "아직 늘어나지 않았다"는 표시로만 쓰고 세 칸이 되면 거두면, 판 위에서 빛나는 쇠는 언제나 기다리는 막대 하나뿐이라 뜻이 겹치지 않습니다.'),
+      G('큐브를 밀어내며 늘어남', '큐브가 막대를 밀어 숯에 닿게 한 수 끝에 먼 끝 칸에 큐브 자신이 서 있는 경우. 막대는 달궈진 뒤 늘어나며 큐브를 한 칸 밀어냅니다. 큐브는 화약통 폭발 때처럼 구르지 않고 바람에 밀리듯 미끄러지고, 늘어나는 끝과 같은 박자로 움직입니다.',
+        [bar({ g: gO2, cells: cwO2, objs: { '3,1': [{ t: 'cube' }] } }, 1, 1, 0, { heat: 0.6 }), Object.assign(bar({ g: gO2, cells: cwO2 }, 1, 1, 0, { heat: 1, n: 2.5 }), { over: [{ x: 3.5, y: 1, h: 0, o: { t: 'cube' } }] }), bar({ g: gO2, cells: cwO2, objs: { '4,1': [{ t: 'cube' }] } }, 1, 1, 0, { heat: 1, n: 3 })],
+        ['0.1초 · 달궈짐', '0.2초 · 밀어내며 자람', '0.3초 · 세 칸 · 큐브 한 칸 밀림']),
+      G('상자를 밀어내며 늘어남', '상자도 같은 박자로 한 칸 밀려납니다.',
+        [bar({ g: gO2, cells: cwO2, objs: { '3,1': [{ t: 'box' }] } }, 1, 1, 0, { heat: 0.6 }), Object.assign(bar({ g: gO2, cells: cwO2 }, 1, 1, 0, { heat: 1, n: 2.5 }), { over: [{ x: 3.5, y: 1, h: 0, o: { t: 'box' } }] }), bar({ g: gO2, cells: cwO2, objs: { '4,1': [{ t: 'box' }] } }, 1, 1, 0, { heat: 1, n: 3 })],
+        ['0.1초 · 달궈짐', '0.2초 · 밀어내며 자람', '0.3초 · 세 칸']),
+      G('벽에 막혀 기다림', '늘어날 자리가 벽이거나, 그 자리의 상자 뒤가 벽이라 밀 수 없을 때만 막대는 달궈진 채(가장 밝은 빛) 기다립니다. 기다리는 동안 빛은 숯처럼 2.4초 주기로 아주 약하게 숨 쉬게 해 멈춘 그림이 아님을 보이게 하길 권합니다. 자리가 나는 수에 0.3초 늘어납니다.',
+        [bar({ g: set(gO2, { '3,1': 1 }), cells: cwO2 }, 1, 1, 0, { heat: 1 }), bar({ g: set(gO2, { '4,1': 1 }), cells: cwO2, objs: { '3,1': [{ t: 'box' }] } }, 1, 1, 0, { heat: 1 })],
+        ['늘어날 자리가 벽', '상자 뒤가 벽']),
+      G('세 칸 막대가 돎', '끝을 밀어 반대 끝을 축으로 90°, 두 칸 막대와 같은 박자. 옅은 칸은 쓸고 지나가는 자리와 갈 자리입니다. 그려 보면 끝이 지나는 칸은 대각선 칸 하나와 그 바깥 두 칸(오른쪽 뒤, 축 쪽 뒤에서 두 번째)으로 셋이고, 갈 자리가 둘입니다. "쓸 자리 둘"로 정하시려면 바깥 두 칸 가운데 어느 쪽을 볼지 규칙에서 정해 주세요.',
+        [rot3(0, 0, '3,3', true), rot3(-30, -0.33, '3,3', true), rot3(-60, -0.67, '3,3', true), rot3(-90, 0, '3,2')], ['밀기 전', '0.08초 · 30°', '0.16초 · 60°', '0.24초 · 90°']),
+      G('세 칸 구덩이 다리', '세 칸이 다 받쳐지는(다 구덩이 위) 때만 내려앉습니다. 다리 모습과 건널 때 흔들림(4°)은 두 칸 다리와 같습니다.',
+        [bar({ g: gO4, objs: { '1,0': [{ t: 'cube' }] } }, 2, 0, 0, { n: 3 }), bar({ g: gO4, objs: { '1,0': [{ t: 'cube' }] } }, 2, 0, 0, { n: 3, z: -7 }), bridgeN({ g: gO4, objs: { '1,0': [{ t: 'cube' }] } }, 2, 3), bridgeN({ g: gO4 }, 2, 3, { cube: 3.33, roll: 4 })],
+        ['세 칸 다 구덩이 위', '내려앉는 중', '걸쳐짐', '건넘 · 4°'])
+    ] };
+
+    // P · boss restart
+    const gP = L(5, 2, 0);
+    const rP = (o3, o2) => { const dd = { g: gP }; if (o3) bar(dd, 2, 1, 0, { n: 3, o: o3 }); if (o2) bar(dd, 0, 0, 0, { o: o2 }); return dd; };
+    const Pp = { id: 'P', title: '보스 재시작 · 두 칸으로 돌아옴', groups: [
+      G('세 칸이 사라지고 두 칸이 차오름', 'I절과 같은 결로 0.24초 안의 세 컷. 늘어난 세 칸 막대는 놓인 자리에서 1 → 0.6 → 0.3 → 0으로 옅어지고, 처음 자리에 두 칸 막대가 0.35 → 0.7 → 1로 차오릅니다. 줄어드는 움직임은 넣지 않습니다.',
+        [rP(1, 0), rP(0.6, 0.35), rP(0.3, 0.7), rP(0, 1)], ['세 칸', '0.08초', '0.16초', '0.24초 · 두 칸'])
+    ] };
+
+    const IK = K.BAR.ironK('a');
+    const css = ['/* 쇠막대 (가 · 흑철) · 상자와 같은 tone() 규칙 */', `--color-iron: ${K.BAR.IRONS.a};`, `--color-iron-top: ${IK.k.t};`, `--color-iron-left: ${IK.k.l};`, `--color-iron-right: ${IK.k.r};`, `--color-iron-sheen-top: ${IK.hi.t};   /* 윗모서리 광택: 몸 맨 위 2px 띠 + 윗면 */`, `--color-iron-sheen-left: ${IK.hi.l};`, `--color-iron-sheen-right: ${IK.hi.r};`, `--color-iron-base-top: ${IK.kb.t};   /* 받침 = 쇠 −18% */`, `--color-iron-base-left: ${IK.kb.l};`, `--color-iron-base-right: ${IK.kb.r};`,
+      '받침 1.64 × 0.36배 × 4px + 몸 1.5 × 0.24배 × (7 + 광택 2)px = 13px (상자 30px) · 두 칸 가운데 사이 1칸 + 양 끝 0.32배',
+      '', '/* 움직임 (한 수 0.24초) */', '길이 방향: 한 칸 미끄러짐', '돌기: 축 = 밀지 않은 끝 칸 · 0.08 / 0.16 / 0.24초에 30° / 60° / 90° · 쓸 자리(대각선)와 갈 자리 둘 다 비어야 함', '막힘: 끝이 5° 들렸다 돌아옴 · 큐브 0.1칸 · 수 안 씀',
+      '', '/* 구덩이 · 스위치 · 재시작 */', '한 칸만 구덩이 위 (나): 가장자리 모서리를 받침으로 6° · 닿는 띠 0.08배 (바닥 + 쇠 55%) · 들린 쪽 그늘 0.82 × 0.36배 (바닥 + 먹 14%) · 빼낼 때 3° → 0', '두 칸 구덩이: 7px → 13px 내려앉음 (윗면 = 바닥) · 길이 2.0 + 양 끝 0.14배 얹힘 (윗면과 같은 높이·색, 받침 폭 짙은 자리) · 한 칸만이면 그대로', '건널 때 흔들림: 긴 축 기준 4° → −2° → 0 (0.08 / 0.16 / 0.24초), 막대와 큐브 한 몸', '스위치: 끝마다 누름 · 막대는 1px 위', '재시작: 걸친 막대 1 → 0.6 → 0.3 → 0 · 처음 자리 막대 0.35 → 0.7 → 1',
+      '', '/* 받침 · 낮은 땅 · 폭발 */', '두 칸 같은 높이에 받쳐질 때만 내려앉음 · 두 칸 다 낮은 땅: 0.12초 반 층 → 0.24초 한 층 (수평)', '쓸 자리가 구덩이: 바닥 높이로 스쳐 돎', '숯 다리 위: 장작은 타서 사라지고 불은 지나감 · 막대는 남아 버팀 → 다리', '폭발: 두 칸 다 깎이면 반 층 0.16초 → 한 층 0.28초 · 한 칸만이면 높은 쪽에 얹힘',
+      '', '/* 보스 190 · 달군 쇠 */', '달궈짐 0.1초: 몸 → --color-heat-hi / l / r 50–55% · 받침 35% · 광택 띠 → --color-heat-hot 60% · 칸마다 발밑 빛 0.95배 0.1', '늘어남 0.1 → 0.3초: 먼 끝이 같은 굵기로 한 칸 · 다음 수에 걸쳐 식음', '자리에 큐브·상자: 한 칸 밀어내며 늘어남 (큐브는 바람 미끄러짐) · 벽이거나 뒤가 벽일 때만 기다림: 달궈진 채, 2.4초 주기로 약하게 숨 쉼', '세 칸 막대: 길이 2.64 · 다리 3.0 + 양 끝 얹힘', '재시작: 세 칸 1 → 0 · 두 칸 0.35 → 1'].map(s => ({ s }));
+
+    const toSrc = (shapes, vb) => encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '">' + shapes.filter(p => !p.raw).map(p => '<polygon points="' + p.d + '" fill="' + p.f + '"' + (p.o !== 1 ? ' opacity="' + p.o + '"' : '') + '/>').join('') + '</svg>');
+    const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { if (o.shapes && o.vb) { const vbp = o.vb.split(' ');
+        o.bgi = 'url("data:image/svg+xml,' + toSrc(o.shapes, o.vb) + '")'; o.ar = vbp[2] + ' / ' + vbp[3]; delete o.shapes; } Object.values(o).forEach(walk); } };
+    const out = { S: [A, B, C, D, E, F, G1, Hs, I, Kk, Ll, Mm, Nn, Oo, Pp], P: mid, css };
+    walk(out);
+    return out;
+  }
+}
+</script>
+</body>
+</html>

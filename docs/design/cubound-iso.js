@@ -734,6 +734,53 @@
     if (o.lit && n === 0) out.push(plate(X, Y - H, KL * 0.6, HEAT.core, 0.7));
     return out;
   };
+  // ---------- CHAPTER 4 · iron bar (19) ----------
+  // base plate (4px) + body (7px) + a lighter 2px top band = sheen on the upper edge (faces, no lines). any angle; roll = tilt about the long axis (bridge wobble)
+  const IRONS = { a: '#4C5259', b: '#5F6B76' };
+  const IRON = IRONS.a, IRON_B = mix(IRON, '#000000', 0.18);
+  const ironK = col => { const b = IRONS[col || 'a'], k = tone(b); return { k, kb: tone(mix(b, '#000000', 0.18)), hi: { t: mix(b, '#FFFFFF', 0.36), l: mix(k.l, '#FFFFFF', 0.2), r: mix(k.r, '#FFFFFF', 0.2) } }; };
+  const oprism = (cx, cy, cu, cv, L, W, a, z, h, k, o, R) => {
+    const c = Math.cos(a), s2 = Math.sin(a), out = [];
+    const q = (u, v, zz) => { if (!R) return pt(cx, cy, u, v, zz);
+      if (R.ax === 'u') { const du = u - R.u0, dz = (zz - R.z0) / ZU, rc = Math.cos(R.a), rs = Math.sin(R.a); return pt(cx, cy, R.u0 + du * rc - dz * rs, v, R.z0 + (du * rs + dz * rc) * ZU); }
+      const dv = v - (R.v0 || 0), dz = (zz - R.z0) / ZU, rc = Math.cos(R.a), rs = Math.sin(R.a); return pt(cx, cy, u, (R.v0 || 0) + dv * rc - dz * rs, R.z0 + (dv * rs + dz * rc) * ZU); };
+    const loc = [[-L / 2, -W / 2], [L / 2, -W / 2], [L / 2, W / 2], [-L / 2, W / 2]].map(([x, y]) => [cu + x * c - y * s2, cv + x * s2 + y * c]);
+    for (let i = 0; i < 4; i++) {
+      const A = loc[i], B = loc[(i + 1) % 4]; let nu = B[1] - A[1], nv = -(B[0] - A[0]);
+      if (nu * ((A[0] + B[0]) / 2 - cu) + nv * ((A[1] + B[1]) / 2 - cv) < 0) { nu = -nu; nv = -nv; }
+      const Ln = Math.hypot(nu, nv); nu /= Ln; nv /= Ln; if (nu + nv < 0.001) continue;
+      const kk = Math.max(0, Math.min(1, (nu - nv + 1) / 2));
+      out.push(sh(P([q(A[0], A[1], z), q(B[0], B[1], z), q(B[0], B[1], z + h), q(A[0], A[1], z + h)]), mix(k.l, k.r, kk), o));
+    }
+    out.push(sh(P(loc.map(p => q(p[0], p[1], z + h))), k.t, o));
+    return out;
+  };
+  const ibar = (cx, cy, o) => {
+    const a = (o.ang || 0) * Math.PI / 180, z = o.z || 0, op = o.o === undefined ? 1 : o.o, len = o.len || 1.64, K3 = ironK(o.col), bl = o.full ? len : len - 0.14;
+    // heat (boss 190): ember glow laid into the iron faces, sheen warms most; a faint floor glow under each cell. no flame shapes
+    const ht = o.heat || 0, pre = [];
+    if (ht) { const m = (c, t, f) => mix(c, t, f * ht);
+      K3.k = { t: m(K3.k.t, HEAT.hi, 0.5), l: m(K3.k.l, HEAT.l, 0.55), r: m(K3.k.r, HEAT.r, 0.55) };
+      K3.kb = { t: m(K3.kb.t, HEAT.t, 0.35), l: m(K3.kb.l, HEAT.l, 0.35), r: m(K3.kb.r, HEAT.r, 0.35) };
+      K3.hi = { t: m(K3.hi.t, HEAT.hot, 0.6), l: m(K3.hi.l, HEAT.crack, 0.45), r: m(K3.hi.r, HEAT.hot, 0.45) };
+      const c = Math.cos(a), s2 = Math.sin(a), nc = Math.max(2, Math.round(len - 0.64 + 1));
+      for (let i = 0; i < nc; i++) { const t = -(len - 0.64) / 2 + i * (len - 0.64) / (nc - 1), q = pt(cx, cy, t * c, t * s2, z); pre.push(...pool(q[0], q[1], 0, 0.95, 0.1 * ht * op)); } }
+    // tip = one end sagging over a pit edge: pitch (x bars, u–z) / tipv (y bars, v–z) about the rim corner at pivot offset pu / pv, bar bottom
+    const R = o.roll ? { v0: 0, z0: z + 6.5, a: o.roll * Math.PI / 180 } : o.pitch ? { ax: 'u', u0: o.pu || 0, z0: z, a: o.pitch * Math.PI / 180 } : o.tipv ? { v0: o.pv || 0, z0: z, a: o.tipv * Math.PI / 180 } : null;
+    // lip = bridge end lying flush on the rim: a base-coloured 0.36 footprint and the 0.24 sheen top, both at the bar's top height (no step faces)
+    if (o.style === 'lip') return [...pre, ...oprism(cx, cy, 0, 0, len, 0.36, a, z, 0.3, { t: K3.kb.t, l: K3.kb.l, r: K3.kb.r }, op), ...oprism(cx, cy, 0, 0, len, 0.24, a, z + 0.3, 0.3, { t: K3.hi.t, l: K3.hi.l, r: K3.hi.r }, op)];
+    // lit = fire from burning logs below, cast up on the lower front faces only (base plate + bottom of the body), ang 0 bars. [[u0, u1], ...] in bar-local u
+    const lit = [];
+    (o.lit || []).forEach(([u0, u1]) => {
+      const fv = (v, za, zb, f, al) => lit.push(sh(P([pt(cx, cy, u0, v, z + za), pt(cx, cy, u1, v, z + za), pt(cx, cy, u1, v, z + zb), pt(cx, cy, u0, v, z + zb)]), f, al * op));
+      fv(0.18, 0, 4, HEAT.hot, 0.32); fv(0.18, 0, 1.6, HEAT.core, 0.22); fv(0.12, 4, 6.5, HEAT.hot, 0.14);
+      if (u1 >= len / 2 - 0.01) { const fu = (u, v0, v1, za, zb, f, al) => lit.push(sh(P([pt(cx, cy, u, v0, z + za), pt(cx, cy, u, v1, z + za), pt(cx, cy, u, v1, z + zb), pt(cx, cy, u, v0, z + zb)]), f, al * op)); fu(len / 2, -0.18, 0.18, 0, 4, HEAT.hot, 0.32); }
+    });
+    if (lit.length) return [...pre, ...oprism(cx, cy, 0, 0, len, 0.36, a, z, 4, K3.kb, op, R), ...oprism(cx, cy, 0, 0, bl, 0.24, a, z + 4, 7, K3.k, op, R), ...oprism(cx, cy, 0, 0, bl, 0.24, a, z + 11, 2, K3.hi, op, R), ...lit];
+    return [...pre, ...oprism(cx, cy, 0, 0, len, 0.36, a, z, 4, K3.kb, op, R), ...oprism(cx, cy, 0, 0, bl, 0.24, a, z + 4, 7, K3.k, op, R), ...oprism(cx, cy, 0, 0, bl, 0.24, a, z + 11, 2, K3.hi, op, R)];
+  };
+  const rcube = (cx, cy, o) => oprism(cx, cy, 0, 0, CS, CS, 0, o.z || 0, LV, tone(C.blue), 1, o.roll ? { v0: 0, z0: -6.5, a: o.roll * Math.PI / 180 } : null);
+
   // cube tipping over its far bottom edge (blocked push-away). ang in degrees, toward +u
   const tcube = (cx, cy, ang, z0, back) => {
     const A = CA, th = ang * Math.PI / 180, k = tone(C.blue), c = Math.cos(th), s2 = Math.sin(th), Z = z0 || 0, e = back ? -1 : 1;
@@ -770,6 +817,10 @@
       case 'brazier': return brazier(cx, cy, o.rider, o.I, o.fr, o.flash);
       case 'abox': return ashBox(cx, cy, o);
       case 'keg': return keg(cx, cy, o);
+      case 'ibar': return ibar(cx, cy, o);
+      case 'rcube': return rcube(cx, cy, o);
+      case 'shade': return oprism(cx, cy, 0, 0, o.L, o.W, (o.ang || 0) * Math.PI / 180, 0, 0.2, { t: o.f, l: o.f, r: o.f }, o.o === undefined ? 1 : o.o);
+      case 'mark': return [plate(cx, cy, o.s || 0.86, o.f, o.o === undefined ? 1 : o.o)];
       case 'tcube': return tcube(cx, cy, o.ang || 0, o.z, o.back);
       case 'burst': return burst(cx, cy, o.ph);
       case 'dust': return dust(cx, cy, o.ph, o.du || 0, o.dv || 0);
@@ -856,7 +907,7 @@
         continue;
       }
       if (isP) {
-        const grown = cd && ((cd.t === 'vine' && cd.st === 'grown') || cd.t === 'filled' || (cd.t === 'charbridge' && cd.st !== 'gone' && cd.st !== 'crumble'));
+        const grown = cd && ((cd.t === 'vine' && cd.st === 'grown') || cd.t === 'filled' || (cd.t === 'mfill' && (cd.o === undefined || cd.o === 1)) || (cd.t === 'charbridge' && cd.st !== 'gone' && cd.st !== 'crumble'));
         out.push(...pit(cx, cy, {
           nw: V(c.x - 1, c.y), ne: V(c.x, c.y - 1),
           fl: !grown && V(c.x, c.y + 1) === null, fr: !grown && V(c.x + 1, c.y) === null
@@ -865,6 +916,7 @@
         if (cd && cd.t === 'rail') out.push(...railCell(cx, cy, cd));
         if (cd && cd.t === 'charbridge') out.push(...charCell(cx, cy, cd, par, true));
         if (cd && cd.t === 'filled') { const k = tone(C.yellow); out.push(...prism(cx, cy, 1, TK, k.t, k.l, k.r)); }
+        if (cd && cd.t === 'mfill') { const k = tone(IRON); out.push(...prism(cx, cy, 1, TK, k.t, k.l, k.r, cd.o)); }
       } else if (cd && cd.t === 'iceland') {
         // CHAPTER 1 ice floor: the whole block is ice (sides down to the base), one gloss line
         const pl = WT ? WT.pal : CH3.mid;
@@ -906,6 +958,7 @@
         if (def.damp && def.damp.band && WT) out.push(...dampBand(cx, iso(c.x, c.y, 0)[1], h, WT.pal));
       }
       for (const o of (objs[key] || [])) out.push(...obj(o, cx, cy));
+      (def.late || []).forEach(it => { if (it.after !== key) return; const q = iso(it.x, it.y, it.h || 0); out.push(...obj(it.o, q[0], q[1])); });
     }
     if (ROPES.__last) out.push(...ROPES.__last);
     (def.over || []).forEach(it => { const v = V(it.x, it.y), h = it.h !== undefined ? it.h : (typeof v === 'number' ? v : 0), p = iso(it.x, it.y, h); out.push(...obj(it.o, p[0], p[1])); });
@@ -935,5 +988,5 @@
     }
   });
 
-  window.CuboundIso = { TW, TH, LV, TK, D, C, mix, tone, side, scene, fit, mixed, wither, MUSH, CH3, STONE, WS, DIP, CH4, CH2C, FIRE: { CHAR, HEAT, ASH, STOVE, FLAME, FLAME_B, FL_N, GLOW_N }, KEG: { KEG, KH, tone } };
+  window.CuboundIso = { TW, TH, LV, TK, D, C, mix, tone, side, scene, fit, mixed, wither, MUSH, CH3, STONE, WS, DIP, CH4, CH2C, FIRE: { CHAR, HEAT, ASH, STOVE, FLAME, FLAME_B, FL_N, GLOW_N }, KEG: { KEG, KH, tone }, BAR: { IRON, IRON_B, IRONS, ironK } };
 })();
