@@ -1,12 +1,14 @@
 import { type CheckContext, isInt, isObject, key } from './stageCheck'
 
-const FIRE_CHARS = '.*#='
+const FIRE_CHARS = '.*#=@'
 
 export const checkFire = (ctx: CheckContext) => {
   const { data, grid, width, entities, add, isFloor, isWaterCell } = ctx
   const fire = data.fire
+  const rules = isObject(data.rules) ? data.rules : {}
   if (fire === undefined) {
-    if (isObject(data.rules) && data.rules.chase === true) add('rules.chase 판에 불씨 칸이 없다')
+    if (rules.chase === true) add('rules.chase 판에 불씨 칸이 없다')
+    if (rules.burnBox === true) add('rules.burnBox 판에 화로가 없다')
     return
   }
 
@@ -23,7 +25,7 @@ export const checkFire = (ctx: CheckContext) => {
   const cells = rows.flatMap((row, y) =>
     [...row].flatMap((c, x) => (c === '.' ? [] : [{ c, x, y }])),
   )
-  if (cells.some(({ c }) => !FIRE_CHARS.includes(c))) add('fire 값은 점이나 *, #, =여야 한다')
+  if (cells.some(({ c }) => !FIRE_CHARS.includes(c))) add('fire 값은 점이나 *, #, =, @여야 한다')
   if (cells.some(({ x, y }) => grid[y][x] < 0)) add('바닥 없는 칸에 불씨나 숯이 있다')
   if (cells.some(isWaterCell)) add('물 칸에 불씨나 숯이 있다')
 
@@ -70,10 +72,32 @@ export const checkFire = (ctx: CheckContext) => {
     }
   })
 
-  // 숯에 불을 붙이는 칸, 화로가 들어오면 더할 자리
-  const hasSource = cells.some(({ c }) => c === '*')
-  if (!hasSource && cells.length > 0) add('불씨 칸 없이 숯이 있다')
-  if (!hasSource && isObject(data.rules) && data.rules.chase === true) {
-    add('rules.chase 판에 불씨 칸이 없다')
+  const hasSpark = cells.some(({ c }) => c === '*')
+  const hasBrazier = cells.some(({ c }) => c === '@')
+  if (!hasSpark && rules.chase === true) add('rules.chase 판에 불씨 칸이 없다')
+  if (!hasBrazier && rules.burnBox === true) add('rules.burnBox 판에 화로가 없다')
+
+  // 숯 덩이마다 불이 닿는 길, 맞닿은 불씨 칸이나 화로 판의 숯 벽
+  const isChar = (p: { x: number; y: number }) => '#='.includes(rows[p.y]?.[p.x] ?? '.')
+  const sides = ({ x, y }: { x: number; y: number }) => [
+    { x: x + 1, y },
+    { x: x - 1, y },
+    { x, y: y + 1 },
+    { x, y: y - 1 },
+  ]
+  const seen = new Set<string>()
+  for (const first of cells.filter(isChar)) {
+    if (seen.has(key(first))) continue
+    const lump: { x: number; y: number }[] = [first]
+    seen.add(key(first))
+    for (let i = 0; i < lump.length; i++) {
+      for (const q of sides(lump[i]).filter((q) => isChar(q) && !seen.has(key(q)))) {
+        seen.add(key(q))
+        lump.push(q)
+      }
+    }
+    const sparked = lump.some((p) => sides(p).some((q) => rows[q.y]?.[q.x] === '*'))
+    const torchable = hasBrazier && lump.some((p) => rows[p.y][p.x] === '#')
+    if (!sparked && !torchable) add(`불씨나 화로와 안 이어진 숯이 (${first.x},${first.y})에 있다`)
   }
 }

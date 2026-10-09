@@ -28,6 +28,8 @@ const MID = {
   sparks: [],
   burning: [],
   ashes: [],
+  flame: 0,
+  charred: [],
   trams: [],
   swamps: [],
   mushrooms: [],
@@ -780,5 +782,44 @@ describe('restoreSession 번지는 불', () => {
     expect(restoreSession({ ...session, sparks: [{ x: 2, y: 1 }] }, FIRE_STAGE)).toBeNull()
     expect(restoreSession({ ...session, burning: [{ x: 1, y: 1 }] }, FIRE_STAGE)).toBeNull()
     expect(restoreSession({ ...session, ashes: [{ x: 0, y: 0 }] }, FIRE_STAGE)).toBeNull()
+  })
+})
+
+describe('restoreSession 화로', () => {
+  // 화로 (1,0), 상자 (3,0), 타는 짐 판
+  const BRAZIER_STAGE: Stage = {
+    version: 1,
+    id: '17-10',
+    heights: [[0, 0, 0, 0, 0, 0]],
+    fire: ['.@....'],
+    start: { x: 0, y: 0 },
+    goal: { x: 5, y: 0 },
+    entities: [{ type: 'box', x: 3, y: 0 }],
+    rules: { burnBox: true },
+  }
+  const burnt = played(BRAZIER_STAGE, ['right', 'right', 'right'])
+
+  it('큐브 불의 남은 수와 재 자국을 그대로 이어간다', () => {
+    expect(burnt.flame).toBe(2)
+    expect(burnt.charred).toEqual([{ x: 4, y: 0 }])
+    expect(restoreSession(toSession(burnt), BRAZIER_STAGE)).toEqual(burnt)
+  })
+
+  it('화로가 없던 때 저장한 것은 불 없이 자국 없이 읽는다', () => {
+    const session = { ...toSession(burnt), flame: undefined, charred: undefined }
+
+    expect(restoreSession(session, BRAZIER_STAGE)).toEqual({ ...burnt, flame: 0, charred: [] })
+  })
+
+  it('남은 수가 0에서 4 밖이거나 자국이 상자보다 많으면 버린다', () => {
+    const session = toSession(burnt)
+    const twice = [
+      { x: 4, y: 0 },
+      { x: 2, y: 0 },
+    ]
+
+    expect(restoreSession({ ...session, flame: 5 }, BRAZIER_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, flame: -1 }, BRAZIER_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, charred: twice }, BRAZIER_STAGE)).toBeNull()
   })
 })

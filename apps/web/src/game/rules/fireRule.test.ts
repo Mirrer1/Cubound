@@ -342,10 +342,11 @@ describe('move 큐브가 선 숯', () => {
   }
   const running = () => ({ ...createState(RUN_STAGE), burning: [{ x: 2, y: 1 }] })
 
-  it('불이 큐브가 선 숯까지 와도 칸은 남고 큐브는 그대로다', () => {
+  it('불이 큐브가 선 숯까지 와도 칸은 남고 큐브에 불이 붙는다', () => {
     const { state, events } = move(running(), 'left')
 
     expect(state.player).toEqual({ x: 3, y: 1 })
+    expect(state.flame).toBe(4)
     expect(state.burning).toEqual([{ x: 3, y: 1 }])
     expect(state.heights[1][3]).toBe(0)
     expect(events).toContainEqual({ type: 'caught', from: { x: 2, y: 1 }, to: { x: 3, y: 1 } })

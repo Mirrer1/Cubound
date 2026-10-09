@@ -28,9 +28,10 @@ describe('checkFire', () => {
     expect(errorsOf({ ...FIRE_VALID, fire: '.*#.' })).toContain(shape)
   })
 
-  it('불 값은 점이나 *, #, =여야 한다', () => {
+  it('불 값은 점이나 *, #, =, @여야 한다', () => {
+    expect(errorsOf({ ...FIRE_VALID, fire: ['.*#.', '.@=.'] })).toEqual([])
     expect(errorsOf({ ...FIRE_VALID, fire: ['.*#.', '..1.'] })).toContain(
-      'fire 값은 점이나 *, #, =여야 한다',
+      'fire 값은 점이나 *, #, =, @여야 한다',
     )
   })
 
@@ -111,8 +112,25 @@ describe('checkFire', () => {
     expect(errorsOf(raise(2))).toContain(steep)
   })
 
-  it('불씨 칸 없이 숯만 있는 판은 실패한다', () => {
-    expect(errorsOf({ ...FIRE_VALID, fire: ['..#.', '..=.'] })).toContain('불씨 칸 없이 숯이 있다')
+  it('숯 덩이마다 불씨 칸과 맞닿거나 화로 판의 숯 벽을 품어야 한다', () => {
+    const loose = (x: number, y: number) => `불씨나 화로와 안 이어진 숯이 (${x},${y})에 있다`
+
+    expect(errorsOf({ ...FIRE_VALID, fire: ['..#.', '..=.'] })).toContain(loose(2, 0))
+    expect(errorsOf({ ...FIRE_VALID, fire: ['.*.#', '....'] })).toContain(loose(3, 0))
+    expect(errorsOf({ ...FIRE_VALID, fire: ['.@#.', '..=.'] })).toEqual([])
+    expect(errorsOf({ ...FIRE_VALID, fire: ['.@..', '..=.'] })).toContain(loose(2, 1))
+  })
+
+  it('타는 짐은 참이나 거짓이고 화로가 있는 판에만 쓴다', () => {
+    const brazier = { ...FIRE_VALID, fire: ['.*#.', '.@=.'] }
+
+    expect(errorsOf({ ...brazier, rules: { burnBox: true } })).toEqual([])
+    expect(errorsOf({ ...brazier, rules: { burnBox: 1 } })).toContain(
+      'rules.burnBox는 참이나 거짓이어야 한다',
+    )
+    expect(errorsOf({ ...FIRE_VALID, rules: { burnBox: true } })).toContain(
+      'rules.burnBox 판에 화로가 없다',
+    )
   })
 
   it('쫓아오는 불은 참이나 거짓이고 불씨 칸이 있는 판에만 쓴다', () => {

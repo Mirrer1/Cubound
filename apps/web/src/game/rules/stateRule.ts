@@ -70,6 +70,8 @@ export const createState = (stage: Stage): GameState => ({
   sparks: readSparks(stage),
   burning: [],
   ashes: [],
+  flame: 0,
+  charred: [],
   trams: trams(stage).map(({ id, cells, dir, x, y }) => ({
     id,
     at: cells.findIndex((cell) => same(cell, { x, y })),

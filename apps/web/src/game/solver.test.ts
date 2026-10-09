@@ -125,6 +125,22 @@ describe('solve', () => {
       path: ['right', 'left', 'right', 'right', 'right'],
     })
   })
+
+  it('큐브 불의 남은 수가 다르면 다른 상태로 보고 화로에 다녀온다', () => {
+    const stage: Stage = {
+      ...STAGE,
+      heights: [[0, 0, 0, 0]],
+      fire: ['@.#.'],
+      start: { x: 1, y: 0 },
+      goal: { x: 3, y: 0 },
+    }
+
+    expect(solve(stage)).toEqual({
+      status: 'solved',
+      moves: 7,
+      path: ['left', 'right', 'right', 'left', 'right', 'right', 'right'],
+    })
+  })
 })
 
 describe('moveLimit', () => {

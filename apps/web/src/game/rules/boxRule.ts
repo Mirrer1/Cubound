@@ -1,4 +1,5 @@
 import type { Direction, GameEvent, GameState, MoveResult, Point } from '../types'
+import { burnsBox } from './brazierRule'
 import { hasBox, hasStone, isFrozen, isOpenWater, same, step } from './cellRule'
 import { isFireBlocked } from './fireRule'
 import { isIce } from './iceRule'
@@ -119,13 +120,21 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
   if (landed) events.push({ type: 'pushed', from: rest, to: landed.to, result: landed.result })
 
   const stop = landed?.to ?? rest
-  const sank = isSwamp(state, stop)
+  const burnt = burnsBox(state)
+  if (burnt) events.push({ type: 'boxBurned', at: stop })
+  const sank = !burnt && isSwamp(state, stop)
   if (sank) events.push({ type: 'sank', at: stop })
-  const plugging = isWhirlpool(state, stop)
+  const plugging = !burnt && isWhirlpool(state, stop)
   if (plugging) events.push({ type: 'plugged', at: stop })
 
   const others = state.boxes.filter((b) => !same(b, box))
-  const filled = landing < 0 ? target : landed?.result === 'filled' ? landed.to : null
+  const filled = burnt
+    ? null
+    : landing < 0
+      ? target
+      : landed?.result === 'filled'
+        ? landed.to
+        : null
   const fillHeight = landing < 0 ? launch : landing
 
   // 미끄러짐과 낙하까지 밀기 한 번
@@ -136,23 +145,25 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
     pushes: state.pushes + 1,
     mushrooms: wither(state, flight?.sprung ?? []),
   }
-  const next: GameState = sank
-    ? { ...pushing, boxes: others, swamps: state.swamps.filter((cell) => !same(cell, stop)) }
-    : plugging
-      ? { ...pushing, boxes: others, plugged: [...state.plugged, stop] }
-      : filled
-        ? {
-            ...pushing,
-            boxes: others,
-            heights: state.heights.map((row, y) =>
-              y === filled.y ? row.map((h, x) => (x === filled.x ? fillHeight : h)) : row,
-            ),
-          }
-        : {
-            ...pushing,
-            boxes: [...others, stop],
-            iced: isFrozen(state, stop) ? [...iced, stop] : iced,
-          }
+  const next: GameState = burnt
+    ? { ...pushing, boxes: others, charred: [...state.charred, stop] }
+    : sank
+      ? { ...pushing, boxes: others, swamps: state.swamps.filter((cell) => !same(cell, stop)) }
+      : plugging
+        ? { ...pushing, boxes: others, plugged: [...state.plugged, stop] }
+        : filled
+          ? {
+              ...pushing,
+              boxes: others,
+              heights: state.heights.map((row, y) =>
+                y === filled.y ? row.map((h, x) => (x === filled.x ? fillHeight : h)) : row,
+              ),
+            }
+          : {
+              ...pushing,
+              boxes: [...others, stop],
+              iced: isFrozen(state, stop) ? [...iced, stop] : iced,
+            }
 
   return walk(next, box, boxFloor, direction, events)
 }

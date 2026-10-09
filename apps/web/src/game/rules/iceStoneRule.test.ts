@@ -56,13 +56,33 @@ describe('move 얼음 돌 땅 위', () => {
     expect(events).toContainEqual({ type: 'froze', cells: [p(2, 2)] })
   })
 
-  it('구덩이로 밀면 그 칸을 밀던 높이로 메우고 돌은 사라진다', () => {
+  it('구덩이 쪽으로는 밀리지 않고 막힌다', () => {
     const stage = pond([stone(1, 1)], { start: p(0, 1), heights: raised(2, 1, -1) })
     const { state, events } = play(stage, ['right'])
 
-    expect(state.stones).toEqual([])
-    expect(state.heights[1][2]).toBe(1)
-    expect(events[0]).toEqual({ type: 'stonePushed', from: p(1, 1), to: p(2, 1), result: 'filled' })
+    expect(state.stones).toEqual([p(1, 1)])
+    expect(state.heights[1][2]).toBe(-1)
+    expect(events).toEqual(blocked('right'))
+  })
+
+  it('얼음바닥에서 미끄러지다 구덩이 앞에서 멈춘다', () => {
+    const stage: Stage = {
+      ...POND,
+      heights: [
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, -1, 1],
+        [1, 1, 1, 1, 1, 1],
+      ],
+      water: undefined,
+      ice: ['......', '..##..', '......'],
+      start: p(0, 1),
+      goal: p(5, 2),
+      entities: [stone(1, 1)],
+    }
+    const { state } = play(stage, ['right'])
+
+    expect(state.stones).toEqual([p(3, 1)])
+    expect(state.heights[1][4]).toBe(-1)
   })
 
   it('밀 수 없으면 올라서지 못하고 벽처럼 막힌다', () => {

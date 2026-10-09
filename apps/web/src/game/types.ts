@@ -42,6 +42,7 @@ export interface StageRules {
   lock?: Point // 갑문 판의 가 웅덩이 칸, 수위 장치가 비면 물이 높은 쪽
   tide?: boolean // 4수마다 판 전체 물이 차고 빠지는 판
   chase?: boolean // 불이 큐브와 가까워지는 숯으로만 번지는 판
+  burnBox?: boolean // 불 붙은 큐브가 민 상자가 재가 되는 판
 }
 
 export interface Stage {
@@ -54,7 +55,7 @@ export interface Stage {
   mushroom?: string[] // heights와 같은 모양, '#'이 버섯 칸
   cracks?: string[] // heights와 같은 모양, 1~9는 무너지기까지 견디는 횟수
   water?: number // 물 높이, 이보다 낮은 바닥 칸이 물 칸
-  fire?: string[] // heights와 같은 모양, '*' 불씨 칸, '#' 숯 벽, '=' 숯 다리
+  fire?: string[] // heights와 같은 모양, '*' 불씨 칸, '#' 숯 벽, '=' 숯 다리, '@' 화로
   start: Point
   goal: Point
   entities: Entity[]
@@ -131,6 +132,8 @@ export interface GameState {
   sparks: Point[] // 아직 안 켜진 불씨 칸
   burning: Point[] // 불붙은 숯, 이번 수 동안 통행 불가
   ashes: Point[] // 재가 된 숯, 숯 다리 자리는 바닥 없는 칸
+  flame: number // 큐브 불의 남은 수, 0은 꺼진 불
+  charred: Point[] // 재가 된 상자 자리
   trams: TramSpot[]
   swamps: Point[] // 남아 있는 늪 칸, 상자가 가라앉은 칸은 제외
   mushrooms: Point[] // 남아 있는 버섯 칸, 시드는 판에서 밟힌 칸은 제외
@@ -181,6 +184,10 @@ export type GameEvent =
   | { type: 'kindled'; at: Point } // 큐브가 밟아 켜진 불씨 칸
   | { type: 'caught'; from: Point; to: Point } // from에서 번져 불붙은 숯 to
   | { type: 'ashed'; cells: Point[] } // 재가 된 숯
+  | { type: 'torched'; from: Point; to: Point } // 불 붙은 큐브가 from에서 불을 옮긴 숯 벽 to
+  | { type: 'ignited'; at: Point; by: 'brazier' | 'fire' } // 큐브에 붙거나 4로 다시 찬 불, fire는 번진 불
+  | { type: 'doused'; at: Point } // 큐브 불의 남은 수가 0이 된 수
+  | { type: 'boxBurned'; at: Point } // 불 붙은 큐브가 밀어 재가 된 상자
   | { type: 'tram'; id: string; from: Point; to: Point }
   | { type: 'grew'; id: string; at: Point } // 덩굴이 한 칸 뻗어 메운 칸
   | { type: 'planted'; at: Point; direction: Direction } // direction은 턱 쪽으로 민 방향

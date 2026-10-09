@@ -3,7 +3,7 @@ import { hasBox, same, step } from './cellRule'
 
 const SIDES: Direction[] = ['up', 'right', 'down', 'left']
 
-const fireAt = (stage: Stage, { x, y }: Point) => stage.fire?.[y]?.[x]
+export const fireAt = (stage: Stage, { x, y }: Point) => stage.fire?.[y]?.[x]
 
 const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
 
@@ -28,8 +28,8 @@ const isFresh = (state: GameState, p: Point) => {
   )
 }
 
-// 수 끝의 불, 켜기와 번지기와 재, 큐브가 선 불붙은 숯은 떠날 때까지 유지
-export const burnFire = (state: GameState): MoveResult => {
+// 수 끝의 불, 켜기와 번지기와 재, 큐브가 선 불붙은 숯은 떠날 때까지 유지, torched는 이번 수에 큐브가 불을 옮긴 숯 벽
+export const burnFire = (state: GameState, torched: Point[] = []): MoveResult => {
   if (!state.stage.fire) return { state, events: [] }
 
   const { player } = state
@@ -43,7 +43,7 @@ export const burnFire = (state: GameState): MoveResult => {
     const fresh = SIDES.map((side) => step(from, side)).filter((to) => isFresh(state, to))
     const nearest = Math.min(...fresh.map((to) => distance(to, player)))
     for (const to of fresh) {
-      if (caught.some((c) => same(c.to, to))) continue
+      if (caught.some((c) => same(c.to, to)) || has(torched, to)) continue
       if (chasing && distance(to, player) > nearest) continue
       caught.push({ from, to })
     }
@@ -53,7 +53,9 @@ export const burnFire = (state: GameState): MoveResult => {
   state.burning.forEach(spread)
 
   const ashed = state.burning.filter((b) => !same(b, player))
-  if (!kindled && caught.length === 0 && ashed.length === 0) return { state, events: [] }
+  if (!kindled && caught.length === 0 && ashed.length === 0 && torched.length === 0) {
+    return { state, events: [] }
+  }
 
   const bridges = ashed.filter((p) => fireAt(state.stage, p) === '=')
   const heights =
@@ -72,7 +74,11 @@ export const burnFire = (state: GameState): MoveResult => {
       ...state,
       heights,
       sparks: kindled ? state.sparks.filter((s) => !same(s, kindled)) : state.sparks,
-      burning: [...state.burning.filter((b) => same(b, player)), ...caught.map((c) => c.to)],
+      burning: [
+        ...state.burning.filter((b) => same(b, player)),
+        ...torched,
+        ...caught.map((c) => c.to),
+      ],
       ashes: [...state.ashes, ...ashed],
     },
     events,

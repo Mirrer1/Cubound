@@ -12,8 +12,7 @@ import { isWhirlpool } from './whirlpoolRule'
 type Leg = {
   from: Point
   to: Point
-  level: number
-  result: 'slid' | 'fell' | 'filled' | 'floated' | 'rowed'
+  result: 'slid' | 'fell' | 'floated' | 'rowed'
 }
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
@@ -27,8 +26,9 @@ const landStep = (state: GameState, from: Point, direction: Direction): Leg | nu
   const floor = boxLanding(state, to, level)
   if (floor === null) return null
   // 녹는 판에서 이미 물에 뜬 돌이 있으면 다른 돌은 물 칸 불가
-  if (isWater(state, to)) return state.melt !== null ? null : { from, to, level, result: 'floated' }
-  return { from, to, level, result: floor < 0 ? 'filled' : floor < level ? 'fell' : 'slid' }
+  if (isWater(state, to)) return state.melt !== null ? null : { from, to, result: 'floated' }
+  if (floor < 0) return null
+  return { from, to, result: floor < level ? 'fell' : 'slid' }
 }
 
 // 들어선 칸이 얼음바닥이면 같은 높이로 이어 가는 미끄러짐, 낮은 칸에 닿으면 끝
@@ -50,7 +50,7 @@ const waterLegs = (state: GameState, stone: Point, direction: Direction): Leg[] 
   const to = step(stone, direction)
   const open =
     isWater(state, to) && !hasBox(state, to) && !hasStone(state, to) && !isWhirlpool(state, to)
-  return open ? [{ from: stone, to, level: 0, result: 'rowed' }] : null
+  return open ? [{ from: stone, to, result: 'rowed' }] : null
 }
 
 const legEvents = (legs: Leg[]): GameEvent[] => {
@@ -83,20 +83,12 @@ export const pushStone = (
   if (!legs) return null
 
   const end = legs[legs.length - 1]
-  const filled = end.result === 'filled'
   const entered = !floating && end.result === 'floated'
   const melt = entered ? (state.stage.rules?.melt ?? null) : state.melt
 
   const next: GameState = {
     ...state,
-    stones: filled
-      ? state.stones.filter((s) => !same(s, stone))
-      : state.stones.map((s) => (same(s, stone) ? end.to : s)),
-    heights: filled
-      ? state.heights.map((row, y) =>
-          y === end.to.y ? row.map((h, x) => (x === end.to.x ? end.level : h)) : row,
-        )
-      : state.heights,
+    stones: state.stones.map((s) => (same(s, stone) ? end.to : s)),
     melt,
     pushes: state.pushes + 1,
   }
