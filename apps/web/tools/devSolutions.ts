@@ -1,14 +1,22 @@
 import { type ChildProcess, fork } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
+import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Plugin, ViteDevServer } from 'vite'
 
 interface SolutionEntry {
   hash: string
   path?: string[]
-  code?: string // 풀 때의 게임 코드 지문
 }
 
 interface ChildReply {
@@ -27,6 +35,8 @@ const RESOLVED = `\0${ID}`
 const EVENT = 'cubound:solution'
 const STAGE_FILE = /\/src\/stages\/world-[^/]+\/[^/]+\.json$/
 const GAME_FILE = /\/src\/game\/.+(?<!\.test)\.ts$/
+const CACHE_FILE = /^solutions-[0-9a-f]+\.json$/
+const STALE_MS = 7 * 24 * 60 * 60 * 1000 // 다른 지문 캐시 파일을 남겨 두는 기간
 
 const slash = (file: string) => file.replaceAll('\\', '/')
 
@@ -36,11 +46,33 @@ const gameFiles = (dir: string): string[] =>
     .filter((file) => GAME_FILE.test(slash(file)))
     .sort()
 
-// 규칙이 바뀌면 같은 판도 풀이가 달라져서 판 해시와 함께 견주는 게임 코드 지문
-const codeOf = (gameDir: string) => {
+// 규칙이 바뀌면 같은 판도 풀이가 달라져서 판 해시와 함께 견주는 게임 코드 지문, 폴더 위치와 무관한 상대 경로 기준
+export const codeOf = (gameDir: string) => {
   const sha = createHash('sha1')
-  for (const file of gameFiles(gameDir)) sha.update(slash(file)).update(readFileSync(file))
+  for (const file of gameFiles(gameDir))
+    sha.update(slash(relative(gameDir, file))).update(readFileSync(file))
   return sha.digest('hex').slice(0, 12)
+}
+
+// 없거나 깨진 캐시 파일은 빈 캐시, 다음 저장 때 덮어쓰기
+export const readCacheFile = (file: string): Record<string, SolutionEntry> => {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'))
+  } catch {
+    return {}
+  }
+}
+
+// 같은 파일을 쓰는 다른 개발 서버와 겹쳐도 반쯤 쓴 파일이 안 보이는 임시 파일 이름 바꾸기
+export const writeCacheFile = (file: string, cache: Record<string, SolutionEntry>) => {
+  const temp = `${file}.${process.pid}.tmp`
+  writeFileSync(temp, JSON.stringify(cache))
+  try {
+    renameSync(temp, file)
+  } catch {
+    // 다른 프로세스가 읽는 중인 파일은 Windows에서 이름 바꾸기 실패, 다음 저장 때 재시도
+    rmSync(temp, { force: true })
+  }
 }
 
 const idOf = (file: string) => {
@@ -55,25 +87,30 @@ const idOf = (file: string) => {
 export const devSolutions = (): Plugin => {
   let cache: Record<string, SolutionEntry> = {}
   let serving = false
-  let cacheFile = ''
+  let cacheDir = ''
   let stagesDir = ''
   let gameDir = ''
   let code = ''
 
-  // 지금 게임 코드로 푼 풀이만, 다른 코드로 푼 것은 버림
-  const readCache = (): Record<string, SolutionEntry> =>
-    existsSync(cacheFile)
-      ? Object.fromEntries(
-          Object.entries(
-            JSON.parse(readFileSync(cacheFile, 'utf8')) as Record<string, SolutionEntry>,
-          ).filter(([, entry]) => entry.code === code),
-        )
-      : {}
+  // 지문마다 파일 하나, worktree처럼 node_modules를 이어 쓰는 다른 개발 서버의 풀이 보존
+  const cacheFile = () => join(cacheDir, `solutions-${code}.json`)
+
+  const readCache = () => readCacheFile(cacheFile())
+
+  // 지금 지문 밖에서 STALE_MS 동안 안 쓰인 캐시 파일 정리
+  const pruneCache = () => {
+    if (!existsSync(cacheDir)) return
+    for (const name of readdirSync(cacheDir).filter((n) => CACHE_FILE.test(n))) {
+      const file = join(cacheDir, name)
+      if (file !== cacheFile() && Date.now() - statSync(file).mtimeMs > STALE_MS) rmSync(file)
+    }
+  }
 
   const start = (server: ViteDevServer) => {
     const logger = server.config.logger
     code = codeOf(gameDir)
     cache = readCache()
+    pruneCache()
     const queue: string[] = []
     let busy = false
     let ready = false
@@ -110,11 +147,11 @@ export const devSolutions = (): Plugin => {
         else busy = false
         if (reply.error) logger.warn(`[풀이] ${reply.file}: ${reply.error}`)
         if (reply.id && reply.hash && !reply.same) {
-          const entry = { hash: reply.hash, path: reply.path, code }
+          const entry = { hash: reply.hash, path: reply.path }
           // 같은 캐시를 쓰는 다른 개발 서버가 그사이 쓴 판 보존
           cache = { ...readCache(), ...cache, [reply.id]: entry }
-          mkdirSync(dirname(cacheFile), { recursive: true })
-          writeFileSync(cacheFile, JSON.stringify(cache))
+          mkdirSync(cacheDir, { recursive: true })
+          writeCacheFile(cacheFile(), cache)
           const mod = server.moduleGraph.getModuleById(RESOLVED)
           if (mod) server.moduleGraph.invalidateModule(mod)
           server.ws.send({ type: 'custom', event: EVENT, data: { id: reply.id, entry } })
@@ -139,7 +176,7 @@ export const devSolutions = (): Plugin => {
       const next = codeOf(gameDir)
       if (next === code) return
       code = next
-      cache = {}
+      cache = readCache()
       child.kill()
       queue.length = 0
       busy = false
@@ -168,7 +205,7 @@ export const devSolutions = (): Plugin => {
     name: 'cubound-dev-solutions',
     configResolved(config) {
       serving = config.command === 'serve' && !process.env.VITEST
-      cacheFile = join(config.root, 'node_modules/.cache/cubound/solutions.json')
+      cacheDir = join(config.root, 'node_modules/.cache/cubound')
       stagesDir = join(config.root, 'src/stages')
       gameDir = join(config.root, 'src/game')
     },
