@@ -31,12 +31,29 @@ const spanOf = (game: GameState, p: Point, surface = 0) => {
 }
 
 describe('guideRect', () => {
-  it('서 있는 숯 벽 칸은 숯 더미 맨 위까지 위로 넓히고 재가 되면 빈 칸과 같다', () => {
-    const stage = { ...FLAT, fire: ['.*.', '.#.', '...'] }
-    const flat = spanOf(createState(FLAT), MID)
+  it('서 있는 숯 벽은 숯 더미 가운데를 사각형 가운데에 두고 옆면은 넣지 않는다', () => {
+    const stage = {
+      ...FLAT,
+      heights: [
+        [1, 1, 1],
+        [1, 1, -1],
+        [1, -1, -1],
+      ],
+      fire: ['.*.', '.#.', '...'],
+    }
+    const rect = guideRect(createState(stage), MID)
+    const center = toScreen(MID, 0).y - TILE.layer
+    const tip = center - pileReach()
+    const foot = center + (TILE.width * 0.8) / 4
+    expect(rect.y + rect.height / 2).toBeCloseTo((tip + foot) / 2)
+    expect(rect.y + rect.height).toBeCloseTo(center + TILE.height / 2 + 12)
+  })
 
-    expect(spanOf(createState(stage), MID).above).toBe(flat.above + pileReach() - TILE.width / 4)
-    expect(spanOf({ ...createState(stage), ashes: [MID] }, MID).above).toBe(flat.above)
+  it('재가 된 숯 벽 칸은 빈 칸과 같다', () => {
+    const stage = { ...FLAT, fire: ['.*.', '.#.', '...'] }
+    expect(guideRect({ ...createState(stage), ashes: [MID] }, MID)).toEqual(
+      guideRect(createState(FLAT), MID),
+    )
   })
 
   it('숯 다리 칸은 장작 판 두께만 옆면으로 넣는다', () => {

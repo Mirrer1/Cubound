@@ -7,6 +7,7 @@ import {
   TAP,
   WATER,
   channelCells,
+  pileLumps,
   pileReach,
   stoneSteps,
   surfaceRise,
@@ -95,9 +96,11 @@ export const guideRect = (game: GameState, p: Point) => {
   const x = center.x - TILE.width / 2 - GUIDE_MARGIN
   const width = TILE.width + GUIDE_MARGIN * 2
 
-  // 얼음 돌 칸은 돌을 가운데에 두고 윗면까지만, 옆면 제외
-  if (has(game.stones, p)) {
-    const mid = y + (halfTop(TILE.width * STONE.steps[0].width) - reach) / 2
+  // 얼음 돌과 서 있는 숯 벽은 그 물건을 가운데에 두고 윗면까지만, 옆면 제외
+  const pile = fireKindAt(game.stage, p) === 'wall' && !has(game.ashes, p)
+  if (has(game.stones, p) || pile) {
+    const foot = pile ? pileLumps(false)[0].scale : STONE.steps[0].width
+    const mid = y + (halfTop(TILE.width * foot) - reach) / 2
     const half = Math.max(mid - (y - reach), y + TILE.height / 2 - mid) + GUIDE_MARGIN
     return { x, y: mid - half, width, height: half * 2 }
   }
