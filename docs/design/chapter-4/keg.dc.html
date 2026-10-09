@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="../cubound-iso.js?v=20261009v"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #E9E7E2; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+</style>
+</helmet>
+<div style="background:#E9E7E2;color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 90px;min-height:100vh">
+  <div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">
+      <span style="white-space:nowrap">CUBOUND · CHAPTER 4 · WORLD 18</span>
+      <span style="white-space:nowrap">화약통</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:860px">
+      <span style="font-size:34px;font-weight:400;letter-spacing:-0.01em">불을 건너는 길 · 화약통</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.7;word-break:keep-all;text-wrap:pretty">화약통은 상자처럼 미는 통입니다. 얼음 돌, 숯 더미와 같이 몸통 블록 위에 작은 뚜껑 블록 하나를 얹고, 몸통에 짙은 띠 둘(테)과 뚜껑에 작은 적갈색 마개를 두었습니다. 불이 닿은 수에 터져 둘레 네 칸을 한 층씩 깎습니다(2층 → 1층, 1층 → 평지. 평지는 깎이지 않음). 터짐은 불꽃이나 별 모양 없이 빛(숯불빛 고임과 한 겹 위의 속불빛), 둘레로 흩어지는 작은 불티, 깎인 칸에서 오르는 흙먼지로만 그립니다. 불 표현은 fire.dc.html 값을 그대로 썼습니다.</span>
+      <span style="font-size:13px;color:#7A7771;line-height:1.6;word-break:keep-all">모든 그림은 4장 세계 색 위에 칠했습니다. 각 칸 아래 작은 줄은 칸 폭 60px 축소판입니다.</span>
+    </div>
+
+    <sc-for list="{{ S }}" as="sec" hint-placeholder-count="5">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">{{ sec.id }}</span><span style="font-size:22px;font-weight:400">{{ sec.title }}</span></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(380px, 1fr));gap:16px">
+          <sc-for list="{{ sec.groups }}" as="g" hint-placeholder-count="2">
+            <div style="grid-column:{{ g.span }};background:{{ P.bg }};border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;flex-direction:column;gap:4px;max-width:900px"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><span style="font-size:13px;color:#5F5D59;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span></div>
+              <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+                <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
+                  <div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:0 1 {{ f.w }}">
+                    <div style="width:{{ f.w }};max-width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                    <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.12em;color:#6E6C68">{{ f.cap }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding-top:8px;border-top:1px solid rgba(58,57,54,0.08)">
+                <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
+                  <div style="width:{{ f.w60 }};display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ g.hasPick }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size:13px;color:#3A3936;line-height:1.6;word-break:keep-all;text-wrap:pretty;background:{{ P.card }};border-radius:10px;padding:10px 12px">{{ g.pick }}</span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">J</span><span style="font-size:22px;font-weight:400">토큰과 치수</span></div>
+      <div style="background:#F2F1EE;border-radius:16px;padding:18px 20px;font-family:'IBM Plex Mono', monospace;font-size:12px;line-height:1.75;display:flex;flex-direction:column">
+        <sc-for list="{{ css }}" as="l" hint-placeholder-count="20"><span style="white-space:pre-wrap">{{ l.s }}</span></sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.wait(); }
+  componentWillUnmount() { clearTimeout(this.tm); }
+  wait() { if (!window.CuboundIso || !window.CuboundIso.KEG) { this.tm = setTimeout(() => this.wait(), 40); return; } this.forceUpdate(); }
+  renderVals() {
+    const K = window.CuboundIso;
+    if (!K || !K.KEG) return { S: [], P: {}, css: [] };
+    const mid = K.CH4.amber, floor = { a: mid.a, b: mid.b, l: mid.l, r: mid.r, pit: mid.pit };
+    const frames = (defs, caps) => {
+      const S = defs.map(d => K.scene(Object.assign({ floor }, d))), vb = K.fit([].concat(...S), 14), w = +vb.split(' ')[2];
+      const n = S.length, wf = n >= 4 ? Math.min(w, (1130 - 16 * (n - 1)) / n) : w;
+      return S.map((s, i) => ({ cap: caps[i] || '', shapes: s, vb, w: wf.toFixed(1) + 'px', w60: (w * 60 / 104).toFixed(1) + 'px' }));
+    };
+    const G = (title, note, defs, caps, pick) => ({ title, note, pick: pick || '', hasPick: !!pick, span: defs.length >= 4 ? '1 / -1' : 'auto', frames: frames(defs, caps || []) });
+    const L = (w, h, v) => Array.from({ length: h }, () => Array(w).fill(v));
+    const set = (g, m) => { const c = g.map(r => r.slice()); for (const k in m) { const [x, y] = k.split(',').map(Number); c[y][x] = m[k]; } return c; };
+    const ad = (O, k, o) => { (O[k] = O[k] || []).push(o); };
+    // one frame of one or more bursts. kegs: [{ k:[x,y], ph: cold|lit|glow|flash|fade|end, cuts:['x,y'], fills:['x,y'] }]
+    const ST = { cold: -1, lit: 0, glow: 0, flash: 1, fade: 2, end: 3, after: 4 };
+    const boom = ({ g, kegs, cells, objs, over, fuse }) => {
+      const G2 = g.map(r => r.slice()), C2 = Object.assign({}, cells || {}), O2 = {}, OV = (over || []).slice();
+      for (const k in (objs || {})) O2[k] = objs[k].slice();
+      kegs.forEach(kg => {
+        const [kx, ky] = kg.k, kk = kx + ',' + ky, s = ST[kg.ph];
+        if (s <= 0) ad(O2, kk, Object.assign({ t: 'keg', st: kg.ph === 'glow' ? 'swell' : kg.ph === 'lit' ? 'lit' : 'cold', style: kg.style }, kg.fuse !== undefined ? { fuse: kg.fuse, lit: true, st: kg.ph === 'glow' ? 'swell' : 'cold' } : {}));
+        if (s >= 2) ad(O2, kk, { t: 'abox', st: 'gone' });
+        if (kg.ph === 'glow') OV.push({ x: kx, y: ky, o: { t: 'burst', ph: 'glow' } });
+        if (s >= 1 && s <= 3) OV.push({ x: kx, y: ky, o: { t: 'burst', ph: ['', 'flash', 'fade', 'end'][s] } });
+        (kg.cuts || []).forEach(c => {
+          const [x, y] = c.split(',').map(Number), h0 = g[y][x];
+          let nh = h0;
+          if (s >= 1) {
+            if (h0 >= 1) { nh = h0 - (s === 1 ? 0.5 : 1); G2[y][x] = nh; }
+          }
+          if (s >= 1 && s <= 3 && h0 >= 1) OV.push({ x, y, h: nh, o: { t: 'dust', ph: ['', 'rise', 'spread', 'settle'][s], du: x - kx, dv: y - ky } });
+        });
+      });
+      return { g: G2, cells: C2, objs: O2, over: OV };
+    };
+    const cross = (x, y) => [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]].map(a => a.join(','));
+
+    const kegOne = extra => ({ g: [[0]], objs: { '0,0': [Object.assign({ t: 'keg' }, extra || {})] } });
+    const cmpRow = extra => ({ g: [[0, 0, 0, 0, 0, 0]], cells: { '3,0': { t: 'charwall' }, '5,0': { t: 'ember' } }, objs: { '0,0': [{ t: 'box' }], '1,0': [Object.assign({ t: 'keg' }, extra || {})], '2,0': [{ t: 'stone' }], '4,0': [{ t: 'brazier' }] } });
+    const A = { id: 'A', title: '생김새', groups: [
+      G('가 · 통 비율 + 테 + 마개', '몸통 0.48배 × 24px 위에 뚜껑 0.34배 × 4px, 모두 28px입니다. 폭(약 25px 깊이)보다 높이가 커 상자(0.58배 × 30px, 정육면체)보다 좁고 조금 낮은 세로로 선 통 비율입니다. 몸통 위아래에 한 단계(−16%) 짙은 옆면 띠 둘(3px)이 테로 읽히고, 뚜껑 가운데에 작은 적갈색 마개 블록(0.1배 × 3px) 하나. 마개 색은 숯불빛(주황·노랑)보다 짙고 붉어 불과 갈리고, "화약"이라는 위험 단서를 맡습니다. 세 면 명암은 상자와 같은 비율, 색은 지난 시안의 황갈색 그대로.',
+        [kegOne(), cmpRow()], ['화약통', '상자 · 화약통 · 얼음 돌 · 숯 벽 · 화로 · 불씨 칸'],
+        '추천 · 가. 테 둘이 "통", 붉은 마개가 "터지는 물건"을 따로 맡아 두 단서가 겹치지 않습니다. 마개는 판 위에서 유일하게 붉은 작은 면이라 60px 칸에서도 점 하나로 남고, 블록이라 구멍이나 아이콘으로 읽히지 않습니다. 붉은빛은 이 작은 마개에만 써서 5장 몫(넓은 빨강)과 겹치지 않습니다.'),
+      G('나 · 통 비율 + 테', '가에서 마개를 뺐습니다. 통으로는 읽히지만, 뚜껑이 비어 상자 위에 판을 얹은 짐과 구별하는 단서가 테뿐입니다.',
+        [kegOne({ plug: false }), cmpRow({ plug: false })], ['화약통', '나란히'])
+    ] };
+
+    // B · burst by a burning cube pushing
+    const gB = L(5, 3, 1), cutB = cross(2, 1);
+    const fcB = (n, u) => ({ t: 'fcube', n, u });
+    const B1 = [
+      boom({ g: gB, kegs: [{ k: [2, 1], ph: 'lit', cuts: cutB }], objs: { '1,1': [{ t: 'fcube', n: 2 }] } }),
+      boom({ g: gB, kegs: [{ k: [2, 1], ph: 'glow', cuts: cutB }], objs: { '1,1': [{ t: 'fcube', n: 2 }] } }),
+      boom({ g: gB, kegs: [{ k: [2, 1], ph: 'flash', cuts: cutB }], over: [{ x: 0.5, y: 1, h: 1, o: { t: 'fcube', n: 2 } }] }),
+      boom({ g: gB, kegs: [{ k: [2, 1], ph: 'fade', cuts: cutB }], objs: { '0,1': [{ t: 'fcube', n: 2 }] } }),
+      boom({ g: gB, kegs: [{ k: [2, 1], ph: 'end', cuts: cutB }], objs: { '0,1': [{ t: 'fcube', n: 2 }] } })
+    ];
+    const gB2 = L(4, 3, 1), cutB2 = ['2,1', '1,0', '1,2'], cwB = { '0,1': { t: 'charwall', st: 'burn' } };
+    const B2 = [boom({ g: gB2, cells: cwB, kegs: [{ k: [1, 1], ph: 'lit', cuts: cutB2 }] }), boom({ g: gB2, cells: cwB, kegs: [{ k: [1, 1], ph: 'flash', cuts: cutB2 }] }), boom({ g: gB2, cells: cwB, kegs: [{ k: [1, 1], ph: 'end', cuts: cutB2 }] })];
+    const B = { id: 'B', title: '터지는 순간 · 0.4초', groups: [
+      G('불 붙은 큐브가 밂', '0초 미는 수에 불이 닿고(화약통 면이 숯불빛 쪽으로 30%, 발밑 빛), 0.08초 부풉니다(1.07배, 면 72%, 뚜껑 속불빛). 0.16초 터짐: 통이 사라지고 가장 밝은 빛(바닥 고임 3.1배 0.26, 속불빛 1.6배 0.42, 12~16px 높이에 세 겹 빛)과 불티 열둘(6~26px)이 둘레로 흩어지며, 둘레 칸이 반 층 내려가며 흙먼지가 오릅니다. 0.28초 땅이 다 내려앉고 먼지가 바깥으로 퍼지며, 0.4초 가라앉습니다. 미는 큐브도 둘레 칸이라 반대쪽으로 한 칸 밀려나고, 큐브 불은 그대로입니다.',
+        B1, ['0초 · 밀어서 불이 닿음', '0.08초 · 부풂', '0.16초 · 터짐', '0.28초 · 내려앉음', '0.4초 · 가라앉음'],
+        '추천 · 0.4초. 한 수(0.24초)보다 조금 길게 두어 깎이는 땅과 먼지가 읽히고, 0.5초를 넘기면 연쇄(0.1초 간격)가 늘어져 다음 수 입력을 기다리게 합니다. 가장 밝은 컷은 한 번(0.16초)뿐입니다.'),
+      G('번지는 불이 닿음', '숯 벽이 불붙은 수 끝에 맞닿은 화약통도 불이 닿아 같은 수에 터집니다. 숯 벽은 이미 타고 있어 그대로 타고, 나머지 둘레 칸이 깎입니다.',
+        B2, ['숯 벽이 탐 · 불이 닿음', '터짐', '가라앉음'])
+    ] };
+
+    // C · ground cut
+    const caseC = h => { const g = L(3, 3, h), cuts = cross(1, 1); return ['cold', 'flash', 'after'].map(ph => boom({ g, kegs: [{ k: [1, 1], ph, cuts }] })); };
+    const regrow = (h, ph) => { const g = L(3, 3, h), cuts = cross(1, 1), cells = {}, objs = {}, G2 = g.map(r => r.slice());
+      if (ph === 'full') return { g, objs: { '1,1': [{ t: 'keg' }] } };
+      const o = ph === 'gone' ? null : ph;
+      cuts.forEach(c => { const [x, y] = c.split(',').map(Number); if (h >= 1) { G2[y][x] = h - 1; if (o) cells[c] = { t: 'regrow', add: 1, o }; } else if (o) cells[c] = { t: 'gland', o }; else G2[y][x] = null; });
+      objs['1,1'] = o ? [{ t: 'abox', st: 'gone', o: 1 - o }, { t: 'keg', o }] : [{ t: 'abox', st: 'gone' }];
+      return { g: G2, cells, objs }; };
+    const C = { id: 'C', title: '땅이 깎임', groups: [
+      G('2층 → 1층', '터진 수에 둘레 네 칸이 반 층(0.16초) → 한 층(0.28초) 내려앉습니다. 화약통 자리는 높이 그대로이고 재 자국만 남습니다.', caseC(2), ['전', '0.16초', '뒤']),
+      G('1층 → 평지', '같은 차례. 깎인 칸 옆면이 새로 드러나 높이 차가 생긴 것이 옆면 명암으로 보입니다.', caseC(1), ['전', '0.16초', '뒤']),
+      G('평지는 그대로', '평지는 더 깎이지 않아 구멍이 생기지 않습니다. 빛과 불티는 같고, 흙먼지는 깎이는 칸에서만 오르니 평지 둘레는 터진 컷에도 깨끗합니다. 화약통 자리에 재 자국만 남습니다.', caseC(0), ['전', '0.16초', '뒤'],
+        '추천 · 깎인 칸에는 그을음을 남기지 않습니다. 높이가 바뀐 것은 새로 드러난 옆면이 이미 보여 주고, 깎인 칸마다 짙은 자국이 남으면 무너지는 칸의 금이나 꺼진 불씨 칸처럼 바닥 요소로 읽힙니다. 터진 화약통 자리에만 숯 벽·타는 짐과 같은 재 자국(칸 폭 0.5배)을 남겨 "무언가 탄 자리"라는 한 가지 뜻을 지킵니다.'),
+      G('재시작 · 깎인 땅이 돌아옴', '숯 재시작과 같은 결로 0.24초 안의 세 컷. 깎여 나간 한 층이 깎인 칸 위에 0.35 → 0.7 → 1로 차오르고, 화약통도 같은 박자로 차오르며 재 자국은 옅어집니다.',
+        [regrow(1, 'gone'), regrow(1, 0.35), regrow(1, 0.7), regrow(1, 'full')], ['깎인 뒤', '0.35', '0.7', '되돌아옴'])
+    ] };
+
+    // D · chain
+    const gD = L(7, 3, 1), cwD = { '1,1': { t: 'charwall', st: 'burn' } };
+    const kD = (a, b, c) => [{ k: [2, 1], ph: a, cuts: ['2,0', '2,2'] }, { k: [3, 1], ph: b, cuts: ['3,0', '3,2'] }, { k: [4, 1], ph: c, cuts: ['4,0', '4,2', '5,1'] }];
+    const D = { id: 'D', title: '연쇄 · 0.1초씩', groups: [
+      G('셋이 줄지어', '같은 수 안에서 0.1초 간격. 앞 통이 터지는 컷(가장 밝음)에 다음 통이 부풀고, 0.1초 뒤 다음 통이 터집니다. 맞닿은 화약통 칸은 깎이지 않고 이어서 터지며, 마지막 통이 터진 뒤 0.24초에 모두 가라앉습니다(모두 0.6초). 가장 밝은 빛은 한 컷에 하나뿐이라 줄 위로 불이 옮겨 가는 방향이 읽힙니다.',
+        [boom({ g: gD, cells: cwD, kegs: kD('lit', 'cold', 'cold') }), boom({ g: gD, cells: cwD, kegs: kD('flash', 'glow', 'cold') }), boom({ g: gD, cells: cwD, kegs: kD('fade', 'flash', 'glow') }), boom({ g: gD, cells: cwD, kegs: kD('end', 'fade', 'flash') }), boom({ g: gD, cells: cwD, kegs: kD('after', 'after', 'after') })],
+        ['0초 · 숯 벽 불이 닿음', '0.16초 · 첫째', '0.26초 · 둘째', '0.36초 · 셋째', '0.6초 · 가라앉음'])
+    ] };
+
+    // E · neighbours
+    const g1 = L(3, 3, 1);
+    const E1 = ph => boom({ g: g1, cells: { '2,1': { t: 'charwall', st: ph === 'cold' ? 'cold' : 'burn' } }, objs: { '1,2': [{ t: 'box' }] }, kegs: [{ k: [1, 1], ph, cuts: ['1,0', '0,1', '1,2'] }] });
+    const g0 = L(3, 3, 0);
+    const E2 = ph => { const f = boom({ g: g0, kegs: [{ k: [1, 1], ph, cuts: cross(1, 1), fills: ['2,1'] }] }); const s = ST[ph];
+      if (s < 3) ad(f.objs, '2,1', { t: 'box', z: s <= 0 ? 0 : s === 1 ? -8 : -24 }); return f; };
+    const E3 = ph => boom({ g: g1, cells: { '1,2': { t: 'ember' } }, objs: { '2,1': [{ t: 'sw' }], '0,1': [{ t: 'hole' }] }, kegs: [{ k: [1, 1], ph, cuts: cross(1, 1) }] });
+    const E = { id: 'E', title: '둘레 칸', groups: [
+      G('숯 벽에 옮겨붙음 · 높은 칸 상자가 한 층 내려앉음', '오른쪽 숯 벽은 깎이지 않고 터진 컷에 불붙음이 되어 다음 수부터 번집니다. 1층에 선 앞쪽 상자는 깎인 땅에 실린 채 반 층 → 한 층 내려앉아 평지에 놓입니다. 평지에 선 상자는 그대로입니다.',
+        [E1('cold'), E1('flash'), E1('after')], ['전', '0.16초', '뒤']),
+      G('장치 칸도 같이 내려앉음', '스위치(오른쪽), 집(왼쪽), 불씨 칸(앞)도 다른 칸처럼 반 층 → 한 층 내려앉고, 장치는 낮아진 칸 위에 그대로 붙어 있습니다. 흙먼지도 다른 깎이는 칸과 같이 오릅니다. 문과 엘리베이터 발판도 같은 규칙입니다(발판은 내려간 높이와 올라간 높이가 함께 한 층 낮아짐). 짝 칸은 규칙이 정해질 때까지 화약통 옆에 두지 않습니다.',
+        [E3('cold'), E3('flash'), E3('after')], ['전', '0.16초', '뒤'])
+    ] };
+
+    // F · cube in the ring
+    const gF = L(5, 3, 1), cwF = { '0,1': { t: 'charwall', st: 'burn' } }, cutF = ['1,0', '1,2', '2,1'];
+    const F1 = [boom({ g: gF, cells: cwF, objs: { '2,1': [{ t: 'cube' }] }, kegs: [{ k: [1, 1], ph: 'lit', cuts: cutF }] }),
+      boom({ g: gF, cells: cwF, kegs: [{ k: [1, 1], ph: 'flash', cuts: cutF }], over: [{ x: 2.5, y: 1, h: 1, o: { t: 'cube' } }] }),
+      boom({ g: gF, cells: cwF, objs: { '3,1': [{ t: 'cube' }] }, kegs: [{ k: [1, 1], ph: 'fade', cuts: cutF }] }),
+      boom({ g: gF, cells: cwF, objs: { '3,1': [{ t: 'cube' }] }, kegs: [{ k: [1, 1], ph: 'after', cuts: cutF }] })];
+    const gF2 = set(gF, { '0,0': 2, '0,1': 2, '0,2': 2, '1,0': 2, '1,1': 2, '1,2': 2 }), cutF2 = ['3,0', '3,2'], cwF2 = { '4,1': { t: 'charwall', st: 'burn' } };
+    const F2 = [['lit', 'cube', 0], ['flash', 'tcube', 14], ['fade', 'tcube', 6], ['after', 'cube', 0]].map(([ph, t, ang]) => boom({ g: gF2, cells: cwF2, objs: { '2,1': [{ t, ang, back: true }] }, kegs: [{ k: [3, 1], ph, cuts: cutF2 }] }));
+    const gF0 = L(5, 3, 0), cwF0 = { '0,1': { t: 'charwall', st: 'burn' } };
+    const F0g = [boom({ g: gF0, cells: cwF0, objs: { '2,1': [{ t: 'cube' }] }, kegs: [{ k: [1, 1], ph: 'lit', cuts: cutF }] }),
+      boom({ g: gF0, cells: cwF0, kegs: [{ k: [1, 1], ph: 'flash', cuts: cutF }], over: [{ x: 2.5, y: 1, h: 0, o: { t: 'cube' } }] }),
+      boom({ g: gF0, cells: cwF0, objs: { '3,1': [{ t: 'cube' }] }, kegs: [{ k: [1, 1], ph: 'after', cuts: cutF }] })];
+    const F = { id: 'F', title: '큐브가 둘레 칸에 있을 때', groups: [
+      G('밀려남', '바람 미끄러짐을 그대로 씁니다. 터진 컷(0.16초)에 큐브가 구르지 않고 화약통 반대쪽으로 반 칸 미끄러지고, 0.28초 다음 칸에 닿습니다. 큐브가 떠난 칸은 그 뒤에 한 층 깎여, 큐브는 늘 깎이기 전 높이에서 미끄러집니다.',
+        F1, ['전 · 숯 벽 불이 닿음', '0.16초 · 미끄러짐', '0.28초 · 닿음', '뒤']),
+      G('평지에서 밀려남', '평지에 선 큐브도 같은 바람 미끄러짐으로 한 칸 밀려납니다. 칸은 깎이지 않고 그대로입니다. 막히면 위 1층과 같이 제자리에서 기울었다 돌아옵니다.',
+        F0g, ['전', '0.16초 · 미끄러짐', '뒤 · 칸 그대로']),
+      G('막혀서 버팀', '밀려날 칸이 막혀(뒤쪽 2층 땅) 있으면 큐브는 먼 쪽 아래 모서리를 축으로 14° 기울었다가(0.16초) 6°(0.28초)를 거쳐 돌아옵니다. 큐브가 선 칸은 깎이지 않아, 큐브 발밑만 1층으로 남습니다.',
+        F2, ['전', '0.16초 · 14°', '0.28초 · 6°', '뒤 · 발밑 남음'])
+    ] };
+
+    // G · pit
+    const Gp = { id: 'G', title: '구덩이 쪽으로 밀기', groups: [
+      G('막힘', '구덩이 쪽으로는 벽을 민 것처럼 막힙니다. 큐브가 0.1칸 다가갔다 돌아오고 화약통은 움직이지 않습니다. 평지 쪽으로는 상자처럼 한 칸 밀립니다.',
+        [{ g: [[0, 0, 'p', 0]], objs: { '0,0': [{ t: 'cube' }], '1,0': [{ t: 'keg' }] } }, { g: [[0, 0, 'p', 0]], objs: { '0,0': [{ t: 'cube', u: 0.1 }], '1,0': [{ t: 'keg' }] } }, { g: [[0, 0, 0, 0]], objs: { '1,0': [{ t: 'cube' }], '2,0': [{ t: 'keg' }] } }],
+        ['밀기 전', '밀어 봄 · 막힘', '평지 쪽 · 밀림'])
+    ] };
+
+    // H · fuse keg (boss 180)
+    const fz = (n, lit, extra) => ({ g: [[0]], objs: { '0,0': [Object.assign({ t: 'keg', fuse: n, lit }, extra || {})] } });
+    const fz0 = fs => ({ g: [[0]], objs: { '0,0': [{ t: 'keg', fuse: 0, lit: true, st: 'swell', fs }] }, over: [{ x: 0, y: 0, o: { t: 'burst', ph: 'glow' } }] });
+    const Hh = { id: 'H', title: '보스 180 · 심지', groups: [
+      G('가 · 뚜껑 둘레를 감는 줄', '심지는 뚜껑 오른쪽 모서리에서 시작해 몸통 윗단 앞쪽 두 변(뚜껑 둘레, 안쪽 0.205배)을 따라 왼쪽 모서리까지 감긴 네 마디입니다. 뒤쪽 두 변은 뚜껑에 가려 쓰지 않았습니다. 숯 더미의 짙은 면과 같은 숯빛(윗면 --color-char-left, 옆면 숯 골 색), 너비 0.04배, 높이 2px로 낮고 가늘게 했습니다. 한 변을 두 마디로 나눠 마디 사이를 0.05배 띄웠습니다. 불이 닿으면 끝 마디 끝이 숯불빛으로 달고 작은 빛이 고이며 불티 하나가 오르고, 한 수마다 끝에서부터 한 변씩 사라집니다. 마지막 마디가 다 타면 0.08초 부풂을 거쳐 보통 화약통과 같은 차례로 터집니다.',
+        [fz(4, true), fz(3, true), fz(2, true), fz(1, true), fz0()],
+        ['불이 닿음 · 4', '1수 · 3', '2수 · 2', '3수 · 1', '4수 · 터지기 직전'],
+        '추천 · 가. 네 마디가 모두 앞쪽에 드러나 가려지는 마디가 없습니다. 숯빛 줄이 밝은 황갈색 윗단 위에서 또렷해 남은 줄 길이가 60px 칸에서도 보이고, 숯불빛 끝이 왼쪽 모서리(4) → 앞 왼쪽 가운데(3) → 앞 모서리(2) → 앞 오른쪽 가운데(1)로 한 마디씩 오른쪽으로 물러나, 60px 칸에서도 빛의 자리와 남은 줄 길이로 남은 수가 보입니다. 마디가 나보다 세 배쯤 깁니다(약 10px).'),
+      G('나 · 가장자리로 뻗는 짧은 줄', '뚜껑 가운데에서 오른쪽 앞 가장자리까지 곧게 누운 네 마디(뚜껑 위 셋, 윗단 하나). 같은 색과 굵기. 줄이 짧아 마디 하나가 4px 남짓이고, 60px 칸에서는 줄어드는 것이 숯불빛의 자리 이동으로만 보입니다.',
+        [fz(4, true, { fs: 'line' }), fz(3, true, { fs: 'line' }), fz(2, true, { fs: 'line' }), fz(1, true, { fs: 'line' }), fz0('line')],
+        ['4', '3', '2', '1', '터지기 직전']),
+      G('불 붙은 채 밀기 (가)', '심지는 윗단에 누워 있어 블록과 한 몸으로 움직입니다. 불티만 진행 반대쪽으로 조금 처집니다. 민 수에도 한 마디 줄어듭니다.',
+        [{ g: [[0, 0, 0]], objs: { '0,0': [{ t: 'cube' }], '1,0': [{ t: 'keg', fuse: 3, lit: true }] } }, { g: [[0, 0, 0]], objs: { '1,0': [{ t: 'cube', u: -0.5 }], '2,0': [{ t: 'keg', fuse: 3, lit: true, u: -0.5, trail: 1 }] } }, { g: [[0, 0, 0]], objs: { '1,0': [{ t: 'cube' }], '2,0': [{ t: 'keg', fuse: 2, lit: true }] } }],
+        ['밀기 전 · 3', '미는 중', '도착 · 2']),
+      G('보통 화약통과 나란히 (가)', '왼쪽부터 보통 화약통, 꺼진 심지 화약통(마디 넷), 불 붙은 심지 화약통(2). 몸은 같고 뚜껑 앞쪽에 옅은 줄이 감겼는지로 갈립니다. 불 붙은 것은 숯불빛 점 하나로 바로 눈에 띕니다.',
+        [{ g: [[0, 0, 0]], objs: { '0,0': [{ t: 'keg' }], '1,0': [{ t: 'keg', fuse: 4 }], '2,0': [{ t: 'keg', fuse: 2, lit: true }] } }], ['보통 · 심지 · 불 붙은 심지'])
+    ] };
+
+    const mixB = { g: [[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]],
+      cells: { '4,2': { t: 'charwall' }, '5,2': { t: 'charwall' }, '0,3': { t: 'ember' }, '1,3': { t: 'ember', on: true } },
+      objs: { '1,1': [{ t: 'keg' }], '3,1': [{ t: 'keg', fuse: 4 }], '2,3': [{ t: 'box' }], '5,0': [{ t: 'brazier' }], '4,3': [{ t: 'cube' }], '4,0': [{ t: 'keg', fuse: 2, lit: true }] } };
+    const I = { id: 'I', title: '한 판에', groups: [
+      G('화약통 · 심지 화약통 · 상자 · 숯 벽 · 불씨 칸 · 화로', '가운데 줄 왼쪽 화약통, 그 오른쪽 심지 화약통, 오른쪽 위 불 붙은 심지 화약통과 화로. 앞쪽에 상자, 숯 벽 둘, 불씨 칸(꺼짐 · 켜짐), 큐브.',
+        [mixB], ['한 판'],
+        '모양으로 먼저 갈립니다. 뚜껑을 얹은 낮은 블록(화약통)과 정육면체(상자, 큐브), 계단꼴 더미(숯 벽), 납작한 바닥(불씨 칸), 낮은 돌 그릇(화로). 색은 황갈색, 노랑, 회갈색 숯, 회색 돌 테로 겹치지 않고, 처음부터 빛나는 것은 화로와 불 붙은 심지뿐입니다.')
+    ] };
+
+    const F0 = K.FIRE, KT = K.KEG.tone(K.KEG.KEG.base);
+    const KLd = K.KEG.tone(K.mix(K.KEG.KEG.base, '#FFFFFF', 0.1));
+    const PK = K.KEG.tone(K.KEG.KEG.plug);
+    const css = ['/* 화약통 (가 · 통 비율 + 테 + 마개) · 상자와 같은 tone() 규칙 */', `--color-keg: ${K.KEG.KEG.base};`, `--color-keg-top: ${KT.t};`, `--color-keg-left: ${KT.l};`, `--color-keg-right: ${KT.r};`, `--color-keg-lid-top: ${KLd.t};   /* 뚜껑 = 몸통 +10% 흰 */`, `--color-keg-lid-left: ${KLd.l};`, `--color-keg-lid-right: ${KLd.r};`, `--color-keg-hoop-left: ${K.mix(KT.l, '#000000', 0.16)};   /* 테 = 옆면 −16% · 3px × 둘 (바닥 위 3px, 18px) */`, `--color-keg-hoop-right: ${K.mix(KT.r, '#000000', 0.16)};`, `--color-keg-plug: ${K.KEG.KEG.plug};   /* 마개 블록 0.1배 × 3px · 윗면 ${PK.t} · 왼 ${PK.l} · 오 ${PK.r} */`, '몸통 0.48배 × 24px + 뚜껑 0.34배 × 4px = 28px (상자 0.58배 · 30px) · 폭보다 높이가 큼',
+      '', '/* 터짐 (0.4초) */', '0초 불이 닿음: 면 → 숯불빛 30% · 발밑 빛 1.3배', '0.08초 부풂: 1.07배 · 면 72% · 뚜껑 --color-heat-hot 0.62 / --color-heat-core 0.34', '0.16초 터짐: 바닥 --color-heat-hot 3.1배 0.26 + --color-heat-core 1.6배 0.42 · 12–16px에 세 겹 빛 (0.62 / 0.44 / 0.26) · 불티 열둘 6–26px', '0.28초: 바닥 2.4배 0.12 · 불티 여덟 0.55 · 0.4초: 1.3배 0.05', '연쇄: 0.1초 간격, 앞 통이 터지는 컷에 다음 통이 부풂',
+      '', '/* 깎임 · 먼지 */', '1층 이상: 0.16초 반 층 → 0.28초 한 층 · 평지: 깎이지 않음 (먼지도 없음)', `흙먼지 ${K.mix(mid.l, F0.ASH.t, 0.45)} / ${K.mix(mid.a, F0.ASH.t, 0.35)} · 4 / 11 / 18px 높이 0.5 → 퍼짐 0.3 → 가라앉음 0.13`, '그을음 없음 · 화약통 자리에만 재 자국 0.5배 (숯 벽과 같음)', '재시작: 깎인 층 0.35 → 0.7 → 1 (0.24초)',
+      '', '/* 큐브 */', '밀려남: 바람 미끄러짐 · 0.16초 반 칸 · 0.28초 도착 · 평지에서도 같음 (칸 그대로)', '버팀: 먼 쪽 아래 모서리 축 14° → 6° → 0 · 발밑 칸 안 깎임',
+      '', '/* 심지 (보스 180) */', `--color-fuse: ${K.KEG.KEG.fuse};   /* 숯 더미 짙은 면 (--color-char-left) · 옆면 숯 골 색 */`, '뚜껑 둘레 앞쪽 두 변: 안쪽 0.205배 · 한 변 두 마디 (0.135배씩, 사이 0.05배) · 너비 0.04배 · 높이 2px · 오른쪽 모서리 → 왼쪽 모서리', '타는 끝 0.08배: --color-heat-core / crack / hot · 빛 0.2 (0.45) / 0.11배 (0.75) · 불티 하나 7px', '끝에서부터 한 수에 한 변 · 밀 때 불티만 처짐'].map(s => ({ s }));
+
+    const toSrc = (shapes, vb) => encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '">' + shapes.filter(p => !p.raw).map(p => '<polygon points="' + p.d + '" fill="' + p.f + '"' + (p.o !== 1 ? ' opacity="' + p.o + '"' : '') + '/>').join('') + '</svg>');
+    const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { if (o.shapes && o.vb) { const vbp = o.vb.split(' ');
+        o.bgi = 'url("data:image/svg+xml,' + toSrc(o.shapes, o.vb) + '")'; o.ar = vbp[2] + ' / ' + vbp[3]; delete o.shapes; } Object.values(o).forEach(walk); } };
+    const out = { S: [A, B, C, D, E, F, Gp, Hh, I], P: mid, css };
+    walk(out);
+    return out;
+  }
+}
+</script>
+</body>
+</html>

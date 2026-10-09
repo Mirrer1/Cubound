@@ -697,10 +697,82 @@
     return out;
   };
 
+  // ---------- CHAPTER 4 · powder keg (18) ----------
+  // stacked blocks like the ice stone and char pile: a body block (0.7, 15px) + one smaller lid block (0.46, 5px). same tone() faces as the box.
+  // band = one darker face round the middle of the body. warm tan, between box yellow and char grey-brown
+  const KEG = { base: '#B38662', fuse: CHAR.l, plug: '#A4452E' };
+  const KB = 0.48, KBH = 24, KL = 0.34, KLH = 4, KH = KBH + KLH, ZU = TH;   // 0.48 (≈25px deep) × 28px: upright. hoops: two darker side bands (z 3–6, 18–21)
+  const ring = (cx, cy, r, z, du, dv) => Array.from({ length: 20 }, (_, i) => { const a = i / 20 * Math.PI * 2; return pt(cx, cy, (du || 0) + r * Math.cos(a), (dv || 0) + r * Math.sin(a), z); });
+  const ell = (cx, cy, r, z, f, o, du, dv) => sh(P(ring(cx, cy, r, z, du, dv)), f, o);
+  // fuse (ring): four cords on the front two sides of the ledge (inset 0.29), right corner → front corner → left corner; the back sides hide behind the lid.
+  // fs 'line': four cords from the lid centre straight out to the front-right edge (lid top, then ledge)
+  const RING = [{ q: [0.185, 0.225, -0.16, -0.025], b: [0.185, 0.225, -0.08, -0.025], e: [0.205, -0.025] }, { q: [0.185, 0.225, 0.025, 0.16], b: [0.185, 0.225, 0.105, 0.16], e: [0.205, 0.16] },
+    { q: [0.025, 0.16, 0.185, 0.225], b: [0.025, 0.08, 0.185, 0.225], e: [0.025, 0.205] }, { q: [-0.16, -0.025, 0.185, 0.225], b: [-0.16, -0.105, 0.185, 0.225], e: [-0.16, 0.205] }];
+  const keg = (cx, cy, o) => {
+    const st = o.st || 'cold', ht = st === 'lit' ? 0.3 : st === 'swell' ? 0.72 : 0, sc = st === 'swell' ? 1.07 : 1;
+    const p = pt(cx, cy, o.u || 0, o.v || 0), X = p[0], Y = p[1], a = o.o === undefined ? 1 : o.o, out = [], k = tone(KEG.base), kl = tone(mix(KEG.base, '#FFFFFF', 0.1));
+    if (ht) out.push(...pool(X, Y, 0, 1 + ht, 0.14 * ht + 0.04));
+    const h = (c, t2) => mix(c, t2, ht), bh = KBH * sc, lh = KLH * sc, H = bh + lh;
+    out.push(...block(X, Y, KB * sc, 0, bh, h(k.t, HEAT.hi), h(k.l, HEAT.l), h(k.r, HEAT.r), a));
+    if (o.hoops !== false) [6, 21].forEach(z => out.push(...prism(X, Y - z * sc, KB * sc, 3 * sc, '#000000', h(mix(k.l, '#000000', 0.16), HEAT.l), h(mix(k.r, '#000000', 0.16), HEAT.r), a).slice(0, 2)));
+    const fz = bh + 2, fuseC = { t: KEG.fuse, l: CHAR.g, r: mix(KEG.fuse, CHAR.g, 0.5) };
+    const glow = (u, v, z) => { const q = pt(X, Y, u, v, z); out.push(plate(q[0], q[1], 0.2, HEAT.hot, 0.45), plate(q[0], q[1], 0.11, HEAT.core, 0.75), Object.assign(spark(q[0] - (o.trail || 0) * 4, q[1] - 7, 1.5, HEAT.core), { o: 0.9 })); };
+    const n = o.fuse, ringF = n !== undefined && o.fs !== 'line';
+    const side = i => { const R = RING[i], burn = o.lit && i === n - 1;
+      out.push(...box3(X, Y, R.q[0], R.q[1], R.q[2], R.q[3], fz, 2, fuseC.t, fuseC.l, fuseC.r, a));
+      if (burn) { out.push(...box3(X, Y, R.b[0], R.b[1], R.b[2], R.b[3], fz, 2, HEAT.core, HEAT.crack, HEAT.hot, a)); glow(R.e[0], R.e[1], fz); } };
+    out.push(...block(X, Y, KL * sc, bh, lh, h(kl.t, HEAT.hi), h(kl.l, HEAT.l), h(kl.r, HEAT.r), a));
+    if (o.plug !== false) { const pk = tone(KEG.plug); out.push(...block(X, Y, 0.1 * sc, H, 3, pk.t, pk.l, pk.r, a)); }
+    if (ringF) [0, 1, 2, 3].filter(i => i < n).forEach(side);
+    if (n !== undefined && o.fs === 'line') for (let i = 0; i < n; i++) {
+      const u0 = 0.05 + i * 0.048, u1 = u0 + 0.036, z = u1 <= KL / 2 + 0.01 ? H + 2 : fz, burn = o.lit && i === n - 1;
+      out.push(...box3(X, Y, u0, u1, -0.025, 0.025, z, 2, fuseC.t, fuseC.l, fuseC.r, a));
+      if (burn) { out.push(...box3(X, Y, u1 - 0.03, u1, -0.025, 0.025, z, 2, HEAT.core, HEAT.crack, HEAT.hot, a)); glow(u1, 0, z); }
+    }
+    if (st === 'swell') out.push(plate(X, Y - H, KL * 0.8, HEAT.hot, 0.55), plate(X, Y - H, KL * 0.45, HEAT.core, 0.7));
+    if (st === 'lit' && n === undefined) out.push(plate(X, Y - H, KL * 0.5, HEAT.hot, 0.35));
+    if (o.lit && n === 0) out.push(plate(X, Y - H, KL * 0.6, HEAT.core, 0.7));
+    return out;
+  };
+  // cube tipping over its far bottom edge (blocked push-away). ang in degrees, toward +u
+  const tcube = (cx, cy, ang, z0, back) => {
+    const A = CA, th = ang * Math.PI / 180, k = tone(C.blue), c = Math.cos(th), s2 = Math.sin(th), Z = z0 || 0, e = back ? -1 : 1;
+    const R = (u, v, z) => { const du = u - e * A; return pt(cx, cy, e * A + du * c + e * (z / ZU) * s2, v, Z - e * du * s2 * ZU + z * c); };
+    return [sh(P([R(-A, A, 0), R(A, A, 0), R(A, A, LV), R(-A, A, LV)]), k.l), sh(P([R(A, A, 0), R(A, -A, 0), R(A, -A, LV), R(A, A, LV)]), k.r), sh(P([R(-A, -A, LV), R(A, -A, LV), R(A, A, LV), R(-A, A, LV)]), k.t)];
+  };
+  // burst light over the keg cell. ph: glow | flash | fade | end
+  const SPR = Array.from({ length: 12 }, (_, i) => [i / 12 * Math.PI * 2 + 0.3, 0.5 + 0.22 * (i % 3), 6 + (i * 7) % 20]);
+  const burst = (cx, cy, ph) => {
+    const out = [];
+    if (ph === 'glow') out.push(...pool(cx, cy, 0, 1.8, 0.16));
+    if (ph === 'flash') {
+      out.push(...pool(cx, cy, 0, 3.1, 0.26), ...pool(cx, cy, 0, 1.6, 0.42, HEAT.core));
+      [[0.62, 0.22], [0.44, 0.38], [0.26, 0.6]].forEach(([r, a], i) => out.push(ell(cx, cy, r, 12 + i * 2, i === 2 ? '#FFF3D2' : HEAT.core, a)));
+      SPR.forEach(([an, r, z], i) => { const q = pt(cx, cy, r * Math.cos(an), r * Math.sin(an), z); out.push(spark(q[0], q[1], i % 2 ? 1.3 : 1.8, i % 2 ? HEAT.hot : HEAT.core)); });
+    }
+    if (ph === 'fade') { out.push(...pool(cx, cy, 0, 2.4, 0.12)); SPR.slice(0, 8).forEach(([an, r, z], i) => { const q = pt(cx, cy, (r + 0.4) * Math.cos(an), (r + 0.4) * Math.sin(an), Math.min(28, z + 6)); out.push(Object.assign(spark(q[0], q[1], 1.2, i % 2 ? HEAT.hot : HEAT.core), { o: 0.55 })); }); }
+    if (ph === 'end') out.push(...pool(cx, cy, 0, 1.3, 0.05));
+    return out;
+  };
+  // dust over a cut cell. du, dv = away from the keg. ph: rise | spread | settle
+  const dust = (cx, cy, ph, du, dv) => {
+    const a = mix(FL ? FL.l : '#BFC1B4', ASH.t, 0.45), b = mix(FL ? FL.a : C.a, ASH.t, 0.35), out = [], d = (k, z) => [du * k, dv * k, z];
+    const puff = (k, z, r, o, f) => { const q = d(k, z); out.push(ell(cx, cy, r, q[2], f, o, q[0], q[1])); };
+    const bit = (k, z, s, sx) => { const q = pt(cx, cy, du * k + sx * dv, dv * k + sx * du, z); out.push(...block(q[0], q[1], s, 0, 3, b, FL ? FL.l : '#BFC1B4', FL ? FL.r : '#D2D4C8')); };
+    if (ph === 'rise') { puff(0, 4, 0.38, 0.5, a); puff(0.1, 11, 0.32, 0.45, b); puff(0.18, 18, 0.22, 0.4, a); bit(0.3, 14, 0.07, 0.18); bit(0.36, 20, 0.06, -0.16); bit(0.22, 24, 0.05, 0.02); }
+    if (ph === 'spread') { puff(0.2, 3, 0.48, 0.3, a); puff(0.3, 9, 0.4, 0.26, b); bit(0.5, 2, 0.07, 0.2); bit(0.56, 2, 0.06, -0.2); }
+    if (ph === 'settle') puff(0.25, 1, 0.5, 0.13, a);
+    return out;
+  };
+
   const obj = (o, cx, cy) => {
     switch (o.t) {
       case 'brazier': return brazier(cx, cy, o.rider, o.I, o.fr, o.flash);
       case 'abox': return ashBox(cx, cy, o);
+      case 'keg': return keg(cx, cy, o);
+      case 'tcube': return tcube(cx, cy, o.ang || 0, o.z, o.back);
+      case 'burst': return burst(cx, cy, o.ph);
+      case 'dust': return dust(cx, cy, o.ph, o.du || 0, o.dv || 0);
       // ambient overlay drawn in this cell's paint order (so walls in front cover it). raw = svg markup in cell-local coords
       case 'raw': return [{ d: n0(cx) + ',' + n0(cy), f: 'none', o: 0, raw: '<g transform="translate(' + n0(cx) + ',' + n0(cy) + ')">' + o.raw + '</g>' }];
       case 'fcube': {
@@ -801,6 +873,15 @@
       } else if (cd && (cd.t === 'charwall' || cd.t === 'ember')) {
         out.push(...land(cx, cy, h, par));
         out.push(...(cd.t === 'ember' ? emberTile(cx, cy, cd.on) : charCell(cx, cy, cd, par, false)));
+      } else if (cd && cd.t === 'void') {
+      } else if (cd && cd.t === 'yfill') { const k = tone(C.yellow); out.push(...prism(cx, cy, 1, TK, k.t, k.l, k.r));
+      } else if (cd && (cd.t === 'gland' || cd.t === 'drop')) {
+        const th = (h - FB) * LV + TK, t = FL ? (par ? FL.b : FL.a) : (par ? C.b : C.a), sd = FL ? { l: FL.l, r: FL.r } : side(t);
+        out.push(...prism(cx, cy + (cd.dz || 0), 1, th, t, sd.l, sd.r, cd.o === undefined ? 1 : cd.o));
+      } else if (cd && cd.t === 'regrow') {
+        out.push(...land(cx, cy, h, par));
+        const t = FL ? (par ? FL.b : FL.a) : (par ? C.b : C.a), sd = FL ? { l: FL.l, r: FL.r } : side(t);
+        out.push(...prism(cx, cy - cd.add * LV, 1, cd.add * LV, t, sd.l, sd.r, cd.o));
       } else if (cd && cd.t === 'swamp') {
         out.push(...swamp(cx, cy, h, par, cd.st));
       } else if (def.grown && def.grown[key]) {
@@ -827,6 +908,7 @@
       for (const o of (objs[key] || [])) out.push(...obj(o, cx, cy));
     }
     if (ROPES.__last) out.push(...ROPES.__last);
+    (def.over || []).forEach(it => { const v = V(it.x, it.y), h = it.h !== undefined ? it.h : (typeof v === 'number' ? v : 0), p = iso(it.x, it.y, h); out.push(...obj(it.o, p[0], p[1])); });
     FL = null; FB = 0; WT = null;
     return out;
   };
@@ -853,5 +935,5 @@
     }
   });
 
-  window.CuboundIso = { TW, TH, LV, TK, D, C, mix, tone, side, scene, fit, mixed, wither, MUSH, CH3, STONE, WS, DIP, CH4, CH2C, FIRE: { CHAR, HEAT, ASH, STOVE, FLAME, FLAME_B, FL_N, GLOW_N } };
+  window.CuboundIso = { TW, TH, LV, TK, D, C, mix, tone, side, scene, fit, mixed, wither, MUSH, CH3, STONE, WS, DIP, CH4, CH2C, FIRE: { CHAR, HEAT, ASH, STOVE, FLAME, FLAME_B, FL_N, GLOW_N }, KEG: { KEG, KH, tone } };
 })();
