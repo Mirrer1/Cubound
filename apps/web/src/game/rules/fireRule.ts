@@ -36,18 +36,21 @@ export const burnFire = (state: GameState): MoveResult => {
   const kindled = hasBox(state, player) ? undefined : state.sparks.find((s) => same(s, player))
   const caught: { from: Point; to: Point }[] = []
 
-  const spread = (from: Point, chasing: boolean) => {
-    for (const side of SIDES) {
-      const to = step(from, side)
-      if (!isFresh(state, to) || caught.some((c) => same(c.to, to))) continue
-      if (chasing && distance(to, player) >= distance(from, player)) continue
+  const chasing = state.stage.rules?.chase === true
+
+  // 쫓아오는 판의 갈림길은 큐브와 가장 가까운 갈래만, 거리가 같으면 모두
+  const spread = (from: Point) => {
+    const fresh = SIDES.map((side) => step(from, side)).filter((to) => isFresh(state, to))
+    const nearest = Math.min(...fresh.map((to) => distance(to, player)))
+    for (const to of fresh) {
+      if (caught.some((c) => same(c.to, to))) continue
+      if (chasing && distance(to, player) > nearest) continue
       caught.push({ from, to })
     }
   }
 
-  // 불씨에서 첫 번짐은 쫓아오는 판에서도 거리 무관
-  if (kindled) spread(kindled, false)
-  state.burning.forEach((b) => spread(b, state.stage.rules?.chase === true))
+  if (kindled) spread(kindled)
+  state.burning.forEach(spread)
 
   const ashed = state.burning.filter((b) => !same(b, player))
   if (!kindled && caught.length === 0 && ashed.length === 0) return { state, events: [] }

@@ -380,7 +380,47 @@ describe('move 쫓아오는 불', () => {
   }
   const burningAt = (stage: Stage) => ({ ...createState(stage), burning: [{ x: 3, y: 2 }] })
 
-  it('큐브와 가까워지는 숯으로만 번지고 두 쪽이 다 가까워지면 둘 다 번진다', () => {
+  // (0,2)~(3,2) 곧은 숯 줄, (3,2) 갈림길에서 위아래 두 갈래
+  const FORK_STAGE: Stage = {
+    ...CROSS_STAGE,
+    fire: ['...#...', '...#...', '####...', '...#...', '...#...'],
+  }
+  const forkAt = (burning: Point, start: Point, boxes: Point[] = []) => ({
+    ...createState({ ...FORK_STAGE, start }),
+    burning: [burning],
+    ashes: [0, 1, 2].filter((x) => x < burning.x).map((x) => ({ x, y: 2 })),
+    boxes,
+  })
+
+  it('곧은 줄은 큐브가 멀어져도 끝까지 탄다', () => {
+    const directions: Direction[] = ['right', 'left', 'right']
+    const state = directions.reduce(
+      (s, d) => move(s, d).state,
+      forkAt({ x: 0, y: 2 }, { x: 0, y: 4 }),
+    )
+
+    expect(state.burning).toEqual([{ x: 3, y: 2 }])
+  })
+
+  it('갈림길에서는 큐브와 가까운 갈래로만 번진다', () => {
+    const { events } = move(forkAt({ x: 3, y: 2 }, { x: 5, y: 0 }), 'down')
+
+    expect(caughtOf(events)).toEqual([{ x: 3, y: 1 }])
+  })
+
+  it('갈림길에 닿기 전 큐브 자리가 바뀌면 다른 갈래로 번진다', () => {
+    const { events } = move(forkAt({ x: 3, y: 2 }, { x: 5, y: 4 }), 'up')
+
+    expect(caughtOf(events)).toEqual([{ x: 3, y: 3 }])
+  })
+
+  it('상자가 올라선 숯은 갈래에서 빠져 남은 갈래로 번진다', () => {
+    const { events } = move(forkAt({ x: 3, y: 2 }, { x: 5, y: 0 }, [{ x: 3, y: 1 }]), 'down')
+
+    expect(caughtOf(events)).toEqual([{ x: 3, y: 3 }])
+  })
+
+  it('갈림길에서 큐브와 거리가 같은 갈래는 다 번진다', () => {
     const { events } = move(burningAt(CROSS_STAGE), 'left')
 
     expect(caughtOf(events)).toEqual([
@@ -395,7 +435,7 @@ describe('move 쫓아오는 불', () => {
     expect(caughtOf(events)).toHaveLength(4)
   })
 
-  it('불씨에서 첫 번짐은 거리와 상관없이 맞닿은 숯 전부다', () => {
+  it('불씨에서 켤 때 맞닿은 숯은 큐브와 거리가 같아 다 번진다', () => {
     const stage: Stage = {
       ...CROSS_STAGE,
       fire: ['.......', '.......', '..=*=..', '.......', '.......'],

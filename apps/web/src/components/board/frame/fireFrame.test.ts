@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { FIRE, fireEnd, fireKindAt, fireLookOf, fireScene, warmCells } from './fireFrame'
 import { playerPath, segmentsOf } from './pathFrame'
 import { durationOf, elapsedAt, playerSegments, stepProgress } from './timeFrame'
-import { createState, move } from '@/game/rules'
+import { burnFire, createState, move } from '@/game/rules'
 import type { Direction, GameEvent, GameState, Point, Stage } from '@/game/types'
 
 // 윗줄은 걷는 길, 아랫줄은 불씨 (1,1)에서 숯 벽 하나와 숯 다리 둘로 이어진 숯 길
@@ -217,17 +217,36 @@ describe('fireLookOf', () => {
     expect(lookAt(onBridge, ['up'], half + 0.1, FAR).crumble).toBeGreaterThan(0)
   })
 
-  it('빗나간 달아오름은 그 수 동안 0.5에서 0으로 이어서 식는다', () => {
-    const ahead = chaseAt(3)
-    expect(warmCells(ahead)).toEqual([{ x: 3, y: 1 }])
-    expect(move(ahead, 'left').state.burning).toEqual([])
+  it('갈림길에서는 큐브와 가까운 갈래만, 거리가 같으면 모두 달아오르고 규칙이 불붙이는 칸과 같다', () => {
+    const caught = (state: GameState) =>
+      burnFire(state).events.flatMap((e) => (e.type === 'caught' ? [e.to] : []))
 
-    const steps = [0, 0.25, 0.5, 0.75, 1].map(
-      (t) => lookAt(ahead, ['left'], t, { x: 3, y: 1 }).heat,
-    )
+    expect(warmCells(chaseAt(3))).toEqual([NEAR])
+    expect(warmCells(chaseAt(0))).toEqual([SPARK])
+    expect(warmCells(chaseAt(2))).toEqual(expect.arrayContaining([SPARK, NEAR]))
+    expect(warmCells(chaseAt(2))).toHaveLength(2)
+    for (const x of [0, 1, 2, 3, 4]) expect(warmCells(chaseAt(x))).toEqual(caught(chaseAt(x)))
+  })
+
+  it('갈림길에서 함께 달아오른 갈래는 큐브가 반대쪽으로 가면 그 수 동안 0.5에서 0으로 이어서 식는다', () => {
+    const tie = chaseAt(2)
+    expect(move(tie, 'left').state.burning).toEqual([SPARK])
+
+    const steps = [0, 0.25, 0.5, 0.75, 1].map((t) => lookAt(tie, ['left'], t, NEAR).heat)
     expect(steps[0]).toBe(0.5)
     expect(steps.at(-1)).toBe(0)
     steps.slice(1).forEach((heat, i) => expect(heat).toBeLessThanOrEqual(steps[i]))
+  })
+
+  it('큐브가 다가가 거리가 같아진 갈래는 달아오르지 않았어도 그 수 동안 0에서 1로 이어서 오른다', () => {
+    const ahead = chaseAt(3)
+    expect(warmCells(ahead)).not.toContainEqual(SPARK)
+    expect(move(ahead, 'left').state.burning).toContainEqual(SPARK)
+
+    const steps = [0, 0.25, 0.5, 0.75, 1].map((t) => lookAt(ahead, ['left'], t, SPARK).heat)
+    expect(steps[0]).toBe(0)
+    expect(steps.at(-1)).toBe(1)
+    steps.slice(1).forEach((heat, i) => expect(heat).toBeGreaterThanOrEqual(steps[i]))
   })
 
   it('재시작은 재 자국에서 숯이 다시 서고 불과 불씨 칸이 꺼진다', () => {
