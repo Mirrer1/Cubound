@@ -99,7 +99,7 @@ const ChapterCard = ({
       data-chapter={chapter}
       disabled={locked}
       onClick={onSelect}
-      className={`flex cursor-pointer items-center gap-4 rounded-[1.25rem] border ${many ? 'px-2 py-3 max-[390px]:gap-3 short:p-2.5' : 'p-4'} text-left transition-soft-colors disabled:cursor-default roomy:flex-col roomy:items-stretch roomy:gap-3 roomy:p-5 ${
+      className={`flex cursor-pointer items-center gap-4 rounded-[1.25rem] border ${many ? 'px-2 py-3 max-[390px]:gap-3 short:p-2.5' : 'p-4'} text-left transition-soft-colors disabled:cursor-default roomy:flex-col roomy:items-stretch roomy:gap-3 roomy:p-5 roomy:@max-[65.5rem]:p-3! ${
         locked
           ? 'border-line bg-locked text-faint'
           : `bg-surface hover:bg-hover ${state === 'now' ? 'border-ink' : 'border-line-strong'}`
@@ -128,7 +128,7 @@ const ChapterCard = ({
         <span
           className={
             many
-              ? 'flex items-baseline justify-between gap-2 font-mono text-label tracking-[0.12em] whitespace-nowrap max-[390px]:gap-1 roomy:tracking-[0.22em]'
+              ? 'flex items-baseline justify-between gap-2 font-mono text-label tracking-[0.12em] whitespace-nowrap max-[390px]:gap-1 roomy:tracking-[0.22em] roomy:@max-[65.5rem]:text-[0.6875rem]! roomy:@max-[65.5rem]:tracking-[0.08em]!'
               : 'flex items-baseline justify-between gap-2 font-mono text-label tracking-[0.18em] roomy:tracking-[0.22em]'
           }
         >

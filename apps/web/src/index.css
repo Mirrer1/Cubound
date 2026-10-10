@@ -341,7 +341,7 @@ body {
       gap: 0.625rem;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    /* 두 줄이 남은 높이에 들도록 줄이는 줄 높이, 카드 네 장 폭 250 × 4 + 16 × 3이 한 줄 기준 */
+    /* 두 줄이 남은 높이에 들도록 줄이는 줄 높이, 카드 네 장 폭 200 × 4 + 16 × 3이 한 줄 기준 */
     @media (width >= 60rem) and (width < 106.25rem) and (height >= 500px) {
       --cols: 2;
       --rows: 2;
@@ -349,7 +349,7 @@ body {
       grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
       grid-auto-rows: min(19rem, (100cqh - (var(--rows) - 1) * 1rem) / var(--rows));
 
-      @container (width >= 1048px) {
+      @container (width >= 848px) {
         --cols: 4;
         --rows: 1;
       }
