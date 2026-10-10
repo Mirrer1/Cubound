@@ -4,7 +4,8 @@ const VARIANTS = {
   primary: 'h-14 rounded-2xl bg-ink px-8 text-lg text-base-bg hover:bg-ink/90',
   secondary: 'h-14 rounded-2xl border px-3 text-lg sm:px-6',
   icon: 'size-11 shrink-0 rounded-[0.8125rem] border text-lg',
-  ghost: 'size-11 shrink-0 rounded-[0.8125rem] text-lg',
+  tool: 'shrink-0 rounded-[0.8125rem] border tool-size',
+  ghost: 'shrink-0 rounded-[0.8125rem] tool-size',
   text: 'h-11 rounded-[0.8125rem] px-4 text-sm text-mute',
 }
 

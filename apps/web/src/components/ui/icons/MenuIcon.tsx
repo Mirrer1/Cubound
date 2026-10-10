@@ -1,6 +1,6 @@
 const MenuIcon = ({ className = 'size-[1em]' }: { className?: string }) => (
   <svg
-    viewBox="0 0 24 24"
+    viewBox="4.35 4.35 15.3 15.3"
     className={className}
     fill="none"
     stroke="currentColor"

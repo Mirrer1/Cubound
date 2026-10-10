@@ -1,5 +1,5 @@
 import { motion } from 'motion/react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 
 import Button from '@/components/ui/Button'
 import ChapterCard, { type ChapterCardState } from '@/components/ui/ChapterCard'
@@ -54,6 +54,8 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
   const progress = useGameStore((s) => s.progress)
   const gridRef = useRef<HTMLDivElement>(null)
   const previousRef = useRef<HTMLButtonElement>(null)
+  const sectionRef = useRef<HTMLElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
   const t = useText()
 
   const chapter = cycleOf(world)
@@ -158,17 +160,30 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [now, nowChapter, chapters, world])
 
+  // 카드 크기 계산에 넘기는 헤더 높이, 그리기 전에 넣어 첫 화면 튐 방지
+  useLayoutEffect(() => {
+    const section = sectionRef.current
+    const header = headerRef.current
+    if (!section || !header) return
+    const observer = new ResizeObserver(() =>
+      section.style.setProperty('--head', `${header.getBoundingClientRect().height}px`),
+    )
+    observer.observe(header)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
-      <section className="scroll-area flex min-h-0 flex-1 flex-col gap-6 rounded-[1.375rem] border border-line bg-base-bg panel-pad min-[1700px]:grid min-[1700px]:grid-cols-[auto_minmax(0,1fr)] min-[1700px]:content-center min-[1700px]:items-center min-[1700px]:gap-12! wide:gap-8">
+      <section
+        ref={sectionRef}
+        className="stage-frame scroll-area flex min-h-0 flex-1 flex-col rounded-[1.375rem] border border-line bg-base-bg panel-pad min-[1700px]:grid min-[1700px]:grid-cols-[auto_minmax(0,1fr)] min-[1700px]:content-center min-[1700px]:items-center min-[1700px]:gap-12! short:py-2.5"
+      >
         {/* 장 카드 셋이 한 줄에 못 서는 화면은 윗줄에 ←와 별과 화살표, 아랫줄 전체가 장 덩이, 차례는 order */}
-        <header className="mx-auto flex w-full max-w-content flex-wrap items-center gap-x-4 gap-y-2.5 min-[1700px]:mx-0 min-[1700px]:ml-10 min-[1700px]:w-90 min-[1700px]:max-w-none min-[1700px]:shrink-0 min-[1700px]:flex-col min-[1700px]:items-start min-[1700px]:gap-6 narrow:gap-x-3">
-          <Button
-            variant="icon"
-            onClick={handleBack}
-            aria-label={t('select.back')}
-            className="min-[1700px]:size-13 narrow:size-8.5"
-          >
+        <header
+          ref={headerRef}
+          className={`mx-auto flex w-full stage-block flex-wrap items-center gap-x-4 gap-y-2.5 min-[1700px]:mx-0 min-[1700px]:ml-10 min-[1700px]:w-90 min-[1700px]:max-w-none min-[1700px]:shrink-0 min-[1700px]:flex-col min-[1700px]:items-start min-[1700px]:gap-6 narrow:gap-x-3`}
+        >
+          <Button variant="tool" onClick={handleBack} aria-label={t('select.back')}>
             <BackIcon />
           </Button>
           <ChapterTab
@@ -180,21 +195,21 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
             onClick={handleChapters}
             className="order-last w-full max-w-full min-w-0 min-[1700px]:order-1! min-[1700px]:w-full! min-[1700px]:grow-0! min-[1700px]:basis-auto! short:order-none short:w-auto short:max-w-125 short:grow short:basis-0 roomy:order-none roomy:w-auto roomy:max-w-125 roomy:grow roomy:basis-0"
           />
-          <span className="ml-auto font-mono text-xs tracking-[0.15em] whitespace-nowrap text-mute min-[1700px]:order-3 min-[1700px]:ml-0 narrow:text-[0.6875rem]">
+          <span className="ml-auto font-mono text-xs tracking-[0.15em] whitespace-nowrap text-mute min-[1700px]:order-3 min-[1700px]:ml-0 min-[1700px]:pl-1 narrow:text-[0.6875rem]">
             <span className="min-[1700px]:text-[1.875rem] min-[1700px]:text-ink">
               {totalStars(progress, ids)}
             </span>{' '}
             / {ids.length * 3} <StarIcon className="inline-block size-[1em] align-[-0.1em]" />
           </span>
           {/* 월드가 하나뿐인 장에서도 남기는 자리, 장을 넘길 때 왼쪽 흔들림 방지 */}
-          <span className="flex items-center gap-1 min-[1700px]:order-4">
+          <span className="flex items-center gap-1 min-[1700px]:order-4 min-[1700px]:-ml-2.5">
             <Button
               ref={previousRef}
               variant="ghost"
               disabled={index === 0}
               onClick={handlePrevious}
               aria-label={t('select.previousWorld')}
-              className="min-[1700px]:size-13 short:after:w-[calc(100%+0.25rem)] narrow:size-8.5 narrow:after:w-[calc(100%+0.25rem)]"
+              className="short:after:w-[calc(100%+0.25rem)] narrow:after:w-[calc(100%+0.25rem)]"
             >
               <ChevronIcon />
             </Button>
@@ -203,12 +218,12 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
               disabled={!nextOpen}
               onClick={handleNext}
               aria-label={t('select.nextWorld')}
-              className="min-[1700px]:size-13 short:after:w-[calc(100%+0.25rem)] narrow:size-8.5 narrow:after:w-[calc(100%+0.25rem)]"
+              className="short:after:w-[calc(100%+0.25rem)] narrow:after:w-[calc(100%+0.25rem)]"
             >
               <ChevronIcon className="size-[1em] rotate-180" />
             </Button>
           </span>
-          <span className="hidden text-sm break-keep text-mute min-[1700px]:order-2 min-[1700px]:block">
+          <span className="hidden text-sm break-keep text-mute min-[1700px]:order-2 min-[1700px]:block min-[1700px]:pl-1 min-[1700px]:text-base">
             {sentencesOf(t(worldNoteKey(world))).map((sentence) => (
               <span key={sentence} className="block">
                 {sentence}
@@ -219,7 +234,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
         {/* 장 고르기 카드는 ← 아래 장 덩이부터 화살표까지와 같은 높이 */}
         <div
           ref={gridRef}
-          className={`grid-box mx-auto min-h-0 w-full max-w-content flex-1 min-[1700px]:mx-0 min-[1700px]:mr-10 min-[1700px]:max-w-none narrow:flex-none ${chapters ? 'min-[1700px]:mt-19 min-[1700px]:self-stretch' : ''}`}
+          className={`mx-auto w-full min-[1700px]:mx-0 min-[1700px]:mr-10 ${chapters ? 'grid-box min-h-0 stage-block min-[1700px]:mt-17 min-[1700px]:max-w-none min-[1700px]:self-stretch narrow:flex-none' : 'stage-block'}`}
         >
           {/* 자리에서 바뀌는 카드, 새 카드가 바로 붙어 포커스가 따라가는 key 교체 */}
           <motion.div

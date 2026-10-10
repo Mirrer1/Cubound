@@ -37,11 +37,11 @@ const TitleScreen = () => {
       <section className="relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[1.375rem] border border-line bg-base-bg">
         <TitleScene
           opacity={0.4}
-          className="pointer-events-none absolute -top-10 -left-16 w-64 min-[1700px]:-top-16! min-[1700px]:-left-24! min-[1700px]:w-[38rem]! sm:w-72"
+          className="pointer-events-none absolute -top-10 -left-16 w-64 min-[1024px]:max-[1700px]:-top-[3.3vw]! min-[1024px]:max-[1700px]:-left-[4.96vw]! min-[1024px]:max-[1700px]:w-[31.4vw]! min-[1700px]:-top-16! min-[1700px]:-left-24! min-[1700px]:w-[38rem]! sm:w-72"
         />
         <TitleScene
           opacity={0.6}
-          className="pointer-events-none absolute -right-10 bottom-40 w-72 min-[1700px]:-right-20! min-[1700px]:-bottom-16! min-[1700px]:w-[46rem]! sm:-bottom-8 sm:w-96"
+          className="pointer-events-none absolute -right-10 bottom-40 w-72 min-[1024px]:max-[1700px]:-right-[4.13vw]! min-[1024px]:max-[1700px]:-bottom-[3.3vw]! min-[1024px]:max-[1700px]:w-[38vw]! min-[1700px]:-right-20! min-[1700px]:-bottom-16! min-[1700px]:w-[46rem]! sm:-bottom-8 sm:w-96"
         />
         <div className="absolute top-0 right-0 z-10 panel-pad">
           <LanguageMenu />
@@ -50,14 +50,18 @@ const TitleScreen = () => {
           <Logo />
           <span className="font-mono text-xs tracking-[0.3em] text-mute">FIND YOUR WAY HOME</span>
         </div>
-        <div className="relative flex w-full flex-col items-center gap-4 panel-pad sm:mt-10 sm:w-auto sm:p-0">
+        <div className="relative flex w-full flex-col items-center gap-2.5 panel-pad sm:mt-10 sm:w-auto sm:p-0">
           <Button variant="primary" className="w-full sm:w-52" onClick={handleStart}>
             {t('title.start')}
           </Button>
-          <Button variant="text" onClick={handleSelect}>
+          <Button
+            variant="text"
+            className="h-14! w-full rounded-2xl! sm:w-52"
+            onClick={handleSelect}
+          >
             {t('title.stages')}
           </Button>
-          <span className="font-mono text-[0.6875rem] tracking-[0.25em] text-faint sm:hidden">
+          <span className="font-mono text-label tracking-[0.25em] text-mute sm:hidden">
             SWIPE TO MOVE
           </span>
         </div>

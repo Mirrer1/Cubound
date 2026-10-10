@@ -193,12 +193,12 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
           className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.375rem] border border-line bg-base-bg"
         >
           <header className="relative flex items-start justify-between gap-6 px-(--panel-pad) pt-(--panel-pad) short:items-center short:pt-3 narrow:flex-wrap narrow:items-center narrow:gap-x-3 narrow:gap-y-3">
-            <div className="flex min-w-0 flex-col gap-1.5 short:flex-row short:items-baseline short:gap-3 narrow:flex-1 narrow:flex-row narrow:items-baseline narrow:gap-2">
-              <span className="shrink-0 font-mono text-[0.6875rem] tracking-[0.22em] text-mute">
+            <div className="flex min-w-0 flex-col gap-1.5 short:flex-row short:items-center short:gap-3 narrow:flex-1 narrow:flex-row narrow:items-center narrow:gap-2 slim:basis-full">
+              <span className="shrink-0 font-mono text-label tracking-[0.22em] text-mute">
                 <span className="narrow:hidden">{'STAGE '}</span>
                 {String(stageNumber).padStart(2, '0')}
               </span>
-              <span className="text-2xl tracking-tight short:text-xl wide:text-[1.6875rem] narrow:min-w-0 narrow:truncate narrow:text-xl">
+              <span className="text-2xl tracking-tight short:text-xl wide:text-[1.6875rem] narrow:min-w-0 narrow:truncate narrow:text-xl slim:whitespace-normal">
                 {t(stageTextKey(game.stage.id))}
               </span>
             </div>
@@ -215,31 +215,27 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                 turn={turn}
                 animating={animating}
               />
-              {/* 320px에서 버튼과 긴 이름이 한 줄에 들어가는 폰 세로 전용 작은 버튼 */}
-              <div className="flex gap-2.5 narrow:gap-1.5 narrow:[&>button]:size-8.5 narrow:[&>button]:after:w-[calc(100%+0.375rem)]">
+              {/* 누르는 범위 경계는 버튼 사이 간격 가운데 */}
+              <div className="flex gap-2.5 narrow:gap-1.5 narrow:[&>button]:after:w-[calc(100%+0.375rem)]">
                 {!showsAll && (
                   <Button
-                    variant="icon"
+                    variant="tool"
                     onClick={handleOverview}
                     title={t('play.overview')}
                     aria-label={t('play.overview')}
                     aria-pressed={overview}
                     strong={overview}
                   >
-                    {overview ? (
-                      <ShrinkIcon className="size-4.5" />
-                    ) : (
-                      <ExpandIcon className="size-4.5" />
-                    )}
+                    {overview ? <ShrinkIcon /> : <ExpandIcon />}
                   </Button>
                 )}
                 {hasGuide && (
-                  <Button variant="icon" onClick={handleOpenGuide} title={t('play.guide')}>
+                  <Button variant="tool" onClick={handleOpenGuide} title={t('play.guide')}>
                     <GuideIcon />
                   </Button>
                 )}
                 <Button
-                  variant="icon"
+                  variant="tool"
                   strong={outOfMoves}
                   onClick={askOrRestart}
                   title={t('play.restart')}
@@ -247,7 +243,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                 >
                   <RestartIcon />
                 </Button>
-                <Button variant="icon" onClick={handleSelect} title={t('play.select')}>
+                <Button variant="tool" onClick={handleSelect} title={t('play.select')}>
                   <MenuIcon />
                 </Button>
               </div>

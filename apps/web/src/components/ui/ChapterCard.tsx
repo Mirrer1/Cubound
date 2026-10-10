@@ -128,14 +128,14 @@ const ChapterCard = ({
         <span
           className={
             many
-              ? 'flex items-baseline justify-between gap-2 font-mono text-[0.6875rem] tracking-[0.12em] whitespace-nowrap max-[390px]:gap-1 short:text-[0.625rem] roomy:text-[0.6875rem] roomy:tracking-[0.22em]'
-              : 'flex items-baseline justify-between gap-2 font-mono text-[0.625rem] tracking-[0.18em] roomy:text-[0.6875rem] roomy:tracking-[0.22em]'
+              ? 'flex items-baseline justify-between gap-2 font-mono text-label tracking-[0.12em] whitespace-nowrap max-[390px]:gap-1 roomy:tracking-[0.22em]'
+              : 'flex items-baseline justify-between gap-2 font-mono text-label tracking-[0.18em] roomy:tracking-[0.22em]'
           }
         >
           <span className={locked ? '' : 'text-mute'}>
             CHAPTER {chapter} · {range}
           </span>
-          <span className={locked ? '' : 'text-faint'}>{LABELS[state]}</span>
+          <span className={locked ? '' : 'text-mute'}>{LABELS[state]}</span>
         </span>
         <span
           className={`truncate tracking-tight roomy:text-[1.375rem] ${many ? 'text-xl short:text-lg' : 'text-lg'}`}
@@ -149,7 +149,7 @@ const ChapterCard = ({
               style={{ width: `${total === 0 ? 0 : Math.round((stars / total) * 100)}%` }}
             />
           </span>
-          <span className="font-mono text-[0.625rem] whitespace-nowrap text-faint roomy:text-[0.6875rem]">
+          <span className="font-mono text-label whitespace-nowrap text-mute">
             {stars} / {total} <StarIcon className="inline-block size-[1em] align-[-0.1em]" />
           </span>
         </span>

@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<script src="../cubound-iso.js?v=20261009a"></script>
+<script src="../cubound-iso.js?v=20261010e"></script>
 <style>
   html, body { margin: 0; padding: 0; background: #E9E7E2; }
   a { color: #3A3936; }
@@ -28,6 +28,13 @@
       <span style="font-size:34px;font-weight:400;letter-spacing:-0.01em">불을 건너는 길 · 불 요소</span>
       <span style="font-size:14.5px;color:#5F5D59;line-height:1.7;word-break:keep-all;text-wrap:pretty">숯은 모닥불의 탄 통나무입니다. 숯 벽은 칸보다 작은 낮은 숯 더미, 숯 다리는 나란히 깐 쪼갠 장작입니다. 안쪽 선을 쓰지 않고 결은 면의 명암으로만 보입니다. 불이 닿으면 숯 면 전체가 반쯤 주황으로 물들고(달아오름), 다음 수에 숯불빛이 되며(불붙음), 그다음 수에 재 덩이로 부서집니다. 빨강과 어두운 용암빛은 쓰지 않고 5장 몫으로 남겼습니다. 불꽃 모양은 그리지 않습니다. 불은 숯 안쪽의 빛, 둘레 바닥에 고이는 빛, 드문드문 오르는 작은 불티로만 보이고, 불티도 한 층(30px)을 넘지 않습니다. 숯 벽(22px 숯 더미)은 불꽃 없이 면이 숯불빛으로 물들고 불티만 오릅니다.</span>
       <span style="font-size:13px;color:#7A7771;line-height:1.6;word-break:keep-all">모든 그림은 4장 세계 색 "호박색"(새 추천안) 위에 칠했습니다. 각 칸 아래 작은 줄은 칸 폭 60px 축소판입니다.</span>
+    </div>
+
+    <div style="background:#F2F1EE;border-radius:16px;padding:16px 20px;display:flex;flex-direction:column;gap:8px;max-width:860px">
+      <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">확정</span>
+      <span style="font-size:13.5px;line-height:1.6;word-break:keep-all;text-wrap:pretty">17월드 화로 · 큐브에 붙은 불은 "가 · 아래에서 비치는 빛". FIRE 숫자는 0이 되면 지웁니다.</span>
+      <span style="font-size:13.5px;line-height:1.6;word-break:keep-all;text-wrap:pretty">170 타는 짐 · 재 자국을 남기고, 큐브에 불이 붙은 동안 상자에 옅은 열빛(나). FIRE 1 테두리는 쓰지 않습니다(게임의 숫자 경고를 따름).</span>
+      <span style="font-size:13.5px;line-height:1.6;word-break:keep-all;text-wrap:pretty">보스 200 · J절(그을린 숯을 새로 그린 시안)은 쓰지 않습니다. 게임에서는 있는 그림으로 만듭니다. 그을린 숯 벽은 숯 벽이 재가 될 때의 재 덩이를 남기고, 그을린 다리는 장작 판을 짙게, 다시 불붙음은 16월드 달아오름 · 불붙음 그대로입니다.</span>
     </div>
 
     <sc-for list="{{ S1 }}" as="sec" hint-placeholder-count="4">
@@ -131,11 +138,11 @@
         <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">{{ sec.id }}</span><span style="font-size:22px;font-weight:400">{{ sec.title }}</span></div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(380px, 1fr));gap:16px">
           <sc-for list="{{ sec.groups }}" as="g" hint-placeholder-count="2">
-            <div style="background:{{ P.bg }};border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="grid-column:{{ g.span }};background:{{ P.bg }};border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
               <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><span style="font-size:13px;color:#5F5D59;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span></div>
-              <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+              <div style="display:flex;flex-wrap:{{ g.wrap }};gap:16px;align-items:flex-end">
                 <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
-                  <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                  <div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:0 1 {{ f.w }}">
                     <div style="width:{{ f.w }};max-width:100%;display:block;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
                     <sc-if value="{{ f.hasHud }}" hint-placeholder-val="{{ false }}">
                       <div style="align-self:flex-start;background:{{ P.panel }};border-radius:12px;padding:8px 12px;display:flex;gap:14px;align-items:flex-start;box-shadow:{{ f.hring }}">
@@ -185,7 +192,7 @@ class Component extends DCLogic {
       const S = defs.map(d => K.scene(Object.assign({ floor }, d))), vb = K.fit([].concat(...S), 14), w = +vb.split(' ')[2];
       return S.map((s, i) => ({ cap: caps[i] || '', shapes: s, vb, w: w + 'px', w60: (w * 60 / 104).toFixed(1) + 'px' }));
     };
-    const G = (title, note, defs, caps, pick) => ({ title, note, pick: pick || '', hasPick: !!pick, frames: frames(defs, caps || []) });
+    const G = (title, note, defs, caps, pick, wide) => ({ title, note, pick: pick || '', hasPick: !!pick, span: wide ? '1 / -1' : 'auto', wrap: wide ? 'nowrap' : 'wrap', frames: frames(defs, caps || []) });
     const one = (cd, objs) => ({ g: [[0]], cells: cd ? { '0,0': cd } : {}, objs: objs ? { '0,0': objs } : {} });
     const pit1 = (cd, objs) => ({ g: [[0, 'p', 0]], cells: cd ? { '1,0': cd } : {}, objs: objs ? { '1,0': objs } : {} });
     const wall1 = st => ({ g: [[0, 0, 0]], cells: { '1,0': { t: 'charwall', st } } });
@@ -281,7 +288,7 @@ class Component extends DCLogic {
     ] };
 
     // hud per frame: [fire n or null, moves, fire opacity]
-    const GH = (title, note, defs, caps, huds, pick) => { const g = G(title, note, defs, caps, pick); g.frames.forEach((f, i) => { const h = huds && huds[i]; f.hasHud = !!h; f.hon = !!h && h[0] !== null; f.hn = h ? h[0] : ''; f.hm = h ? h[1] : ''; f.hop = h && h[2] !== undefined ? h[2] : 1; f.hring = h && h[0] === 1 ? 'inset 0 0 0 1.5px #3A3936' : 'none'; }); return g; };
+    const GH = (title, note, defs, caps, huds, pick) => { const g = G(title, note, defs, caps, pick); g.frames.forEach((f, i) => { const h = huds && huds[i]; f.hasHud = !!h; f.hon = !!h && h[0] !== null; f.hn = h ? h[0] : ''; f.hm = h ? h[1] : ''; f.hop = h && h[2] !== undefined ? h[2] : 1; f.hring = 'none'; }); return g; };
     const onBraz = (cube, bz) => ({ g: [[0, 0]], objs: cube ? { '1,0': [{ t: 'brazier' }, cube] } : { '1,0': [Object.assign({ t: 'brazier', rider: true }, bz)] } });
     const R1 = { id: 'E-2', title: '화로를 다시 밟음 · 4로 참', groups: [
       GH('가 · 꺼진 큐브가 다시 밟음', '한 수 0.24초를 세 컷으로. 0.08초 굴러 올라서는 동안 큐브는 아직 빛이 없습니다. 0.16초 올라선 순간 화로 숯불이 한 번 밝아지고(속불빛 1.1배, 0.22) 큐브 옆면 아래에 빛이 절반 높이·절반 세기로 들어오며, FIRE 4가 이때 나타납니다. 0.24초에 빛이 위로 다 차 가 안 4와 같아집니다.',
@@ -320,6 +327,50 @@ class Component extends DCLogic {
         [rs(null, null, 1), rs('ghost', 0.35, 0.6), rs('ghost', 0.7, 0.3), rs('cold', null, null)], ['재 자국', '0.35', '0.7', '되살아남'])
     ] };
 
+    // ---- boss 200 · the fire that never goes out ----
+    const cw = (st, ex) => Object.assign({ t: 'charwall', st, boss: true }, ex || {}), cb = (st, ex) => Object.assign({ t: 'charbridge', st, boss: true }, ex || {});
+    const w1 = (cd, objs) => ({ g: [[0, 0, 0]], cells: { '1,0': cd }, objs: objs ? { '1,0': objs } : {} });
+    const J1 = { id: 'J-1', title: '쓰지 않음 · 보스 200 · 그을린 숯 벽', groups: [
+      G('가 · 낮은 숯 판 + 속불씨', '탄 숯 벽은 칸 폭 0.84배 · 5px 낮은 판으로 무너지고, 뒤 모서리에 작은 덩이 둘(4 · 5px)이 남습니다. 숯보다 한 단계(−25%) 짙고, 윗면에 작은 불씨 셋(0.09배)이 옅게 남아 있습니다. 큐브는 판 위(5px)에 올라서 지나갑니다.',
+        [w1(cw('cold')), w1(cw('charred')), w1({ t: 'charwall', st: 'crumble' }), w1({ t: 'charwall', st: 'gone' })], ['처음 숯 더미', '그을린 숯 · 가', '16월드 재 · 무너짐', '재 자국'],
+        '추천 · 가. 짙은 숯빛 판이라 밝은 회색 재(사라지는 것)와 명도부터 반대이고, 속불씨가 "아직 불이 남아 다시 탄다"를 말합니다. 불씨는 다음 불붙음까지 수마다 밝아져 4수 박자도 함께 맡습니다(J-4).'),
+      G('나 · 낮은 숯 판 + 그을음 결', '같은 판에 불씨 없이 윗면에 옅은 그을음 얼룩(재 28%) 둘. 탄 자리로는 읽히지만, 재와 섞인 얼룩이 16월드 재 쪽으로 기울고 다시 탈 단서가 없습니다.',
+        [w1(cw('charred', { cs: 'b' })), w1(cw('charred', { cs: 'b' }), [{ t: 'cube', z: 5 }])], ['그을린 숯 · 나', '큐브가 올라섬'])
+    ] };
+    const J2 = { id: 'J-2', title: '쓰지 않음 · 보스 200 · 그을린 숯 다리', groups: [
+      G('장작 판이 그을린 채 남음', '숯 다리의 장작 둘(16px 판)이 모양은 그대로, 색만 그을린 숯빛(−25%)으로 남습니다. 다리 두께와 장작 끝 결이 그대로라 건널 수 있는 판으로 읽히고, 장작 윗면에 불씨 셋이 옅게 남습니다. 큐브는 바닥 높이로 건넙니다.',
+        [pit1({ t: 'charbridge' }), pit1(cb('charred')), pit1(cb('charred'), [{ t: 'cube' }])], ['처음 숯 다리', '그을린 숯 다리', '큐브가 건넘'])
+    ] };
+    const J3 = { id: 'J-3', title: '쓰지 않음 · 보스 200 · 다시 불붙는 한 수', groups: [
+      G('숯 벽', '16월드 달아오름 · 불붙음을 그을린 판에 그대로 씁니다. 예고 수에 면이 숯불빛 쪽으로 50%, 불붙는 수에 100%와 속불빛(0.56 · 0.3배), 불티 일곱(20px). 보스 불이라 둘레 빛은 160과 같은 1.75배 · 0.2. 다음 수에 다시 그을린 숯(불씨 가장 옅음)으로 돌아옵니다.',
+        [w1(cw('charred', { lv: 2 })), w1(cw('rewarm')), w1(cw('reburn')), w1(cw('charred', { lv: 1 }))], ['그을린 숯', '예고 · 달아오름', '불붙음 · 못 지나감', '다음 수 · 다시 그을림']),
+      G('숯 다리', '다리도 같은 차례. 불붙은 한 수 동안은 건널 수 없습니다.',
+        [pit1(cb('charred', { lv: 2 })), pit1(cb('rewarm')), pit1(cb('reburn')), pit1(cb('charred', { lv: 1 }))], ['그을린 숯', '예고', '불붙음', '다시 그을림'])
+    ] };
+    const cyc = [cw('reburn'), cw('charred', { lv: 1 }), cw('charred', { lv: 2 }), cw('rewarm')];
+    const J4 = { id: 'J-4', title: '쓰지 않음 · 보스 200 · 4수 박자와 예고', groups: [
+      G('한 칸의 네 수', '한 칸은 4수마다 같은 차례를 돕니다. 불붙음 → 그을림(불씨 0.3) → 그을림(불씨 0.55) → 예고(달아오름, 발밑 빛 1.3배 0.09) → 불붙음. 불씨가 수마다 한 단계씩 밝아지다 달아오르니, 숫자 없이 "몇 수 남았나"가 칸 위에서 보입니다.',
+        [w1(cyc[0]), w1(cyc[1]), w1(cyc[2]), w1(cyc[3]), w1(cyc[0])], ['1수 · 불붙음', '2수 · 그을림', '3수 · 불씨 밝아짐', '4수 · 예고', '5수 · 다시 불붙음'])
+    ] };
+    const cycB = [cb('reburn'), cb('charred', { lv: 1 }), cb('charred', { lv: 2 }), cb('rewarm')];
+    const path200 = T => { const cells = {}; [0, 1, 2, 3, 4, 5].forEach(i => { const st = ((T - i) % 4 + 4) % 4, isB = i === 2 || i === 3; cells[i + ',0'] = isB ? cycB[st] : cyc[st]; }); return { g: [[0, 0, 'p', 'p', 0, 0]], cells }; };
+    const J5 = { id: 'J-5', title: '쓰지 않음 · 보스 200 · 불길이 같은 길을 다시 훑음', groups: [
+      G('숯 줄 한 순간', '처음에 왼쪽부터 차례로 탔으니, 칸마다 한 수씩 늦은 박자로 돕니다. 한 순간에 불붙음 · 예고 · 그을림(밝은 불씨) · 그을림(옅은 불씨)이 줄을 따라 차례로 놓여, 불붙음이 4칸 간격으로 서고 한 수마다 한 칸씩 오른쪽으로 나아갑니다. 예고 칸이 늘 불붙음 바로 앞에 있어 다음에 막힐 칸이 보입니다.',
+        [path200(4), path200(5), path200(6)], ['이번 수', '다음 수', '그다음 수'], '', true)
+    ] };
+    const J6 = { id: 'J-6', title: '쓰지 않음 · 보스 200 · 그을린 숯 위 큐브에 불', groups: [
+      GH('숯 벽 위', '그을린 판 위에 선 큐브 밑 칸이 예고되고, 다음 수에 다시 불붙으면 큐브에 불이 붙어 FIRE 4(17월드 화로와 같음, 큐브 불 가 안)가 됩니다. 큐브는 그 칸에서 빠져나갈 수 있고, 다음 수에 그을린 숯 위에서 FIRE 3이 됩니다.',
+        [w1(cw('rewarm'), [{ t: 'cube', z: 5 }]), w1(cw('reburn'), [{ t: 'fcube', n: 4, z: 5 }]), { g: [[0, 0, 0]], cells: { '1,0': cw('charred', { lv: 1 }) }, objs: { '2,0': [{ t: 'fcube', n: 3 }] } }],
+        ['예고 · 큐브가 서 있음', '불붙음 · FIRE 4', '다음 수 · 빠져나감'], [[null, 8], [4, 7], [3, 6]]),
+      GH('숯 다리 위', '다리 위에서도 같습니다.',
+        [pit1(cb('rewarm'), [{ t: 'cube' }]), pit1(cb('reburn'), [{ t: 'fcube', n: 4 }])], ['예고', '불붙음 · FIRE 4'], [[null, 8], [4, 7]])
+    ] };
+    const J7 = { id: 'J-7', title: '쓰지 않음 · 보스 200 · 재시작', groups: [
+      G('그을린 숯이 처음 숯으로', '숯 재시작과 같은 결로 0.24초 안의 세 컷. 그을린 판이 1 → 0.6 → 0.3 → 0으로 옅어지는 사이 처음 숯 더미가 같은 칸에서 0.35 → 0.7 → 1로 차오릅니다. 다리도 같습니다.',
+        [w1(cw('charred')), w1(cw('charred', { re: 0.35 })), w1(cw('charred', { re: 0.7 })), w1({ t: 'charwall' })], ['그을린 숯', '0.08초', '0.16초', '0.24초 · 처음 숯']),
+      G('다리', '', [pit1(cb('charred')), pit1(cb('charred', { re: 0.35 })), pit1(cb('charred', { re: 0.7 })), pit1({ t: 'charbridge' })], ['그을린 다리', '0.08초', '0.16초', '처음 다리'])
+    ] };
+
     const mx = K.mix;
     const css = ['/* 숯 (선 없음 · 면 명암만) */', `--color-char-top: ${FR.CHAR.t};   /* 밑 덩이 윗면 · 장작 */`, `--color-char-hi: ${FR.CHAR.hi};   /* 위 덩이 윗면 · 밝은 장작 결 */`, `--color-char-low: ${mx(FR.CHAR.t, FR.CHAR.l, 0.45)};   /* 장작 사이 골 */`, `--color-char-left: ${FR.CHAR.l};`, `--color-char-right: ${FR.CHAR.r};`, '/* 숯 더미: 0.8 × 13px + 0.46 × 9px + 0.3 × 6px = 꼭대기 22px */',
       '', '/* 달아오름 · 불붙음: 위 면 전체를 숯 → 숯불빛으로 섞음 (달아오름 50%, 불붙음 100%) · 위 덩이는 --color-heat-hot 쪽으로 85% */', `--color-heat-top: ${FR.HEAT.t};`, `--color-heat-left: ${FR.HEAT.l};`, `--color-heat-right: ${FR.HEAT.r};`, `--color-heat-hot: ${FR.HEAT.hot};   /* 불티 · 큐브 빛 */`, `--color-heat-core: ${FR.HEAT.core};   /* 불티 속 · 큐브 윗면 빛 */`,
@@ -330,14 +381,14 @@ class Component extends DCLogic {
       '', '/* 치수 */', '숯 더미 0.8배 · 22px · 숯 다리 16px · 부서진 다리 조각 12px 내려앉음', '구르는 중: 반 칸, 5px 들림, 빛은 큐브와 함께 · 불티만 진행 반대쪽으로 처짐',
       '불꽃 모양 없음 · 불티 꼭대기 < 30px (놓인 면 기준)',
       '', '/* 화로 다시 밟음 · 꺼짐 (한 수 0.24초) */', '다시 참: 0.16초 세기 0.5 높이 0.45 (꺼짐에서) · 0.8 / 0.75 (2에서) + 화로 속불빛 --color-heat-core 1.1배 0.22 → 0.24초 4', '꺼짐: 0.08초 0.24 / 0.6 · 0.16초 0.1 / 0.25 + 불티 하나 8px 0.7 · 0.24초 0 · FIRE 0 → 0.2초 페이드로 지움',
-      '', '/* 170 타는 상자 (숯 벽과 같은 차례, 0.5초) */', '달아오름: 면 노랑 → 숯불빛 50% (윗면 --color-heat-hi 쪽 × 0.75) · 옆면 아래 0.6층 빛 0.4 · 둘레 1.1배 0.07', '불붙음: 100% · 윗면 --color-heat-hot 0.62배 0.7 · --color-heat-core 0.34배 0.8 · 불티 둘 12px · 둘레 1.35배 0.13', '무너짐: 재 덩이 12 · 8 · 6 · 4px (둘은 숯불빛) · 재 자국 = 숯 벽 자국 (0.5배)', '미리 알림: 옆면 아래 12px --color-heat-hot 0.2 · 발밑 0.92배 0.06 · 큐브에 불이 있는 동안만', '재시작: 상자 0.35 → 0.7 → 1 · 재 자국 0.6 → 0.3 → 0'].map(s => ({ s }));
+      '', '/* 보스 200 · 꺼지지 않는 불 */', `그을린 숯: 숯 −25% (윗면 ${K.FIRE.CT.t} · 왼 ${K.FIRE.CT.l} · 오 ${K.FIRE.CT.r})`, '벽: 판 0.84배 × 5px + 뒤 덩이 0.24 / 0.28배 × 4 / 5px · 큐브는 5px 위 · 다리: 장작 판 그대로 (16px)', '속불씨 셋 0.09배 --color-heat-crack · 그을림 1수 0.3 → 2수 0.55 → 예고(달아오름 50%, 발밑 1.3배 0.09) → 불붙음', '불붙음: 보스 빛 (둘레 1.75배 0.2 · 속불빛 0.35 · 불티 일곱 20px) · 한 수 동안 못 지나감', '재시작: 그을린 숯 1 → 0 · 처음 숯 0.35 → 1 (같은 칸)', '', '/* 170 타는 상자 (숯 벽과 같은 차례, 0.5초) */', '달아오름: 면 노랑 → 숯불빛 50% (윗면 --color-heat-hi 쪽 × 0.75) · 옆면 아래 0.6층 빛 0.4 · 둘레 1.1배 0.07', '불붙음: 100% · 윗면 --color-heat-hot 0.62배 0.7 · --color-heat-core 0.34배 0.8 · 불티 둘 12px · 둘레 1.35배 0.13', '무너짐: 재 덩이 12 · 8 · 6 · 4px (둘은 숯불빛) · 재 자국 = 숯 벽 자국 (0.5배)', '미리 알림: 옆면 아래 12px --color-heat-hot 0.2 · 발밑 0.92배 0.06 · 큐브에 불이 있는 동안만', '재시작: 상자 0.35 → 0.7 → 1 · 재 자국 0.6 → 0.3 → 0'].map(s => ({ s }));
 
     const toSrc = (shapes, vb) => encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '">' + shapes.map(p => p.txt !== undefined
       ? '<text x="' + p.d.split(',')[0] + '" y="' + p.d.split(',')[1] + '" font-size="' + p.fs + '" font-family="Jost, Helvetica, Arial, sans-serif" font-weight="500" text-anchor="middle" fill="' + p.f + '">' + p.txt + '</text>'
       : '<polygon points="' + p.d + '" fill="' + p.f + '"' + (p.o !== 1 ? ' opacity="' + p.o + '"' : '') + '/>').join('') + '</svg>');
     const walk = o => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { if (o.shapes && o.vb) { const vbp = o.vb.split(' ');
         o.bgi = 'url("data:image/svg+xml,' + toSrc(o.shapes, o.vb) + '")'; o.ar = vbp[2] + ' / ' + vbp[3]; delete o.shapes; } Object.values(o).forEach(walk); } };
-    const out = { S1: [A, B, C, D, MV], S2: [E, F, Gs], S3: [R1, R2, R3, R4, R5], tagA, hud, P: mid, css };
+    const out = { S1: [A, B, C, D, MV], S2: [E, F, Gs], S3: [R1, R2, R3, R4, R5, J1, J2, J3, J4, J5, J6, J7], tagA, hud, P: mid, css };
     walk(out);
     return out;
   }

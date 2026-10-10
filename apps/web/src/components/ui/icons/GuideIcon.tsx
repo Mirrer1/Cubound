@@ -1,6 +1,6 @@
 const GuideIcon = ({ className = 'size-[1em]' }: { className?: string }) => (
   <svg
-    viewBox="0 0 24 24"
+    viewBox="0.17 -0.12 23.66 23.66"
     className={className}
     fill="none"
     stroke="currentColor"

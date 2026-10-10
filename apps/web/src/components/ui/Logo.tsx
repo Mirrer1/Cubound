@@ -3,7 +3,7 @@ import { darken } from '@/components/board/view'
 const Logo = () => {
   return (
     <h1
-      className="flex items-center text-6xl font-light tracking-tight sm:text-8xl"
+      className="flex items-center text-6xl font-light tracking-tight sm:text-8xl flat:text-[4.5rem]"
       aria-label="Cubound"
     >
       Cub

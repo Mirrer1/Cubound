@@ -18,365 +18,287 @@
 </style>
 </helmet>
 <div style="background:#E9E7E2;color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 90px;min-height:100vh">
-  <div style="max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:44px">
+  <div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:48px">
 
-    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781;text-transform:uppercase">
-      <span>CUBOUND</span>
-      <span>Layout studies · 헤더와 스테이지 목록</span>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#66645F">
+      <span style="white-space:nowrap">CUBOUND · LAYOUT</span>
+      <span style="white-space:nowrap">반응형 기준 · 최종본</span>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:20px">
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781">질문 1</span>
-        <span style="font-size:28px;font-weight:400;letter-spacing:-0.01em">폰 세로 게임 헤더</span>
-        <span style="font-size:14.5px;color:#5F5D59;line-height:1.65;max-width:720px;word-break:keep-all;text-wrap:pretty">어긋나 보이는 원인은 2×2 배치 자체가 아니라 네 덩이가 저마다 다른 기준선을 쓰고 있다는 점입니다. 세 안 모두 기준선을 하나로 줄였습니다. A는 지금 구조를 유지한 채 정렬만 고치고, B는 두 줄을 한 줄로 접고, C는 숫자를 필드 쪽으로 내려 헤더를 가장 낮게 만듭니다.</span>
-      </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:860px">
+      <span style="font-size:34px;font-weight:400;letter-spacing:-0.01em">모든 화면, 모든 기기 한 벌의 기준</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.7;word-break:keep-all;text-wrap:pretty">기기 묶음 여섯 개마다 크기 단계 하나씩을 정하고, 모든 화면이 그 단계만 씁니다. 치수는 rem(16px)이고 폰은 100% 기준 값입니다(구현에서 85%). 화면 모양은 Gameplay(common/ui.dc.html)를 따르고, 이 파일은 크기·여백·배치만 정합니다. 판 그림은 범위 밖이라 시안에서는 판이 들어갈 자리만 칠했습니다.</span>
+    </div>
 
-      <div style="display:flex;flex-wrap:wrap;gap:22px">
-
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;flex-direction:column;gap:2px">
-            <span style="font-size:16px;font-weight:400">A · 기준선 정리 (2×2 유지)</span>
-            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.08em">HEADER 88PX</span>
-          </div>
-          <div style="width:390px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:34px;overflow:hidden">
-            <div style="height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
-            <div style="padding:14px 20px 12px;display:flex;flex-direction:column;gap:8px">
-              <div style="height:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.22em;color:#8A8781;line-height:16px">STAGE 10</span>
-                <div style="display:flex;gap:22px">
-                  <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.18em;color:#8A8781;line-height:16px;width:56px;text-align:right">CLIMBS</span>
-                  <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.18em;color:#8A8781;line-height:16px;width:56px;text-align:right">MOVES</span>
-                </div>
-              </div>
-              <div style="height:36px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
-                <span style="font-size:26px;font-weight:400;line-height:32px;white-space:nowrap">무너짐</span>
-                <div style="display:flex;gap:22px">
-                  <span style="font-size:30px;font-weight:300;line-height:32px;width:56px;text-align:right;font-variant-numeric:tabular-nums">3</span>
-                  <span style="font-size:30px;font-weight:300;line-height:32px;width:56px;text-align:right;font-variant-numeric:tabular-nums">0</span>
-                </div>
-              </div>
-            </div>
-            <div style="padding:0 20px 14px;display:flex;justify-content:flex-end;gap:10px">
-              <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:15px;color:#3A3936">?</span>
-              <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:17px;color:#3A3936">↺</span>
-              <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:15px;color:#3A3936">≡</span>
-            </div>
-            <div style="height:440px;border-top:1px solid #E6E3DE;display:flex;align-items:center;justify-content:center">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#C2BFB8">FIELD</span>
-            </div>
-            <div style="height:120px;display:flex;align-items:center;justify-content:center;border-top:1px dashed #E1DED8">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#C2BFB8">SWIPE ZONE · 비움</span>
-            </div>
-          </div>
-          <span style="width:390px;font-size:13px;color:#6E6C68;line-height:1.6;word-break:keep-all;text-wrap:pretty">라벨 줄 16px, 값 줄 36px, 둘 사이 8px. 라벨은 line-height로 가운데, 값은 baseline(32px)으로 맞춥니다. 숫자 칸은 56px 고정이라 한 개일 때도 자리가 흔들리지 않습니다. 버튼은 값 줄 아래 별도 40px 줄로 내려 세 덩이가 아니라 두 줄 + 버튼 줄이 됩니다.</span>
+    <div style="background:#F2F1EE;border-radius:16px;padding:16px 20px;display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#66645F">진행 상황</span>
+      <sc-for list="{{ progress }}" as="p" hint-placeholder-count="3">
+        <div style="display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;align-items:baseline">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.12em;color:{{ p.c }}">{{ p.s }}</span>
+          <span style="font-size:13.5px;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ p.t }}</span>
         </div>
+      </sc-for>
+    </div>
 
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;flex-direction:column;gap:2px">
-            <span style="font-size:16px;font-weight:400">B · 한 줄로 접기</span>
-            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.08em">HEADER 56PX</span>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">1</span><span style="font-size:24px;font-weight:400">공통 규칙</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));gap:12px">
+        <sc-for list="{{ rules }}" as="r" hint-placeholder-count="8">
+          <div style="background:#F2F1EE;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:15px;font-weight:400">{{ r.k }}</span>
+            <span style="font-size:13.5px;color:#5F5D59;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ r.v }}</span>
           </div>
-          <div style="width:390px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:34px;overflow:hidden">
-            <div style="height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
-            <div style="height:56px;padding:0 20px;display:flex;align-items:center;gap:14px">
-              <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0">
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781;line-height:13px">STAGE 10</span>
-                <span style="font-size:19px;font-weight:400;line-height:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">무너짐</span>
-              </div>
-              <div style="display:flex;align-items:baseline;gap:5px">
-                <span style="font-size:24px;font-weight:300;line-height:24px;font-variant-numeric:tabular-nums">3</span>
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781">CLIMBS</span>
-              </div>
-              <div style="display:flex;align-items:baseline;gap:5px">
-                <span style="font-size:24px;font-weight:300;line-height:24px;font-variant-numeric:tabular-nums">0</span>
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.14em;color:#8A8781">MOVES</span>
-              </div>
-            </div>
-            <div style="height:52px;padding:0 20px;display:flex;justify-content:flex-end;align-items:center;gap:10px">
-              <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:15px">?</span>
-              <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:17px">↺</span>
-              <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:15px">≡</span>
-            </div>
-            <div style="height:480px;border-top:1px solid #E6E3DE;display:flex;align-items:center;justify-content:center">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#C2BFB8">FIELD</span>
-            </div>
-            <div style="height:120px;display:flex;align-items:center;justify-content:center;border-top:1px dashed #E1DED8">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#C2BFB8">SWIPE ZONE · 비움</span>
-            </div>
-          </div>
-          <span style="width:390px;font-size:13px;color:#6E6C68;line-height:1.6;word-break:keep-all;text-wrap:pretty">이름과 숫자가 한 줄(56px)에서 같은 baseline을 씁니다. 라벨을 숫자 옆으로 붙여 라벨 줄 자체를 없앴습니다. 긴 영문 이름은 줄바꿈 대신 말줄임으로 처리합니다. 필드가 A보다 40px 넓어집니다.</span>
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;flex-direction:column;gap:2px">
-            <span style="font-size:16px;font-weight:400">C · 숫자를 필드 쪽으로</span>
-            <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.08em">HEADER 48PX + 상태 줄 28PX</span>
-          </div>
-          <div style="width:390px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:34px;overflow:hidden">
-            <div style="height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;font-family:'IBM Plex Mono', monospace;font-size:11px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
-            <div style="height:48px;padding:0 20px;display:flex;align-items:center;gap:12px">
-              <div style="display:flex;align-items:baseline;gap:10px;flex:1;min-width:0">
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.22em;color:#8A8781">10</span>
-                <span style="font-size:19px;font-weight:400;line-height:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">무너짐</span>
-              </div>
-              <div style="display:flex;gap:8px">
-                <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:15px">?</span>
-                <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:17px">↺</span>
-                <span style="width:40px;height:40px;border:1px solid #DCD9D3;border-radius:12px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:15px">≡</span>
-              </div>
-            </div>
-            <div style="height:28px;padding:0 20px;display:flex;align-items:center;justify-content:center;gap:20px">
-              <div style="display:flex;align-items:baseline;gap:6px">
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">CLIMBS</span>
-                <span style="font-size:17px;font-weight:400;line-height:20px;font-variant-numeric:tabular-nums">3</span>
-              </div>
-              <span style="width:1px;height:12px;background:#DCD9D3"></span>
-              <div style="display:flex;align-items:baseline;gap:6px">
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#8A8781">MOVES</span>
-                <span style="font-size:17px;font-weight:400;line-height:20px;font-variant-numeric:tabular-nums">0</span>
-              </div>
-            </div>
-            <div style="height:512px;display:flex;align-items:center;justify-content:center">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#C2BFB8">FIELD</span>
-            </div>
-            <div style="height:120px;display:flex;align-items:center;justify-content:center;border-top:1px dashed #E1DED8">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.18em;color:#C2BFB8">SWIPE ZONE · 비움</span>
-            </div>
-          </div>
-          <span style="width:390px;font-size:13px;color:#6E6C68;line-height:1.6;word-break:keep-all;text-wrap:pretty">헤더는 이름과 버튼만 남겨 48px, 숫자는 가운데 정렬 상태 줄 28px로 분리합니다. 숫자가 하나면 구분선과 함께 그대로 하나만 남아 좌우 균형이 깨지지 않습니다. 필드가 가장 넓지만 숫자가 작아 보스 판에는 A나 B가 낫습니다.</span>
-        </div>
-
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781">320 × 568 · 같은 세 안</span>
-        <div style="display:flex;flex-wrap:wrap;gap:20px">
-
-          <div style="width:320px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:28px;overflow:hidden">
-            <div style="height:28px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 18px 4px;font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
-            <div style="padding:10px 16px 10px;display:flex;flex-direction:column;gap:6px">
-              <div style="height:14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781;line-height:14px">STAGE 10</span>
-                <div style="display:flex;gap:16px">
-                  <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#8A8781;line-height:14px;width:48px;text-align:right">CLIMBS</span>
-                  <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#8A8781;line-height:14px;width:48px;text-align:right">MOVES</span>
-                </div>
-              </div>
-              <div style="height:30px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px">
-                <span style="font-size:21px;font-weight:400;line-height:26px;white-space:nowrap">무너짐</span>
-                <div style="display:flex;gap:16px">
-                  <span style="font-size:25px;font-weight:300;line-height:26px;width:48px;text-align:right;font-variant-numeric:tabular-nums">3</span>
-                  <span style="font-size:25px;font-weight:300;line-height:26px;width:48px;text-align:right;font-variant-numeric:tabular-nums">0</span>
-                </div>
-              </div>
-            </div>
-            <div style="padding:0 16px 12px;display:flex;justify-content:flex-end;gap:8px">
-              <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:14px">?</span>
-              <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:16px">↺</span>
-              <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:14px">≡</span>
-            </div>
-            <div style="height:288px;border-top:1px solid #E6E3DE;display:flex;align-items:center;justify-content:center">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#C2BFB8">FIELD</span>
-            </div>
-            <div style="height:96px;display:flex;align-items:center;justify-content:center;border-top:1px dashed #E1DED8">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#C2BFB8">SWIPE ZONE</span>
-            </div>
-          </div>
-
-          <div style="width:320px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:28px;overflow:hidden">
-            <div style="height:28px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 18px 4px;font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
-            <div style="height:52px;padding:0 16px;display:flex;align-items:center;gap:10px">
-              <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0">
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.2em;color:#8A8781;line-height:12px">STAGE 10</span>
-                <span style="font-size:17px;font-weight:400;line-height:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">The Cracked Path</span>
-              </div>
-              <div style="display:flex;align-items:baseline;gap:4px">
-                <span style="font-size:21px;font-weight:300;line-height:22px;font-variant-numeric:tabular-nums">3</span>
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:9px;letter-spacing:0.12em;color:#8A8781">CL</span>
-              </div>
-              <div style="display:flex;align-items:baseline;gap:4px">
-                <span style="font-size:21px;font-weight:300;line-height:22px;font-variant-numeric:tabular-nums">0</span>
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:9px;letter-spacing:0.12em;color:#8A8781">MV</span>
-              </div>
-            </div>
-            <div style="height:48px;padding:0 16px;display:flex;justify-content:flex-end;align-items:center;gap:8px">
-              <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:14px">?</span>
-              <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:16px">↺</span>
-              <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:14px">≡</span>
-            </div>
-            <div style="height:316px;border-top:1px solid #E6E3DE;display:flex;align-items:center;justify-content:center">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#C2BFB8">FIELD</span>
-            </div>
-            <div style="height:96px;display:flex;align-items:center;justify-content:center;border-top:1px dashed #E1DED8">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#C2BFB8">SWIPE ZONE</span>
-            </div>
-          </div>
-
-          <div style="width:320px;background:#F2F1EE;border:1px solid #DCD9D3;border-radius:28px;overflow:hidden">
-            <div style="height:28px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 18px 4px;font-family:'IBM Plex Mono', monospace;font-size:10px;color:#A9A6A0"><span>9:41</span><span>●●●</span></div>
-            <div style="height:46px;padding:0 16px;display:flex;align-items:center;gap:10px">
-              <div style="display:flex;align-items:baseline;gap:8px;flex:1;min-width:0">
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.2em;color:#8A8781">10</span>
-                <span style="font-size:17px;font-weight:400;line-height:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">The Cracked Path</span>
-              </div>
-              <div style="display:flex;gap:7px">
-                <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:16px">↺</span>
-                <span style="width:38px;height:38px;border:1px solid #DCD9D3;border-radius:11px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:14px">≡</span>
-              </div>
-            </div>
-            <div style="height:26px;padding:0 16px;display:flex;align-items:center;justify-content:center;gap:16px">
-              <div style="display:flex;align-items:baseline;gap:6px">
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#8A8781">CLIMBS</span>
-                <span style="font-size:16px;font-weight:400;line-height:18px;font-variant-numeric:tabular-nums">3</span>
-              </div>
-              <span style="width:1px;height:11px;background:#DCD9D3"></span>
-              <div style="display:flex;align-items:baseline;gap:6px">
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#8A8781">MOVES</span>
-                <span style="font-size:16px;font-weight:400;line-height:18px;font-variant-numeric:tabular-nums">0</span>
-              </div>
-            </div>
-            <div style="height:344px;display:flex;align-items:center;justify-content:center">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#C2BFB8">FIELD</span>
-            </div>
-            <div style="height:96px;display:flex;align-items:center;justify-content:center;border-top:1px dashed #E1DED8">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:9.5px;letter-spacing:0.16em;color:#C2BFB8">SWIPE ZONE</span>
-            </div>
-          </div>
-
-        </div>
-        <span style="font-size:13.5px;color:#6E6C68;line-height:1.65;max-width:900px;word-break:keep-all;text-wrap:pretty">320px에서는 A의 숫자 칸을 48px, 라벨을 9.5px로 줄입니다. B는 긴 영문 이름이 들어가면 라벨을 CL/MV 두 글자로 줄여야 하므로, 영문 빌드에서는 A나 C를 권합니다. 가이드 버튼이 없는 판에서는 버튼이 둘만 남고 나머지 배치는 그대로입니다(C 예시).</span>
+        </sc-for>
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:20px">
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#8A8781">질문 2</span>
-        <span style="font-size:28px;font-weight:400;letter-spacing:-0.01em">2560px에서 스테이지 목록</span>
-        <span style="font-size:14.5px;color:#5F5D59;line-height:1.65;max-width:720px;word-break:keep-all;text-wrap:pretty">세 안 모두 2560×1440 실제 치수로 그리고 화면 폭에 맞게 축소해 보여 줍니다. 괄호 안 숫자는 모두 실제 px입니다.</span>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;flex-direction:column;gap:2px">
-          <span style="font-size:16px;font-weight:400">D · 패널을 내용 폭으로 (1264 고정, 가운데)</span>
-          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.08em">CARD 240 · GAP 16 · PANEL 1264 · 좌우 648 여백</span>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">2</span><span style="font-size:24px;font-weight:400">요소 치수 표 (rem)</span></div>
+      <span style="font-size:13px;color:#5F5D59;line-height:1.6;max-width:860px;word-break:keep-all">폰 두 칸은 100% 기준 값(화면 위에서는 0.85배). 괄호는 화면 위 px.</span>
+      <div style="background:#F2F1EE;border-radius:16px;padding:8px 0;overflow-x:auto">
+        <div style="min-width:1000px;display:flex;flex-direction:column">
+          <div style="display:grid;grid-template-columns:210px repeat(6, minmax(0,1fr));gap:8px;padding:10px 20px;border-bottom:1px solid #DCD9D3">
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.14em;color:#66645F">요소</span>
+            <sc-for list="{{ tierHeads }}" as="h" hint-placeholder-count="6"><span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.14em;color:#66645F">{{ h }}</span></sc-for>
+          </div>
+          <sc-for list="{{ table }}" as="row" hint-placeholder-count="24">
+            <div style="display:grid;grid-template-columns:210px repeat(6, minmax(0,1fr));gap:8px;padding:8px 20px;border-bottom:1px solid #E6E3DE;align-items:baseline">
+              <span style="font-size:13.5px">{{ row.k }}</span>
+              <sc-for list="{{ row.v }}" as="c" hint-placeholder-count="6"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;line-height:1.5;color:#3A3936">{{ c }}</span></sc-for>
+            </div>
+          </sc-for>
         </div>
-        <div ref="{{ mockRef }}" style="width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;border:1px solid #DCD9D3;border-radius:16px;background:#E9E7E2">
-          <div style="position:absolute;top:0;left:0;width:2560px;height:1440px;transform-origin:top left;display:flex;align-items:center;justify-content:center">
-            <div style="width:1264px;display:flex;flex-direction:column;gap:40px">
-              <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:32px">
-                <div style="display:flex;flex-direction:column;gap:10px">
-                  <span style="font-family:'IBM Plex Mono', monospace;font-size:15px;letter-spacing:0.28em;color:#8A8781">WORLD 1</span>
-                  <span style="font-size:46px;font-weight:400;line-height:1">낮은 계단의 땅</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:28px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">3</span><span style="font-size:24px;font-weight:400">스테이지 목록 · 장 고르기</span></div>
+      <sc-for list="{{ listGroups }}" as="lg" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+            <span style="font-size:17px;font-weight:400">{{ lg.title }}</span>
+            <sc-if value="{{ lg.hasTag }}" hint-placeholder-val="{{ false }}"><span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.16em;background:#3A3936;color:#F2F1EE;padding:3px 8px;border-radius:6px">{{ lg.tag }}</span></sc-if>
+          </div>
+          <span style="font-size:13.5px;color:#5F5D59;line-height:1.6;max-width:900px;word-break:keep-all;text-wrap:pretty">{{ lg.note }}</span>
+          <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+            <sc-for list="{{ lg.frames }}" as="f" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:8px;max-width:100%">
+                <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+                  <sc-if value="{{ f.hasId }}" hint-placeholder-val="{{ false }}"><span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.1em;background:#F7F6F4;border:1px solid #CFCCC6;padding:2px 7px;border-radius:6px">{{ f.id }}</span></sc-if>
+                  <span style="font-size:14px">{{ f.name }}</span>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.08em;color:#66645F">{{ f.dim }}</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:26px">
-                  <span style="font-family:'IBM Plex Mono', monospace;font-size:15px;letter-spacing:0.18em;color:#8A8781">0 / 30 ◆</span>
-                  <span style="width:52px;height:52px;border:1px solid #DCD9D3;border-radius:15px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:18px">‹</span>
-                  <span style="width:52px;height:52px;border:1px solid #DCD9D3;border-radius:15px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:18px">›</span>
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:repeat(5, 240px);gap:16px;justify-content:center">
-                <sc-for list="{{ cards }}" as="c" hint-placeholder-count="10">
-                  <div style="width:240px;height:240px;box-sizing:border-box;border-radius:24px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;border:{{ c.border }};background:{{ c.bg }}">
-                    <span style="font-family:'IBM Plex Mono', monospace;font-size:14px;letter-spacing:0.2em;color:{{ c.tag }}">{{ c.state }}</span>
-                    <span style="font-size:64px;font-weight:300;line-height:1;align-self:center;color:{{ c.num }}">{{ c.n }}</span>
-                    <div style="display:flex;gap:10px;align-self:center">
-                      <span style="width:16px;height:16px;transform:rotate(45deg);border-radius:3px;background:{{ c.s1 }};border:1px solid {{ c.sb }}"></span>
-                      <span style="width:16px;height:16px;transform:rotate(45deg);border-radius:3px;background:{{ c.s2 }};border:1px solid {{ c.sb }}"></span>
-                      <span style="width:16px;height:16px;transform:rotate(45deg);border-radius:3px;background:{{ c.s3 }};border:1px solid {{ c.sb }}"></span>
+                <div style="width:{{ f.ow }}px;height:{{ f.oh }}px;position:relative;overflow:hidden;border-radius:14px;box-shadow:0 0 0 1px rgba(58,57,54,0.14)">
+                  <div style="position:absolute;top:0;left:0;width:{{ f.w }}px;height:{{ f.h }}px;transform:{{ f.tf }};transform-origin:top left;background:{{ f.bg }};box-sizing:border-box;padding:{{ f.pad }}px;display:flex;align-items:{{ f.va }};justify-content:center;gap:{{ f.sideGap }}px">
+                    <sc-if value="{{ f.side }}" hint-placeholder-val="{{ false }}">
+                      <div style="width:{{ f.sideW }}px;display:flex;flex-direction:column;gap:{{ f.u1 }}px">
+                        <span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.22em;color:#66645F">WORLD 1</span>
+                        <span style="font-size:{{ f.heroName }}px;font-weight:400;line-height:1.15">낮은 계단의 땅</span>
+                        <span style="font-size:{{ f.desc }}px;line-height:1.6;color:#5F5D59;word-break:keep-all">한 칸씩 오르내리는 법을 익히는 열 판입니다.</span>
+                        <div style="display:flex;align-items:baseline;gap:{{ f.u05 }}px"><span style="font-size:{{ f.heroNum }}px;font-weight:300;line-height:1">21</span><span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.18em;color:#66645F">/ 30 ◆</span></div>
+                      </div>
+                    </sc-if>
+                    <div style="width:{{ f.bw }}px;display:flex;flex-direction:column;gap:{{ f.gap }}px">
+                      <div style="display:flex;justify-content:space-between;align-items:center;gap:{{ f.u1 }}px">
+                        <div style="display:flex;align-items:center;gap:{{ f.u075 }}px;min-width:0">
+                          <div style="width:{{ f.btn }}px;height:{{ f.btn }}px;flex:none;border:1px solid #CFCCC6;border-radius:{{ f.br }}px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" style="width:{{ f.ic }}px;height:{{ f.ic }}px"><path d="M15 5L8 12L15 19" fill="none" stroke="#3A3936" stroke-width="{{ f.sw }}" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                          <div style="position:relative;min-width:0">
+                            <div style="position:absolute;left:{{ f.u05 }}px;right:-{{ f.u05 }}px;top:-{{ f.u05 }}px;bottom:{{ f.u05 }}px;background:{{ f.locked }};border-radius:{{ f.tr }}px"></div>
+                            <div style="position:relative;background:{{ f.card }};border:1px solid #DCD9D3;border-radius:{{ f.tr }}px;padding:{{ f.u05 }}px {{ f.u1 }}px;display:flex;flex-direction:column;gap:{{ f.u025 }}px">
+                              <span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.2em;color:#66645F;white-space:nowrap">{{ f.tabLab }}</span>
+                              <sc-if value="{{ f.tabLab2On }}" hint-placeholder-val="{{ false }}"><span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.2em;color:#66645F;white-space:nowrap">{{ f.tabLab2 }}</span></sc-if>
+                              <span style="font-size:{{ f.wname }}px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.wtitle }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:{{ f.u05 }}px;flex:none">
+                          <span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.16em;color:#66645F;margin-right:{{ f.u05 }}px">{{ f.prog }}</span>
+                          <div style="width:{{ f.btn }}px;height:{{ f.btn }}px;border:1px solid #CFCCC6;border-radius:{{ f.br }}px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" style="width:{{ f.ic }}px;height:{{ f.ic }}px"><path d="M14 6L8 12L14 18" fill="none" stroke="#3A3936" stroke-width="{{ f.sw }}" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                          <div style="width:{{ f.btn }}px;height:{{ f.btn }}px;border:1px solid #CFCCC6;border-radius:{{ f.br }}px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" style="width:{{ f.ic }}px;height:{{ f.ic }}px"><path d="M10 6L16 12L10 18" fill="none" stroke="#3A3936" stroke-width="{{ f.sw }}" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                        </div>
+                      </div>
+                      <sc-if value="{{ f.hero }}" hint-placeholder-val="{{ false }}">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:{{ f.u2 }}px;padding:{{ f.u1 }}px 0">
+                          <span style="font-size:{{ f.desc }}px;line-height:1.6;color:#5F5D59;max-width:60%;word-break:keep-all">한 칸씩 오르내리는 법을 익히는 열 판입니다.</span>
+                          <div style="display:flex;align-items:baseline;gap:{{ f.u05 }}px"><span style="font-size:{{ f.heroNum }}px;font-weight:300;line-height:1">21</span><span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.18em;color:#66645F">/ 30 ◆</span></div>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ f.isList }}" hint-placeholder-val="{{ true }}">
+                        <div style="display:flex;flex-direction:column;gap:{{ f.cg }}px;align-items:center">
+                          <sc-for list="{{ f.rows }}" as="row" hint-placeholder-count="2">
+                            <div style="display:flex;gap:{{ f.cg }}px">
+                              <sc-for list="{{ row }}" as="c" hint-placeholder-count="5">
+                                <div style="width:{{ f.cs }}px;height:{{ f.cs }}px;box-sizing:border-box;border:{{ c.bd }};border-radius:{{ f.cr }}px;background:{{ c.bg }};padding:{{ f.cp }}px;display:flex;flex-direction:column;justify-content:space-between">
+                                  <span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.18em;color:{{ c.tc }}">{{ c.st }}</span>
+                                  <span style="font-size:{{ f.num }}px;font-weight:300;line-height:1;align-self:center;color:{{ c.nc }}">{{ c.n }}</span>
+                                  <span style="font-size:{{ f.star }}px;letter-spacing:0.2em;align-self:center;color:{{ c.sc }}">◆◆◆</span>
+                                </div>
+                              </sc-for>
+                            </div>
+                          </sc-for>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ f.isChap }}" hint-placeholder-val="{{ false }}">
+                        <div style="display:grid;grid-template-columns:{{ f.chCols }};gap:{{ f.cg }}px">
+                          <sc-for list="{{ f.chaps }}" as="ch" hint-placeholder-count="4">
+                            <div style="background:{{ f.card }};border:{{ ch.bd }};border-radius:{{ f.cr }}px;padding:{{ f.chPad }}px;display:flex;flex-direction:{{ f.chDir }};gap:{{ f.chGap }}px;align-items:{{ f.chAlign }}">
+                              <div style="flex:none;width:{{ f.winW }};height:{{ f.winH }}px;border-radius:{{ f.winR }}px;background:{{ ch.win }};box-shadow:inset 0 0 0 1px rgba(58,57,54,0.08)"></div>
+                              <div style="display:flex;flex-direction:column;gap:{{ f.u05 }}px;min-width:0;flex:1">
+                                <div style="display:flex;justify-content:space-between;gap:{{ f.u05 }}px"><span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.2em;color:#66645F;white-space:nowrap">{{ ch.lab }}</span><span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.2em;color:#3A3936">{{ ch.now }}</span></div>
+                                <span style="font-size:{{ f.chName }}px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ ch.name }}</span>
+                                <div style="display:flex;align-items:center;gap:{{ f.u075 }}px">
+                                  <div style="flex:1;height:{{ f.barH }}px;border-radius:999px;background:#E1DED8;overflow:hidden"><div style="width:{{ ch.pct }};height:100%;background:#3A3936"></div></div>
+                                  <span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.12em;color:#66645F;white-space:nowrap">{{ ch.cnt }}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </sc-for>
+                        </div>
+                      </sc-if>
                     </div>
                   </div>
-                </sc-for>
+                </div>
+                <span style="width:{{ f.ow }}px;max-width:100%;font-size:12.5px;color:#5F5D59;line-height:1.55;word-break:keep-all;text-wrap:pretty">{{ f.note }}</span>
               </div>
-            </div>
+            </sc-for>
           </div>
+          <sc-if value="{{ lg.hasPick }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:13.5px;line-height:1.6;max-width:900px;word-break:keep-all;text-wrap:pretty;background:#F2F1EE;border-radius:10px;padding:12px 14px">{{ lg.pick }}</span>
+          </sc-if>
         </div>
-        <span style="font-size:13.5px;color:#6E6C68;line-height:1.65;max-width:900px;word-break:keep-all;text-wrap:pretty">가장 손이 적게 가는 안입니다. 패널 배경을 없애고 카드 묶음 자체를 화면 가운데 고정 폭 덩이로 둡니다. 헤더도 같은 1264px 안에 맞춰 왼쪽 끝이 카드 01과, 오른쪽 끝이 카드 05와 정확히 맞습니다. 여백이 "패널이 덜 찼다"가 아니라 "가운데 놓인 물건"으로 읽힙니다.</span>
-      </div>
+      </sc-for>
+    </div>
 
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;flex-direction:column;gap:2px">
-          <span style="font-size:16px;font-weight:400">E · 한 줄 10칸 · 세로 가운데 띠</span>
-          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.08em">CARD 200 · GAP 16 · STRIP 2144 · 좌우 208 여백</span>
-        </div>
-        <div ref="{{ mockRef }}" style="width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;border:1px solid #DCD9D3;border-radius:16px;background:#E9E7E2">
-          <div style="position:absolute;top:0;left:0;width:2560px;height:1440px;transform-origin:top left;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:56px">
-            <div style="width:2144px;display:flex;justify-content:space-between;align-items:flex-end;gap:32px">
-              <div style="display:flex;align-items:baseline;gap:28px">
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:15px;letter-spacing:0.28em;color:#8A8781">WORLD 1</span>
-                <span style="font-size:46px;font-weight:400;line-height:1">낮은 계단의 땅</span>
-              </div>
-              <div style="display:flex;align-items:center;gap:26px">
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:15px;letter-spacing:0.18em;color:#8A8781">0 / 30 ◆</span>
-                <span style="width:52px;height:52px;border:1px solid #DCD9D3;border-radius:15px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:18px">‹</span>
-                <span style="width:52px;height:52px;border:1px solid #DCD9D3;border-radius:15px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:18px">›</span>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(10, 200px);gap:16px">
-              <sc-for list="{{ cards }}" as="c" hint-placeholder-count="10">
-                <div style="width:200px;height:200px;box-sizing:border-box;border-radius:22px;padding:20px;display:flex;flex-direction:column;justify-content:space-between;border:{{ c.border }};background:{{ c.bg }}">
-                  <span style="font-family:'IBM Plex Mono', monospace;font-size:13px;letter-spacing:0.2em;color:{{ c.tag }}">{{ c.state }}</span>
-                  <span style="font-size:54px;font-weight:300;line-height:1;align-self:center;color:{{ c.num }}">{{ c.n }}</span>
-                  <div style="display:flex;gap:9px;align-self:center">
-                    <span style="width:14px;height:14px;transform:rotate(45deg);border-radius:3px;background:{{ c.s1 }};border:1px solid {{ c.sb }}"></span>
-                    <span style="width:14px;height:14px;transform:rotate(45deg);border-radius:3px;background:{{ c.s2 }};border:1px solid {{ c.sb }}"></span>
-                    <span style="width:14px;height:14px;transform:rotate(45deg);border-radius:3px;background:{{ c.s3 }};border:1px solid {{ c.sb }}"></span>
+    <div style="display:flex;flex-direction:column;gap:28px">
+      <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">4</span><span style="font-size:24px;font-weight:400">게임 · 타이틀 · 위에 뜨는 것 · 오류</span></div>
+      <sc-for list="{{ screens }}" as="sg" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <span style="font-size:17px;font-weight:400">{{ sg.title }}</span>
+          <span style="font-size:13.5px;color:#5F5D59;line-height:1.6;max-width:900px;word-break:keep-all;text-wrap:pretty">{{ sg.note }}</span>
+          <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+            <sc-for list="{{ sg.frames }}" as="f" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:8px;max-width:100%">
+                <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+                  <span style="font-size:14px">{{ f.name }}</span>
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.08em;color:#66645F">{{ f.dim }}</span>
+                </div>
+                <div style="width:{{ f.ow }}px;height:{{ f.oh }}px;position:relative;overflow:hidden;border-radius:14px;box-shadow:0 0 0 1px rgba(58,57,54,0.14)">
+                  <div style="position:absolute;top:0;left:0;width:{{ f.w }}px;height:{{ f.h }}px;transform:{{ f.tf }};transform-origin:top left;background:{{ f.bg }};box-sizing:border-box;display:flex;flex-direction:column">
+
+                    <sc-if value="{{ f.isGame }}" hint-placeholder-val="{{ false }}">
+                      <div style="flex:none;height:{{ f.hh }}px;box-sizing:border-box;padding:{{ f.hpv }}px {{ f.pad }}px 0;display:flex;flex-direction:column;justify-content:center;gap:{{ f.u05 }}px">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:{{ f.u1 }}px">
+                          <div style="display:flex;flex-direction:{{ f.nameDir }};align-items:{{ f.nameAlign }};gap:{{ f.nameGap }}px;min-width:0;flex:1">
+                            <span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.22em;color:#66645F;white-space:nowrap">STAGE 10</span>
+                            <span style="font-size:{{ f.gname }}px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:{{ f.clamp }};-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all">{{ f.sname }}</span>
+                          </div>
+                          <sc-if value="{{ f.numsTop }}" hint-placeholder-val="{{ false }}">
+                            <div style="display:flex;gap:{{ f.u15 }}px;flex:none">
+                              <sc-for list="{{ f.nums }}" as="n" hint-placeholder-count="1">
+                                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:{{ f.u0125 }}px"><span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.22em;color:#66645F">{{ n.k }}</span><span style="font-size:{{ f.gnum }}px;font-weight:300;line-height:1">{{ n.v }}</span></div>
+                              </sc-for>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ f.btnTop }}" hint-placeholder-val="{{ true }}">
+                            <div style="display:flex;gap:{{ f.bgap }}px;flex:none">
+                              <sc-for list="{{ f.icons }}" as="i" hint-placeholder-count="4">
+                                <div style="width:{{ f.btn }}px;height:{{ f.btn }}px;border:1px solid #CFCCC6;border-radius:{{ f.br }}px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" style="width:{{ f.ic }}px;height:{{ f.ic }}px"><path d="{{ i }}" fill="none" stroke="#3A3936" stroke-width="{{ f.sw }}" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                              </sc-for>
+                            </div>
+                          </sc-if>
+                        </div>
+                        <sc-if value="{{ f.row2 }}" hint-placeholder-val="{{ false }}">
+                          <div style="display:flex;justify-content:space-between;align-items:center;gap:{{ f.u1 }}px">
+                            <div style="display:flex;gap:{{ f.n2gap }}px">
+                              <sc-for list="{{ f.nums }}" as="n" hint-placeholder-count="1">
+                                <div style="display:flex;flex-direction:{{ f.n2dir }};align-items:{{ f.n2align }};gap:{{ f.n2in }}px"><span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.22em;color:#66645F">{{ n.k }}</span><span style="font-size:{{ f.gnum }}px;font-weight:300;line-height:1">{{ n.v }}</span></div>
+                              </sc-for>
+                            </div>
+                            <sc-if value="{{ f.btnLow }}" hint-placeholder-val="{{ false }}">
+                              <div style="display:flex;gap:{{ f.bgap }}px;flex:none">
+                                <sc-for list="{{ f.icons }}" as="i" hint-placeholder-count="4">
+                                  <div style="width:{{ f.btn }}px;height:{{ f.btn }}px;border:1px solid #CFCCC6;border-radius:{{ f.br }}px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" style="width:{{ f.ic }}px;height:{{ f.ic }}px"><path d="{{ i }}" fill="none" stroke="#3A3936" stroke-width="{{ f.sw }}" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                                </sc-for>
+                              </div>
+                            </sc-if>
+                          </div>
+                        </sc-if>
+                      </div>
+                      <div style="flex:1;margin:{{ f.u1 }}px {{ f.pad }}px {{ f.pad }}px;border-radius:{{ f.cr }}px;background:{{ f.field }};display:flex;align-items:center;justify-content:center;position:relative">
+                        <span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.2em;color:#66645F">{{ f.fieldLab }}</span>
+                        <sc-if value="{{ f.focus }}" hint-placeholder-val="{{ false }}">
+                          <div style="position:absolute;left:{{ f.fx }};top:{{ f.fy }};width:{{ f.fw }}px;height:{{ f.fh }}px;border-radius:{{ f.fr }}px;box-shadow:0 0 0 2px #F7F6F4, 0 0 0 9999px rgba(58,57,54,0.32)"></div>
+                        </sc-if>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ f.isTitle }}" hint-placeholder-val="{{ false }}">
+                      <div style="flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:{{ f.u15 }}px;padding:{{ f.pad }}px">
+                        <div style="position:absolute;top:{{ f.pad }}px;right:{{ f.pad }}px;height:{{ f.btn }}px;padding:0 {{ f.u075 }}px;border:1px solid #CFCCC6;border-radius:{{ f.br }}px;display:flex;align-items:center;gap:{{ f.u05 }}px"><span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.16em;color:#66645F">한국어</span><svg viewBox="0 0 24 24" style="width:{{ f.ic }}px;height:{{ f.ic }}px"><path d="M7 10L12 15L17 10" fill="none" stroke="#3A3936" stroke-width="{{ f.sw }}" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                        <div style="position:absolute;right:{{ f.pad }}px;bottom:{{ f.pad }}px;width:{{ f.decoW }}px;height:{{ f.decoH }}px;border-radius:{{ f.cr }}px;background:{{ f.field }}"></div>
+                        <span style="position:relative;font-size:{{ f.logo }}px;font-weight:300;line-height:1">Cubound</span>
+                        <span style="position:relative;font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.28em;color:#66645F">FIND YOUR WAY HOME</span>
+                        <div style="position:relative;width:{{ f.sbw }};height:{{ f.sbh }}px;border-radius:{{ f.sbr }}px;background:#3A3936;color:#F2F1EE;display:flex;align-items:center;justify-content:center;font-size:{{ f.sbf }}px;margin-top:{{ f.u05 }}px">시작</div>
+                        <span style="position:relative;font-size:{{ f.small }}px;color:#3A3936">스테이지 선택</span>
+                        <sc-if value="{{ f.touch }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;bottom:{{ f.pad }}px;left:0;right:0;text-align:center;font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.22em;color:#66645F">SWIPE TO MOVE</span></sc-if>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ f.isError }}" hint-placeholder-val="{{ false }}">
+                      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:{{ f.u1 }}px;padding:{{ f.pad }}px;text-align:center">
+                        <span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.22em;color:#66645F">ERROR</span>
+                        <span style="font-size:{{ f.gname }}px;line-height:1.3;word-break:keep-all">판을 불러오지 못했습니다</span>
+                        <div style="height:{{ f.sbh }}px;padding:0 {{ f.u2 }}px;border-radius:{{ f.sbr }}px;background:#3A3936;color:#F2F1EE;display:flex;align-items:center;font-size:{{ f.small }}px;margin-top:{{ f.u05 }}px">다시 시도</div>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ f.dim2 }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:0;background:rgba(58,57,54,0.32)"></div>
+                    </sc-if>
+                    <sc-if value="{{ f.hasCard }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;left:0;right:0;top:{{ f.cardTop }};bottom:{{ f.cardBottom }};display:flex;align-items:{{ f.cardAlign }};justify-content:center;padding:{{ f.pad }}px;pointer-events:none">
+                        <div style="width:{{ f.ovw }}px;max-width:100%;background:#F2F1EE;border-radius:{{ f.cr }}px;padding:{{ f.ovp }}px;display:flex;flex-direction:column;gap:{{ f.u1 }}px;box-sizing:border-box">
+                          <span style="font-family:'IBM Plex Mono', monospace;font-size:{{ f.lab }}px;letter-spacing:0.22em;color:#66645F">{{ f.ovLab }}</span>
+                          <span style="font-size:{{ f.ovTitle }}px;line-height:1.35;word-break:keep-all;text-wrap:pretty">{{ f.ovText }}</span>
+                          <sc-if value="{{ f.ovStars }}" hint-placeholder-val="{{ false }}"><span style="font-size:{{ f.gnum }}px;letter-spacing:0.3em;align-self:center">◆◆◆</span></sc-if>
+                          <div style="display:flex;justify-content:space-between;align-items:center;gap:{{ f.u1 }}px;margin-top:{{ f.u05 }}px">
+                            <span style="font-size:{{ f.small }}px;color:#66645F;padding:{{ f.u05 }}px 0">{{ f.ovSkip }}</span>
+                            <sc-if value="{{ f.ovNext }}" hint-placeholder-val="{{ false }}">
+                              <div style="width:{{ f.btn }}px;height:{{ f.btn }}px;border-radius:{{ f.br }}px;background:#3A3936;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" style="width:{{ f.ic }}px;height:{{ f.ic }}px"><path d="M10 6L16 12L10 18" fill="none" stroke="#F2F1EE" stroke-width="{{ f.sw }}" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                            </sc-if>
+                            <sc-if value="{{ f.ovMain }}" hint-placeholder-val="{{ false }}">
+                              <div style="height:{{ f.sbh }}px;padding:0 {{ f.u15 }}px;border-radius:{{ f.sbr }}px;background:#3A3936;color:#F2F1EE;display:flex;align-items:center;font-size:{{ f.small }}px">{{ f.ovBtn }}</div>
+                            </sc-if>
+                          </div>
+                        </div>
+                      </div>
+                    </sc-if>
                   </div>
                 </div>
-              </sc-for>
-            </div>
-            <div style="width:2144px;display:flex;justify-content:center">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:14px;letter-spacing:0.24em;color:#A9A6A0">01 → 10</span>
-            </div>
+                <span style="width:{{ f.ow }}px;max-width:100%;font-size:12.5px;color:#5F5D59;line-height:1.55;word-break:keep-all;text-wrap:pretty">{{ f.note }}</span>
+              </div>
+            </sc-for>
           </div>
         </div>
-        <span style="font-size:13.5px;color:#6E6C68;line-height:1.65;max-width:900px;word-break:keep-all;text-wrap:pretty">10개가 정확히 고정이라는 점을 그대로 형태로 씁니다. 한 줄이면 순서가 경로처럼 읽히고 가로 폭도 자연스럽게 채워집니다. 세로로는 화면 가운데 띠 하나만 남아 위아래 여백이 대칭이 됩니다. 1440px 이하에서는 5×2로, 폰에서는 2열로 접습니다.</span>
-      </div>
+      </sc-for>
+    </div>
 
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(380px, 1fr));gap:16px">
       <div style="display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;flex-direction:column;gap:2px">
-          <span style="font-size:16px;font-weight:400">F · 카드에 최소 이동 수를 더하고 5×2 유지</span>
-          <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:#8A8781;letter-spacing:0.08em">CARD 280 · GAP 20 · GRID 1480 · 좌우 540 여백</span>
+        <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">5</span><span style="font-size:22px;font-weight:400">지금과 달라진 점</span></div>
+        <div style="background:#F2F1EE;border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ changes }}" as="c" hint-placeholder-count="14"><span style="font-size:13.5px;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ c }}</span></sc-for>
         </div>
-        <div ref="{{ mockRef }}" style="width:100%;aspect-ratio:16/9;position:relative;overflow:hidden;border:1px solid #DCD9D3;border-radius:16px;background:#E9E7E2">
-          <div style="position:absolute;top:0;left:0;width:2560px;height:1440px;transform-origin:top left;display:flex;align-items:center;justify-content:center;gap:120px">
-            <div style="width:420px;display:flex;flex-direction:column;gap:28px">
-              <span style="font-family:'IBM Plex Mono', monospace;font-size:15px;letter-spacing:0.28em;color:#8A8781">WORLD 1</span>
-              <span style="font-size:58px;font-weight:400;line-height:1.15">낮은 계단의 땅</span>
-              <span style="font-size:22px;color:#6E6C68;line-height:1.7;word-break:keep-all">한 칸씩 오르내리는 법을 익히는 열 판입니다.</span>
-              <div style="display:flex;align-items:baseline;gap:14px;margin-top:8px">
-                <span style="font-size:52px;font-weight:300;line-height:1;font-variant-numeric:tabular-nums">0</span>
-                <span style="font-family:'IBM Plex Mono', monospace;font-size:15px;letter-spacing:0.18em;color:#8A8781">/ 30 ◆</span>
-              </div>
-              <div style="display:flex;gap:14px;margin-top:12px">
-                <span style="width:56px;height:56px;border:1px solid #DCD9D3;border-radius:16px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:19px">‹</span>
-                <span style="width:56px;height:56px;border:1px solid #DCD9D3;border-radius:16px;background:#F7F6F4;display:flex;align-items:center;justify-content:center;font-size:19px">›</span>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(5, 280px);gap:20px">
-              <sc-for list="{{ cards }}" as="c" hint-placeholder-count="10">
-                <div style="width:280px;height:280px;box-sizing:border-box;border-radius:26px;padding:26px;display:flex;flex-direction:column;justify-content:space-between;border:{{ c.border }};background:{{ c.bg }}">
-                  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
-                    <span style="font-family:'IBM Plex Mono', monospace;font-size:14px;letter-spacing:0.2em;color:{{ c.tag }}">{{ c.state }}</span>
-                    <span style="font-family:'IBM Plex Mono', monospace;font-size:14px;letter-spacing:0.12em;color:{{ c.tag }}">{{ c.best }}</span>
-                  </div>
-                  <span style="font-size:76px;font-weight:300;line-height:1;align-self:center;color:{{ c.num }}">{{ c.n }}</span>
-                  <div style="display:flex;gap:12px;align-self:center">
-                    <span style="width:18px;height:18px;transform:rotate(45deg);border-radius:4px;background:{{ c.s1 }};border:1px solid {{ c.sb }}"></span>
-                    <span style="width:18px;height:18px;transform:rotate(45deg);border-radius:4px;background:{{ c.s2 }};border:1px solid {{ c.sb }}"></span>
-                    <span style="width:18px;height:18px;transform:rotate(45deg);border-radius:4px;background:{{ c.s3 }};border:1px solid {{ c.sb }}"></span>
-                  </div>
-                </div>
-              </sc-for>
-            </div>
-          </div>
-        </div>
-        <span style="font-size:13.5px;color:#6E6C68;line-height:1.65;max-width:900px;word-break:keep-all;text-wrap:pretty">카드에 더할 것은 최소 이동 수입니다. 이미 기록하고 있는 값이고, 깬 판에만 나타나며, 별과 달리 "다시 해 볼 이유"가 됩니다(보스 판은 제한 수 24를 같은 자리에 둡니다). 잠긴 판은 그 자리가 비어 상태 차이가 한 겹 더 생깁니다. 남는 가로 폭은 왼쪽 월드 설명 기둥이 받습니다. 카드는 280px까지만 키웁니다.</span>
       </div>
-
-      <div style="background:#F2F1EE;border:1px solid #DCD9D3;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:10px">
-        <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.2em;color:#8A8781">새 색 없음</span>
-        <span style="font-size:14px;color:#5F5D59;line-height:1.65;max-width:900px;word-break:keep-all;text-wrap:pretty">세 안 모두 기존 팔레트만 씁니다. 다만 D와 E에서는 패널 배경(#F2F1EE)을 쓰지 않고 카드(#F7F6F4)를 화면 배경(#E9E7E2) 위에 직접 올립니다. 배경 두 겹이 사라지면서 같은 여백이 더 의도적으로 보입니다.</span>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">6</span><span style="font-size:22px;font-weight:400">Gameplay(ui.dc.html)와 어긋난 곳</span></div>
+        <div style="background:#F2F1EE;border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ mismatch }}" as="c" hint-placeholder-count="5"><span style="font-size:13.5px;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ c }}</span></sc-for>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:12px;margin-top:8px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em">7</span><span style="font-size:22px;font-weight:400">배치를 크게 바꾸는 제안</span></div>
+        <div style="background:#F2F1EE;border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ big }}" as="c" hint-placeholder-count="3"><span style="font-size:13.5px;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ c }}</span></sc-for>
+        </div>
       </div>
     </div>
 
@@ -385,57 +307,230 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1240}}">
 class Component extends DCLogic {
-  mocks = [];
-  componentDidMount() {
-    this.fitAll = () => this.mocks.forEach(el => {
-      if (!el || !el.firstElementChild) return;
-      el.firstElementChild.style.transform = 'scale(' + (el.clientWidth / 2560) + ')';
-    });
-    this.ro = new ResizeObserver(this.fitAll);
-    this.mocks.forEach(el => el && this.ro.observe(el));
-    this.fitAll();
-  }
-  componentWillUnmount() { if (this.ro) this.ro.disconnect(); }
-
   renderVals() {
-    const ink = '#3A3936', mute = '#8A8781', line = '#DCD9D3', card = '#F7F6F4', lock = '#ECEAE6';
-    const mk = (n, state, kind, stars, best) => {
-      const boss = kind === 'boss';
-      const locked = kind === 'locked';
-      const fill = boss ? '#E3CD8E' : ink;
-      const empty = boss ? '#4A4845' : 'transparent';
-      const sb = boss ? '#5A5854' : (locked ? '#E1DED8' : '#CFCCC6');
-      return {
-        n, state, best: best || '',
-        bg: boss ? ink : (locked ? lock : card),
-        border: boss ? '1px solid ' + ink : (kind === 'now' ? '2px solid ' + ink : '1px solid ' + line),
-        num: boss ? '#F2F1EE' : (locked ? '#B5B2AB' : ink),
-        tag: boss ? '#E3CD8E' : (locked ? '#A9A6A0' : mute),
-        sb,
-        s1: stars > 0 ? fill : empty, s2: stars > 1 ? fill : empty, s3: stars > 2 ? fill : empty
-      };
+    const C1 = { bg: '#E9E7E2', card: '#F7F6F4', locked: '#ECEAE6', field: '#E2E0DA' }, C4 = { bg: '#EBE3D9', card: '#FAF4ED', locked: '#EEE7DF', field: '#E4DBD0' };
+    const T = {
+      P: { k: 0.85, pad: 1.25, lab: 0.6875, wname: 1.125, btn: 2.5, ic: 1.25, gap: 1, cmax: 12, cg: 0.75, cr: 1.375, cp: 0.875, gname: 1.25, gnum: 1.25, logo: 3.75, small: 1, sbh: 3.5 },
+      PL: { k: 0.85, pad: 1.25, lab: 0.6875, wname: 1.25, btn: 2.5, ic: 1.25, gap: 0.75, cmax: 8.5, cg: 0.625, cr: 1.125, cp: 0.625, gname: 1.25, gnum: 1.5, logo: 6, small: 1, sbh: 3.5 },
+      TP: { k: 1, pad: 2.5, lab: 0.75, wname: 1.5, btn: 3, ic: 1.5, gap: 1.5, cmax: 14, cg: 1, cr: 1.375, cp: 1, gname: 1.5, gnum: 1.75, logo: 5.5, small: 1.0625, sbh: 3.75 },
+      TL: { k: 1, pad: 2.5, lab: 0.75, wname: 1.5, btn: 3, ic: 1.5, gap: 1.25, cmax: 14, cg: 1, cr: 1.375, cp: 1, gname: 1.625, gnum: 1.875, logo: 5.5, small: 1.0625, sbh: 3.75 },
+      L: { k: 1, pad: 3, lab: 0.75, wname: 1.5, btn: 2.75, ic: 1.375, gap: 2, cmax: 15, cg: 1, cr: 1.375, cp: 1, gname: 1.6875, gnum: 2, logo: 6, small: 1.0625, sbh: 3.5 },
+      M: { k: 1, pad: 4, lab: 0.8125, wname: 2, btn: 2.75, ic: 1.375, gap: 2.5, cmax: 16, cg: 1.25, cr: 1.375, cp: 1.25, gname: 1.6875, gnum: 2, logo: 6, small: 1.125, sbh: 3.5 }
     };
-    return {
-      mockRef: el => {
-        if (el && this.mocks.indexOf(el) === -1) {
-          this.mocks.push(el);
-          if (this.ro) this.ro.observe(el);
-          if (this.fitAll) this.fitAll();
-        }
-      },
-      cards: [
-        mk('01', 'CLEAR', 'clear', 3, '12'),
-        mk('02', 'CLEAR', 'clear', 2, '19'),
-        mk('03', 'CLEAR', 'clear', 3, '08'),
-        mk('04', 'NOW', 'now', 0, ''),
-        mk('05', '잠김', 'locked', 0, ''),
-        mk('06', '잠김', 'locked', 0, ''),
-        mk('07', '잠김', 'locked', 0, ''),
-        mk('08', '잠김', 'locked', 0, ''),
-        mk('09', '잠김', 'locked', 0, ''),
-        mk('10', 'BOSS', 'boss', 0, '24')
-      ]
+    const ink = '#3A3936', mute = '#66645F', faint = '#7A7771';
+    const base = (o, t) => { const R = 16 * t.k, px = v => v * R, sc = (o.shown || o.w) / o.w, btn = px(t.btn), ic = px(t.ic);
+      return { R, px, sc, out: { name: o.name || '', note: o.note || '', dim: o.w + ' × ' + o.h + (t.k < 1 ? ' · 85%' : '') + ' · 축소 ' + Math.round(sc * 100) + '%',
+        w: o.w, h: o.h, ow: Math.round(o.w * sc), oh: Math.round(o.h * sc), tf: 'scale(' + sc + ')',
+        pad: px(t.pad), lab: px(t.lab), btn, ic, sw: 1.5 * 24 / ic, br: Math.round(btn * 0.3), cr: px(t.cr), small: px(t.small), sbh: px(t.sbh), sbr: Math.round(px(t.sbh) * 0.3),
+        gname: px(t.gname), gnum: px(t.gnum), u0125: px(0.125), u025: px(0.25), u05: px(0.5), u075: px(0.75), u1: px(1), u15: px(1.5), u2: px(2) } }; };
+    const cards = C => Array.from({ length: 10 }, (_, i) => {
+      const n = String(i + 1).padStart(2, '0');
+      if (i < 3) return { n, st: 'CLEAR', bd: '1px solid #CFCCC6', bg: C.card, tc: mute, nc: ink, sc: ink };
+      if (i === 3) return { n, st: 'NOW', bd: '1.5px solid ' + ink, bg: C.card, tc: ink, nc: ink, sc: '#CFCCC6' };
+      return { n, st: '잠김', bd: '1px solid #E1DED8', bg: C.locked, tc: faint, nc: '#B5B2AB', sc: '#DCD9D3' };
+    });
+    const CHAPS = [['CHAPTER 1 · 1–50', '돌 위의 첫걸음', '#E9E7E2', 150], ['CHAPTER 2 · 51–100', '풀이 우거진 길', '#E2E6DB', 150], ['CHAPTER 3 · 101–150', '물이 차오르는 길', '#DDE6E7', 150], ['CHAPTER 4 · 151–200', '불을 건너는 길', '#EBE3D9', 21]];
+    const split = (arr, pat) => { const out = []; let i = 0; pat.forEach(n => { out.push(arr.slice(i, i + n)); i += n; }); return out; };
+    // list / chapter frame. o: { tier, w, h, C, pat, hero, side, shown, name, id, note, crop, chap }
+    const frame = o => {
+      const t = T[o.tier], C = o.C || C1, b = base(o, t), px = b.px, f = b.out;
+      const pad = f.pad, btn = f.btn, lab = f.lab, wname = px(t.wname), gap = px(t.gap), cg = px(t.cg);
+      const tabH = lab * 1.3 * (o.tier === 'P' && !o.chap ? 2 : 1) + px(0.25) + wname * 1.2 + px(1) + 2, headH = Math.max(btn, tabH + px(0.5));
+      const desc = px(o.tier === 'M' ? 1.125 : 1), heroNum = px(o.tier === 'M' ? 3.25 : 2.5), heroName = px(o.tier === 'M' ? 3 : 2);
+      const heroH = o.hero ? heroNum + px(2) + gap : 0, sideW = o.side ? px(20) : 0, sideGap = o.side ? px(5) : 0;
+      const aw = o.w - 2 * pad - sideW - sideGap, ah = o.h - 2 * pad - headH - gap - heroH;
+      Object.assign(f, { id: o.id || '', hasId: !!o.id, bg: C.bg, card: C.card, locked: C.locked, gap, cg, wname, tr: px(0.875), hero: !!o.hero, side: !!o.side, sideW, sideGap, desc, heroNum, heroName,
+        wtitle: '낮은 계단의 땅', tabLab: o.tier === 'P' ? 'CHAPTER 1 ▾' : 'CHAPTER 1 ▾ · WORLD 1', tabLab2: 'WORLD 1', tabLab2On: o.tier === 'P' && !o.chap, prog: (o.hero || o.side) ? '' : '21 / 30 ◆', va: o.crop ? 'flex-start' : 'center', isList: !o.chap, isChap: !!o.chap });
+      if (o.chap) {
+        const horiz = o.tier === 'P' || o.tier === 'TP', cols = o.tier === 'P' ? 1 : o.tier === 'TP' ? 2 : 4;
+        const cmaxW = px({ PL: 11, TL: 14, L: 16, M: 20, P: 99, TP: 99 }[o.tier]), cw = Math.min(cmaxW, (aw - (cols - 1) * cg) / cols);
+        f.bw = cols * cw + (cols - 1) * cg; f.chCols = 'repeat(' + cols + ', ' + Math.floor(cw) + 'px)';
+        f.chDir = horiz ? 'row' : 'column'; f.chAlign = horiz ? 'center' : 'stretch'; f.chPad = px(horiz ? 0.75 : 1); f.chGap = px(horiz ? 1 : 0.75);
+        f.winW = horiz ? px(o.tier === 'P' ? 3.75 : 4) + 'px' : '100%'; f.winH = horiz ? px(o.tier === 'P' ? 3.75 : 4) : Math.round((cw - 2 * px(1)) * 0.5); f.winR = px(0.75);
+        f.chName = px(o.tier === 'M' ? 1.375 : o.tier === 'P' || o.tier === 'PL' ? 1.125 : 1.25); f.barH = px(0.25);
+        f.chaps = CHAPS.map(([l, n, w, c], i) => ({ lab: l, name: n, win: w, cnt: c + ' / 150', pct: Math.round(c / 1.5) + '%', now: i === 3 ? 'NOW' : '', bd: i === 3 ? '1.5px solid ' + ink : '1px solid #DCD9D3' }));
+        f.tabLab = 'CHAPTER 4 ▴'; f.wtitle = '장 고르기'; f.prog = '';
+        f.rows = [];
+        return f;
+      }
+      const cols = Math.max(...o.pat), rows = o.pat.length;
+      let cs = Math.min(px(t.cmax), (aw - (cols - 1) * cg) / cols);
+      if (!o.crop) cs = Math.min(cs, (ah - (rows - 1) * cg) / rows);
+      cs = Math.floor(cs);
+      Object.assign(f, { cs, bw: cols * cs + (cols - 1) * cg, cp: Math.min(px(t.cp), cs * 0.1), num: Math.round(cs * 0.26), star: Math.max(px(0.5), Math.round(cs * 0.07)), rows: split(cards(C), o.pat), chaps: [] });
+      return f;
     };
+    const P52 = [5, 5], P22 = [2, 2, 2, 2, 2];
+    const listGroups = [
+      { title: '태블릿 세로 · 고를 안', tag: '고를 안', hasTag: true,
+        note: '세 안 모두 헤더와 카드 묶음을 같은 폭의 한 덩어리로 묶고, 남는 높이는 덩어리 위아래에 반씩 둡니다. 왼쪽 끝은 ← 버튼과 첫 카드가, 오른쪽 끝은 › 버튼과 줄 끝 카드가 맞습니다. 768 × 1024(위)와 1024 × 1366(아래).',
+        frames: [
+          frame({ tier: 'TP', w: 768, h: 1024, pat: [3, 4, 3], shown: 300, id: 'TA', name: '3 · 4 · 3', note: '가운데 줄만 넷. 카드가 세 안 중 가장 큼(160). 줄마다 가운데 정렬이라 끝에 한 장 남는 일이 없습니다. 격자 모양이 다른 기기와 달라 배치를 크게 바꾸는 제안입니다.' }),
+          frame({ tier: 'TP', w: 768, h: 1024, pat: P52, hero: true, shown: 300, id: 'TB', name: '넓은 헤더 + 5 × 2', note: '모니터의 월드 설명을 헤더 아래 한 줄로 가져와 헤더가 자리를 차지합니다(설명, 큰 진행 수). 카드는 5 × 2라 가로·노트북과 순서가 같지만 작습니다(124).' }),
+          frame({ tier: 'TP', w: 768, h: 1024, pat: P52, shown: 300, id: 'TC', name: '한 덩어리 5 × 2', note: '헤더를 그대로 두고 카드만 5 × 2로. 가장 손이 적게 가지만 덩어리가 낮아 위아래 빈 곳이 가장 큽니다.' }),
+          frame({ tier: 'TP', w: 1024, h: 1366, pat: [3, 4, 3], shown: 300, id: 'TA', name: '3 · 4 · 3', note: '큰 태블릿에서는 카드 상한(14rem, 224)에 닿습니다.' }),
+          frame({ tier: 'TP', w: 1024, h: 1366, pat: P52, hero: true, shown: 300, id: 'TB', name: '넓은 헤더 + 5 × 2', note: '' }),
+          frame({ tier: 'TP', w: 1024, h: 1366, pat: P52, shown: 300, id: 'TC', name: '한 덩어리 5 × 2', note: '' })
+        ],
+        pick: '추천 · TB. 카드 격자가 모든 큰 화면에서 5 × 2 하나로 같아 판 순서와 위치를 다시 익힐 일이 없고, 비던 위쪽을 설명과 진행 수가 채워 휑하지 않습니다. 카드를 크게 보고 싶으시면 TA입니다.', hasPick: true },
+      { title: '태블릿 가로 · 정사각에 가까운 창', tag: '', hasTag: false,
+        note: '카드 크기는 폭으로 정해지고, 남는 높이는 헤더와 카드를 한 덩어리로 세로 가운데에 두어 위아래에 반씩 나눕니다(한쪽에만 70~140px 비던 것). 칸 수는 10의 약수(2, 5)만 써서, 창을 줄여도 4 + 4 + 2가 생기지 않습니다. 폭이 카드 8rem × 5를 못 담을 때만 2칸으로 접습니다.',
+        frames: [
+          frame({ tier: 'TL', w: 1024, h: 768, pat: P52, shown: 380, name: '태블릿 가로', note: '1024 × 768. 카드 164, 덩어리 위아래가 같게 빕니다.' }),
+          frame({ tier: 'TL', w: 1194, h: 834, pat: P52, shown: 380, C: C4, name: '태블릿 가로 · 4장', note: '' }),
+          frame({ tier: 'L', w: 1000, h: 960, pat: P52, shown: 340, name: '정사각에 가까운 창', note: '데스크톱 창 1000 × 960. 4 + 4 + 2 대신 5 × 2.' })
+        ], pick: '', hasPick: false },
+      { title: '폰 · 노트북 · 모니터 (지금 배치, 어긋난 곳만 다듬음)', tag: '', hasTag: false,
+        note: '폰 세로는 2칸 세로 스크롤, 폰 가로는 5 × 2, 노트북은 5 × 2, 모니터는 왼쪽 월드 설명 + 5 × 2.',
+        frames: [
+          frame({ tier: 'P', w: 390, h: 844, pat: P22, crop: true, shown: 220, name: '폰 세로', note: '카드 160 안팎. 다섯 줄 중 셋이 보이고 스크롤.' }),
+          frame({ tier: 'PL', w: 844, h: 390, pat: P52, shown: 420, C: C4, name: '폰 가로 · 4장', note: '실제 높이 340에서도 카드가 높이로 줄어 들어갑니다.' }),
+          frame({ tier: 'L', w: 1366, h: 768, pat: P52, shown: 460, name: '노트북 · 낮은 화면', note: '1366 × 768. 헤더 덩이가 높이의 약 10%.' }),
+          frame({ tier: 'M', w: 1920, h: 1080, pat: P52, side: true, shown: 640, C: C4, name: '모니터 · 4장', note: '설명 1.125rem(18), 월드 이름 3rem, 진행 수 3.25rem. 설명 기둥 20rem.' })
+        ], pick: '', hasPick: false },
+      { title: '장 고르기 (스테이지 목록 안에서 카드 격자만 바뀜)', tag: '', hasTag: false,
+        note: '헤더는 목록과 같고 카드 자리만 장 카드로 바뀝니다. 노트북·모니터·태블릿 가로·폰 가로는 세로 카드 4칸, 태블릿 세로는 가로 카드 2칸, 폰 세로는 가로 카드 한 줄씩. 장이 8개가 되면 같은 칸 수로 줄만 늘어 노트북·모니터 4 × 2, 태블릿 세로 2 × 4, 폰 세로는 스크롤입니다(만든 장만 그리므로 시안에는 넷).',
+        frames: [
+          frame({ tier: 'P', w: 390, h: 844, chap: true, crop: true, shown: 220, name: '폰 세로', note: '카드 높이 5.25rem, 창 3.75rem.' }),
+          frame({ tier: 'TP', w: 768, h: 1024, chap: true, shown: 300, name: '태블릿 세로', note: '가로 카드 두 칸, 창 4rem.' }),
+          frame({ tier: 'L', w: 1366, h: 768, chap: true, shown: 460, C: C4, name: '노트북 · 4장', note: '카드 폭 상한 16rem. 창은 카드 폭의 절반 높이.' }),
+          frame({ tier: 'M', w: 1920, h: 1080, chap: true, shown: 520, name: '모니터', note: '카드 폭 상한 20rem.' })
+        ], pick: '', hasPick: false }
+    ];
+
+    const ICON = { fit: 'M4 9V4H9M15 4H20V9M20 15V20H15M9 20H4V15', help: 'M9.2 9.2A2.9 2.9 0 1 1 13.4 11.8C12.5 12.3 12 12.8 12 13.8M12 17.6V17.7', re: 'M5.5 12A6.5 6.5 0 1 0 7.4 7.4M5 4.5V8.5H9', menu: 'M5 7H19M5 12H19M5 17H19' };
+    const ICONS = [ICON.fit, ICON.help, ICON.re, ICON.menu];
+    // game frame. o: { tier, w, h, C, name, nums, narrow, low, shown, note, ov }
+    const game = o => {
+      const t = T[o.tier], C = o.C || C1, b = base(o, t), px = b.px, f = b.out;
+      const two = o.tier === 'P', narrow = two && o.narrow;
+      const hh = px(two ? (narrow ? 7.25 : 6) : o.tier === 'PL' ? 3.5 : o.low ? 4 : o.tier === 'M' ? 5.5 : 5);
+      Object.assign(f, { isGame: true, bg: C.bg, field: C.field, hh, hpv: px(two ? 0.75 : 0.5), sname: o.sname || '무너짐',
+        nameDir: (o.tier === 'PL' || o.low) ? 'row' : 'column', nameAlign: (o.tier === 'PL' || o.low) ? 'baseline' : 'flex-start', nameGap: px((o.tier === 'PL' || o.low) ? 0.75 : 0.25), clamp: narrow ? 2 : 1,
+        numsTop: !two, btnTop: !narrow, row2: two, btnLow: narrow, bgap: px(narrow ? 0.375 : two ? 0.5 : 0.625), icons: ICONS,
+        n2gap: px(narrow ? 1 : 1.5), n2dir: narrow ? 'column' : 'row', n2align: narrow ? 'flex-start' : 'baseline', n2in: px(narrow ? 0.125 : 0.5),
+        nums: (o.nums || [['MOVES', '12']]).map(([k, v]) => ({ k, v })),
+        fieldLab: '판 자리 ' + Math.round((o.h - hh - px(1) - f.pad) / o.h * 100) + '%', focus: false, dim2: false, hasCard: false });
+      return f;
+    };
+    const ov = (f, o, t) => {
+      const px = v => v * 16 * t.k;
+      Object.assign(f, { hasCard: true, ovw: px(o.wide ? 26 : 24), ovp: px(1.5), ovTitle: px(o.big ? 1.375 : 1.125), ovLab: o.lab, ovText: o.text, ovSkip: o.skip || '', ovNext: !!o.next, ovMain: !!o.btn, ovBtn: o.btn || '', ovStars: !!o.stars,
+        cardTop: o.bottom ? 'auto' : '0', cardBottom: '0', cardAlign: o.bottom ? 'flex-end' : 'center', dim2: !o.focus });
+      if (o.focus) Object.assign(f, { focus: true, fx: o.focus[0], fy: o.focus[1], fw: o.focus[2] * f.R / 16 * 16 / 16 * 1, fh: o.focus[3], fr: Math.round(o.focus[3] * 0.3) });
+      return f;
+    };
+    const title = o => { const t = T[o.tier], C = o.C || C1, b = base(o, t), px = b.px, f = b.out;
+      Object.assign(f, { isTitle: true, bg: C.bg, field: C.field, logo: px(t.logo), touch: !!o.touch, sbh: px(t.sbh), sbf: px(1.125),
+        sbw: o.tier === 'P' ? (o.w - 2 * f.pad) + 'px' : px(o.tier === 'TP' || o.tier === 'TL' ? 14 : 13) + 'px', decoW: px(o.tier === 'P' ? 10 : 18), decoH: px(o.tier === 'P' ? 6 : 11) });
+      return f; };
+    const err = o => { const t = T[o.tier], b = base(o, t), f = b.out; Object.assign(f, { isError: true, bg: (o.C || C1).bg }); return f; };
+
+    const EN = 'The Stairs That Fall Away', ES = 'Las escaleras que se desmoronan';
+    const screens = [
+      { title: '게임 화면', note: '폰 세로는 두 줄(이름과 버튼 / 숫자). 폭 360 미만이면 이름이 첫 줄을 다 쓰고(두 줄까지), 버튼 넷은 둘째 줄 숫자 오른쪽으로 내려갑니다. 그 밖의 묶음은 한 줄. 노트북에서 높이가 820 미만이면 STAGE와 이름을 한 줄로 붙여 헤더를 4rem으로 낮춥니다. 판 자리 비율은 화면 높이 대비.',
+        frames: [
+          game({ tier: 'P', w: 390, h: 844, shown: 220, name: '폰 세로 390', nums: [['MOVES', '12'], ['FIRE', '3']] }),
+          game({ tier: 'P', w: 320, h: 568, narrow: true, shown: 200, sname: EN, name: '폰 세로 320 · 영어', nums: [['MOVES', '12'], ['FIRE', '3']], note: '이름 두 줄, 버튼은 둘째 줄.' }),
+          game({ tier: 'P', w: 320, h: 568, narrow: true, shown: 200, sname: ES, name: '320 · 스페인어', note: '가장 긴 말도 두 줄 안.' }),
+          game({ tier: 'PL', w: 844, h: 390, shown: 420, C: C4, name: '폰 가로 · 4장', nums: [['MOVES', '12'], ['FIRE', '3']] }),
+          game({ tier: 'TP', w: 768, h: 1024, shown: 300, name: '태블릿 세로' }),
+          game({ tier: 'TL', w: 1024, h: 768, shown: 380, C: C4, name: '태블릿 가로 · 4장', nums: [['MOVES', '12'], ['FIRE', '3']] }),
+          game({ tier: 'L', w: 1366, h: 768, low: true, shown: 460, name: '노트북 1366 × 768 · 낮은 헤더', note: '헤더 4rem(64). 5rem일 때보다 판 자리가 16px 넓어집니다.' }),
+          game({ tier: 'M', w: 1920, h: 1080, shown: 520, C: C4, sname: EN, name: '모니터 · 4장 · 영어', nums: [['MOVES', '12'], ['FIRE', '3']] })
+        ] },
+      { title: '타이틀', note: '로고, FIND YOUR WAY HOME, 시작, 스테이지 선택이 한 기둥. 언어 버튼은 오른쪽 위 구석(높이 = 아이콘 버튼), SWIPE TO MOVE는 터치 기기에서만 아래 가운데. 배경 지형 장식은 오른쪽 아래 자리만 표시했습니다.',
+        frames: [
+          title({ tier: 'P', w: 390, h: 844, touch: true, shown: 220, name: '폰 세로' }),
+          title({ tier: 'PL', w: 844, h: 390, touch: true, shown: 420, C: C4, name: '폰 가로 · 4장', note: '높이 340에서는 로고 6rem이 크므로 높이 400 미만에서 4.5rem으로.' }),
+          title({ tier: 'TP', w: 768, h: 1024, touch: true, shown: 300, name: '태블릿 세로' }),
+          title({ tier: 'L', w: 1366, h: 768, shown: 460, name: '노트북' })
+        ] },
+      { title: '게임 위에 뜨는 것', note: '카드는 폭 24rem(폰은 화면 폭 − 2.5rem), 안쪽 1.5rem, 둥글기 1.375rem. 가이드는 판을 가리지 않게 아래에 붙이고, 포커스 사각형은 둥글기를 높이의 30%로 고정해 가로로 긴 두 칸 사각형도 타원이 되지 않습니다. 다음 버튼은 꺾쇠 그림.',
+        frames: [
+          ov(game({ tier: 'P', w: 390, h: 844, shown: 220, name: '가이드 · 폰' }), { lab: 'GUIDE 1 / 2', text: '상자를 밀어 구덩이를 메우세요.', skip: '건너뛰기', next: true, bottom: true, focus: ['36%', '40%', 104, 60] }, T.P),
+          ov(game({ tier: 'TL', w: 1024, h: 768, shown: 380, C: C4, name: '가이드 · 두 칸 · 태블릿 가로' }), { lab: 'GUIDE 2 / 2', text: '화로를 밟으면 큐브에 불이 붙습니다.', skip: '건너뛰기', btn: '시작', bottom: true, focus: ['38%', '34%', 240, 96] }, T.TL),
+          ov(game({ tier: 'P', w: 390, h: 844, shown: 220, name: '클리어 · 폰' }), { lab: 'CLEAR', text: 'STAGE 10 · 무너짐', big: true, stars: true, btn: '다음 판', skip: '목록' }, T.P),
+          ov(game({ tier: 'L', w: 1366, h: 768, shown: 460, name: '다시 시작 확인 · 노트북' }), { lab: 'RESTART', text: '처음부터 다시 할까요?', skip: '취소', btn: '다시 시작' }, T.L),
+          ov(game({ tier: 'TP', w: 768, h: 1024, shown: 300, C: C4, name: '보스 안내 · 태블릿 세로' }), { lab: 'BOSS · STAGE 170', text: '불 붙은 큐브가 민 상자는 재가 됩니다.', big: true, btn: '시작' }, T.TP)
+        ] },
+      { title: '오류 화면', note: '공용 버튼 하나. 크기는 그 묶음의 판 이름·작은 글자·시작 버튼 높이를 그대로 씁니다.',
+        frames: [err({ tier: 'P', w: 390, h: 844, shown: 200, name: '폰 세로' }), err({ tier: 'L', w: 1366, h: 768, shown: 420, name: '노트북' })] }
+    ];
+
+    const tierHeads = ['폰 세로', '폰 가로', '태블릿 세로', '태블릿 가로', '노트북', '모니터'];
+    const table = [
+      ['작은 라벨 (모노 대문자)', '0.6875 (9.4)', '0.6875 (9.4)', '0.75 (12)', '0.75 (12)', '0.75 (12)', '0.8125 (13)'],
+      ['작은 글자 (건너뛰기, 스테이지 선택)', '1 (13.6)', '1 (13.6)', '1.0625 (17)', '1.0625 (17)', '1.0625 (17)', '1.125 (18)'],
+      ['로고 글자', '3.75 (51)', '6 (82) · 높이 400 미만 4.5', '5.5 (88)', '5.5 (88)', '6 (96)', '6 (96)'],
+      ['시작 버튼 폭 × 높이', '화면 폭 − 2.5 × 3.5', '13 × 3.5', '14 × 3.75', '14 × 3.75', '13 × 3.5', '13 × 3.5'],
+      ['게임 판 이름', '1.25 (17) · 360 미만 두 줄', '1.25 (17)', '1.5 (24)', '1.625 (26)', '1.6875 (27)', '1.6875 (27)'],
+      ['이동 수 숫자', '1.25 (17)', '1.5 (20)', '1.75 (28)', '1.875 (30)', '2 (32)', '2 (32)'],
+      ['아이콘 버튼 (눌리는 곳 2.75 이상)', '2.5 (34)', '2.5 (34)', '3 (48)', '3 (48)', '2.75 (44)', '2.75 (44)'],
+      ['버튼 사이', '0.5', '0.5', '0.625', '0.625', '0.625', '0.625'],
+      ['버튼 안 아이콘 · 획', '버튼 × 0.5 · 획 0.09375', '같음', '같음', '같음', '같음', '같음'],
+      ['버튼 둥글기', '버튼 × 0.3', '같음', '같음', '같음', '같음', '같음'],
+      ['게임 헤더 높이', '두 줄 6 · 360 미만 7.25', '한 줄 3.5', '5', '5', '5 · 높이 820 미만 4', '5.5'],
+      ['장 탭 라벨', 'CHAPTER · WORLD 두 줄', '한 줄', '한 줄', '한 줄', '한 줄', '한 줄'],
+      ['장 탭 월드 이름', '1.125 (15)', '1.25 (17)', '1.5 (24)', '1.5 (24)', '1.5 (24)', '2 (32)'],
+      ['판 카드 크기 상한', '12 (163)', '8.5 (116)', '14 (224)', '14 (224)', '15 (240)', '16 (256)'],
+      ['판 카드 칸 × 줄', '2 × 5 (스크롤)', '5 × 2', '고를 안', '5 × 2', '5 × 2', '5 × 2'],
+      ['판 카드 번호', '카드 × 0.26', '같음', '같음', '같음', '같음', '같음'],
+      ['카드 사이', '0.75', '0.625', '1', '1', '1', '1.25'],
+      ['장 카드', '가로 1칸 · 창 3.75', '세로 4칸 · 폭 11 이하', '가로 2칸 · 창 4', '세로 4칸 · 폭 14 이하', '세로 4칸 · 폭 16 이하', '세로 4칸 · 폭 20 이하'],
+      ['카드·패널 둥글기', '1.375 (18.7)', '1.125 (15.3)', '1.375 (22)', '1.375 (22)', '1.375 (22)', '1.375 (22)'],
+      ['뜨는 카드 폭 · 안쪽', '화면 폭 − 2.5 · 1.5', '24 · 1.5', '24 · 1.5', '24 · 1.5', '24 · 1.5', '24 · 1.5'],
+      ['포커스 사각형 둥글기', '높이 × 0.3', '같음', '같음', '같음', '같음', '같음'],
+      ['화면 바깥 여백', '1.25', '1.25 + 안전 영역', '2.5', '2.5', '3', '4'],
+      ['헤더 ↔ 카드 묶음', '1', '0.75', '1.5', '1.25', '2', '2.5'],
+      ['헤더 폭 = 카드 묶음 폭', '화면 폭', '같음', '같음', '같음', '같음', '같음 (설명 기둥 제외)'],
+      ['월드 설명', '—', '—', '1 (TB안)', '—', '—', '1.125 (18) · 기둥 20']
+    ].map(r => ({ k: r[0], v: r.slice(1) }));
+    const rules = [
+      ['크기 단계는 묶음에 하나', '화면마다 다른 값을 쓰지 않고, 표의 값만 씁니다. 같은 이름의 요소는 어느 화면에서든 같은 크기입니다.'],
+      ['헤더와 카드 묶음은 한 덩어리', '헤더 폭 = 카드 묶음 폭. 남는 폭과 높이는 덩어리 바깥에 고르게 나눕니다(가운데 정렬).'],
+      ['카드 칸 수는 10의 약수', '2, 5만 씁니다. 카드 크기는 폭과 높이 가운데 작은 쪽과 상한으로 정해집니다. 정사각 창도 5 × 2.'],
+      ['작은 라벨', '모노 대문자, 자간 0.2em. 묶음마다 크기 하나(표 첫 줄).'],
+      ['흐린 글자 색', 'mute #8A8781 → #66645F (1장 바탕 4.78 / 패널 5.23 / 카드 5.47, 4장 바탕 4.65 / 패널 5.10 / 카드 5.41). 0/150 · NOW · SWIPE TO MOVE · 건너뛰기 · 언어 버튼도 mute. 잠긴 카드 글자만 #7A7771(3.5 이상), 잠김을 흐림으로 보이려는 뜻이라 남깁니다.'],
+      ['아이콘', '버튼 크기의 50% 네모 안에 그리고, 획은 0.09375rem(16px 기준 1.5px) 하나. 꺾쇠·메뉴·다시 시작·확대·?가 모두 같은 틀이라 들쭉날쭉하지 않습니다. 글자(‹ › ≡ ↺ >)로 그리지 않습니다.'],
+      ['눌리는 곳', '보이는 크기와 상관없이 2.75rem(44) 이상. 붙은 버튼은 사이 간격 가운데까지. 폰 버튼 2.5rem은 바깥으로 넓힌 투명 영역으로 채웁니다.'],
+      ['낮은 화면', '높이 820 미만 노트북은 게임 헤더 4rem 한 줄, 높이 400 미만 폰 가로는 로고 4.5rem. 판 자리를 먼저 지킵니다.']
+    ].map(([k, v]) => ({ k, v }));
+    const changes = [
+      '지난 배치 안 정리 · 폰 헤더 A·B와 2560 목록 D·E를 지웠습니다. 구현된 배치(폰 헤더 두 줄, 모니터 왼쪽 설명)만 남겼습니다.',
+      '작은 라벨 10 · 11 · 12 · 13px → 묶음마다 하나. 화면마다 섞여 있었음.',
+      'mute 색 #8A8781 → #66645F. 대비 3.2 → 4.65 이상(모든 바탕).',
+      '0/150 · NOW · SWIPE TO MOVE를 mute로. 2.1 → 4.65 이상.',
+      '폰 아이콘 버튼 2.125(세로) / 2.75(가로) → 둘 다 2.5. 두 방향이 달랐음.',
+      '아이콘을 버튼 × 0.5, 획 하나로. 목록 메뉴와 월드 꺾쇠가 작아 보였음.',
+      '태블릿 전용 단계 추가 · 버튼 3rem(48), 판 이름 1.5~1.625, 작은 글자 1.0625. 손으로 쓰는 화면이라 버튼은 노트북보다 크게.',
+      '카드 번호를 카드 크기의 0.26배로. 26~64px가 카드와 따로 정해져 있었음.',
+      '칸 수를 10의 약수만. 정사각 창의 4 + 4 + 2를 없앰.',
+      '헤더와 카드를 한 덩어리로 세로 가운데. 태블릿 가로 위아래 한쪽만 비던 것.',
+      '모니터 월드 설명 14 → 18px(1.125rem).',
+      '폭 360 미만 폰은 이름이 첫 줄 전체(두 줄까지), 버튼은 둘째 줄로(버튼 사이 0.375, 숫자는 라벨 위·값 아래로 쌓음). 긴 이름과 버튼 넷이 다투던 것.', '폰 세로 장 탭 라벨을 CHAPTER / WORLD 두 줄로. 한 줄이면 탭 카드 밖으로 넘쳤음.',
+      '노트북 높이 820 미만이면 게임 헤더 4rem 한 줄. 1366 × 768에서 판 자리를 돌려받음.',
+      '폰 가로 높이 400 미만이면 타이틀 로고 4.5rem. 실제 높이 340에서 로고가 화면을 채우던 것.'
+    ];
+    const mismatch = [
+      'ui.dc.html의 라벨은 10 · 11px가 섞여 있습니다(MOVES 10, STAGE·WORLD 11).',
+      'ui.dc.html의 mute 라벨은 #8A8781입니다(이 기준 #66645F).',
+      'ui.dc.html의 아이콘 버튼은 글자 ↺ ≡ ‹ ›와 글자 크기 16 / 18px입니다(이 기준은 그림, 버튼 × 0.5).',
+      'ui.dc.html 진행 표시는 ★, 요청서와 구현은 ◆입니다.',
+      'ui.dc.html 목록은 패널 배경 안에 카드를 둡니다. 이 파일은 패널 없이 그렸습니다. 구현이 패널을 쓰면 패널 안쪽 여백 = 표의 화면 바깥 여백으로 보면 됩니다.',
+      'ui.dc.html 타이틀 로고는 72px(4.5rem)입니다. 요청서의 지금 값(96)을 따랐습니다.'
+    ];
+    const big = [
+      '태블릿 세로 목록 TA(3 · 4 · 3) · 이 묶음에서만 격자 모양이 달라집니다. 고를 안.',
+      '태블릿 세로 목록 TB(넓은 헤더) · 헤더 아래에 월드 설명과 큰 진행 수 줄이 생깁니다. 고를 안.',
+      '폰 320 게임 헤더 · 버튼 넷이 둘째 줄로 내려갑니다(폭 360 미만에서만).'
+    ];
+    const progress = [
+      { s: '완료', c: '#3A3936', t: '1단계 · 기준, 치수 표, 스테이지 목록(태블릿 세로 고를 안 셋, 태블릿 가로, 정사각 창, 폰·노트북·모니터).' },
+      { s: '완료', c: '#3A3936', t: '2단계 · 게임 화면(320 두 줄 헤더와 영어·스페인어, 낮은 노트북), 타이틀, 장 고르기.' },
+      { s: '완료', c: '#3A3936', t: '3단계 · 게임 위에 뜨는 것(가이드와 포커스 사각형, 클리어, 다시 시작 확인, 보스 안내), 오류 화면, 달라진 점, 어긋난 곳, 크게 바꾸는 제안.' }
+    ];
+    return { listGroups, screens, tierHeads, table, rules, changes, mismatch, big, progress };
   }
 }
 </script>

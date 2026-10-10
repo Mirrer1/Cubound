@@ -234,7 +234,12 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
               {text(language, 'guide.skip')}
             </button>
             {isLast ? (
-              <Button ref={nextRef} variant="primary" onClick={onNext}>
+              <Button
+                ref={nextRef}
+                variant="primary"
+                className="h-11! rounded-[0.8125rem]! px-6! text-base!"
+                onClick={onNext}
+              >
                 {text(language, 'guide.start')}
               </Button>
             ) : (
@@ -244,7 +249,7 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
                 onClick={onNext}
                 title={text(language, 'guide.next')}
               >
-                <ChevronIcon className="size-[1em] rotate-180" />
+                <ChevronIcon className="size-[0.625em] rotate-180" />
               </Button>
             )}
           </div>

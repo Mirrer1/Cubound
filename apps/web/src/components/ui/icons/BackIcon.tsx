@@ -1,6 +1,6 @@
 const BackIcon = ({ className = 'size-[1em]' }: { className?: string }) => (
   <svg
-    viewBox="0 0 24 24"
+    viewBox="-1.65 -1.65 27.3 27.3"
     className={className}
     fill="none"
     stroke="currentColor"

@@ -97,14 +97,14 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
   }, [gustAt, turn, reduced])
 
   return (
-    <div className="flex items-center gap-5 wide:gap-7 narrow:order-last narrow:w-full narrow:justify-center narrow:gap-4 narrow:[&>*+*]:border-l narrow:[&>*+*]:border-line narrow:[&>*+*]:pl-4">
+    <div className="flex items-center gap-5 wide:gap-7 narrow:order-last narrow:w-full narrow:justify-center narrow:gap-4 slim:order-none slim:w-auto slim:flex-1 slim:justify-start narrow:[&>*+*]:border-l narrow:[&>*+*]:border-line narrow:[&>*+*]:pl-4">
       {pushesOver !== null && (
         <div
           data-guide="pushes"
-          className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
+          className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5"
         >
           <span
-            className={`font-mono text-[0.625rem] tracking-[0.22em] ${pushesOver === 0 ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-label tracking-[0.22em] short:-translate-y-px narrow:-translate-y-px slim:translate-y-0 ${pushesOver === 0 ? 'text-alert' : 'text-mute'}`}
           >
             PUSHES
           </span>
@@ -116,10 +116,10 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
       {climbsOver !== null && (
         <div
           data-guide="climbs"
-          className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
+          className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5"
         >
           <span
-            className={`font-mono text-[0.625rem] tracking-[0.22em] ${climbsOver === 0 ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-label tracking-[0.22em] short:-translate-y-px narrow:-translate-y-px slim:translate-y-0 ${climbsOver === 0 ? 'text-alert' : 'text-mute'}`}
           >
             CLIMBS
           </span>
@@ -131,10 +131,10 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
       {ridesOver !== null && (
         <div
           data-guide="rides"
-          className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
+          className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5"
         >
           <span
-            className={`font-mono text-[0.625rem] tracking-[0.22em] ${ridesOver === 0 ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-label tracking-[0.22em] short:-translate-y-px narrow:-translate-y-px slim:translate-y-0 ${ridesOver === 0 ? 'text-alert' : 'text-mute'}`}
           >
             RIDES
           </span>
@@ -146,10 +146,10 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
       {dirOver !== null && limitedDir && (
         <div
           data-guide="dir"
-          className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
+          className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5"
         >
           <span
-            className={`font-mono text-[0.625rem] tracking-[0.22em] ${dirOver === 0 ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-label tracking-[0.22em] short:-translate-y-px narrow:-translate-y-px slim:translate-y-0 ${dirOver === 0 ? 'text-alert' : 'text-mute'}`}
           >
             {limitedDir.toUpperCase()}
           </span>
@@ -159,30 +159,36 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
         </div>
       )}
       {mudSinks !== null && (
-        <div className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2">
-          <span className="font-mono text-[0.625rem] tracking-[0.22em] text-mute">MUD</span>
+        <div className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5">
+          <span className="font-mono text-label tracking-[0.22em] text-mute short:-translate-y-px narrow:-translate-y-px slim:translate-y-0">
+            MUD
+          </span>
           <LimitCount hit={null}>{mudSinks}</LimitCount>
         </div>
       )}
       {caps !== null && (
-        <div className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2">
-          <span className="font-mono text-[0.625rem] tracking-[0.22em] text-mute">CAPS</span>
+        <div className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5">
+          <span className="font-mono text-label tracking-[0.22em] text-mute short:-translate-y-px narrow:-translate-y-px slim:translate-y-0">
+            CAPS
+          </span>
           <LimitCount hit={null}>{caps}</LimitCount>
         </div>
       )}
       {vines !== null && (
-        <div className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2">
-          <span className="font-mono text-[0.625rem] tracking-[0.22em] text-mute">VINE</span>
+        <div className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5">
+          <span className="font-mono text-label tracking-[0.22em] text-mute short:-translate-y-px narrow:-translate-y-px slim:translate-y-0">
+            VINE
+          </span>
           <LimitCount hit={null}>{vines}</LimitCount>
         </div>
       )}
       {wind !== null && (
         <div
           data-guide="wind"
-          className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
+          className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5"
         >
           <span
-            className={`font-mono text-[0.625rem] tracking-[0.22em] ${gusting ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-label tracking-[0.22em] short:-translate-y-px narrow:-translate-y-px slim:translate-y-0 ${gusting ? 'text-alert' : 'text-mute'}`}
           >
             WIND
           </span>
@@ -198,10 +204,10 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
       {melt && (
         <div
           data-guide="melt"
-          className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
+          className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5"
         >
           <span
-            className={`font-mono text-[0.625rem] tracking-[0.22em] ${melt.holding || melt.melting ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-label tracking-[0.22em] short:-translate-y-px narrow:-translate-y-px slim:translate-y-0 ${melt.holding || melt.melting ? 'text-alert' : 'text-mute'}`}
           >
             MELT
           </span>
@@ -222,10 +228,10 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
       {tide && (
         <div
           data-guide="tide"
-          className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
+          className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5"
         >
           <span
-            className={`font-mono text-[0.625rem] tracking-[0.22em] ${tide.turning ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-label tracking-[0.22em] short:-translate-y-px narrow:-translate-y-px slim:translate-y-0 ${tide.turning ? 'text-alert' : 'text-mute'}`}
           >
             TIDE
           </span>
@@ -249,10 +255,10 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
+            className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5"
           >
             <span
-              className={`font-mono text-[0.625rem] tracking-[0.22em] ${flame.out ? 'text-alert' : 'text-mute'}`}
+              className={`font-mono text-label tracking-[0.22em] short:-translate-y-px narrow:-translate-y-px slim:translate-y-0 ${flame.out ? 'text-alert' : 'text-mute'}`}
             >
               FIRE
             </span>
@@ -264,10 +270,10 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
       </AnimatePresence>
       <div
         data-guide="moves"
-        className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
+        className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5"
       >
         <span
-          className={`font-mono text-[0.625rem] tracking-[0.22em] ${left === 0 ? 'text-alert' : 'text-mute'}`}
+          className={`font-mono text-label tracking-[0.22em] short:-translate-y-px narrow:-translate-y-px slim:translate-y-0 ${left === 0 ? 'text-alert' : 'text-mute'}`}
         >
           MOVES
         </span>

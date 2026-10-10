@@ -593,9 +593,9 @@
   // heat 0 → 0.5 → 1: every face blends from char toward ember; upper faces lead (they warm first). no cracks.
   const PILE = [[[0, 0, 0.8, 0, 13], [-0.13, -0.1, 0.46, 13, 9], [0.17, 0.13, 0.3, 13, 6]], [[0, 0, 0.8, 0, 13], [0.1, -0.14, 0.46, 13, 9], [-0.15, 0.15, 0.3, 13, 6]]];
   const charTone = t => ({ t: mix(CHAR.t, HEAT.t, t), l: mix(CHAR.l, HEAT.l, t), r: mix(CHAR.r, HEAT.r, t), hi: mix(CHAR.hi, HEAT.hot, t * 0.85), lo: mix(mix(CHAR.t, CHAR.l, 0.45), HEAT.ring, t) });
-  const charLog = (cx, cy, par, heat, isP, G) => {
+  const charLog = (cx, cy, par, heat, isP, G, kk) => {
     G = G || 1;
-    const k = charTone(heat), out = [];
+    const k = kk || charTone(heat), out = [];
     if (!isP) {
       PILE[par ? 1 : 0].forEach(([u, v, s, z, h], i) => { const p = pt(cx, cy, u, v); out.push(...block(p[0], p[1], s, z, h, i ? k.hi : k.t, k.l, k.r)); });
       if (heat >= 1) PILE[par ? 1 : 0].forEach(([u, v, s, z, h]) => { const p = pt(cx, cy, u, v, z + h); out.push(plate(p[0], p[1], s * 0.62, HEAT.hot, 0.75 * G), plate(p[0], p[1], s * 0.34, HEAT.core, 0.85 * G)); });
@@ -606,6 +606,25 @@
       const E = Array.from({ length: 14 }, (_, n) => { const a = n / 14 * Math.PI * 2, p = pt(cx, cy, 0.5, vc + 0.2 * Math.cos(a)); return [p[0], p[1] + TK * 0.5 + TK * 0.32 * Math.sin(a)]; });
       out.push(sh(P(E), mix(k.r, k.hi, 0.45)));
       if (heat >= 1) out.push(Object.assign(uvq(cx, cy, -0.42, 0.42, vc - 0.11, vc + 0.06, HEAT.hot), { o: 0.7 * G }), Object.assign(uvq(cx, cy, -0.3, 0.3, vc - 0.07, vc + 0.02, HEAT.core), { o: 0.8 * G })); });
+    return out;
+  };
+  // boss 200: charred char that never leaves. one step darker than char; lv 1 → 2 = ember specks brighten each move toward the re-light.
+  // wall = a low 5px slab (the cube stands on it, z 5) + two small lumps at the back corners. cs: a = ember specks (default) | b = soot mottling, no specks
+  const CT = { t: mix(CHAR.t, '#000000', 0.28), l: mix(CHAR.l, '#000000', 0.25), r: mix(CHAR.r, '#000000', 0.25), hi: mix(CHAR.hi, '#000000', 0.3) };
+  const charredTone = h => ({ t: mix(CT.t, HEAT.t, h), l: mix(CT.l, HEAT.l, h), r: mix(CT.r, HEAT.r, h), hi: mix(CT.hi, HEAT.hot, h * 0.85), lo: mix(mix(CT.t, CT.l, 0.45), HEAT.ring, h) });
+  const SPECK = [0, 0.3, 0.55];
+  const charredWall = (cx, cy, par, h, lv, cs, G) => {
+    const k = charredTone(h), out = [...block(cx, cy, 0.84, 0, 5, k.t, k.l, k.r)];
+    (par ? [[-0.04, -0.27, 0.24, 4], [-0.27, -0.05, 0.28, 5]] : [[-0.27, -0.05, 0.24, 4], [-0.05, -0.27, 0.28, 5]]).forEach(([u, v, sz, hh]) => { const p = pt(cx, cy, u, v); out.push(...block(p[0], p[1], sz, 5, hh, k.hi, k.l, k.r)); });
+    if (h === 0 && cs !== 'b') [[0.14, 0.12], [-0.12, 0.22], [0.24, -0.12]].forEach(([u, v]) => { const p = pt(cx, cy, u, v, 5); out.push(plate(p[0], p[1], 0.09, HEAT.crack, SPECK[lv] || 0.3)); });
+    if (h === 0 && cs === 'b') [[0.1, 0.1, 0.34], [-0.16, 0.2, 0.22]].forEach(([u, v, sz]) => { const p = pt(cx, cy, u, v, 5); out.push(plate(p[0], p[1], sz, mix(k.t, ASH.t, 0.28), 0.7)); });
+    if (h >= 1) { const p = pt(cx, cy, 0, 0, 5); out.push(plate(p[0], p[1], 0.56, HEAT.hot, 0.7 * G), plate(p[0], p[1], 0.3, HEAT.core, 0.85 * G)); }
+    return out;
+  };
+  const charredBridge = (cx, cy, par, h, lv, cs, G) => {
+    const out = charLog(cx, cy, par, h, true, G, charredTone(h));
+    if (h === 0 && cs !== 'b') [[-0.22, -0.26], [0.2, 0.24], [0.3, -0.24]].forEach(([u, v]) => out.push(Object.assign(uvq(cx, cy, u - 0.045, u + 0.045, v - 0.045, v + 0.045, HEAT.crack), { o: SPECK[lv] || 0.3 })));
+    if (h === 0 && cs === 'b') [[-0.2, -0.26, 0.16], [0.16, 0.24, 0.12]].forEach(([u, v, z]) => out.push(Object.assign(uvq(cx, cy, u - z, u + z, v - 0.07, v + 0.07, mix(CT.t, ASH.t, 0.28)), { o: 0.7 })));
     return out;
   };
   const lumps = (cx, ty, list) => {
@@ -626,6 +645,16 @@
     if (st === 'crumble') {
       if (isP) out.push(...lumps(cx, cy + 12, [[-0.22, -0.2, 0.42, 8, 1], [0.2, -0.06, 0.38, 7, 0], [-0.08, 0.24, 0.32, 6, 0]]));
       else { out.push(plate(cx, cy, 0.72, mix(FL ? (par ? FL.b : FL.a) : C.a, ASH.t, 0.55))); out.push(...lumps(cx, cy, [[-0.15, -0.12, 0.34, 10, 1], [0.17, -0.08, 0.28, 7, 0], [-0.04, 0.18, 0.28, 5, 1], [0.2, 0.2, 0.18, 4, 0]])); }
+      return out;
+    }
+    if (st === 'charred' || st === 'rewarm' || st === 'reburn') {
+      const hh = st === 'reburn' ? 1 : st === 'rewarm' ? 0.5 : 0, G = PH[cd.ph || 0] * (cd.boss ? 1.25 : 1), lv = cd.lv || 1, Gm = Math.min(1, G);
+      if (st === 'reburn') out.push(...pool(cx, cy, 0, cd.boss ? 1.75 : 1.35, (cd.boss ? 0.2 : 0.13) * G));
+      if (st === 'rewarm') out.push(...pool(cx, cy, 0, cd.boss ? 1.3 : 1.1, cd.boss ? 0.09 : 0.07));
+      let q = isP ? charredBridge(cx, cy, par, hh, lv, cd.cs, Gm) : charredWall(cx, cy, par, hh, lv, cd.cs, Gm);
+      if (cd.re !== undefined) { q = q.map(x => Object.assign({}, x, { o: (x.o === undefined ? 1 : x.o) * (1 - cd.re) })); out.push(...q, ...charLog(cx, cy, par, 0, isP, 1).map(x => Object.assign({}, x, { o: cd.re }))); return out; }
+      out.push(...q);
+      if (st === 'reburn') { const z = isP ? 0 : 9; if (cd.boss) out.push(...pool(cx, cy, z, 0.7, 0.35 * G, HEAT.core)); out.push(...riseSparks(cx, cy, z, cd.boss ? 7 : 2, cd.boss ? 20 : 12, cd.ph)); }
       return out;
     }
     const heat = { cold: 0, ghost: 0, warm: 0.5, held: 0.5, burn: 1 }[st] || 0;
@@ -988,5 +1017,5 @@
     }
   });
 
-  window.CuboundIso = { TW, TH, LV, TK, D, C, mix, tone, side, scene, fit, mixed, wither, MUSH, CH3, STONE, WS, DIP, CH4, CH2C, FIRE: { CHAR, HEAT, ASH, STOVE, FLAME, FLAME_B, FL_N, GLOW_N }, KEG: { KEG, KH, tone }, BAR: { IRON, IRON_B, IRONS, ironK } };
+  window.CuboundIso = { TW, TH, LV, TK, D, C, mix, tone, side, scene, fit, mixed, wither, MUSH, CH3, STONE, WS, DIP, CH4, CH2C, FIRE: { CHAR, HEAT, ASH, STOVE, FLAME, FLAME_B, FL_N, GLOW_N, CT }, KEG: { KEG, KH, tone }, BAR: { IRON, IRON_B, IRONS, ironK } };
 })();

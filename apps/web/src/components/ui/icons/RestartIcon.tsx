@@ -1,6 +1,6 @@
 const RestartIcon = ({ className = 'size-[1em]' }: { className?: string }) => (
   <svg
-    viewBox="0 0 24 24"
+    viewBox="0.54 1.54 22.8 22.8"
     className={className}
     fill="none"
     stroke="currentColor"
