@@ -135,7 +135,9 @@ const ChapterCard = ({
           <span className={locked ? '' : 'text-mute'}>
             CHAPTER {chapter} · {range}
           </span>
-          <span className={locked ? '' : 'text-mute'}>{LABELS[state]}</span>
+          <span className={locked ? '' : `text-mute ${state === 'now' ? 'font-bold' : ''}`}>
+            {LABELS[state]}
+          </span>
         </span>
         <span
           className={`truncate tracking-tight roomy:text-[1.375rem] ${many ? 'text-xl short:text-lg' : 'text-lg'}`}
