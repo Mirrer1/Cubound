@@ -99,6 +99,7 @@ export const tramFramesOf = ({ trams, before, game, tramPhase, fade }: TramView)
       depth: PIT_FLOOR + tram.level * TILE.layer,
       dx: facing.x,
       dy: facing.y,
+      level: tram.level,
       from,
       to,
       cell: slidingCell(from, to, tramPhase),
@@ -110,6 +111,18 @@ export const tramFramesOf = ({ trams, before, game, tramPhase, fade }: TramView)
 // 큐브가 떠나는 발판은 떠나는 칸 순서, 앞 칸으로 미끄러지는 발판이 큐브 위에 그려지는 것 방지
 export const behindCube = <T extends { from: Point; cell: Point }>(frames: T[], cube: Point) =>
   frames.map((frame) => (same(frame.from, cube) ? { ...frame, cell: frame.from } : frame))
+
+// 뒤 칸 옆 높은 칸에 뒤쪽 반이 덮이는 미끄러지는 발판의 칸, 같은 깊이 칸 중 먼저 그리는 칸
+export const underWall = (
+  frames: { from: Point; to: Point; cell: Point; level: number }[],
+  heights: number[][],
+) =>
+  frames.flatMap((frame) => {
+    if (same(frame.from, frame.to) || !same(frame.cell, frontOf(frame.from, frame.to))) return []
+    const back = same(frame.cell, frame.from) ? frame.to : frame.from
+    const side = { x: back.x + frame.cell.y - back.y, y: back.y + frame.cell.x - back.x }
+    return (heights[side.y]?.[side.x] ?? -1) >= frame.level ? [frame.cell] : []
+  })
 
 // 큐브 옆 같은 깊이 칸을 지나는 발판, 큐브를 같은 깊이 칸 중 맨 나중에 그려야 하는 경우
 export const tramBeside = (frames: { cell: Point }[], cube: Point) =>

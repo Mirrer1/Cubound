@@ -379,6 +379,17 @@ describe('playerFrame 발판에 실려 가기', () => {
     }
   })
 
+  it('발판 위에서 숯 벽에 불을 붙이는 수도 발판과 같은 자리를 따라간다', () => {
+    const stage = { ...TRAM_STAGE, fire: ['..#...', '......', '......'] }
+    const prev = { ...move(createState(stage), 'right').state, flame: 4 }
+    const { state, events } = move(prev, 'up')
+
+    expect(events.map((e) => e.type)).toContain('torched')
+    for (let t = 0; t < 1; t += 0.05) {
+      expect(playerFrame(prev, state, events, t).x).toBeCloseTo(2 + tramProgress(events, t))
+    }
+  })
+
   it('실려 가는 동안 구르지 않고 높이도 그대로다', () => {
     const { prev, state, events } = ride()
 

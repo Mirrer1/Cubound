@@ -30,6 +30,7 @@ export {
   tramFramesOf,
   tramNext,
   tramProgress,
+  underWall,
 } from './tramFrame'
 export {
   type CubeFrame,

@@ -226,18 +226,19 @@ const pathFrame = (
     }
   }
 
+  // 제 힘으로 가지 않은 이동은 떠나기 전 칸
+  const hold = prev ? prev.player : player
+  const held = { ...still, x: hold.x, y: hold.y, cell: hold, level: startLevel + riding }
+
   const blocked = events.find((e) => e.type === 'blocked')
   if (blocked?.type === 'blocked') {
-    return { ...still, direction: blocked.direction, angle: Math.sin(Math.PI * t) * TILT }
+    return { ...held, direction: blocked.direction, angle: Math.sin(Math.PI * t) * TILT }
   }
   const torched = events.find((e) => e.type === 'torched')
   if (torched?.type === 'torched') {
     const direction = directionBetween(torched.from, torched.to)
-    return { ...still, direction, angle: Math.sin(Math.PI * t) * TILT }
+    return { ...held, direction, angle: Math.sin(Math.PI * t) * TILT }
   }
-
-  // 제 힘으로 가지 않은 이동은 떠나기 전 칸
-  const hold = prev ? prev.player : player
 
   // 심는 수는 턱에 부딪혀 기울었다가 앞 절반 안에 돌아오는 각도, 그 반동에 떨어지는 씨앗
   // 바람이 분 수에서 심는 수의 몫은 바람 전까지, 그동안은 심은 칸
@@ -249,7 +250,7 @@ const pathFrame = (
     return { ...at, direction: planted.direction, angle: Math.sin(Math.PI * bump) * TILT }
   }
 
-  return { ...still, x: hold.x, y: hold.y, cell: hold, level: startLevel + riding }
+  return held
 }
 
 export const playerFrame = (

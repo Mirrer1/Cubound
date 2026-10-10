@@ -26,6 +26,7 @@ import {
   same,
   sceneFrame,
   swampTime,
+  underWall,
   vineLooks,
   waterAtOf,
 } from './frame'
@@ -196,7 +197,10 @@ const Board = ({
   return (
     <svg ref={ref} viewBox={viewBox} className="h-full w-full">
       {cubeFirst(
-        scene.box ? cubeFirst(cells, scene.box.cell) : cells,
+        underWall(scene.tramFrames, heights).reduce(
+          (ordered, p) => cubeFirst(ordered, p),
+          scene.box ? cubeFirst(cells, scene.box.cell) : cells,
+        ),
         scene.cube.cell,
         scene.cube.last,
       ).map((cell) => {

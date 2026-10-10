@@ -12,6 +12,7 @@ import {
   tramFramesOf,
   tramNext,
   tramProgress,
+  underWall,
 } from './tramFrame'
 import { TILE, toScreen } from '@/game/iso'
 import type { Tram } from '@/game/types'
@@ -162,5 +163,25 @@ describe('tramBeside', () => {
     expect(tramBeside([{ cell: { x: 4, y: 2 } }], { x: 5, y: 1 })).toBe(true)
     expect(tramBeside([{ cell: { x: 4, y: 3 } }], { x: 5, y: 1 })).toBe(false)
     expect(tramBeside([{ cell: { x: 5, y: 1 } }], { x: 5, y: 1 })).toBe(false)
+  })
+})
+
+describe('underWall', () => {
+  const HEIGHTS = [
+    [-1, 2],
+    [-1, -1],
+  ]
+  const frame = { from: { x: 0, y: 0 }, to: { x: 0, y: 1 }, cell: { x: 0, y: 1 }, level: 2 }
+
+  it('뒤 칸 옆이 발판 높이 이상인 미끄러짐은 앞 칸을 먼저 그린다', () => {
+    expect(underWall([frame], HEIGHTS)).toEqual([{ x: 0, y: 1 }])
+  })
+
+  it('뒤 칸 옆이 발판보다 낮으면 순서를 바꾸지 않는다', () => {
+    expect(underWall([{ ...frame, level: 3 }], HEIGHTS)).toEqual([])
+  })
+
+  it('멈춘 발판은 순서를 바꾸지 않는다', () => {
+    expect(underWall([{ ...frame, to: frame.from, cell: frame.from }], HEIGHTS)).toEqual([])
   })
 })
