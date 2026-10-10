@@ -8,6 +8,8 @@ const BASE_MAX_TILE = 145 // 작은 화면에서 쓰는 칸 폭 상한 px
 const MIN_TILE = 48 // 칸 폭 하한 px
 const VIEW_PER_TILE = 6 // 상한이 화면 짧은 변의 몇 분의 1인지 나타내는 값
 const SMALL_VIEW_WIDTH = 600 // 폰 세로만 드는 필드 폭 px
+const SHORT_VIEW_HEIGHT = 400 // 폰 가로만 드는 필드 높이 px
+const SHORT_MIN_TILE = 56 // 폰 가로 칸 폭 하한 px
 const WHOLE_TILE = 88 // 처음부터 판 전체를 보여 주는 판 전체 칸 폭 하한 px
 
 export type ViewBox = [number, number, number, number]
@@ -28,11 +30,18 @@ export interface ViewSize {
 export const maxTile = (view: ViewSize) =>
   Math.max(BASE_MAX_TILE, Math.min(view.width, view.height) / VIEW_PER_TILE)
 
-export const isSmallView = (view: ViewSize) => view.width > 0 && view.width < SMALL_VIEW_WIDTH
+const isShortView = (view: ViewSize) => view.height > 0 && view.height < SHORT_VIEW_HEIGHT
+
+export const isSmallView = (view: ViewSize) =>
+  (view.width > 0 && view.width < SMALL_VIEW_WIDTH) || isShortView(view)
 
 // 작은 화면에서 확대해 보이는 칸 폭 하한
 export const minTileFor = (view: ViewSize, zoomTile: number) =>
-  isSmallView(view) ? zoomTile : MIN_TILE
+  view.width > 0 && view.width < SMALL_VIEW_WIDTH
+    ? zoomTile
+    : isShortView(view)
+      ? SHORT_MIN_TILE
+      : MIN_TILE
 
 // 무너진 칸도 처음 높이로 센 높이, 칸이 사라질 때 화면이 따라 움직이지 않는 이유
 export const cameraHeights = (stage: number[][], heights: number[][]) =>
@@ -61,7 +70,14 @@ const place = (min: number, max: number, size: number, look: number) =>
   size >= max - min ? (min + max - size) / 2 : Math.min(Math.max(look - size / 2, min), max - size)
 
 // 구역을 화면 한가운데에 놓고 화면과 같은 비율로 만든 viewBox, look은 구역이 화면보다 클 때 비출 화면 좌표
-export const viewBoxFor = (box: Box, view: ViewSize, look?: Point, minTile = MIN_TILE): ViewBox => {
+// tile은 구역 크기와 무관하게 쓰는 칸 폭 px
+export const viewBoxFor = (
+  box: Box,
+  view: ViewSize,
+  look?: Point,
+  minTile = MIN_TILE,
+  tile?: number,
+): ViewBox => {
   const width = box.maxX - box.minX
   const height = box.maxY - box.minY
   // 화면 크기를 아직 재지 못했을 때의 구역 범위
@@ -74,7 +90,7 @@ export const viewBoxFor = (box: Box, view: ViewSize, look?: Point, minTile = MIN
     maxTile(view) / TILE.width,
   )
   // 화면 크기를 따라 키우지 않는 하한, 넓은 화면은 칸이 이미 커서 무관
-  const scale = Math.max(fit, minTile / TILE.width)
+  const scale = tile ? tile / TILE.width : Math.max(fit, minTile / TILE.width)
   const vw = view.width / scale
   const vh = view.height / scale
   const at = look ?? { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }
@@ -114,8 +130,18 @@ export const coversBox = ([vx, vy, vw, vh]: ViewBox, box: Box) =>
 const tileFor = (box: Box, view: ViewSize, minTile: number) =>
   (TILE.width * view.width) / viewBoxFor(box, view, undefined, minTile)[2]
 
-// 평소 화면의 범위, 판 전체 칸이 충분히 크거나 어느 구역 화면보다 작아지지 않으면 판 전체
+// 구역 화면에서 판 내내 쓰는 칸 폭, 가장 작은 구역 기준이라 구역이 바뀌어도 배율 유지
+// 작은 화면이나 판 전체 칸이 충분히 크거나 그 칸 폭보다 작아지지 않으면 판 전체라서 없음
 // 판정 기준은 플레이 중 변하지 않는 처음 판 높이 base
+export const zoneTile = (base: number[][], zones: Zone[], view: ViewSize, minTile: number) => {
+  if (zones.length === 0 || isSmallView(view) || view.width === 0 || view.height === 0) return
+
+  const whole = tileFor(zoneBox(base), view, 0)
+  const tile = Math.min(...zones.map((zone) => tileFor(zoneBox(base, zone), view, minTile)))
+  return whole >= Math.max(WHOLE_TILE, minTile) || whole >= tile ? undefined : tile
+}
+
+// 평소 화면의 범위와 칸 폭, 구역 화면 칸 폭이 없으면 판 전체
 export const homeBox = (
   base: number[][],
   heights: number[][],
@@ -123,13 +149,9 @@ export const homeBox = (
   index: number,
   view: ViewSize,
   minTile: number,
-): Box => {
-  if (zones.length === 0) return zoneBox(heights)
-  if (view.width === 0 || view.height === 0) return zoneBox(heights, zones[index])
-
-  const whole = tileFor(zoneBox(base), view, 0)
-  const showsWhole =
-    whole >= Math.max(WHOLE_TILE, minTile) ||
-    zones.every((zone) => whole >= tileFor(zoneBox(base, zone), view, minTile))
-  return showsWhole ? zoneBox(heights) : zoneBox(heights, zones[index])
+): { box: Box; tile?: number } => {
+  if (zones.length > 0 && (view.width === 0 || view.height === 0))
+    return { box: zoneBox(heights, zones[index]) }
+  const tile = zoneTile(base, zones, view, minTile)
+  return { box: tile ? zoneBox(heights, zones[index]) : zoneBox(heights), tile }
 }

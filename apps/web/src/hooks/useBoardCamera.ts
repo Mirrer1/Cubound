@@ -52,7 +52,7 @@ export const useBoardCamera = (
   const heights = cameraHeights(game.stage.heights, game.heights)
   const [view, setView] = useState<ViewSize>({ width: 0, height: 0 })
   const minTile = minTileFor(view, ZOOM_TILE)
-  const home = homeBox(game.stage.heights, heights, zones, nextIndex, view, minTile)
+  const { box: home, tile } = homeBox(game.stage.heights, heights, zones, nextIndex, view, minTile)
   const target = overview ? zoneBox(heights) : home
   const targetKey = `${target.minX} ${target.minY} ${target.maxX} ${target.maxY} ${overview}`
   const [box, setBox] = useState<Box>(target)
@@ -153,13 +153,12 @@ export const useBoardCamera = (
     return () => observer.disconnect()
   }, [])
 
-  const at = (size: ViewSize) =>
-    viewBoxFor(
-      zoneMove?.to ?? box,
-      size,
-      look,
-      (zoneMove ? overview : boxOverview) ? 0 : minTileFor(size, ZOOM_TILE),
-    )
+  const at = (size: ViewSize) => {
+    if (zoneMove ? overview : boxOverview) return viewBoxFor(zoneMove?.to ?? box, size, look, 0)
+    const floor = minTileFor(size, ZOOM_TILE)
+    const fixed = homeBox(game.stage.heights, heights, zones, nextIndex, size, floor).tile
+    return viewBoxFor(zoneMove?.to ?? box, size, look, floor, fixed)
+  }
   const settled = at(view)
   const moved = zoneMove
     ? (zoneMove.from.map((v, i) => lerp(v, settled[i], zoneMove.p)) as ViewBox)
@@ -198,7 +197,7 @@ export const useBoardCamera = (
 
   // 큐브 구역을 보는 평소 화면에 판 전체가 이미 들어오는 경우
   const showsAll =
-    view.width > 0 && coversBox(viewBoxFor(home, view, look, minTile), zoneBox(heights))
+    view.width > 0 && coversBox(viewBoxFor(home, view, look, minTile, tile), zoneBox(heights))
 
   return { ref, viewBox: viewBox.join(' '), showsAll }
 }

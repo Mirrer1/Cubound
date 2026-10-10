@@ -15,6 +15,7 @@ import {
   viewBoxFor,
   viewBoxOfCam,
   zoneBox,
+  zoneTile,
 } from './cameraView'
 import { rollingCubeFaces } from './cubeView'
 import { TILE, toScreen } from '@/game/iso'
@@ -340,9 +341,10 @@ describe('viewBoxFor 칸 폭 하한', () => {
 })
 
 describe('isSmallView', () => {
-  it('폰 세로만 작은 화면이고 폰 가로와 태블릿과 데스크톱은 아니다', () => {
+  it('폰 세로와 폰 가로만 작은 화면이고 태블릿과 데스크톱은 아니다', () => {
     expect(isSmallView({ width: 340, height: 704 })).toBe(true)
-    expect(isSmallView({ width: 794, height: 284 })).toBe(false)
+    expect(isSmallView({ width: 794, height: 284 })).toBe(true)
+    expect(isSmallView({ width: 1252, height: 560 })).toBe(false)
     expect(isSmallView({ width: 654, height: 816 })).toBe(false)
     expect(isSmallView({ width: 1166, height: 512 })).toBe(false)
   })
@@ -353,10 +355,10 @@ describe('isSmallView', () => {
 })
 
 describe('minTileFor', () => {
-  it('작은 화면에서는 확대 칸 폭, 아니면 48', () => {
+  it('폰 세로는 확대 칸 폭, 폰 가로는 56, 아니면 48', () => {
     expect(minTileFor({ width: 340, height: 704 }, 72)).toBe(72)
     expect(minTileFor({ width: 1166, height: 512 }, 72)).toBe(48)
-    expect(minTileFor({ width: 794, height: 284 }, 80)).toBe(48)
+    expect(minTileFor({ width: 794, height: 284 }, 72)).toBe(56)
   })
 })
 
@@ -386,6 +388,51 @@ describe('viewBoxFor 확대 하한', () => {
   it('데스크톱은 확대 하한을 넣어도 지금과 같다', () => {
     const desk = { width: 1166, height: 512 }
     expect(viewBoxFor(big, desk, undefined, minTileFor(desk, 80))).toEqual(viewBoxFor(big, desk))
+  })
+})
+
+describe('viewBoxFor 고정 칸 폭', () => {
+  const desk = { width: 1166, height: 512 }
+  const small = zoneBox(flat(4, 3))
+  const big = zoneBox(flat(10, 9, 2))
+
+  it('고정 칸 폭이 있으면 구역 크기와 무관하게 그 칸 폭', () => {
+    expect(tilePx(viewBoxFor(small, desk, undefined, 48, 90), desk)).toBeCloseTo(90)
+    expect(tilePx(viewBoxFor(big, desk, undefined, 48, 90), desk)).toBeCloseTo(90)
+  })
+
+  it('구역이 담기면 가운데', () => {
+    const [vx, vy, vw, vh] = viewBoxFor(small, desk, toScreen({ x: 0, y: 0 }, 0), 48, 90)
+    expect(vx + vw / 2).toBeCloseTo((small.minX + small.maxX) / 2)
+    expect(vy + vh / 2).toBeCloseTo((small.minY + small.maxY) / 2)
+  })
+})
+
+describe('zoneTile', () => {
+  const PC = { width: 1166, height: 512 }
+  const large = flat(20, 6)
+  const zones = [
+    { x: 0, y: 0, w: 12, h: 6 },
+    { x: 12, y: 0, w: 8, h: 6 },
+  ]
+  const tileOf = (zone: (typeof zones)[number]) =>
+    tilePx(viewBoxFor(zoneBox(large, zone), PC, undefined, 48), PC)
+
+  it('구역 화면을 쓰는 판은 가장 작은 구역 칸 폭', () => {
+    expect(tileOf(zones[0])).toBeLessThan(tileOf(zones[1]))
+    expect(zoneTile(large, zones, PC, 48)).toBeCloseTo(tileOf(zones[0]))
+  })
+
+  it('판 전체를 쓰는 판과 작은 화면과 구역 없는 판은 없음', () => {
+    const small = flat(12, 3)
+    const halves = [
+      { x: 0, y: 0, w: 6, h: 3 },
+      { x: 6, y: 0, w: 6, h: 3 },
+    ]
+    expect(zoneTile(small, halves, PC, 48)).toBeUndefined()
+    expect(zoneTile(large, zones, { width: 794, height: 284 }, 56)).toBeUndefined()
+    expect(zoneTile(large, [], PC, 48)).toBeUndefined()
+    expect(zoneTile(large, zones, { width: 0, height: 0 }, 48)).toBeUndefined()
   })
 })
 
@@ -431,12 +478,12 @@ describe('homeBox', () => {
   const large = flat(20, 6)
 
   it('판 전체 칸 폭이 기준 이상이면 처음부터 판 전체', () => {
-    expect(homeBox(small, small, halves(12, 3), 1, PC, 48)).toEqual(zoneBox(small))
+    expect(homeBox(small, small, halves(12, 3), 1, PC, 48).box).toEqual(zoneBox(small))
   })
 
   it('판 전체 칸 폭이 기준보다 작고 구역 화면보다 작아지면 구역', () => {
     const zones = halves(20, 6)
-    expect(homeBox(large, large, zones, 1, PC, 48)).toEqual(zoneBox(large, zones[1]))
+    expect(homeBox(large, large, zones, 1, PC, 48).box).toEqual(zoneBox(large, zones[1]))
   })
 
   it('어느 구역 화면보다도 칸이 작아지지 않으면 기준보다 작아도 판 전체', () => {
@@ -445,24 +492,44 @@ describe('homeBox', () => {
     const zones = stage.zones ?? []
     expect(tilePx(viewBoxFor(zoneBox(heights), PC, undefined, 0), PC)).toBeLessThan(88)
     for (const index of zones.keys()) {
-      expect(homeBox(heights, heights, zones, index, PC, 48)).toEqual(zoneBox(heights))
+      expect(homeBox(heights, heights, zones, index, PC, 48).box).toEqual(zoneBox(heights))
     }
+  })
+
+  it('판 전체 칸 폭이 가장 작은 구역 칸 폭 이상이면 판 전체', () => {
+    const stage = STAGES['8-9']
+    const heights = cameraHeights(stage.heights, stage.heights)
+    const zones = stage.zones ?? []
+    const view = { width: 1252, height: 560 }
+    const whole = tilePx(viewBoxFor(zoneBox(heights), view, undefined, 0), view)
+    const tiles = zones.map((zone) => tilePx(viewBoxFor(zoneBox(heights, zone), view), view))
+    expect(whole).toBeLessThan(Math.max(...tiles))
+    expect(whole).toBeGreaterThanOrEqual(Math.min(...tiles))
+    expect(homeBox(heights, heights, zones, 0, view, 48).box).toEqual(zoneBox(heights))
   })
 
   it('칸 폭 하한이 기준보다 크면 하한이 기준', () => {
     const zones = halves(12, 3)
-    expect(homeBox(small, small, zones, 0, PC, 110)).toEqual(zoneBox(small, zones[0]))
+    expect(homeBox(small, small, zones, 0, PC, 110).box).toEqual(zoneBox(small, zones[0]))
+  })
+
+  it('작은 화면은 구역이 여럿이어도 판 전체', () => {
+    const zones = halves(20, 6)
+    const PHONE = { width: 324, height: 612 }
+    const LANDSCAPE = { width: 794, height: 284 }
+    expect(homeBox(large, large, zones, 1, PHONE, 72).box).toEqual(zoneBox(large))
+    expect(homeBox(large, large, zones, 1, LANDSCAPE, 56).box).toEqual(zoneBox(large))
   })
 
   it('판정은 처음 판 높이, 범위는 지금 높이', () => {
     const now = flat(12, 3, 1)
-    expect(homeBox(small, now, halves(12, 3), 0, PC, 48)).toEqual(zoneBox(now))
+    expect(homeBox(small, now, halves(12, 3), 0, PC, 48).box).toEqual(zoneBox(now))
   })
 
   it('구역이 없으면 맵 전체, 화면 크기를 재기 전이면 구역', () => {
     const zones = halves(12, 3)
-    expect(homeBox(small, small, [], 0, PC, 48)).toEqual(zoneBox(small))
-    expect(homeBox(small, small, zones, 0, { width: 0, height: 0 }, 48)).toEqual(
+    expect(homeBox(small, small, [], 0, PC, 48).box).toEqual(zoneBox(small))
+    expect(homeBox(small, small, zones, 0, { width: 0, height: 0 }, 48).box).toEqual(
       zoneBox(small, zones[0]),
     )
   })
