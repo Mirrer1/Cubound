@@ -4,7 +4,7 @@ import { type LadderLook, ladderLookOf } from './carryFrame'
 import type { boardCells } from './cellFrame'
 import { crackFrame, crackLeft, sinkAt } from './crackFrame'
 import { clamp01, smooth } from './curveFrame'
-import { wallHeight } from './fillFrame'
+import { landingCellKey, wallHeight } from './fillFrame'
 import { type FireLook, NO_FIRE, fireLookOf } from './fireFrame'
 import { frostAt } from './iceFrame'
 import { frostGround, frostPatches } from './iceStoneFrame'
@@ -143,7 +143,13 @@ export const cellLook = ({
   ambient,
 }: CellLookView) => {
   const { heights, boxes } = game
-  const walls = { heights, before: scene.before, fillingKey, vineFrame: scene.vineFrame, railDirs }
+  const walls = {
+    heights,
+    before: scene.before,
+    fillingKey: fillingKey ?? landingCellKey(scene.box, events),
+    vineFrame: scene.vineFrame,
+    railDirs,
+  }
   // 재시작하며 처음 모습으로 돌아가는 진행도
   const back = scene.dropping ? smooth(clamp01(t)) : 1
   const deviceAt = switchLookOf(scene, { stage, game, events, t, swampSeconds, back })

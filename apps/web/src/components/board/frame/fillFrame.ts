@@ -37,6 +37,12 @@ export const fillingCellKey = (
     : null
 }
 
+// 상자가 내려앉는 동안의 메우는 칸, 옆 구덩이가 이 칸 쪽 벽을 바닥보다 먼저 세우는 것 방지
+export const landingCellKey = (box: Point | null, events: GameEvent[]) => {
+  const filling = box ? events.find((e) => e.type === 'pushed' && e.result === 'filled') : undefined
+  return filling?.type === 'pushed' ? `${filling.to.x}-${filling.to.y}` : null
+}
+
 export interface FillView {
   heights: number[][]
   before: Pick<GameState, 'heights'>

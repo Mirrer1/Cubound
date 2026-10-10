@@ -353,3 +353,27 @@ describe('boxFramesOf', () => {
     expect(view({ tramFrames: [tram] })).toEqual([])
   })
 })
+
+describe('movingBox 타는 상자', () => {
+  const BURN_STAGE: Stage = {
+    version: 1,
+    id: 'test-burn-box',
+    heights: [[2, 2, 2, 2]],
+    fire: ['@...'],
+    start: { x: 0, y: 0 },
+    goal: { x: 3, y: 0 },
+    entities: [{ type: 'box', x: 1, y: 0 }],
+    rules: { burnBox: true },
+  }
+
+  it('불 붙은 큐브가 민 상자는 밀리는 동안 높이가 그대로다', () => {
+    const lit = { ...createState(BURN_STAGE), flame: 4 }
+    const { state, events } = move(lit, 'right')
+
+    expect(events.map((e) => e.type)).toContain('boxBurned')
+    for (let t = 0; t <= 1; t += 0.05) {
+      const frame = movingBox(lit, state, events, t)
+      if (frame) expect(frame.level).toBe(2)
+    }
+  })
+})

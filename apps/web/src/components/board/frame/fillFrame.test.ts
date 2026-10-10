@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { filledCells, fillingCellKey, heightNow, wallHeight } from './fillFrame'
+import { filledCells, fillingCellKey, heightNow, landingCellKey, wallHeight } from './fillFrame'
 import type { VineFrame, VineLook } from './vineFrame'
 import type { Entity, GameEvent } from '@/game/types'
 
@@ -127,5 +127,22 @@ describe('wallHeight', () => {
 
     expect(wallHeight(filling, 1, 0)).toBe(0)
     expect(wallHeight({ ...filling, fillingKey: '1-0' }, 1, 0)).toBe(-1)
+  })
+})
+
+describe('landingCellKey', () => {
+  const FILLED: GameEvent = {
+    type: 'pushed',
+    from: { x: 1, y: 0 },
+    to: { x: 2, y: 0 },
+    result: 'filled',
+  }
+
+  it('상자가 움직이는 동안은 한 칸 안이어도 메우는 칸을 준다', () => {
+    expect(landingCellKey({ x: 1.5, y: 0 }, [FILLED])).toBe('2-0')
+  })
+
+  it('상자가 내려앉고 나면 없다', () => {
+    expect(landingCellKey(null, [FILLED])).toBeNull()
   })
 })
