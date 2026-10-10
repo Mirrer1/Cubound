@@ -9,7 +9,7 @@ const MIN_TILE = 48 // 칸 폭 하한 px
 const VIEW_PER_TILE = 6 // 상한이 화면 짧은 변의 몇 분의 1인지 나타내는 값
 const SMALL_VIEW_WIDTH = 600 // 폰 세로만 드는 필드 폭 px
 const SHORT_VIEW_HEIGHT = 400 // 폰 가로만 드는 필드 높이 px
-const SHORT_MIN_TILE = 56 // 폰 가로 칸 폭 하한 px
+const SHORT_MIN_TILE = 48 // 폰 가로 칸 폭 하한 px
 const WHOLE_TILE = 88 // 처음부터 판 전체를 보여 주는 판 전체 칸 폭 하한 px
 
 export type ViewBox = [number, number, number, number]

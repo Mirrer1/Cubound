@@ -35,7 +35,7 @@ const RestartCard = ({ onKeep, onRestart }: RestartCardProps) => {
     >
       <motion.div
         ref={cardRef}
-        className="flex w-full max-w-[360px] flex-col gap-6 rounded-[22px] border border-line bg-base-bg p-7 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.18)] short:gap-4 short:p-5"
+        className="flex w-full max-w-[22.5rem] flex-col gap-6 rounded-[1.375rem] border border-line bg-base-bg p-7 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.18)] short:gap-4 short:p-5"
         onClick={stopClick}
         initial={{ y: 8, scale: 0.98 }}
         animate={{ y: 0, scale: 1 }}

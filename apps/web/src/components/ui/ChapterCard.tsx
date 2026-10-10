@@ -99,14 +99,14 @@ const ChapterCard = ({
       data-chapter={chapter}
       disabled={locked}
       onClick={onSelect}
-      className={`flex cursor-pointer items-center gap-4 rounded-[20px] border ${many ? 'px-2 py-3 max-[390px]:gap-3 short:p-2.5' : 'p-4'} text-left transition-soft-colors disabled:cursor-default roomy:flex-col roomy:items-stretch roomy:gap-3 roomy:p-5 ${
+      className={`flex cursor-pointer items-center gap-4 rounded-[1.25rem] border ${many ? 'px-2 py-3 max-[390px]:gap-3 short:p-2.5' : 'p-4'} text-left transition-soft-colors disabled:cursor-default roomy:flex-col roomy:items-stretch roomy:gap-3 roomy:p-5 ${
         locked
           ? 'border-line bg-locked text-faint'
           : `bg-surface hover:bg-hover ${state === 'now' ? 'border-ink' : 'border-line-strong'}`
       }`}
     >
       <span
-        className={`flex shrink-0 items-center justify-center overflow-hidden rounded-[11px] bg-(--chapter-win) min-[1700px]:aspect-auto! min-[1700px]:min-h-25 min-[1700px]:flex-1 ${many ? 'h-22 w-24 max-[390px]:size-18 short:h-15 short:w-20 roomy:min-h-0 roomy:flex-1' : 'h-15 w-15 min-[390px]:w-20 roomy:aspect-2/1'} roomy:h-auto roomy:w-full roomy:rounded-[13px]`}
+        className={`flex shrink-0 items-center justify-center overflow-hidden rounded-[0.6875rem] bg-(--chapter-win) min-[1700px]:aspect-auto! min-[1700px]:min-h-25 min-[1700px]:flex-1 ${many ? 'h-22 w-24 max-[390px]:size-18 short:h-15 short:w-20 roomy:min-h-0 roomy:flex-1' : 'h-15 w-15 min-[390px]:w-20 roomy:aspect-2/1'} roomy:h-auto roomy:w-full roomy:rounded-[0.8125rem]`}
         style={{ opacity: locked ? 0.45 : 1 }}
       >
         <svg viewBox={VIEW} className="w-full roomy:h-[92%] roomy:w-[92%]" aria-hidden="true">
@@ -128,8 +128,8 @@ const ChapterCard = ({
         <span
           className={
             many
-              ? 'flex items-baseline justify-between gap-2 font-mono text-[11px] tracking-[0.12em] whitespace-nowrap max-[390px]:gap-1 short:text-[10px] roomy:text-[11px] roomy:tracking-[0.22em]'
-              : 'flex items-baseline justify-between gap-2 font-mono text-[10px] tracking-[0.18em] roomy:text-[11px] roomy:tracking-[0.22em]'
+              ? 'flex items-baseline justify-between gap-2 font-mono text-[0.6875rem] tracking-[0.12em] whitespace-nowrap max-[390px]:gap-1 short:text-[0.625rem] roomy:text-[0.6875rem] roomy:tracking-[0.22em]'
+              : 'flex items-baseline justify-between gap-2 font-mono text-[0.625rem] tracking-[0.18em] roomy:text-[0.6875rem] roomy:tracking-[0.22em]'
           }
         >
           <span className={locked ? '' : 'text-mute'}>
@@ -138,7 +138,7 @@ const ChapterCard = ({
           <span className={locked ? '' : 'text-faint'}>{LABELS[state]}</span>
         </span>
         <span
-          className={`truncate tracking-tight roomy:text-[22px] ${many ? 'text-xl short:text-lg' : 'text-lg'}`}
+          className={`truncate tracking-tight roomy:text-[1.375rem] ${many ? 'text-xl short:text-lg' : 'text-lg'}`}
         >
           {name}
         </span>
@@ -149,7 +149,7 @@ const ChapterCard = ({
               style={{ width: `${total === 0 ? 0 : Math.round((stars / total) * 100)}%` }}
             />
           </span>
-          <span className="font-mono text-[10px] whitespace-nowrap text-faint roomy:text-[11px]">
+          <span className="font-mono text-[0.625rem] whitespace-nowrap text-faint roomy:text-[0.6875rem]">
             {stars} / {total} <StarIcon className="inline-block size-[1em] align-[-0.1em]" />
           </span>
         </span>

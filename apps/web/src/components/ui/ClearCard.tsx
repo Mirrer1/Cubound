@@ -37,18 +37,18 @@ const ClearCard = ({ stageNumber, moves, stars, onNext, onRetry, onSelect }: Cle
     >
       <motion.div
         ref={cardRef}
-        className="flex w-full flex-col items-center gap-5 rounded-t-[22px] border border-line bg-base-bg p-7 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.18)] short:w-[320px] short:gap-3 short:rounded-[22px] short:p-5 wide:w-[440px] wide:rounded-[22px] wide:p-9 narrow:max-w-[320px] narrow:gap-4 narrow:rounded-[22px] narrow:p-5"
+        className="flex w-full flex-col items-center gap-5 rounded-t-[1.375rem] border border-line bg-base-bg p-7 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.18)] short:w-[320px] short:gap-3 short:rounded-[1.375rem] short:p-5 wide:w-[27.5rem] wide:rounded-[1.375rem] wide:p-9 narrow:max-w-[320px] narrow:gap-4 narrow:rounded-[1.375rem] narrow:p-5"
         initial={{ y: 12, scale: 0.98 }}
         animate={{ y: 0, scale: 1 }}
         transition={{ duration: 0.4, delay: 1.3, ease: 'easeOut' }}
       >
-        <span className="font-mono text-[11px] tracking-[0.22em] text-mute">
+        <span className="font-mono text-[0.6875rem] tracking-[0.22em] text-mute">
           STAGE {String(stageNumber).padStart(2, '0')} · CLEAR
         </span>
         <Stars count={stars} size={26} />
         <span className="flex items-baseline gap-2">
           <span className="text-5xl font-light tabular-nums short:text-4xl">{moves}</span>
-          <span className="font-mono text-[11px] tracking-[0.22em] text-mute">MOVES</span>
+          <span className="font-mono text-[0.6875rem] tracking-[0.22em] text-mute">MOVES</span>
         </span>
         <div className="flex w-full flex-col gap-3">
           {onNext && (

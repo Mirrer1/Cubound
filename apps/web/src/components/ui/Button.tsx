@@ -3,9 +3,9 @@ import type { ButtonHTMLAttributes, Ref } from 'react'
 const VARIANTS = {
   primary: 'h-14 rounded-2xl bg-ink px-8 text-lg text-base-bg hover:bg-ink/90',
   secondary: 'h-14 rounded-2xl border px-3 text-lg sm:px-6',
-  icon: 'size-11 shrink-0 rounded-[13px] border text-lg',
-  ghost: 'size-11 shrink-0 rounded-[13px] text-lg',
-  text: 'h-11 rounded-[13px] px-4 text-sm text-mute',
+  icon: 'size-11 shrink-0 rounded-[0.8125rem] border text-lg',
+  ghost: 'size-11 shrink-0 rounded-[0.8125rem] text-lg',
+  text: 'h-11 rounded-[0.8125rem] px-4 text-sm text-mute',
 }
 
 const TONES = {
@@ -30,7 +30,7 @@ const Button = ({
   return (
     <button
       type="button"
-      className={`flex cursor-pointer items-center justify-center transition-soft active:scale-[0.97] disabled:cursor-default disabled:opacity-40 ${VARIANTS[variant]} ${tone} ${className}`}
+      className={`relative flex cursor-pointer items-center justify-center transition-soft after:absolute after:top-1/2 after:left-1/2 after:h-[max(100%,44px)] after:w-[max(100%,44px)] after:-translate-x-1/2 after:-translate-y-1/2 active:scale-[0.97] disabled:cursor-default disabled:opacity-40 ${VARIANTS[variant]} ${tone} ${className}`}
       {...props}
     />
   )

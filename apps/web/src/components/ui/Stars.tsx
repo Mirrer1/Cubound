@@ -15,7 +15,7 @@ const Stars = ({ count, size, tone = 'light', className = '' }: StarsProps) => {
 
   return (
     <span
-      className={`flex items-center gap-[0.4em] text-[12px] ${className}`}
+      className={`flex items-center gap-[0.4em] text-[0.75rem] ${className}`}
       style={size === undefined ? undefined : { fontSize: size }}
       aria-label={t('stars.label', count)}
     >

@@ -355,10 +355,10 @@ describe('isSmallView', () => {
 })
 
 describe('minTileFor', () => {
-  it('폰 세로는 확대 칸 폭, 폰 가로는 56, 아니면 48', () => {
+  it('폰 세로는 확대 칸 폭, 아니면 48', () => {
     expect(minTileFor({ width: 340, height: 704 }, 72)).toBe(72)
     expect(minTileFor({ width: 1166, height: 512 }, 72)).toBe(48)
-    expect(minTileFor({ width: 794, height: 284 }, 72)).toBe(56)
+    expect(minTileFor({ width: 794, height: 284 }, 72)).toBe(48)
   })
 })
 

@@ -242,6 +242,14 @@ body {
   overscroll-behavior: none;
 }
 
+html {
+  font-size: 85%;
+
+  @media (width >= 40rem) and (height >= 500px) {
+    font-size: 100%;
+  }
+}
+
 body {
   margin: 0;
   background: var(--color-page-bg);
@@ -300,7 +308,7 @@ body {
 /* 목록 내용의 폭 상한. 카드 다섯 칸(240)과 그 사이 여백(16) 넷을 더한 값이다.
    이보다 좁아지면 그대로 줄어들고 넓어지면 헤더와 카드가 같은 폭으로 가운데 선다 */
 @utility max-w-content {
-  max-width: 1264px;
+  max-width: 79rem;
 }
 
 /* 장 고르기 카드. 만든 장만 놓이므로 칸이 적고 넓다 */
@@ -315,7 +323,7 @@ body {
   /* 들어가는 만큼 한 줄에 놓고 헤더 폭을 나눠 채운다. 빈 칸은 접혀 남은 카드가 넓어진다 */
   @media (width >= 60rem) and (height >= 500px) {
     gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
   }
   /* 큰 화면은 왼쪽 장 덩이부터 화살표까지와 같은 높이로 카드를 늘이는 기준 */
   @media (width >= 106.25rem) {
@@ -339,7 +347,7 @@ body {
       --rows: 2;
       gap: 1rem;
       grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-      grid-auto-rows: min(304px, (100cqh - (var(--rows) - 1) * 1rem) / var(--rows));
+      grid-auto-rows: min(19rem, (100cqh - (var(--rows) - 1) * 1rem) / var(--rows));
 
       @container (width >= 1048px) {
         --cols: 4;
@@ -379,7 +387,7 @@ body {
   --cols: 2;
   --rows: 5;
   /* 폰 세로는 폭으로만 정하고 넘치는 만큼 스크롤한다 */
-  --cap: 240px;
+  --cap: 15rem;
 
   display: grid;
   height: 100%;
@@ -417,12 +425,12 @@ body {
   }
   /* 칸이 정사각이라 남은 높이를 줄 수로 나눈 값도 크기 상한이 된다 */
   @media (width >= 40rem), (height < 500px) {
-    --cap: min(240px, (100cqh - (var(--rows) - 1) * var(--gap)) / var(--rows));
+    --cap: min(15rem, (100cqh - (var(--rows) - 1) * var(--gap)) / var(--rows));
   }
   /* 왼쪽 기둥과 나란히 서는 넓은 화면. 남는 폭을 카드가 먹는다 */
   @media (width >= 106.25rem) {
     --gap: 1.25rem;
-    --cap: 280px;
+    --cap: 17.5rem;
   }
 }
 /* 카드 격자가 놓이는 자리. 남은 높이를 재서 카드 크기 상한으로 쓴다.

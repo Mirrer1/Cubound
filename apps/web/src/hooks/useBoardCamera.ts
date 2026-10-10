@@ -29,7 +29,7 @@ const LEAP = TILE.width * 1.5 // 큐브에 붙여 따라가지 않고 옮겨 가
 const CAUGHT = 2 // 옮겨 가다 다시 붙는 남은 거리
 const REDUCED_OVERVIEW_SECONDS = 0.2
 const RESIZE_SECONDS = 0.3
-const ZOOM_TILE = 72 // 폰 세로에서 확대해 보이는 칸 폭 px
+const ZOOM_TILE = 61 // 폰 세로에서 확대해 보이는 칸 폭 px
 
 interface ZoneMove {
   from: ViewBox // 구역이 바뀔 때 보이던 화면

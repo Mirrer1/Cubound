@@ -2,6 +2,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { type MouseEvent, type RefObject, useEffect, useRef, useState } from 'react'
 
 import Button from '@/components/ui/Button'
+import ChevronIcon from '@/components/ui/icons/ChevronIcon'
 import type { Guide } from '@/game/types'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { guideText, text } from '@/i18n'
@@ -37,8 +38,8 @@ const PLACES: Record<Place, string> = {
   top: 'inset-x-4 top-4 wide:inset-x-8 wide:top-8',
   under: 'inset-x-4 wide:inset-x-8',
   bottom: 'inset-x-4 bottom-4 wide:inset-x-8 wide:bottom-8',
-  left: 'inset-y-4 left-4 w-[300px]',
-  right: 'inset-y-4 right-4 w-[300px]',
+  left: 'inset-y-4 left-4 w-[18.75rem]',
+  right: 'inset-y-4 right-4 w-[18.75rem]',
 }
 
 // 위아래가 좁으면 대상을 가리지 않게 좌우로 비켜 놓는 자리
@@ -145,7 +146,7 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
           top: Math.round(found.top - base.top - padding),
           width: Math.round(found.width + padding * 2),
           height: Math.round(found.height + padding * 2),
-          borderRadius: onBoard ? 28 : 18,
+          borderRadius: Math.round(Math.min(onBoard ? 20 : 14, (found.height + padding * 2) * 0.3)),
         }
         const nextPlace = placeFor(next, base.width, base.height, !onBoard)
         const nextAlign = alignFor(next, base.width)
@@ -206,13 +207,13 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
       >
         <motion.div
           ref={cardRef}
-          className="flex w-full max-w-[420px] cursor-default flex-col gap-4 rounded-[22px] border border-line bg-base-bg p-6 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.18)] short:gap-3 short:p-4"
+          className="flex w-full max-w-[26.25rem] cursor-default flex-col gap-4 rounded-[1.375rem] border border-line bg-base-bg p-6 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.18)] short:gap-3 short:p-4"
           onClick={stopClick}
           initial={{ y: 6, scale: 0.98 }}
           animate={{ y: 0, scale: 1 }}
           transition={{ duration: 0.3 * speed, ease: 'easeOut' }}
         >
-          <span className="font-mono text-[11px] tracking-[0.22em] text-mute">
+          <span className="font-mono text-[0.6875rem] tracking-[0.22em] text-mute">
             GUIDE {step + 1} / {guides.length}
           </span>
           <motion.p
@@ -227,7 +228,7 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
           <div className="flex min-h-14 items-center justify-between">
             <button
               type="button"
-              className="relative -ml-2 cursor-pointer rounded-lg px-2 py-1 text-sm text-mute transition-soft after:absolute after:-inset-x-1 after:-inset-y-2.5 hover:bg-hover"
+              className="relative -ml-2 cursor-pointer rounded-lg px-2 py-1 text-sm text-mute transition-soft after:absolute after:-inset-x-1 after:top-1/2 after:h-[max(100%,44px)] after:-translate-y-1/2 hover:bg-hover"
               onClick={onSkip}
             >
               {text(language, 'guide.skip')}
@@ -243,7 +244,7 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
                 onClick={onNext}
                 title={text(language, 'guide.next')}
               >
-                &gt;
+                <ChevronIcon className="size-[1em] rotate-180" />
               </Button>
             )}
           </div>

@@ -190,15 +190,15 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
       {game && (
         <section
           ref={sectionRef}
-          className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-line bg-base-bg"
+          className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.375rem] border border-line bg-base-bg"
         >
           <header className="relative flex items-start justify-between gap-6 px-(--panel-pad) pt-(--panel-pad) short:items-center short:pt-3 narrow:flex-wrap narrow:items-center narrow:gap-x-3 narrow:gap-y-3">
             <div className="flex min-w-0 flex-col gap-1.5 short:flex-row short:items-baseline short:gap-3 narrow:flex-1 narrow:flex-row narrow:items-baseline narrow:gap-2">
-              <span className="shrink-0 font-mono text-[11px] tracking-[0.22em] text-mute">
+              <span className="shrink-0 font-mono text-[0.6875rem] tracking-[0.22em] text-mute">
                 <span className="narrow:hidden">{'STAGE '}</span>
                 {String(stageNumber).padStart(2, '0')}
               </span>
-              <span className="text-2xl tracking-tight short:text-xl wide:text-[27px] narrow:min-w-0 narrow:truncate narrow:text-xl">
+              <span className="text-2xl tracking-tight short:text-xl wide:text-[1.6875rem] narrow:min-w-0 narrow:truncate narrow:text-xl">
                 {t(stageTextKey(game.stage.id))}
               </span>
             </div>
@@ -216,7 +216,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                 animating={animating}
               />
               {/* 320px에서 버튼과 긴 이름이 한 줄에 들어가는 폰 세로 전용 작은 버튼 */}
-              <div className="flex gap-2.5 narrow:gap-1.5 narrow:[&>button]:size-8.5">
+              <div className="flex gap-2.5 narrow:gap-1.5 narrow:[&>button]:size-8.5 narrow:[&>button]:after:w-[calc(100%+0.375rem)]">
                 {!showsAll && (
                   <Button
                     variant="icon"

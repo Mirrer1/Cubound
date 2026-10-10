@@ -160,7 +160,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
 
   return (
     <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
-      <section className="scroll-area flex min-h-0 flex-1 flex-col gap-6 rounded-[22px] border border-line bg-base-bg panel-pad min-[1700px]:grid min-[1700px]:grid-cols-[auto_minmax(0,1fr)] min-[1700px]:content-center min-[1700px]:items-center min-[1700px]:gap-12! wide:gap-8">
+      <section className="scroll-area flex min-h-0 flex-1 flex-col gap-6 rounded-[1.375rem] border border-line bg-base-bg panel-pad min-[1700px]:grid min-[1700px]:grid-cols-[auto_minmax(0,1fr)] min-[1700px]:content-center min-[1700px]:items-center min-[1700px]:gap-12! wide:gap-8">
         {/* 장 카드 셋이 한 줄에 못 서는 화면은 윗줄에 ←와 별과 화살표, 아랫줄 전체가 장 덩이, 차례는 order */}
         <header className="mx-auto flex w-full max-w-content flex-wrap items-center gap-x-4 gap-y-2.5 min-[1700px]:mx-0 min-[1700px]:ml-10 min-[1700px]:w-90 min-[1700px]:max-w-none min-[1700px]:shrink-0 min-[1700px]:flex-col min-[1700px]:items-start min-[1700px]:gap-6 narrow:gap-x-3">
           <Button
@@ -180,8 +180,8 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
             onClick={handleChapters}
             className="order-last w-full max-w-full min-w-0 min-[1700px]:order-1! min-[1700px]:w-full! min-[1700px]:grow-0! min-[1700px]:basis-auto! short:order-none short:w-auto short:max-w-125 short:grow short:basis-0 roomy:order-none roomy:w-auto roomy:max-w-125 roomy:grow roomy:basis-0"
           />
-          <span className="ml-auto font-mono text-xs tracking-[0.15em] whitespace-nowrap text-mute min-[1700px]:order-3 min-[1700px]:ml-0 narrow:text-[11px]">
-            <span className="min-[1700px]:text-[30px] min-[1700px]:text-ink">
+          <span className="ml-auto font-mono text-xs tracking-[0.15em] whitespace-nowrap text-mute min-[1700px]:order-3 min-[1700px]:ml-0 narrow:text-[0.6875rem]">
+            <span className="min-[1700px]:text-[1.875rem] min-[1700px]:text-ink">
               {totalStars(progress, ids)}
             </span>{' '}
             / {ids.length * 3} <StarIcon className="inline-block size-[1em] align-[-0.1em]" />
@@ -194,7 +194,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
               disabled={index === 0}
               onClick={handlePrevious}
               aria-label={t('select.previousWorld')}
-              className="min-[1700px]:size-13 narrow:size-8.5"
+              className="min-[1700px]:size-13 short:after:w-[calc(100%+0.25rem)] narrow:size-8.5 narrow:after:w-[calc(100%+0.25rem)]"
             >
               <ChevronIcon />
             </Button>
@@ -203,7 +203,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
               disabled={!nextOpen}
               onClick={handleNext}
               aria-label={t('select.nextWorld')}
-              className="min-[1700px]:size-13 narrow:size-8.5"
+              className="min-[1700px]:size-13 short:after:w-[calc(100%+0.25rem)] narrow:size-8.5 narrow:after:w-[calc(100%+0.25rem)]"
             >
               <ChevronIcon className="size-[1em] rotate-180" />
             </Button>

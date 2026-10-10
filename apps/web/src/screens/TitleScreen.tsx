@@ -34,7 +34,7 @@ const TitleScreen = () => {
 
   return (
     <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
-      <section className="relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[22px] border border-line bg-base-bg">
+      <section className="relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[1.375rem] border border-line bg-base-bg">
         <TitleScene
           opacity={0.4}
           className="pointer-events-none absolute -top-10 -left-16 w-64 min-[1700px]:-top-16! min-[1700px]:-left-24! min-[1700px]:w-[38rem]! sm:w-72"
@@ -57,7 +57,7 @@ const TitleScreen = () => {
           <Button variant="text" onClick={handleSelect}>
             {t('title.stages')}
           </Button>
-          <span className="font-mono text-[11px] tracking-[0.25em] text-faint sm:hidden">
+          <span className="font-mono text-[0.6875rem] tracking-[0.25em] text-faint sm:hidden">
             SWIPE TO MOVE
           </span>
         </div>

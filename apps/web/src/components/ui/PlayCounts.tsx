@@ -45,7 +45,7 @@ const LimitCount = ({
       key={hit ?? 'idle'}
       animate={{ x: hit === null ? 0 : SHAKE.x }}
       transition={{ duration: SHAKE.duration, ease: 'easeOut' }}
-      className="inline-block text-[32px] leading-none font-light tabular-nums short:text-2xl narrow:text-[19px]"
+      className="inline-block text-[2rem] leading-none font-light tabular-nums short:text-2xl narrow:text-[1.1875rem]"
     >
       {children}
     </motion.span>
@@ -104,7 +104,7 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
           className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
         >
           <span
-            className={`font-mono text-[10px] tracking-[0.22em] ${pushesOver === 0 ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-[0.625rem] tracking-[0.22em] ${pushesOver === 0 ? 'text-alert' : 'text-mute'}`}
           >
             PUSHES
           </span>
@@ -119,7 +119,7 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
           className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
         >
           <span
-            className={`font-mono text-[10px] tracking-[0.22em] ${climbsOver === 0 ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-[0.625rem] tracking-[0.22em] ${climbsOver === 0 ? 'text-alert' : 'text-mute'}`}
           >
             CLIMBS
           </span>
@@ -134,7 +134,7 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
           className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
         >
           <span
-            className={`font-mono text-[10px] tracking-[0.22em] ${ridesOver === 0 ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-[0.625rem] tracking-[0.22em] ${ridesOver === 0 ? 'text-alert' : 'text-mute'}`}
           >
             RIDES
           </span>
@@ -149,7 +149,7 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
           className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
         >
           <span
-            className={`font-mono text-[10px] tracking-[0.22em] ${dirOver === 0 ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-[0.625rem] tracking-[0.22em] ${dirOver === 0 ? 'text-alert' : 'text-mute'}`}
           >
             {limitedDir.toUpperCase()}
           </span>
@@ -160,19 +160,19 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
       )}
       {mudSinks !== null && (
         <div className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2">
-          <span className="font-mono text-[10px] tracking-[0.22em] text-mute">MUD</span>
+          <span className="font-mono text-[0.625rem] tracking-[0.22em] text-mute">MUD</span>
           <LimitCount hit={null}>{mudSinks}</LimitCount>
         </div>
       )}
       {caps !== null && (
         <div className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2">
-          <span className="font-mono text-[10px] tracking-[0.22em] text-mute">CAPS</span>
+          <span className="font-mono text-[0.625rem] tracking-[0.22em] text-mute">CAPS</span>
           <LimitCount hit={null}>{caps}</LimitCount>
         </div>
       )}
       {vines !== null && (
         <div className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2">
-          <span className="font-mono text-[10px] tracking-[0.22em] text-mute">VINE</span>
+          <span className="font-mono text-[0.625rem] tracking-[0.22em] text-mute">VINE</span>
           <LimitCount hit={null}>{vines}</LimitCount>
         </div>
       )}
@@ -182,7 +182,7 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
           className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
         >
           <span
-            className={`font-mono text-[10px] tracking-[0.22em] ${gusting ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-[0.625rem] tracking-[0.22em] ${gusting ? 'text-alert' : 'text-mute'}`}
           >
             WIND
           </span>
@@ -201,7 +201,7 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
           className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
         >
           <span
-            className={`font-mono text-[10px] tracking-[0.22em] ${melt.holding || melt.melting ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-[0.625rem] tracking-[0.22em] ${melt.holding || melt.melting ? 'text-alert' : 'text-mute'}`}
           >
             MELT
           </span>
@@ -225,13 +225,13 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
           className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
         >
           <span
-            className={`font-mono text-[10px] tracking-[0.22em] ${tide.turning ? 'text-alert' : 'text-mute'}`}
+            className={`font-mono text-[0.625rem] tracking-[0.22em] ${tide.turning ? 'text-alert' : 'text-mute'}`}
           >
             TIDE
           </span>
           <span className="flex items-center gap-1.5 narrow:gap-1">
             <span
-              className={`text-[11px] narrow:text-[9px] ${tide.turning ? 'text-alert' : 'text-ink'}`}
+              className={`text-[0.6875rem] narrow:text-[0.5625rem] ${tide.turning ? 'text-alert' : 'text-ink'}`}
             >
               <TriangleIcon className={`block h-[0.73em] w-[1em] ${tide.up ? '' : 'rotate-180'}`} />
             </span>
@@ -252,7 +252,7 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
             className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
           >
             <span
-              className={`font-mono text-[10px] tracking-[0.22em] ${flame.out ? 'text-alert' : 'text-mute'}`}
+              className={`font-mono text-[0.625rem] tracking-[0.22em] ${flame.out ? 'text-alert' : 'text-mute'}`}
             >
               FIRE
             </span>
@@ -267,7 +267,7 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
         className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
       >
         <span
-          className={`font-mono text-[10px] tracking-[0.22em] ${left === 0 ? 'text-alert' : 'text-mute'}`}
+          className={`font-mono text-[0.625rem] tracking-[0.22em] ${left === 0 ? 'text-alert' : 'text-mute'}`}
         >
           MOVES
         </span>
