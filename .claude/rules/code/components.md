@@ -13,6 +13,7 @@ paths:
 4. JSX return 안에서 변수를 선언하지 않는다. return 위에서 미리 계산한다
 5. 이벤트 핸들러는 return 위로 추출한다. 한 줄이면서 단순 setter이고 재사용이 없을 때만 인라인을 허용한다
 6. 크기(글자, 여백, 폭, 둥글기)는 rem으로 쓴다. 폰은 `html` 글자 크기 85%로 화면 전체를 줄여서 px 값만 안 줄어든다(`ARCHITECTURE.md` "화면 크기 대응")
+7. 게임 헤더의 작은 모노 라벨(STAGE, MOVES 같은)은 `text-label`, 아이콘 버튼은 `Button`의 `tool` 변형(`tool-size`)으로 쓴다. 기기별 크기는 그 유틸리티 하나에서 정한다
 
 ```tsx
 // 나쁜 예: return 여러 개
