@@ -10,6 +10,7 @@ export const SECONDS = {
   fell: 0.32,
   climbed: 0.3,
   blocked: 0.2,
+  torched: 0.26, // 불 붙은 큐브가 숯 벽 쪽으로 미는 수
   placed: 0.22,
   planted: 0.44,
   tram: 0.24,

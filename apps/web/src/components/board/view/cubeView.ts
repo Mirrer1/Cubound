@@ -1,14 +1,14 @@
 import { TILE } from '@/game/iso'
 import type { Direction } from '@/game/types'
 
-type Vec = [number, number, number]
+export type Vec = [number, number, number]
 type Face = 'top' | 'left' | 'right'
 
 // 한 층 높이와 같은 큐브 한 변
 export const CUBE = TILE.layer / TILE.height
 
 const H = CUBE / 2
-const FACES: { normal: Vec; corners: Vec[] }[] = [
+export const FACES: { normal: Vec; corners: Vec[] }[] = [
   {
     normal: [0, 0, 1],
     corners: [
@@ -68,7 +68,7 @@ const FACES: { normal: Vec; corners: Vec[] }[] = [
 const round = (v: number) => Math.round(v * 100) / 100
 
 // 굴러가는 방향으로 윗면이 넘어가는 회전
-const rotate = ([x, y, z]: Vec, direction: Direction, angle: number): Vec => {
+export const rotate = ([x, y, z]: Vec, direction: Direction, angle: number): Vec => {
   const a = direction === 'right' || direction === 'down' ? angle : -angle
   const cos = Math.cos(a)
   const sin = Math.sin(a)

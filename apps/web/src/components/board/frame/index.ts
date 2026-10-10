@@ -67,6 +67,7 @@ export {
 } from './crackFrame'
 export { type DropFrame, restartDrop, restartDuration } from './restartFrame'
 export { lockFocus } from './guideFrame'
+export { flameDisplay } from './brazierFrame'
 export { type SluiceLook, waterAtOf } from './sluiceFrame'
 export {
   plantedSeedAt,

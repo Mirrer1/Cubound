@@ -385,3 +385,51 @@ describe('ambientLoops', () => {
     expect(ring.keyframes[1].opacity).toBe(0.7)
   })
 })
+
+describe('화로 분위기 연출', () => {
+  // 화로 둘, 큐브는 (0,0)
+  const BRAZIERS: Stage = { ...STAGE, id: '17-1', fire: ['.....', '.....', '..@..', '....@'] }
+
+  it('화로 판은 꺼진 불씨 칸 연기 뒤에 화로 연기와 화로 불티 차례', () => {
+    expect(ambientPlan({ ...BRAZIERS, fire: ['..*..', '.....', '..@..', '....@'] }, 4)).toEqual({
+      cycle: 4350 + 5200 + 5700 + 3050,
+      slots: [
+        { at: 0, kind: 'ash' },
+        { at: 4350, kind: 'emberSmoke' },
+        { at: 4350 + 5200, kind: 'brazierSmoke' },
+        { at: 4350 + 5200 + 5700, kind: 'brazierSpark' },
+      ],
+    })
+  })
+
+  it('큐브나 상자가 올라선 화로와 큐브 옆 화로 제외', () => {
+    const game = createState(BRAZIERS)
+    const picked = new Set(
+      Array.from({ length: 20 }, (_, r) => key(ambientCells(game, 'brazierSmoke', r, 2)[0])),
+    )
+    expect(picked).toEqual(new Set(['2-2', '4-3']))
+    expect(ambientCells({ ...game, boxes: [{ x: 2, y: 2 }] }, 'brazierSpark', 0, 3)).toEqual([
+      { x: 4, y: 3 },
+    ])
+    expect(ambientCells({ ...game, player: { x: 4, y: 2 } }, 'brazierSmoke', 0, 2)).toEqual([
+      { x: 2, y: 2 },
+    ])
+  })
+
+  it('화로 연기 두 덩이는 1.1초 어긋나 3.2초, 불티 넷은 0.25초씩 늦게 0.9초', () => {
+    const smoke = ambientLoops('brazierSmoke', 18300)
+    expect(smoke.map((loop) => [loop.shape, loop.delay])).toEqual([
+      ['brazierSmoke', 0],
+      ['brazierSmoke', 1100],
+    ])
+    expect(smoke[0].keyframes.at(-2)!.offset).toBeCloseTo(3200 / 18300)
+    expect(Math.max(...smoke[0].keyframes.map((k) => Number(k.opacity)))).toBe(0.5)
+    const sparks = ambientLoops('brazierSpark', 18300)
+    expect(sparks.map((loop) => loop.delay)).toEqual([0, 250, 500, 750])
+    expect(sparks[0].keyframes.at(-2)!.offset).toBeCloseTo(900 / 18300)
+    for (const { keyframes } of [...smoke, ...sparks]) {
+      expect(keyframes[0].opacity).toBe(0)
+      expect(keyframes.at(-1)!.opacity).toBe(0)
+    }
+  })
+})

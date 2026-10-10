@@ -230,6 +230,11 @@ const pathFrame = (
   if (blocked?.type === 'blocked') {
     return { ...still, direction: blocked.direction, angle: Math.sin(Math.PI * t) * TILT }
   }
+  const torched = events.find((e) => e.type === 'torched')
+  if (torched?.type === 'torched') {
+    const direction = directionBetween(torched.from, torched.to)
+    return { ...still, direction, angle: Math.sin(Math.PI * t) * TILT }
+  }
 
   // 제 힘으로 가지 않은 이동은 떠나기 전 칸
   const hold = prev ? prev.player : player

@@ -76,6 +76,9 @@ export const en = {
   'guide.spark': 'Step on an ember tile and a fire starts there',
   'guide.charcoal': 'Each move, fire spreads to the charcoal it touches and burnt charcoal is gone',
   'guide.chase': 'The fire spreads only to the nearer charcoal, as if giving chase',
+  'guide.brazier': 'Step on a brazier to catch fire, which goes out after {n} moves',
+  'guide.torch': 'Push toward a charcoal wall while on fire and the fire spreads to it',
+  'guide.burnBox': 'Push a box while on fire and the box burns away',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',

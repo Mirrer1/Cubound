@@ -137,6 +137,7 @@ interface BoxView {
   boxes: Point[]
   crackView: CrackView
   iceDrop: number // 언 칸으로 밀려 가며 얼음 판 높이로 내려앉는 거리
+  bowl: number // 화로 그릇 위로 오른 거리
 }
 
 // 칸과 따로 움직이는 밀리는 상자와 발판 위 상자의 화면 좌표
@@ -147,6 +148,7 @@ export const boxFramesOf = ({
   boxes,
   crackView,
   iceDrop,
+  bowl,
 }: BoxView) => {
   const pushedScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
   return [
@@ -160,6 +162,7 @@ export const boxFramesOf = ({
               TILE.layer +
               standSink(crackView, box.x, box.y) +
               iceDrop -
+              bowl -
               box.lift +
               (sinkingBox ? BOX_SINK * sinkingBox.deep : 0),
             to: box.to,

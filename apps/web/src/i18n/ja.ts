@@ -75,6 +75,9 @@ export const ja: Partial<Texts> = {
   'guide.spark': '火種のマスを踏むと、そこから火がつきます',
   'guide.charcoal': '火は一手ごとに隣の炭へ燃え広がり、燃えた炭は消えます',
   'guide.chase': '火は追いかけるように、近い側の炭へだけ燃え広がります',
+  'guide.brazier': '火鉢を踏むと火がつき、{n} 手で消えます',
+  'guide.torch': '火がついたまま炭の壁へ押すと、火が燃え移ります',
+  'guide.burnBox': '火がついたまま箱を押すと、箱は燃えて消えます',
 
   'chapter.1': '石を踏む道',
   'chapter.2': '草が茂る道',

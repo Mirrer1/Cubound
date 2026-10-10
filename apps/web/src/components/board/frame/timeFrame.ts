@@ -1,3 +1,4 @@
+import { brazierEnd, brazierLightEnd } from './brazierFrame'
 import { clamp01, smooth } from './curveFrame'
 import { fireEnd } from './fireFrame'
 import {
@@ -396,7 +397,9 @@ export const moveSeconds = (events: GameEvent[], swamp: SwampTime) =>
     sluiceEnd(events),
     fireEnd(events, playerSegments(events), swamp.tail),
     ...events.map((e) =>
-      e.type === 'blocked' || e.type === 'placed' || e.type === 'planted' ? SECONDS[e.type] : 0,
+      e.type === 'blocked' || e.type === 'torched' || e.type === 'placed' || e.type === 'planted'
+        ? SECONDS[e.type]
+        : 0,
     ),
     ...events.map((e) => (e.type === 'cracked' && e.gone ? CRUMBLE_SECONDS : 0)),
     ...events.map((e) => (e.type === 'struggled' ? SWAMP.struggle : 0)),
@@ -434,9 +437,13 @@ export const freezeEnd = (events: GameEvent[]) => {
 export const MELT_SECONDS = 0.42
 
 export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
-  moveSeconds(events, swamp) +
-  (rises(events) ? RISE_SECONDS : 0) +
-  (events.some((e) => e.type === 'melted') ? MELT_SECONDS : 0)
+  Math.max(
+    moveSeconds(events, swamp) +
+      (rises(events) ? RISE_SECONDS : 0) +
+      (events.some((e) => e.type === 'melted') ? MELT_SECONDS : 0),
+    brazierLightEnd(events),
+    brazierEnd(events),
+  )
 
 // 물이 바뀌는 수의 꼭지, 수면, 새로 잠긴 칸이 어는 진행도, 드러나는 칸이 녹는 진행도와 그 뒤 돌 밑 판이 녹는 진행도, 물이 그대로인 수는 모두 1
 export const sluicePhase = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {

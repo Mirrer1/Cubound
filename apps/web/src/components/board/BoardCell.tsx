@@ -2,6 +2,7 @@ import { type CSSProperties, type ReactNode, memo } from 'react'
 
 import BoardAmbient from './BoardAmbient'
 import BoardBox from './BoardBox'
+import BoardBrazier from './BoardBrazier'
 import BoardFire from './BoardFire'
 import BoardFloor, { type BehindGoal } from './BoardFloor'
 import BoardIceStone from './BoardIceStone'
@@ -13,6 +14,7 @@ import BoardSwitch from './BoardSwitch'
 import BoardWater from './BoardWater'
 import { type CellLook, sameCellLook, swampSink } from './frame'
 import {
+  ASH_MARK,
   CUBE,
   ICE,
   LEAN_LOOP,
@@ -71,6 +73,7 @@ const BoardCell = ({
   pit: pitLook,
   ladder,
   fire,
+  brazier,
   vine,
   seed,
   ambient,
@@ -122,6 +125,12 @@ const BoardCell = ({
   // 물가 땅보다 조금 낮은 언 판 윗면
   const iceTop = y - water.depth * TILE.layer + ICE.below
   const boat = boatLook(water.depth)
+  const markFill = blend(
+    parity ? 'var(--color-floor-top-alt)' : 'var(--color-floor-top)',
+    'var(--color-ash-top)',
+    0.4,
+  )
+  const boxTop = y - TILE.layer - brazier.lift
 
   return (
     <g>
@@ -174,6 +183,16 @@ const BoardCell = ({
           {fire.kind && (
             <BoardFire part="floor" x={x} y={y} parity={parity} {...fire} kind={fire.kind} />
           )}
+          {brazier.mark > 0 && (
+            <polygon
+              points={blockFaces(x, y, TILE.width * ASH_MARK, 0).top}
+              opacity={brazier.mark}
+              style={{ fill: markFill }}
+            />
+          )}
+          {brazier.on && (
+            <BoardBrazier part="bowl" x={x} y={y} flash={brazier.flash} covered={brazier.covered} />
+          )}
         </g>
       )}
       {device.entity && (
@@ -211,9 +230,12 @@ const BoardCell = ({
               <BoardWater part="box" x={x} y={y - boat.top} shown={boat.shown} />
             </g>
           ) : (
-            <BoardBox x={x} y={y - TILE.layer} />
+            <BoardBox x={x} y={boxTop} />
           )}
         </g>
+      )}
+      {brazier.burn >= 0 && (
+        <BoardBrazier part="box" x={x} y={boxTop} hint={1} burn={brazier.burn} />
       )}
       {iceStone.patch > 0 && (
         <polygon
@@ -263,7 +285,9 @@ const BoardCell = ({
         ambient.kind === 'butterfly' ||
         ambient.kind === 'mist' ||
         ambient.kind === 'ash' ||
-        ambient.kind === 'emberSmoke') && (
+        ambient.kind === 'emberSmoke' ||
+        ambient.kind === 'brazierSmoke' ||
+        ambient.kind === 'brazierSpark') && (
         <BoardAmbient
           x={x}
           y={ambient.kind === 'mist' ? Math.min(y, iceTop) : y}

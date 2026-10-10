@@ -22,7 +22,7 @@ import GuideIcon from '@/components/ui/icons/GuideIcon'
 import MenuIcon from '@/components/ui/icons/MenuIcon'
 import RestartIcon from '@/components/ui/icons/RestartIcon'
 import ShrinkIcon from '@/components/ui/icons/ShrinkIcon'
-import { movesLeft } from '@/game/rules'
+import { FLAME, movesLeft } from '@/game/rules'
 import { useText } from '@/hooks/useText'
 import { stageTextKey } from '@/i18n'
 import { directionFromKey, directionFromSwipe, isOverviewKey, isRestartKey } from '@/platform/input'
@@ -192,7 +192,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
           ref={sectionRef}
           className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-line bg-base-bg"
         >
-          <header className="flex items-start justify-between gap-6 px-(--panel-pad) pt-(--panel-pad) short:items-center short:pt-3 narrow:flex-wrap narrow:items-center narrow:gap-x-3 narrow:gap-y-3">
+          <header className="relative flex items-start justify-between gap-6 px-(--panel-pad) pt-(--panel-pad) short:items-center short:pt-3 narrow:flex-wrap narrow:items-center narrow:gap-x-3 narrow:gap-y-3">
             <div className="flex min-w-0 flex-col gap-1.5 short:flex-row short:items-baseline short:gap-3 narrow:flex-1 narrow:flex-row narrow:items-baseline narrow:gap-2">
               <span className="shrink-0 font-mono text-[11px] tracking-[0.22em] text-mute">
                 <span className="narrow:hidden">{'STAGE '}</span>
@@ -295,7 +295,8 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
                   game.stage.rules?.climbLimit ??
                   game.stage.rules?.rideLimit ??
                   game.stage.rules?.dirLimit?.count ??
-                  game.stage.rules?.melt
+                  game.stage.rules?.melt ??
+                  FLAME
                 }
                 containerRef={sectionRef}
                 onNext={nextGuide}

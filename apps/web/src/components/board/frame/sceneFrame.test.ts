@@ -247,3 +247,43 @@ describe('sceneFrame 집', () => {
     expect(sceneOf(game, prev, events, 1).home).toBe(true)
   })
 })
+
+describe('sceneFrame 화로', () => {
+  // (1,0) 화로, 상자 (2,0)을 화로 너머로 밀고 (1,1) 화로로 미는 판
+  const BRAZIER_STAGE: Stage = {
+    ...BOX_STAGE,
+    heights: [
+      [0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+    ],
+    fire: ['.@...', '.@...'],
+    entities: [{ type: 'box', x: 2, y: 0 }],
+  }
+
+  it('화로 위 큐브는 그릇 높이만큼 위, 올라서는 동안 이어서', () => {
+    const game = createState(BRAZIER_STAGE)
+    const { prev, game: on, events } = lastMove(BRAZIER_STAGE, ['right'])
+    const flat = sceneOf(game, null, [], 1).cubeSink
+    expect(sceneOf(on, prev, events, 1).cubeSink).toBeCloseTo(flat - 8)
+    const rising = sceneOf(on, prev, events, 0.2).cubeSink
+    expect(rising).toBeLessThan(flat)
+    expect(rising).toBeGreaterThan(flat - 8)
+    expect(sceneOf(on, prev, events, 1).cubeHeat.length).toBeGreaterThan(0)
+    expect(sceneOf(game, null, [], 1).cubeHeat).toEqual([])
+  })
+
+  it('화로로 밀리는 상자도 그릇 높이까지 이어서 오름', () => {
+    const stage: Stage = {
+      ...BRAZIER_STAGE,
+      start: { x: 3, y: 1 },
+      entities: [{ type: 'box', x: 2, y: 1 }],
+    }
+    const plain: Stage = { ...stage, fire: ['.....', '.....'] }
+    const lifted = lastMove(stage, ['left'])
+    const flat = lastMove(plain, ['left'])
+    const y = ({ prev, game, events }: typeof flat, t: number) =>
+      sceneOf(game, prev, events, t).boxFrames[0].y
+    expect(y(lifted, 0.5) - y(flat, 0.5)).toBeLessThan(-1)
+    expect(y(lifted, 0.5) - y(flat, 0.5)).toBeGreaterThan(-8)
+  })
+})

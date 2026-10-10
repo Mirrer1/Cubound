@@ -48,6 +48,7 @@
   --color-amb-ash: #8e8a84;
   --color-amb-ash-dust: #9e9a93;
   --color-amb-ember-smoke: #a99d90;
+  --color-amb-brazier-smoke: #c8bdb0;
   --color-char-top: #7a6d61;
   --color-char-left: #5e544a;
   --color-char-right: #6c6156;
@@ -65,6 +66,9 @@
   --color-ash-right: #b0a9a0;
   --color-stove-top: #a9a39b;
   --color-stove-bed: #cfc8bf;
+  --color-stove-left: #7d776f;
+  --color-stove-right: #928c84;
+  --color-stove-coal: #3c3632;
   --color-tram-top: #fcfbf8;
   --color-tram-left: #dfdbd3;
   --color-tram-right: #f3f1eb;
@@ -478,6 +482,24 @@ body {
 }
 
 @property --lean-phase {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+/* 큐브 불 남은 수 1에서 약해지는 몫, 반복 자체는 useLoop */
+@utility flame-dip {
+  opacity: calc(1 - var(--dip-phase) * var(--dip-amp) * 0.55);
+}
+
+/* 깜빡임 세기와 깜빡임 반복의 진행도 */
+@property --dip-amp {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --dip-phase {
   syntax: '<number>';
   inherits: false;
   initial-value: 0;

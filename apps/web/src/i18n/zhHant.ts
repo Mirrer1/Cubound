@@ -75,6 +75,9 @@ export const zhHant: Partial<Texts> = {
   'guide.spark': '踩上火種格，火就從那裡點燃',
   'guide.charcoal': '火每走一步就燒到相鄰的炭，燒完的炭會消失',
   'guide.chase': '火像追來一樣，只燒向較近一側的炭',
+  'guide.brazier': '踩上火盆就會著火，過 {n} 步熄滅',
+  'guide.torch': '帶著火朝炭牆推，火就會燒過去',
+  'guide.burnBox': '帶著火推箱子，箱子會燒掉消失',
 
   'chapter.1': '踏石之路',
   'chapter.2': '草木叢生之路',

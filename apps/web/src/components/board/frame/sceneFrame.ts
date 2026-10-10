@@ -1,5 +1,6 @@
-import { type Lane, floatShownAt, rollingCubeFaces } from '../view'
+import { CUBE_HEAT, type Lane, cubeHeatBands, floatShownAt, rollingCubeFaces } from '../view'
 import { boxFramesOf, movingBox } from './boxFrame'
+import { bowlLift, brazierScene } from './brazierFrame'
 import {
   carriedBaseOf,
   carriedOpacityOf,
@@ -201,6 +202,17 @@ export const sceneFrame = ({
     tail: swampSeconds.tail,
     stepT,
   })
+  const brazier = brazierScene({
+    before,
+    game,
+    events,
+    moving,
+    dropping,
+    t,
+    stepT,
+    spread: fire.spread,
+    elapsed: fire.elapsed,
+  })
 
   // 돌이 밀리고 끌리고 녹는 동안 얼고 녹는 칸, 그 위에 선 큐브가 얼음 판 높이로 내려앉는 거리
   const iceT = moving ? icePhase(events, t, swampSeconds) : 1
@@ -223,8 +235,23 @@ export const sceneFrame = ({
     lanes: fadeLanes(laneShown(sluice.lanes, before, game, iceT), sluice.laneFade),
   }
 
-  const cubeSink = standSink(crackView, cube.x, cube.y) + iceSink(covers, game, cube.x, cube.y)
+  const cubeSink =
+    standSink(crackView, cube.x, cube.y) +
+    iceSink(covers, game, cube.x, cube.y) -
+    bowlLift(stage, cube.x, cube.y)
   const cubeFaces = rollingCubeFaces(cube.x, cube.y, cubeLevel, cube.direction, cube.angle)
+  const { glow } = brazier
+  const cubeHeat =
+    glow.strength > 0
+      ? cubeHeatBands(
+          cube.x,
+          cube.y,
+          cubeLevel,
+          cube.direction,
+          cube.angle,
+          CUBE_HEAT.band * glow.height,
+        )
+      : []
   const carriedBase = carriedBaseOf(cubeScreen, cubeSink, cube)
   const rolling = rollingTilt(cube, chain)
   const bump = carriedTilt({ events, moving, t, swampSeconds, cube, rolling })
@@ -239,7 +266,8 @@ export const sceneFrame = ({
       : cap,
   )
   const iceDrop = box ? iceSink(covers, game, box.x, box.y) : 0
-  const boxFrames = boxFramesOf({ box, sinkingBox, tramFrames, boxes, crackView, iceDrop })
+  const bowl = box ? bowlLift(stage, box.x, box.y) : 0
+  const boxFrames = boxFramesOf({ box, sinkingBox, tramFrames, boxes, crackView, iceDrop, bowl })
   const boxShown = box ? floatShownAt(stage, box, sluice.waterAt) : null
   const tethers = tetherFrames({ prev: moving ? prevGame : null, game, box, t, dropping })
   const moor = moorLooks(stage, tethers)
@@ -293,6 +321,7 @@ export const sceneFrame = ({
     cubeSquash,
     cubeSink,
     cubeFaces,
+    cubeHeat,
     pickedUp,
     placed,
     carried,
@@ -316,6 +345,7 @@ export const sceneFrame = ({
     sluice,
     crackView,
     fire,
+    brazier,
     seedFrame,
     faded,
     vineFrame,

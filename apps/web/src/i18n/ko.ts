@@ -75,6 +75,9 @@ export const ko: Partial<Texts> = {
   'guide.spark': '불씨 칸을 밟으면 거기서 불이 켜져요',
   'guide.charcoal': '불은 한 수마다 맞닿은 숯으로 번지고 탄 숯은 사라져요',
   'guide.chase': '불은 쫓아오듯 가까운 쪽 숯으로만 번져요',
+  'guide.brazier': '화로를 밟으면 불이 붙고 {n}수가 지나면 꺼져요',
+  'guide.torch': '불이 붙은 채 숯 벽 쪽으로 밀면 불이 옮겨붙어요',
+  'guide.burnBox': '불이 붙은 채 상자를 밀면 상자가 타서 사라져요',
 
   'chapter.1': '돌 위의 첫걸음',
   'chapter.2': '풀이 우거진 길',

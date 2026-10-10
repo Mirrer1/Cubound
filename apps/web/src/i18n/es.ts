@@ -84,6 +84,9 @@ export const es: Partial<Texts> = {
   'guide.charcoal':
     'En cada movimiento el fuego pasa al carbón que toca y el carbón quemado desaparece',
   'guide.chase': 'El fuego solo pasa al carbón del lado más cercano, como si persiguiera',
+  'guide.brazier': 'Pisa un brasero para prenderte fuego, que se apaga tras {n} movimientos',
+  'guide.torch': 'Empuja hacia un muro de carbón mientras ardes y el fuego se le pasa',
+  'guide.burnBox': 'Empuja una caja mientras ardes y la caja se quema y desaparece',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',

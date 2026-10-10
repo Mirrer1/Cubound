@@ -106,6 +106,25 @@ const AmbientPiece = ({ shape, x, y, keyframes, cycle, delay }: AmbientPieceProp
       opacity={0}
       style={{ fill: 'var(--color-amb-ember-smoke)', ...origin }}
     />
+  ) : shape === 'brazierSmoke' ? (
+    <ellipse
+      ref={loop}
+      cx={x}
+      cy={y}
+      rx={AMBIENT.brazierSmoke.rx}
+      ry={AMBIENT.brazierSmoke.ry}
+      opacity={0}
+      style={{ fill: 'var(--color-amb-brazier-smoke)', ...origin }}
+    />
+  ) : shape === 'sparkCore' || shape === 'sparkHot' ? (
+    <circle
+      ref={loop}
+      cx={x}
+      cy={y}
+      r={AMBIENT.brazierSpark.size}
+      opacity={0}
+      style={{ fill: shape === 'sparkCore' ? 'var(--color-heat-core)' : 'var(--color-heat-hot)' }}
+    />
   ) : shape === 'wisp' || shape === 'sheetLeft' || shape === 'sheetRight' ? (
     <ellipse
       ref={loop}
@@ -146,10 +165,14 @@ const BoardAmbient = ({ kind, x, y, at, cycle, leave }: BoardAmbientProps) => {
   const group = useRef<SVGGElement>(null)
   const fled = useRef(false)
 
-  // 왼쪽 위로 날아가는 나비, 옅어지는 찬 김과 불씨 칸 연기
+  // 왼쪽 위로 날아가는 나비, 옅어지는 찬 김과 불씨 칸 연기와 화로 연기, 화로 불티
   useEffect(() => {
     if (
-      (kind !== 'butterfly' && kind !== 'mist' && kind !== 'emberSmoke') ||
+      (kind !== 'butterfly' &&
+        kind !== 'mist' &&
+        kind !== 'emberSmoke' &&
+        kind !== 'brazierSmoke' &&
+        kind !== 'brazierSpark') ||
       !leave ||
       fled.current ||
       !group.current

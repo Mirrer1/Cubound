@@ -372,3 +372,29 @@ describe('cellLook 수위', () => {
     expect(cells.get('2-0')!.look.sluice.device).toBe(false)
   })
 })
+
+describe('cellLook 화로', () => {
+  // (1,0) 화로 위 상자, 큐브가 (0,0)
+  const BRAZIER_STAGE: Stage = {
+    version: 1,
+    id: 'test-cell-look-brazier',
+    heights: [[0, 0, 0, 0]],
+    fire: ['.@..'],
+    start: { x: 0, y: 1 },
+    goal: { x: 3, y: 0 },
+    entities: [{ type: 'box', x: 1, y: 0 }],
+  }
+
+  it('화로 칸은 그릇과 그 위 상자 높이, 상자가 덮어 그릇 불티를 거둠', () => {
+    const game = createState({
+      ...BRAZIER_STAGE,
+      heights: [
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+      ],
+    })
+    const cells = looks(game)
+    expect(cells.get('1-0')!.look.brazier).toMatchObject({ on: true, lift: 8, covered: 1 })
+    expect(cells.get('2-0')!.look.brazier).toMatchObject({ on: false, lift: 0, burn: -1 })
+  })
+})

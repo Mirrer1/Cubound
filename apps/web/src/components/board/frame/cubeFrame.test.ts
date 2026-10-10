@@ -89,6 +89,16 @@ describe('playerFrame', () => {
     expect(playerFrame(prev, state, events, 0.5).x).toBe(0)
   })
 
+  it('불 붙은 채 숯 벽 쪽으로 밀면 제자리에서 벽 쪽으로 기울었다 돌아온다', () => {
+    const prev = { ...createState({ ...STAGE, fire: ['.#.'] }), flame: 3 }
+    const { state, events } = move(prev, 'right')
+
+    expect(events.map((e) => e.type)).toEqual(['torched'])
+    expect(playerFrame(prev, state, events, 0.5)).toMatchObject({ x: 0, direction: 'right' })
+    expect(playerFrame(prev, state, events, 0.5).angle).toBeGreaterThan(0)
+    expect(playerFrame(prev, state, events, 1).angle).toBe(0)
+  })
+
   // 재시작에 앞 상태를 넘기지 않는 이유, 넘기면 떠나기 전 칸에 서는 프레임
   it('앞 상태가 없으면 이동 이벤트가 없어도 새 상태의 자리에 선다', () => {
     const start = createState(STAGE)

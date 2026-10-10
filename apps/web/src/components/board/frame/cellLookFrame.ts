@@ -1,4 +1,5 @@
 import { type AmbientKind, ICE, idleRipples, postBands, rippleCycle, waterLook } from '../view'
+import { type BrazierLook, brazierLookOf } from './brazierFrame'
 import { type LadderLook, ladderLookOf } from './carryFrame'
 import type { boardCells } from './cellFrame'
 import { crackFrame, crackLeft, sinkAt } from './crackFrame'
@@ -106,13 +107,14 @@ export interface CellLook {
   }
   ladder: LadderLook
   fire: FireLook
+  brazier: BrazierLook
   vine: VineCell
   seed: SeedCell
   ambient: {
     kind: AmbientKind | null // 이 칸에서 이번 차례에 일어나는 분위기 연출
     at: number // 바퀴 안에서 시작하는 ms
     cycle: number
-    leave: boolean // 거둘 때, 나비는 큐브가 이 칸이나 옆 칸에 온 때, 찬 김은 돌이 칸을 떠난 때, 불씨 칸 연기는 켜진 때
+    leave: boolean // 거둘 때, 나비는 큐브가 이 칸이나 옆 칸에 온 때, 찬 김은 돌이 칸을 떠난 때, 불씨 칸 연기는 켜진 때, 화로 연기와 불티는 큐브나 상자가 올라선 때
   }
 }
 
@@ -219,6 +221,7 @@ export const cellLook = ({
       scene.dropping && !seedHere
         ? Math.sign(scene.before.heights[cell.p.y][cell.p.x] - heights[cell.p.y][cell.p.x])
         : 0
+    const stillBox = boxHere && !movedBoxHere && boxDrop === null
     const overlay =
       drawBoxes.length > 0 ||
       whirlBoxes.length > 0 ||
@@ -237,7 +240,7 @@ export const cellLook = ({
       goal: same(cell.p, stage.goal),
       faded: has(scene.faded, cell.p),
       hidden: isFilled && movedBoxHere && scene.before.heights[cell.p.y][cell.p.x] < 0,
-      box: boxHere && !movedBoxHere && boxDrop === null,
+      box: stillBox,
       ground: {
         filled:
           (isFilled || (restored > 0 && stage.heights[cell.p.y][cell.p.x] < 0)) &&
@@ -321,6 +324,15 @@ export const cellLook = ({
       },
       ladder: ladderLookOf(scene, game, back, cell, pickedHere),
       fire: isFilled ? NO_FIRE : fire,
+      brazier: brazierLookOf({
+        scene: scene.brazier,
+        game,
+        before: scene.before,
+        cube: scene.cube,
+        box: scene.box,
+        boxHere: stillBox,
+        p: cell.p,
+      }),
       vine: vineCellOf(vine),
       seed: seedCellOf(scene, game, cell, seedHere, pickedHere),
       ambient: ambientHere
@@ -333,7 +345,9 @@ export const cellLook = ({
                 ? !has(game.stones, cell.p)
                 : ambientHere.kind === 'emberSmoke'
                   ? !has(game.sparks, cell.p)
-                  : Math.abs(cell.p.x - game.player.x) + Math.abs(cell.p.y - game.player.y) <= 1,
+                  : ambientHere.kind === 'brazierSmoke' || ambientHere.kind === 'brazierSpark'
+                    ? same(game.player, cell.p) || has(boxes, cell.p)
+                    : Math.abs(cell.p.x - game.player.x) + Math.abs(cell.p.y - game.player.y) <= 1,
           }
         : NO_AMBIENT,
     }

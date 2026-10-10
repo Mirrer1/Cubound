@@ -1,6 +1,7 @@
 import { type CSSProperties, useEffect, useMemo } from 'react'
 
 import BoardBox from './BoardBox'
+import BoardBrazier from './BoardBrazier'
 import BoardCell from './BoardCell'
 import BoardClear from './BoardClear'
 import { type BehindGoal } from './BoardFloor'
@@ -186,6 +187,10 @@ const Board = ({
     return device ? [{ ...tap, look: lookOf(device).look }] : []
   })
 
+  const { brazier } = scene
+  const burnOf = (to: Point) =>
+    brazier.burning && same(brazier.burning.at, to) ? brazier.burning.q : -1
+
   useEffect(() => onShowsAll(showsAll), [showsAll, onShowsAll])
 
   return (
@@ -227,6 +232,15 @@ const Board = ({
                     >
                       <BoardWater part="box" x={frame.x} y={frame.y} shown={scene.boxShown} />
                     </g>
+                  ) : brazier.boss ? (
+                    <BoardBrazier
+                      key={`${frame.to.x}-${frame.to.y}`}
+                      part="box"
+                      x={frame.x}
+                      y={frame.y}
+                      hint={burnOf(frame.to) >= 0 ? 1 : 0}
+                      burn={burnOf(frame.to)}
+                    />
                   ) : (
                     <BoardBox key={`${frame.to.x}-${frame.to.y}`} x={frame.x} y={frame.y} />
                   ),
@@ -256,9 +270,12 @@ const Board = ({
                         shown={Math.min(TILE.layer, WATER.lip + over.boxDrop.lift * TILE.layer)}
                       />
                     ) : (
-                      <BoardBox
+                      <BoardBrazier
+                        part="box"
                         x={cell.x}
-                        y={cellY - TILE.layer - over.boxDrop.lift * TILE.layer}
+                        y={cellY - TILE.layer - over.boxDrop.lift * TILE.layer - look.brazier.lift}
+                        hint={0}
+                        burn={-1}
                       />
                     )}
                   </g>
@@ -273,6 +290,15 @@ const Board = ({
                       opacity={(scene.cubeDrop ? scene.cubeDrop.opacity : 1) * scene.cube.fade}
                       transform={`translate(0 ${scene.cubeSink - scene.cube.lift}) ${scene.cubeSquash}`}
                     >
+                      {scene.cubeHeat.length > 0 && (
+                        <BoardBrazier
+                          part="cubePool"
+                          x={scene.cubeScreen.x}
+                          y={scene.cubeScreen.y}
+                          strength={brazier.glow.strength}
+                          dip={brazier.glow.dip}
+                        />
+                      )}
                       {scene.cubeFaces.map((f) => (
                         <polygon
                           key={f.face}
@@ -280,6 +306,18 @@ const Board = ({
                           style={{ fill: shade('player', f.face) }}
                         />
                       ))}
+                      {(scene.cubeHeat.length > 0 || brazier.glow.last > 0) && (
+                        <BoardBrazier
+                          part="cubeGlow"
+                          x={scene.cubeScreen.x}
+                          y={scene.cubeScreen.y - TILE.layer}
+                          bands={scene.cubeHeat}
+                          strength={brazier.glow.strength}
+                          dip={brazier.glow.dip}
+                          spark={brazier.glow.spark}
+                          last={brazier.glow.last}
+                        />
+                      )}
                     </g>
                   )}
                   {over.drawCube && scene.carriedOpacity > 0 && (

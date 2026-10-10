@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { PIT_FLOOR, PLATE, pileReach } from '../view'
+import { BRAZIER, PIT_FLOOR, PLATE, pileReach } from '../view'
 import { TAP } from '../view'
 import { guideRect, lockFocus, lockRect } from './guideFrame'
 import { LOCK_STAGE, SLUICE_STAGE, WHIRL_STAGE } from './testStages'
@@ -175,6 +175,18 @@ describe('guideRect', () => {
     const reach = TILE.layer + (TILE.width * TILE.layer) / TILE.height / 4 - TILE.height / 2
     expect(spanOf(game, MID).above).toBe(flat.above + reach)
     expect(spanOf(game, { x: 2, y: 1 }).above).toBe(flat.above + reach)
+  })
+
+  it('화로는 그릇 윗면까지, 그 위 큐브와 상자는 그릇 높이만큼 더 위를 감싼다', () => {
+    const stage = { ...FLAT, fire: ['...', '.@@', '...'] }
+    const empty = spanOf(createState(FLAT), MID).above
+    const bowl = BRAZIER.height + (TILE.width * BRAZIER.bowl) / 4 - TILE.height / 2
+    expect(spanOf(createState(stage), MID).above).toBe(empty + bowl)
+    const cube = spanOf(createState({ ...FLAT, start: MID }), MID).above
+    expect(spanOf(createState({ ...stage, start: MID }), MID).above).toBe(cube + BRAZIER.height)
+    const boxed = { ...stage, entities: [{ type: 'box' as const, x: 2, y: 1 }] }
+    const box = spanOf(createState({ ...FLAT, entities: boxed.entities }), { x: 2, y: 1 }).above
+    expect(spanOf(createState(boxed), { x: 2, y: 1 }).above).toBe(box + BRAZIER.height)
   })
 
   it('얼음 돌은 돌 가운데를 사각형 가운데에 두고 윗면까지 감싼다', () => {

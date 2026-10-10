@@ -87,7 +87,7 @@ interface EmbersProps {
 }
 
 // 드문드문 오르는 작은 불티, 움직임 줄이기 설정은 제외
-const Embers = ({ x, y, count, top, every, opacity }: EmbersProps) => {
+export const Embers = ({ x, y, count, top, every, opacity }: EmbersProps) => {
   const cycle = Math.max(count * every, EMBER_LIFE + 100)
   const spots = EMBER_SPOTS.slice(0, count).map(([u, v]) => isoPoint(x, y, u, v, 3))
 
@@ -106,7 +106,7 @@ interface FlickerProps {
 }
 
 // 2.4초 주기로 일렁이는 빛, 진하기는 바깥 묶음 몫
-const Flicker = ({ opacity, children }: FlickerProps) => {
+export const Flicker = ({ opacity, children }: FlickerProps) => {
   const loop = useLoop(FLICKER, FLICKER_MS)
 
   return (
@@ -124,7 +124,7 @@ interface PoolProps {
   core?: boolean
 }
 
-const Pool = ({ x, y, scale, opacity, core = false }: PoolProps) => (
+export const Pool = ({ x, y, scale, opacity, core = false }: PoolProps) => (
   <g opacity={opacity}>
     {POOL.map(([k, a]) => (
       <polygon key={k} points={plate(x, y, scale * k)} opacity={a} style={core ? CORE : HOT} />

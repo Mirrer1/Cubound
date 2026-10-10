@@ -300,6 +300,7 @@ describe('boxFramesOf', () => {
       boxes: [],
       crackView: NO_CRACK,
       iceDrop: 0,
+      bowl: 0,
       ...over,
     })
   const pushed = toScreen({ x: 1.5, y: 0 }, 1)

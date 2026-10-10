@@ -4,7 +4,16 @@ import { isIce, same } from '@/game/rules'
 import type { GameState, Point, Stage } from '@/game/types'
 
 export type AmbientKind =
-  'mote' | 'warp' | 'bubble' | 'spore' | 'butterfly' | 'mist' | 'ash' | 'emberSmoke'
+  | 'mote'
+  | 'warp'
+  | 'bubble'
+  | 'spore'
+  | 'butterfly'
+  | 'mist'
+  | 'ash'
+  | 'emberSmoke'
+  | 'brazierSmoke'
+  | 'brazierSpark'
 
 export type AmbientShape =
   | 'mote'
@@ -21,6 +30,9 @@ export type AmbientShape =
   | 'dust'
   | 'flake'
   | 'smoke'
+  | 'brazierSmoke'
+  | 'sparkCore'
+  | 'sparkHot'
 
 // 한 번 일어나는 ms와 크기 px, 칸 폭 배수
 export const AMBIENT = {
@@ -32,6 +44,8 @@ export const AMBIENT = {
   mist: { life: 2550, sheet: { rx: 20, ry: 8 }, wisp: { rx: 9, ry: 5 } },
   ash: { life: 2950, flake: { rx: 4.5, ry: 2.6 }, dust: 0.62 },
   emberSmoke: { life: 3800, rx: 16, ry: 7 },
+  brazierSmoke: { life: 4300, rx: 20, ry: 8 },
+  brazierSpark: { life: 1650, size: 2.2 },
 }
 
 // 한 번 끝난 뒤 쉬는 ms, 바닥 연출이 없는 장에서 그 자리를 비우는 ms
@@ -138,6 +152,22 @@ const THREADS = [
   { delay: 800, dx: -16 },
 ]
 
+// 화로 연기 한 덩이의 ms마다 옆으로 간 몫, y, rx, ry, 진하기와 두 덩이의 늦는 ms, 옆으로 가는 px
+const PUFF: [number, number, number, number, number, number][] = [
+  [0, 0, -10, 4, 3.5, 0],
+  [500, 0.15, -14, 8, 5, 0.5],
+  [2000, 0.6, -24, 16, 7, 0.3],
+  [3200, 1, -30, 20, 8, 0],
+]
+const PUFFS = [
+  { delay: 0, dx: -15 },
+  { delay: 1100, dx: 15 },
+]
+
+// 화로 불티 넷의 그릇 안에서 벌어지는 px, 0.25초씩 늦게 0.9초
+const SPARKS = [-24, -8, 8, 24]
+const SPARK_LIFE = 900
+
 // 판의 한 바퀴 차례, 바닥 연출 다음 그 판의 요소 연출, 한 번에 하나, 끝나고 REST 쉼
 // 바닥 연출은 그 장만, 요소 연출은 그 요소가 있는 모든 판, 둘 다 없으면 null
 export const ambientPlan = (stage: Stage, chapter: number): AmbientPlan | null => {
@@ -148,6 +178,9 @@ export const ambientPlan = (stage: Stage, chapter: number): AmbientPlan | null =
     ...(stage.entities.some((e) => e.type === 'iceStone') ? ['mist' as const] : []),
     ...(stage.entities.some((e) => e.type === 'warp') ? ['warp' as const] : []),
     ...(stage.fire?.some((row) => row.includes('*')) ? ['emberSmoke' as const] : []),
+    ...(stage.fire?.some((row) => row.includes('@'))
+      ? ['brazierSmoke' as const, 'brazierSpark' as const]
+      : []),
   ]
   if (!floor && elements.length === 0) return null
   const slots: AmbientSlot[] = []
@@ -211,6 +244,14 @@ const isBare = (game: GameState, p: Point) => {
   )
 }
 
+// 상자가 올라서지 않은 화로
+const braziersOf = (game: GameState) =>
+  (game.stage.fire ?? []).flatMap((row, y) =>
+    [...row].flatMap((c, x) =>
+      c === '@' && !game.boxes.some((b) => same(b, { x, y })) ? [{ x, y }] : [],
+    ),
+  )
+
 // 연출이 일어날 수 있는 칸, 큐브 칸과 상하좌우 칸 제외, 찬 김은 모든 얼음 돌
 const candidates = (game: GameState, kind: AmbientKind) => {
   const cells =
@@ -222,9 +263,11 @@ const candidates = (game: GameState, kind: AmbientKind) => {
           ? game.stones
           : kind === 'emberSmoke'
             ? game.sparks
-            : game.stage.heights.flatMap((row, y) =>
-                row.flatMap((_, x) => (isBare(game, { x, y }) ? [{ x, y }] : [])),
-              )
+            : kind === 'brazierSmoke' || kind === 'brazierSpark'
+              ? braziersOf(game)
+              : game.stage.heights.flatMap((row, y) =>
+                  row.flatMap((_, x) => (isBare(game, { x, y }) ? [{ x, y }] : [])),
+                )
   return kind === 'mist' ? cells : cells.filter((p) => apart(p, game.player))
 }
 
@@ -393,6 +436,36 @@ export const ambientLoops = (kind: AmbientKind, cycle: number): AmbientLoop[] =>
         transform: `${move(dx * side, y)} scale(${rx / baseX}, ${ry / baseY})`,
       }))
       return { shape: 'smoke', delay, keyframes: [...steps, { ...steps.at(-1)!, offset: 1 }] }
+    })
+  }
+  if (kind === 'brazierSmoke') {
+    const { rx: baseX, ry: baseY } = AMBIENT.brazierSmoke
+    return PUFFS.map(({ delay, dx }) => {
+      const steps = PUFF.map(([ms, side, y, rx, ry, opacity]) => ({
+        offset: at(ms, cycle),
+        opacity,
+        transform: `${move(dx * side, y)} scale(${rx / baseX}, ${ry / baseY})`,
+      }))
+      return {
+        shape: 'brazierSmoke',
+        delay,
+        keyframes: [...steps, { ...steps.at(-1)!, offset: 1 }],
+      }
+    })
+  }
+  if (kind === 'brazierSpark') {
+    return SPARKS.map((dx, i) => {
+      const end = { opacity: 0, transform: move(dx, -24) }
+      return {
+        shape: i % 2 ? 'sparkHot' : 'sparkCore',
+        delay: i * 250,
+        keyframes: [
+          { offset: 0, opacity: 0, transform: move(0, -9), easing: 'ease-out' },
+          { offset: at(150, cycle), opacity: 1, transform: move(dx * 0.25, -13) },
+          { offset: at(SPARK_LIFE, cycle), ...end },
+          { offset: 1, ...end },
+        ],
+      }
     })
   }
   const { ring, rim } = AMBIENT.warp

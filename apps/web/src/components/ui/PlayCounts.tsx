@@ -1,8 +1,9 @@
-import { motion, useReducedMotion } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { type ReactNode, useEffect, useState } from 'react'
 
 import {
   capsDisplay,
+  flameDisplay,
   meltDisplay,
   mudDisplay,
   tideDisplay,
@@ -77,6 +78,7 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
   const gusting = gustAt !== null && gustTurn === turn && animating
   const melt = meltDisplay(game, events, animating)
   const tide = tideDisplay(game, events, animating)
+  const flame = flameDisplay(game, events, animating)
   const meltHold = useLoop(MELT_HOLD, 600)
   const limitedDir = game?.stage.rules?.dirLimit?.dir
   const limited = events.flatMap((e) => (e.type === 'limit' ? [e.limit] : []))[0]
@@ -239,6 +241,27 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
           </span>
         </div>
       )}
+      <AnimatePresence initial={false}>
+        {flame && (
+          <motion.div
+            key="fire"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"
+          >
+            <span
+              className={`font-mono text-[10px] tracking-[0.22em] ${flame.out ? 'text-alert' : 'text-mute'}`}
+            >
+              FIRE
+            </span>
+            <LimitCount hit={flame.out ? turn : null} alert={flame.out}>
+              {flame.count}
+            </LimitCount>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div
         data-guide="moves"
         className="flex flex-col items-end gap-0.5 short:flex-row short:items-baseline short:gap-2 narrow:flex-row narrow:items-baseline narrow:gap-2"

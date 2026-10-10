@@ -1,4 +1,5 @@
 import {
+  BRAZIER,
   CUBE,
   LADDER_TIP,
   PIT_FLOOR,
@@ -13,6 +14,7 @@ import {
   surfaceRise,
   waterLook,
 } from '../view'
+import { isBrazier } from './brazierFrame'
 import { fireKindAt } from './fireFrame'
 import { MUSHROOM_STAND, mushroomPose } from './mushroomFrame'
 import { has, same } from './pathFrame'
@@ -45,8 +47,10 @@ const reachOf = (game: GameState, p: Point, floating: boolean) => {
   const mushroom = has(readMushrooms(game.stage), p)
   const player = same(game.player, p)
   const entity = game.stage.entities.find((e) => same(e, p))
+  const bowl = isBrazier(game.stage, p) ? BRAZIER.height : 0
 
-  if (boxed) reaches.push(boxTop + cube)
+  if (bowl) reaches.push(bowl + halfTop(TILE.width * BRAZIER.bowl))
+  if (boxed) reaches.push(bowl + boxTop + cube)
   if (fireKindAt(game.stage, p) === 'wall' && !has(game.ashes, p)) reaches.push(pileReach())
   if (mushroom) {
     const pose = mushroomPose(player ? 2 : 0, has(game.mushrooms, p) ? 0 : 1)
@@ -56,7 +60,9 @@ const reachOf = (game: GameState, p: Point, floating: boolean) => {
     const peak = stoneSteps(0, 0, floating ? STONE.floatCut : 0, 1)[2]
     reaches.push(-peak.y + halfTop(peak.width))
   }
-  if (player) reaches.push((boxed ? boxTop : mushroom ? MUSHROOM_STAND : 0) + TILE.layer + cube)
+  if (player) {
+    reaches.push(bowl + (boxed ? boxTop : mushroom ? MUSHROOM_STAND : 0) + TILE.layer + cube)
+  }
   if (entity?.type === 'sluice')
     reaches.push(TAP.height + TAP.wheelDepth + halfTop(TILE.width * TAP.wheel))
   if (entity?.type === 'door' && !isDoorOpen(game, entity.id)) {
