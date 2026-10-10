@@ -1,9 +1,9 @@
-import { cpSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdtempSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { codeOf, readCacheFile, writeCacheFile } from './devSolutions'
+import { codeOf, migrateCache, readCacheFile, writeCacheFile } from './devSolutions'
 
 const GAME = resolve('src/game')
 
@@ -61,5 +61,31 @@ describe('캐시 파일', () => {
       '1-2': { hash: 'b', path: ['up'] },
     })
     expect(readdirSync(dir)).toEqual(['solutions-abc.json'])
+  })
+})
+
+describe('migrateCache', () => {
+  it('예전 캐시 파일을 새 파일 하나로 모으고 지운다, 같은 판은 최근 파일 기준', () => {
+    const dir = tempDir()
+    writeFileSync(join(dir, 'solutions.json'), '{"1-1":{"hash":"old"},"1-2":{"hash":"b"}}')
+    writeFileSync(join(dir, 'solutions-abc.json'), '{"1-1":{"hash":"new"}}')
+    utimesSync(join(dir, 'solutions.json'), 1, 1)
+    const file = join(dir, 'devSolutions.json')
+    expect(migrateCache(dir, file)).toEqual({ '1-1': { hash: 'new' }, '1-2': { hash: 'b' } })
+    expect(readdirSync(dir)).toEqual(['devSolutions.json'])
+  })
+
+  it('새 파일이 있으면 새 파일이 앞선다', () => {
+    const dir = tempDir()
+    const file = join(dir, 'devSolutions.json')
+    writeCacheFile(file, { '1-1': { hash: 'kept' } })
+    writeFileSync(join(dir, 'solutions-abc.json'), '{"1-1":{"hash":"old"}}')
+    expect(migrateCache(dir, file)).toEqual({ '1-1': { hash: 'kept' } })
+    expect(readdirSync(dir)).toEqual(['devSolutions.json'])
+  })
+
+  it('폴더가 없으면 빈 캐시다', () => {
+    const dir = join(tempDir(), 'none')
+    expect(migrateCache(dir, join(dir, 'devSolutions.json'))).toEqual({})
   })
 })

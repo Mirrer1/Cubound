@@ -14,14 +14,14 @@ const server = await createServer({
 })
 
 const { solve } = await server.ssrLoadModule('/src/game/solver.ts')
-const { stageHash } = await server.ssrLoadModule('/src/dev/solutionCache.ts')
+const { pickSolution, stageHash } = await server.ssrLoadModule('/src/dev/solutionCache.ts')
 
-// 해시가 known과 같으면 풀이 생략
+// 저장된 풀이가 지금 규칙으로 재생해 맞으면 풀이 생략
 process.on('message', ({ file, known }) => {
   try {
     const stage = JSON.parse(readFileSync(file, 'utf8'))
     const hash = stageHash(stage)
-    if (hash === known) return process.send({ file, id: stage.id, hash, same: true })
+    if (pickSolution(stage, known)) return process.send({ file, id: stage.id, hash, same: true })
     const started = Date.now()
     const result = solve(stage)
     process.send({

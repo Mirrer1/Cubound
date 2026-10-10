@@ -274,13 +274,15 @@ const DevController = ({ game }: DevControllerProps) => {
       <div
         data-dev-controller
         onPointerDown={stopSwipe}
-        className="@container pointer-events-none flex min-w-0 flex-1 justify-center self-center narrow:order-[10000] narrow:w-full narrow:flex-none"
+        className="@container pointer-events-none flex min-w-0 flex-1 justify-center self-center min-[1200px]:absolute min-[1200px]:inset-y-0 min-[1200px]:left-1/2 min-[1200px]:w-[34rem] min-[1200px]:-translate-x-1/2 min-[1200px]:items-center min-[1200px]:pt-(--panel-pad) narrow:order-[10000] narrow:w-full narrow:flex-none"
       >
-        <div className="relative flex min-w-0 items-center gap-x-2.5 rounded-[13px] border border-line bg-surface/85 py-1 pr-1.5 pl-1 font-mono text-[13px] text-mute @max-[21rem]:gap-x-2 @max-[21rem]:pr-1 wide:text-sm">
-          <span className="flex min-w-0 items-center gap-2">
+        <div
+          className={`relative flex min-w-0 items-center gap-x-2.5 rounded-[13px] border border-line bg-surface/85 py-1 pr-1.5 pl-1 font-mono text-[13px] text-mute @max-[21rem]:gap-x-2 @max-[21rem]:pr-1 wide:text-sm ${collapsed ? '' : 'min-[1200px]:w-full narrow:w-full'}`}
+        >
+          <span className="flex min-w-0 flex-1 items-center gap-2">
             <button type="button" onClick={toggle} title="풀이 띠 접기 (`)" className={BUTTON}>
               <TriangleIcon
-                className={`h-[0.36em] w-[0.43em] ${collapsed ? 'rotate-90' : 'rotate-180'}`}
+                className={`h-[7px] w-2 narrow:h-2 narrow:w-2.5 ${collapsed ? 'rotate-90' : 'rotate-180'}`}
               />
             </button>
             {!collapsed &&

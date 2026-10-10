@@ -35,8 +35,7 @@ const RESOLVED = `\0${ID}`
 const EVENT = 'cubound:solution'
 const STAGE_FILE = /\/src\/stages\/world-[^/]+\/[^/]+\.json$/
 const GAME_FILE = /\/src\/game\/.+(?<!\.test)\.ts$/
-const CACHE_FILE = /^solutions-[0-9a-f]+\.json$/
-const STALE_MS = 7 * 24 * 60 * 60 * 1000 // 다른 지문 캐시 파일을 남겨 두는 기간
+const OLD_CACHE_FILE = /^solutions(-[0-9a-f]+)?\.json$/
 
 const slash = (file: string) => file.replaceAll('\\', '/')
 
@@ -46,7 +45,7 @@ const gameFiles = (dir: string): string[] =>
     .filter((file) => GAME_FILE.test(slash(file)))
     .sort()
 
-// 규칙이 바뀌면 같은 판도 풀이가 달라져서 판 해시와 함께 견주는 게임 코드 지문, 폴더 위치와 무관한 상대 경로 기준
+// 개발 서버 도중 게임 코드가 실제로 바뀌었는지 가리는 지문, 폴더 위치와 무관한 상대 경로 기준
 export const codeOf = (gameDir: string) => {
   const sha = createHash('sha1')
   for (const file of gameFiles(gameDir))
@@ -75,6 +74,20 @@ export const writeCacheFile = (file: string, cache: Record<string, SolutionEntry
   }
 }
 
+// 지문마다 나뉘던 예전 캐시 파일을 새 파일 하나로 모으고 삭제, 같은 판은 새 파일과 최근 파일 우선
+export const migrateCache = (dir: string, file: string): Record<string, SolutionEntry> => {
+  if (!existsSync(dir)) return {}
+  const olds = readdirSync(dir)
+    .filter((name) => OLD_CACHE_FILE.test(name))
+    .map((name) => join(dir, name))
+    .sort((a, b) => statSync(a).mtimeMs - statSync(b).mtimeMs)
+  if (olds.length === 0) return readCacheFile(file)
+  const cache = Object.assign({}, ...olds.map(readCacheFile), readCacheFile(file))
+  writeCacheFile(file, cache)
+  for (const old of olds) rmSync(old, { force: true })
+  return cache
+}
+
 const idOf = (file: string) => {
   try {
     return JSON.parse(readFileSync(file, 'utf8')).id as string
@@ -92,29 +105,19 @@ export const devSolutions = (): Plugin => {
   let gameDir = ''
   let code = ''
 
-  // 지문마다 파일 하나, worktree처럼 node_modules를 이어 쓰는 다른 개발 서버의 풀이 보존
-  const cacheFile = () => join(cacheDir, `solutions-${code}.json`)
+  const cacheFile = () => join(cacheDir, 'devSolutions.json')
 
   const readCache = () => readCacheFile(cacheFile())
-
-  // 지금 지문 밖에서 STALE_MS 동안 안 쓰인 캐시 파일 정리
-  const pruneCache = () => {
-    if (!existsSync(cacheDir)) return
-    for (const name of readdirSync(cacheDir).filter((n) => CACHE_FILE.test(n))) {
-      const file = join(cacheDir, name)
-      if (file !== cacheFile() && Date.now() - statSync(file).mtimeMs > STALE_MS) rmSync(file)
-    }
-  }
 
   const start = (server: ViteDevServer) => {
     const logger = server.config.logger
     code = codeOf(gameDir)
-    cache = readCache()
-    pruneCache()
+    cache = migrateCache(cacheDir, cacheFile())
     const queue: string[] = []
     let busy = false
     let ready = false
     let batchStarted = 0
+    let checked = 0
     let solved = 0
     const spawn = () => fork(fileURLToPath(new URL('./devSolveChild.mjs', import.meta.url)))
     let child: ChildProcess = spawn()
@@ -123,16 +126,19 @@ export const devSolutions = (): Plugin => {
       if (busy || !ready) return
       const file = queue.shift()
       if (!file) {
-        if (batchStarted && solved > 0)
-          logger.info(`[풀이] ${solved}판 ${((Date.now() - batchStarted) / 1000).toFixed(1)}초`)
+        if (checked > 0)
+          logger.info(
+            `[풀이] ${checked}판 확인, ${solved}판 다시 구함 ${((Date.now() - batchStarted) / 1000).toFixed(1)}초`,
+          )
         batchStarted = 0
+        checked = 0
         solved = 0
         return
       }
       if (!batchStarted) batchStarted = Date.now()
       busy = true
       const id = idOf(file)
-      child.send({ file, known: id ? cache[id]?.hash : undefined })
+      child.send({ file, known: id ? cache[id] : undefined })
     }
 
     const enqueue = (file: string) => {
@@ -146,6 +152,7 @@ export const devSolutions = (): Plugin => {
         if (reply.ready) ready = true
         else busy = false
         if (reply.error) logger.warn(`[풀이] ${reply.file}: ${reply.error}`)
+        if (reply.id) checked++
         if (reply.id && reply.hash && !reply.same) {
           const entry = { hash: reply.hash, path: reply.path }
           // 같은 캐시를 쓰는 다른 개발 서버가 그사이 쓴 판 보존
@@ -171,19 +178,18 @@ export const devSolutions = (): Plugin => {
     }
     enqueueAll()
 
-    // 자식 프로세스는 처음 불러온 게임 코드를 계속 써서 규칙이 바뀌면 새로 띄우고 모든 판 다시 구함
+    // 자식 프로세스는 처음 불러온 게임 코드를 계속 써서 규칙이 바뀌면 새로 띄우고 모든 판 재생 확인
     const restart = () => {
       const next = codeOf(gameDir)
       if (next === code) return
       code = next
-      cache = readCache()
       child.kill()
       queue.length = 0
       busy = false
       ready = false
       child = spawn()
       listen(child)
-      logger.info('[풀이] 게임 코드가 바뀌어 모든 판을 다시 구함')
+      logger.info('[풀이] 게임 코드가 바뀌어 모든 판 풀이를 다시 확인')
       enqueueAll()
     }
     let pending: ReturnType<typeof setTimeout> | undefined
