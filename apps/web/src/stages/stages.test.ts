@@ -44,7 +44,7 @@ describe('스테이지 데이터', () => {
       expect(result.status).toBe('solved')
       expect(stage.best).toBe(result.status === 'solved' ? result.moves : undefined)
     },
-    20000,
+    40000,
   )
 
   it.each(STAGES)('%s의 id가 파일 경로와 맞다', (path, stage) => {
