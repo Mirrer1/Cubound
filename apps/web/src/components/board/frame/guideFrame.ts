@@ -126,6 +126,26 @@ export const guideRect = (game: GameState, p: Point) => {
   return { x, y: top, width, height: bottom - top }
 }
 
+// 타는 짐 가이드가 비추는 상자와 맞닿은 화로, 두 칸 모두 윗면까지만
+export const burnRect = (game: GameState, p: Point) => {
+  const near = [
+    { x: p.x + 1, y: p.y },
+    { x: p.x - 1, y: p.y },
+    { x: p.x, y: p.y + 1 },
+    { x: p.x, y: p.y - 1 },
+  ].filter((q) => isBrazier(game.stage, q))
+  const rects = [p, ...near].map((q) => {
+    const rect = guideRect(game, q)
+    const bottom = toScreen(q, 0).y - (surfaceOf(game, q) ?? 0) + TILE.height / 2 + GUIDE_MARGIN
+    return { ...rect, height: bottom - rect.y }
+  })
+  const left = Math.min(...rects.map((r) => r.x))
+  const top = Math.min(...rects.map((r) => r.y))
+  const right = Math.max(...rects.map((r) => r.x + r.width))
+  const bottom = Math.max(...rects.map((r) => r.y + r.height))
+  return { x: left, y: top, width: right - left, height: bottom - top }
+}
+
 // 갑문 가이드가 비추는 칸, 장치와 물길과 물길이 닿는 두 웅덩이 칸, 물길이 없으면 두 웅덩이 전체
 const lockCells = (stage: Stage): Point[] => {
   const path = [...channelCells(stage)].map(([key, axis]) => {

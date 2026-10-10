@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { BRAZIER, PIT_FLOOR, PLATE, pileReach } from '../view'
 import { TAP } from '../view'
-import { guideRect, lockFocus, lockRect } from './guideFrame'
+import { burnRect, guideRect, lockFocus, lockRect } from './guideFrame'
 import { LOCK_STAGE, SLUICE_STAGE, WHIRL_STAGE } from './testStages'
 import { TILE, toScreen } from '@/game/iso'
 import { createState } from '@/game/rules'
@@ -302,5 +302,33 @@ describe('lockRect', () => {
     )
 
     expect(lockRect(game)).toEqual(union(game, pools))
+  })
+})
+
+describe('burnRect', () => {
+  const BURN_STAGE: Stage = {
+    version: 1,
+    id: 'test-burn',
+    heights: [
+      [2, 2, 2],
+      [2, 2, 2],
+    ],
+    fire: ['...', '.@.'],
+    start: { x: 0, y: 0 },
+    goal: { x: 2, y: 0 },
+    entities: [{ type: 'box', x: 1, y: 0 }],
+    rules: { burnBox: true },
+  }
+
+  it('상자와 맞닿은 화로까지 감싸고 기둥 옆면은 넣지 않는다', () => {
+    const game = createState(BURN_STAGE)
+    const rect = burnRect(game, { x: 1, y: 0 })
+    const box = guideRect(game, { x: 1, y: 0 })
+    const brazier = guideRect(game, { x: 1, y: 1 })
+
+    expect(rect.x).toBe(Math.min(box.x, brazier.x))
+    expect(rect.x + rect.width).toBe(Math.max(box.x + box.width, brazier.x + brazier.width))
+    expect(rect.y).toBe(box.y)
+    expect(rect.y + rect.height).toBeLessThan(brazier.y + brazier.height)
   })
 })

@@ -13,7 +13,7 @@ import { crackProgress, standSink } from './crackFrame'
 import { SLIDE_DEG, playerFrame, squashTransform } from './cubeFrame'
 import { type Chain, smooth } from './curveFrame'
 import { fireScene } from './fireFrame'
-import { guideRect, lockRect } from './guideFrame'
+import { burnRect, guideRect, lockRect } from './guideFrame'
 import {
   iceCovers,
   iceCoversAt,
@@ -271,7 +271,7 @@ export const sceneFrame = ({
   const boxShown = box ? floatShownAt(stage, box, sluice.waterAt) : null
   const tethers = tetherFrames({ prev: moving ? prevGame : null, game, box, t, dropping })
   const moor = moorLooks(stage, tethers)
-  const guide = guideCell ? guideRect(game, guideCell) : null
+  const guide = guideCell ? (stage.rules?.burnBox ? burnRect : guideRect)(game, guideCell) : null
   const lockGuide = guideCell && stage.rules?.lock ? lockRect(game) : null
   const still = (list: Point[], moved: Point[]) =>
     list.filter((p) => !has(moved, p)).map((p) => ({ ...p, cell: p }))
