@@ -144,8 +144,8 @@ apps/web/
   public/         # 아이콘 / manifest / 공유 카드 / robots.txt
   tools/          # pnpm stage:check
   e2e/            # Playwright 스모크와 화면 캡처
-apps/server/      # 비어 있음, 나중에 NestJS
-packages/         # 비어 있음, 나중에 web과 server 공용 코드
+apps/server/      # 추후 NestJS 서버 도입 예정
+packages/         # 추후 web과 server 공용 코드 도입 예정
 docs/             # 기획, 설계, 디자인 브리프
 ```
 
