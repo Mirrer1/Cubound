@@ -99,14 +99,14 @@ const ChapterCard = ({
       data-chapter={chapter}
       disabled={locked}
       onClick={onSelect}
-      className={`flex cursor-pointer items-center gap-4 rounded-[20px] border ${many ? 'p-2 max-[390px]:gap-3 short:p-2.5 wide:p-2.5' : 'p-4'} text-left transition-soft-colors disabled:cursor-default roomy:flex-col roomy:items-stretch roomy:gap-3 roomy:p-5 ${
+      className={`flex cursor-pointer items-center gap-4 rounded-[20px] border ${many ? 'px-2 py-3 max-[390px]:gap-3 short:p-2.5' : 'p-4'} text-left transition-soft-colors disabled:cursor-default roomy:flex-col roomy:items-stretch roomy:gap-3 roomy:p-5 ${
         locked
           ? 'border-line bg-locked text-faint'
           : `bg-surface hover:bg-hover ${state === 'now' ? 'border-ink' : 'border-line-strong'}`
       }`}
     >
       <span
-        className={`flex h-15 w-15 shrink-0 items-center justify-center overflow-hidden rounded-[11px] bg-(--chapter-win) min-[390px]:w-20 min-[1700px]:aspect-auto! min-[1700px]:min-h-25 min-[1700px]:flex-1 ${many ? 'max-[390px]:size-12 roomy:min-h-0 roomy:flex-1' : 'roomy:aspect-2/1'} roomy:h-auto roomy:w-full roomy:rounded-[13px]`}
+        className={`flex shrink-0 items-center justify-center overflow-hidden rounded-[11px] bg-(--chapter-win) min-[1700px]:aspect-auto! min-[1700px]:min-h-25 min-[1700px]:flex-1 ${many ? 'h-22 w-24 max-[390px]:size-18 short:h-15 short:w-20 roomy:min-h-0 roomy:flex-1' : 'h-15 w-15 min-[390px]:w-20 roomy:aspect-2/1'} roomy:h-auto roomy:w-full roomy:rounded-[13px]`}
         style={{ opacity: locked ? 0.45 : 1 }}
       >
         <svg viewBox={VIEW} className="w-full roomy:h-[92%] roomy:w-[92%]" aria-hidden="true">
@@ -123,12 +123,12 @@ const ChapterCard = ({
         </svg>
       </span>
       <span
-        className={`flex min-w-0 flex-1 flex-col ${many ? 'gap-px short:gap-1 wide:gap-1 roomy:flex-none' : 'gap-1.5'} min-[1700px]:flex-none roomy:gap-2.5`}
+        className={`flex min-w-0 flex-1 flex-col ${many ? 'gap-1.5 short:gap-1 roomy:flex-none' : 'gap-1.5'} min-[1700px]:flex-none roomy:gap-2.5`}
       >
         <span
           className={
             many
-              ? 'flex items-baseline justify-between gap-2 font-mono text-[10px] tracking-[0.18em] max-[390px]:gap-1 max-[390px]:tracking-[0.12em] roomy:text-[11px] roomy:tracking-[0.22em]'
+              ? 'flex items-baseline justify-between gap-2 font-mono text-[11px] tracking-[0.12em] whitespace-nowrap max-[390px]:gap-1 short:text-[10px] roomy:text-[11px] roomy:tracking-[0.22em]'
               : 'flex items-baseline justify-between gap-2 font-mono text-[10px] tracking-[0.18em] roomy:text-[11px] roomy:tracking-[0.22em]'
           }
         >
@@ -137,7 +137,11 @@ const ChapterCard = ({
           </span>
           <span className={locked ? '' : 'text-faint'}>{LABELS[state]}</span>
         </span>
-        <span className="truncate text-lg tracking-tight roomy:text-[22px]">{name}</span>
+        <span
+          className={`truncate tracking-tight roomy:text-[22px] ${many ? 'text-xl short:text-lg' : 'text-lg'}`}
+        >
+          {name}
+        </span>
         <span className="flex items-center gap-2">
           <span className="h-[3px] flex-1 overflow-hidden rounded-full bg-line roomy:h-[5px]">
             <span
