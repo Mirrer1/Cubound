@@ -516,6 +516,7 @@ body {
 /* 스크롤바가 생겨도 레이아웃이 밀리지 않게 양쪽 자리를 미리 비워둔다 */
 @utility scroll-area {
   --scrollbar: 10px;
+  --scrollbar-thumb: color-mix(in srgb, var(--color-ink) 13%, var(--color-base-bg));
   --panel-trim: var(--scrollbar);
 
   overflow-y: auto;
@@ -532,12 +533,21 @@ body {
   &::-webkit-scrollbar-thumb {
     border: 3px solid transparent;
     border-radius: 999px;
-    background: var(--color-line) padding-box;
+    background: var(--scrollbar-thumb) padding-box;
   }
 
   @supports not selector(::-webkit-scrollbar) {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-line) transparent;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+
+  /* 터치 화면은 스크롤바 표시 제외, 아이폰 사파리에서 스크롤바가 흰 줄로 보이는 문제 방지 */
+  @media (pointer: coarse) {
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 }
 

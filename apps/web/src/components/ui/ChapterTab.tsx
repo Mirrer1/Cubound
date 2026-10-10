@@ -52,7 +52,7 @@ const ChapterTab = ({
         <span className="font-mono text-[0.625rem] tracking-[0.2em] text-mute min-[1700px]:text-[0.6875rem] min-[1700px]:tracking-[0.22em]">
           WORLD {world}
         </span>
-        <span className="truncate text-xl tracking-tight min-[1700px]:text-[2.5rem]/[1.15]! min-[1700px]:whitespace-normal wide:text-2xl narrow:text-lg">
+        <span className="truncate text-xl tracking-tight min-[1700px]:text-[2rem]/[1.15]! min-[1700px]:whitespace-normal wide:text-2xl narrow:text-lg">
           {name}
         </span>
       </span>
