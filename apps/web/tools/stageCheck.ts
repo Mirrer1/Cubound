@@ -8,6 +8,7 @@ import {
   deadEnds,
   filledFloods,
   floodBlocks,
+  kegBlocks,
   minPushes,
   moveLimit,
   solutionCount,
@@ -130,6 +131,11 @@ const check = (file: string): Summary | null => {
     row(label, blocked.status === 'ok' ? `${blocked.count}` : '탐색 한도 초과')
     const sunk = filledFloods(stage)
     row('메움 잠김', sunk.status === 'ok' ? `${sunk.count}` : '탐색 한도 초과')
+  }
+
+  if (stage.entities.some((e) => e.type === 'keg')) {
+    const blocked = kegBlocks(stage)
+    row('화약통 막힘', blocked.status === 'ok' ? `${blocked.count}` : '탐색 한도 초과')
   }
 
   const started = Date.now()

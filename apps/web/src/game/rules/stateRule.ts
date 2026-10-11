@@ -72,6 +72,9 @@ export const createState = (stage: Stage): GameState => ({
   ashes: [],
   flame: 0,
   charred: [],
+  kegs: stage.entities.flatMap((e) =>
+    e.type === 'keg' ? [{ x: e.x, y: e.y, fuse: e.fuse === true, lit: 0 }] : [],
+  ),
   trams: trams(stage).map(({ id, cells, dir, x, y }) => ({
     id,
     at: cells.findIndex((cell) => same(cell, { x, y })),

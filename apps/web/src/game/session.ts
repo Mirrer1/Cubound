@@ -1,5 +1,6 @@
 import {
   FLAME,
+  FUSE,
   SEED_WAIT,
   STRUGGLES,
   createState,
@@ -12,6 +13,7 @@ import type {
   Crack,
   Direction,
   GameState,
+  Keg,
   LeaningLadder,
   PlantedSeed,
   Point,
@@ -38,6 +40,7 @@ export interface Session {
   ashes?: Point[] // 예전 저장에는 없는 값
   flame?: number // 예전 저장에는 없는 값
   charred?: Point[] // 예전 저장에는 없는 값
+  kegs?: Keg[] // 예전 저장에는 없는 값
   trams: TramSpot[]
   swamps?: Point[] // 예전 저장에는 없는 값
   mushrooms?: Point[] // 예전 저장에는 없는 값
@@ -83,6 +86,7 @@ export const toSession = (game: GameState): Session => ({
   ashes: game.ashes,
   flame: game.flame,
   charred: game.charred,
+  kegs: game.kegs,
   trams: game.trams,
   swamps: game.swamps,
   mushrooms: game.mushrooms,
@@ -204,6 +208,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   const charKeys = fireKeys('#=')
   const bridgeKeys = fireKeys('=')
   const seedCount = countOf(stage, 'seed')
+  const kegCount = countOf(stage, 'keg')
   const rows = saved.heights
   const sameShape =
     Array.isArray(rows) &&
@@ -219,7 +224,8 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
             (stage.heights[y][x] < 0 && isCount(h)) ||
             ((crackKeys.has(`${x},${y}`) || bridgeKeys.has(`${x},${y}`)) &&
               (h === -1 || isCount(h))) ||
-            (seedCount > 0 && isCount(h) && h > stage.heights[y][x]),
+            (seedCount > 0 && isCount(h) && h > stage.heights[y][x]) ||
+            (kegCount > 0 && isCount(h) && h < stage.heights[y][x]),
         ),
     )
   if (!sameShape) return null
@@ -302,13 +308,20 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   const inMap = (value: unknown): value is Point =>
     isObject(value) && heights[value.y as number]?.[value.x as number] !== undefined
   const charred = saved.charred === undefined ? [] : listOf(saved.charred, inMap, boxCount)
+  // 보통 화약통의 심지는 늘 0
+  const isKeg = (value: unknown): value is Keg => {
+    if (!onFloor(value)) return false
+    const { fuse, lit } = value as Keg
+    return typeof fuse === 'boolean' && isCount(lit) && lit <= (fuse ? FUSE : 0)
+  }
+  const kegs = saved.kegs === undefined ? start.kegs : listOf(saved.kegs, isKeg, kegCount)
   const mostMelt = stage.rules?.melt ?? -1
   if (melt !== null && !(isCount(melt) && (melt as number) <= mostMelt)) return null
 
   if (!boxes || !ladders || !leaningLadders || !seeds || !planted || !tethered || !plugged) {
     return null
   }
-  if (!stones || !iced || !sparks || !burning || !ashes || !charred) return null
+  if (!stones || !iced || !sparks || !burning || !ashes || !charred || !kegs) return null
   if (new Set(plugged.map(({ x, y }) => `${x},${y}`)).size !== plugged.length) return null
   const tiedToBox = (boat: Point) => boxes.some(({ x, y }) => x === boat.x && y === boat.y)
   if (tethered.length !== stagePosts.length || !tethered.every(tiedToBox)) return null
@@ -336,6 +349,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     ashes: ashes.map(({ x, y }) => ({ x, y })),
     flame: flame as number,
     charred: charred.map(({ x, y }) => ({ x, y })),
+    kegs: kegs.map(({ x, y, fuse, lit }) => ({ x, y, fuse, lit })),
     trams: (savedTrams as TramSpot[]).map(({ id, at, dir }) => ({ id, at, dir })),
     swamps:
       savedSwamps === undefined ? swamps : (savedSwamps as Point[]).map(({ x, y }) => ({ x, y })),

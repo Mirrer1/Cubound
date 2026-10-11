@@ -1,6 +1,6 @@
 import type { Direction, GameEvent, GameState, MoveResult, Point } from '../types'
 import { burnsBox } from './brazierRule'
-import { hasBox, hasStone, isFrozen, isOpenWater, same, step } from './cellRule'
+import { hasBox, hasKeg, hasStone, isFrozen, isOpenWater, same, step } from './cellRule'
 import { isFireBlocked } from './fireRule'
 import { isIce } from './iceRule'
 import { isMushroom, wither } from './mushroomRule'
@@ -20,6 +20,7 @@ export const boxLanding = (state: GameState, p: Point, level: number): number | 
   if (
     hasBox(state, p) ||
     hasStone(state, p) ||
+    hasKeg(state, p) ||
     state.ladders.some((l) => same(l, p)) ||
     state.leaningLadders.some((l) => same(l, p)) ||
     state.seeds.some((s) => same(s, p)) ||

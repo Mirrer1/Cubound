@@ -17,6 +17,8 @@ export const step = (p: Point, direction: Direction) => ({
 
 export const hasBox = (state: GameState, p: Point) => state.boxes.some((box) => same(box, p))
 
+export const hasKeg = (state: GameState, p: Point) => state.kegs.some((keg) => same(keg, p))
+
 export const isWater = (state: GameState, { x, y }: Point) => {
   const h = state.stage.heights[y]?.[x]
   return h !== undefined && h >= 0 && h < waterLevel(state, { x, y })

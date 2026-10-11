@@ -6,6 +6,7 @@ import {
   eachMove,
   filledFloods,
   floodBlocks,
+  kegBlocks,
   minPushes,
   moveLimit,
   solutionCount,
@@ -335,6 +336,38 @@ describe('eachMove', () => {
 
   it('탐색 상태 수 한도를 넘으면 false를 돌려준다', () => {
     expect(eachMove(STAGE, () => {}, { maxStates: 2 })).toBe(false)
+  })
+})
+
+// 화로 (0,0)에서 불을 붙여 화약통 (2,0)을 터뜨려야 한 층 벽 (3,0)을 넘는 판
+const KEG: Stage = {
+  version: 1,
+  id: 'test-solver-keg',
+  heights: [[0, 0, 0, 1, 0]],
+  fire: ['@....'],
+  start: { x: 1, y: 0 },
+  goal: { x: 4, y: 0 },
+  entities: [{ type: 'keg', x: 2, y: 0 }],
+}
+
+describe('solve 화약통', () => {
+  it('화약통을 터뜨려 깎은 칸을 다른 상태로 보고 길을 찾는다', () => {
+    const solved = solve(KEG)
+
+    expect(solved.status).toBe('solved')
+    expect(solved.status === 'solved' && solved.moves).toBe(7)
+  })
+})
+
+describe('kegBlocks', () => {
+  const PIT: Stage = { ...KEG, heights: [[0, 0, 0, -1, 0]], fire: undefined }
+
+  it('화약통을 구덩이 쪽으로 밀어 막힌 이동을 센다', () => {
+    expect(kegBlocks(PIT)).toEqual({ status: 'ok', count: 1 })
+  })
+
+  it('구덩이가 없으면 0', () => {
+    expect(kegBlocks({ ...PIT, heights: [[0, 0, 0, 0, 0]] })).toEqual({ status: 'ok', count: 0 })
   })
 })
 

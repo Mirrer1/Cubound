@@ -1,10 +1,11 @@
 import type { Direction, GameEvent, GameState, MoveResult } from '../types'
 import { pushBox } from './boxRule'
 import { burnFlame, torch } from './brazierRule'
-import { hasBox, hasStone, isOpenWater, isWater, step } from './cellRule'
+import { hasBox, hasKeg, hasStone, isOpenWater, isWater, step } from './cellRule'
 import { crumble } from './crackRule'
 import { burnFire, isFireBlocked } from './fireRule'
 import { meltStones, pushStone, settleIce } from './iceStoneRule'
+import { blastKegs, pushKeg, torchKeg } from './kegRule'
 import { climbOrPlaceLadder } from './ladderRule'
 import { climbsLeft, dirLeft, limitBlocked, movesLeft, pushesLeft, ridesLeft } from './limitRule'
 import { hop, isMushroom, spring } from './mushroomRule'
@@ -49,6 +50,14 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
   if (torched) return torched
   if (toFloor === null || isClosedDoor(state, to) || isFireBlocked(state, to)) return blocked
 
+  if (hasKeg(state, to)) {
+    if (toFloor !== fromHeight) return blocked
+    const lit = torchKeg(state, to)
+    if (lit) return lit
+    if (pushesLeft(state) === 0) return limitBlocked(state, direction, 'pushes')
+    return pushKeg(state, to, direction) ?? blocked
+  }
+
   if (!hasBox(state, to)) {
     if (toFloor <= fromHeight) {
       const hopped = isMushroom(state, to) ? hop(state, to, direction) : null
@@ -90,9 +99,15 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
   const torched = events.flatMap((e) => (e.type === 'torched' ? [e.to] : []))
   const { state: burnt, events: fireEvents } = burnFire(settled, torched)
   const { state: flamed, events: flameEvents } = burnFlame(burnt, fireEvents)
+  const { state: blasted, events: kegEvents } = blastKegs(settled.burning, flamed, [
+    ...events,
+    ...fireEvents,
+  ])
   // 물에 잠긴 골은 언 칸이나 배로 올라서도 못 들어가는 집
   const moved =
-    flamed.cleared && isWater(flamed, flamed.stage.goal) ? { ...flamed, cleared: false } : flamed
+    blasted.cleared && isWater(blasted, blasted.stage.goal)
+      ? { ...blasted, cleared: false }
+      : blasted
 
   const doorEvents: GameEvent[] = doors(before.stage)
     .map((door) => ({
@@ -121,6 +136,7 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
       ...iceEvents,
       ...fireEvents,
       ...flameEvents,
+      ...kegEvents,
       ...doorEvents,
       ...liftEvents,
       ...sluiceEvents(before, moved),

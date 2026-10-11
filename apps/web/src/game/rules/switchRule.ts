@@ -1,12 +1,12 @@
 import type { GameState, Point, Stage } from '../types'
-import { hasBox, hasStone, same } from './cellRule'
+import { hasBox, hasKeg, hasStone, same } from './cellRule'
 
 export const doors = (stage: Stage) => stage.entities.filter((e) => e.type === 'door')
 
 export const lifts = (stage: Stage) => stage.entities.filter((e) => e.type === 'lift')
 
 const isPressed = (state: GameState, p: Point) =>
-  same(state.player, p) || hasBox(state, p) || hasStone(state, p)
+  same(state.player, p) || hasBox(state, p) || hasStone(state, p) || hasKeg(state, p)
 
 const isSwitchOn = (state: GameState, target: string) =>
   state.stage.entities.some(

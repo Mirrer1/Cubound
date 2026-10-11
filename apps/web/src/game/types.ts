@@ -19,6 +19,7 @@ export type Entity = (
   | { type: 'whirlpool' }
   | { type: 'iceStone' }
   | { type: 'sluice' }
+  | { type: 'keg'; fuse?: true } // fuse는 불이 닿고 4수 뒤에 터지는 심지 화약통
 ) &
   Point
 
@@ -109,6 +110,11 @@ export interface VineSpot {
   stopped: boolean
 }
 
+export interface Keg extends Point {
+  fuse: boolean
+  lit: number // 심지 불이 터지기까지 남은 수, 0은 안 붙은 심지
+}
+
 export type Carried = 'ladder' | 'seed'
 
 // 솟는 칸과 함께 올라간 것
@@ -134,6 +140,7 @@ export interface GameState {
   ashes: Point[] // 재가 된 숯, 숯 다리 자리는 바닥 없는 칸
   flame: number // 큐브 불의 남은 수, 0은 꺼진 불
   charred: Point[] // 재가 된 상자 자리
+  kegs: Keg[]
   trams: TramSpot[]
   swamps: Point[] // 남아 있는 늪 칸, 상자가 가라앉은 칸은 제외
   mushrooms: Point[] // 남아 있는 버섯 칸, 시드는 판에서 밟힌 칸은 제외
@@ -158,7 +165,7 @@ export type GameEvent =
   | { type: 'moved'; from: Point; to: Point }
   | { type: 'fell'; from: Point; to: Point; drop: number } // drop은 떨어진 층 수
   | { type: 'climbed'; from: Point; to: Point; via: 'box' | 'ladder' }
-  | { type: 'slid'; subject: 'player' | 'box' | 'stone'; from: Point; to: Point } // 얼음 위 미끄러짐, 이웃하지 않을 수도 있는 from과 to
+  | { type: 'slid'; subject: 'player' | 'box' | 'stone' | 'keg'; from: Point; to: Point } // 얼음 위 미끄러짐, 이웃하지 않을 수도 있는 from과 to
   | { type: 'pushed'; from: Point; to: Point; result: 'slid' | 'fell' | 'filled' | 'floated' } // floated는 땅에서 물에 떨어져 뜬 상자
   | { type: 'cracked'; at: Point; left: number; gone: boolean } // gone은 바닥 없는 칸이 되었는지 여부
   | { type: 'struggled'; at: Point } // 늪에서 제자리에 선 수
@@ -188,6 +195,13 @@ export type GameEvent =
   | { type: 'ignited'; at: Point; by: 'brazier' | 'fire' } // 큐브에 붙거나 4로 다시 찬 불, fire는 번진 불
   | { type: 'doused'; at: Point } // 큐브 불의 남은 수가 0이 된 수
   | { type: 'boxBurned'; at: Point } // 불 붙은 큐브가 밀어 재가 된 상자
+  | { type: 'kegPushed'; from: Point; to: Point; result: 'slid' | 'fell' }
+  | { type: 'torchedKeg'; from: Point; to: Point } // 불 붙은 큐브가 from에서 불을 옮긴 화약통 to
+  | { type: 'fuseLit'; at: Point }
+  | { type: 'fuseTicked'; at: Point; left: number }
+  | { type: 'exploded'; at: Point; lowered: Point[]; caught: Point[] } // 연쇄 순서대로 하나씩, lowered는 한 층 깎인 칸, caught는 불이 붙은 숯
+  | { type: 'blasted'; from: Point; to: Point; direction: Direction } // 폭발에 밀려 to 쪽으로 간 이동, 그 이동의 이벤트는 바로 뒤
+  | { type: 'blastBraced'; direction: Direction } // 밀릴 자리가 막혀 폭발을 버틴 수
   | { type: 'tram'; id: string; from: Point; to: Point }
   | { type: 'grew'; id: string; at: Point } // 덩굴이 한 칸 뻗어 메운 칸
   | { type: 'planted'; at: Point; direction: Direction } // direction은 턱 쪽으로 민 방향
@@ -196,7 +210,7 @@ export type GameEvent =
   | { type: 'blown'; from: Point; to: Point; direction: Direction } // 바람에 밀려 to 쪽으로 간 이동, 그 이동의 이벤트는 바로 뒤
   | { type: 'braced'; direction: Direction; sheltered?: true } // 바람을 버틴 수, sheltered는 바람 오는 쪽이 막혀 숨은 경우
   | { type: 'sluice'; up: boolean; pool?: 0 | 1; cells: Point[]; tide?: true } // 수위가 바뀐 웅덩이, pool은 갑문 판의 가 0과 나 1, cells는 새로 잠기거나 드러난 칸, tide는 밀물 판
-  | { type: 'blocked'; direction: Direction; flooded?: true } // flooded는 큐브가 선 칸에 물이 차오르는 수
+  | { type: 'blocked'; direction: Direction; flooded?: true; pit?: true } // flooded는 큐브가 선 칸에 물이 차오르는 수, pit는 화약통을 구덩이 쪽으로 민 수
   | { type: 'limit'; limit: Limit } // 보스 제약에 막힌 이동
   | { type: 'cleared' }
 

@@ -17,7 +17,7 @@ export const isFireBlocked = (state: GameState, p: Point) =>
   (fireAt(state.stage, p) === '#' && !has(state.ashes, p)) || has(state.burning, p)
 
 // 불이 번질 숯, 상자와 기댄 사다리가 올라선 칸은 제외
-const isFresh = (state: GameState, p: Point) => {
+export const isFresh = (state: GameState, p: Point) => {
   const c = fireAt(state.stage, p)
   return (
     (c === '#' || c === '=') &&

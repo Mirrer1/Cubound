@@ -5,6 +5,7 @@ import { checkFire } from './fireCheck'
 import { checkGuides } from './guideCheck'
 import { checkIce } from './iceCheck'
 import { checkIceStones } from './iceStoneCheck'
+import { checkKegs } from './kegCheck'
 import { checkMushroom } from './mushroomCheck'
 import { checkRules } from './rulesCheck'
 import { checkSluices } from './sluiceCheck'
@@ -45,6 +46,7 @@ export const validateStage = (data: unknown): ValidateResult => {
   checkIceStones(ctx)
   checkSluices(ctx)
   checkFire(ctx)
+  checkKegs(ctx)
   checkBest(ctx)
   checkRules(ctx)
   checkGuides(ctx)

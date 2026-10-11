@@ -115,6 +115,16 @@ const stateKey = (state: GameState, deep = true) => {
     ...(state.stage.fire
       ? [points(state.sparks), points(state.burning), points(state.ashes), `${state.flame}`]
       : []),
+    // 화약통 자리와 심지 남은 수, 같은 칸이 여러 번 깎인 높이
+    ...(state.stage.entities.some((e) => e.type === 'keg')
+      ? [
+          state.kegs
+            .map(({ x, y, fuse, lit }) => `${x},${y},${fuse ? lit : '-'}`)
+            .sort()
+            .join(' '),
+          filled.map(({ x, y }) => `${state.heights[y][x]}`).join(' '),
+        ]
+      : []),
     ...(state.trams.length > 0
       ? [state.trams.map(({ at, dir }) => `${at}${dir > 0 ? '+' : '-'}`).join(' ')]
       : []),
@@ -428,6 +438,19 @@ export const floodBlocks = (stage: Stage, { maxStates = 1_000_000 } = {}): Count
     stage,
     (_, events) => {
       if (events.some((e) => e.type === 'blocked' && e.flooded)) count += 1
+    },
+    { maxStates },
+  )
+  return done ? { status: 'ok', count } : { status: 'limit' }
+}
+
+// 닿을 수 있는 모든 상태에서 화약통을 구덩이 쪽으로 밀어 막힌 이동 수
+export const kegBlocks = (stage: Stage, { maxStates = 1_000_000 } = {}): CountResult => {
+  let count = 0
+  const done = eachMove(
+    stage,
+    (_, events) => {
+      if (events.some((e) => e.type === 'blocked' && e.pit)) count += 1
     },
     { maxStates },
   )

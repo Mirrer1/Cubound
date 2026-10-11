@@ -14,6 +14,7 @@ const ENTITY_TYPES = [
   'whirlpool',
   'iceStone',
   'sluice',
+  'keg',
 ]
 
 export const checkEntities = ({
@@ -44,8 +45,8 @@ export const checkEntities = ({
       add(`entities[${i}]이 바닥 칸이 아니다`)
       return
     }
-    // 밀려 다니는 상자와 얼음 돌은 무너지는 칸과 스위치 위에서 시작해도 되는 예외
-    const pushable = entity.type === 'box' || entity.type === 'iceStone'
+    // 밀려 다니는 상자와 얼음 돌과 화약통은 무너지는 칸과 스위치 위에서 시작해도 되는 예외
+    const pushable = entity.type === 'box' || entity.type === 'iceStone' || entity.type === 'keg'
     const kind = pushable ? 'pushable' : entity.type === 'switch' ? 'switch' : 'other'
     const here = occupied.get(key(entity))
     const pressed = here?.length === 1 && [here[0], kind].sort().join() === 'pushable,switch'
