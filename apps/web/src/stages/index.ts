@@ -1,10 +1,23 @@
 import { type Progress, isWorldUnlocked } from '@/game/progress'
-import type { Stage } from '@/game/types'
+import type { Direction, Stage } from '@/game/types'
 
 export const STAGES_PER_WORLD = 10
 export const WORLDS_PER_CYCLE = 5
 
 const modules = import.meta.glob<Stage>('./world-*/*.json', { eager: true, import: 'default' })
+
+// 개발 서버에서만 여는 화면 확인용 판, 테스트 제외, script는 개발용 컨트롤러가 재생하는 수순
+export const DEV_STAGES: Record<string, Stage & { script: Direction[] }> =
+  import.meta.env.DEV && import.meta.env.MODE !== 'test'
+    ? Object.fromEntries(
+        Object.values(
+          import.meta.glob<Stage & { script: Direction[] }>('./dev/*.json', {
+            eager: true,
+            import: 'default',
+          }),
+        ).map((stage) => [stage.id, stage]),
+      )
+    : {}
 
 // "1-3" 같은 id에서 나눈 월드 번호와 스테이지 번호
 export const parseStageId = (id: string) => {
@@ -14,19 +27,22 @@ export const parseStageId = (id: string) => {
 
 export const stageId = (world: number, stage: number) => `${world}-${stage}`
 
-export const STAGES: Record<string, Stage> = Object.fromEntries(
-  Object.values(modules).map((stage) => [stage.id, stage]),
-)
+export const STAGES: Record<string, Stage> = {
+  ...Object.fromEntries(Object.values(modules).map((stage) => [stage.id, stage])),
+  ...DEV_STAGES,
+}
 
 export const WORLDS = [...new Set(Object.keys(STAGES).map((id) => parseStageId(id).world))].sort(
   (a, b) => a - b,
 )
 
-// 아직 만들지 않은 스테이지를 뺀 번호순 목록
-export const stageIdsOf = (world: number) =>
-  Array.from({ length: STAGES_PER_WORLD }, (_, i) => stageId(world, i + 1)).filter(
+// 아직 만들지 않은 스테이지를 뺀 번호순 목록, 화면 확인용 판은 끝
+export const stageIdsOf = (world: number) => [
+  ...Array.from({ length: STAGES_PER_WORLD }, (_, i) => stageId(world, i + 1)).filter(
     (id) => id in STAGES,
-  )
+  ),
+  ...Object.keys(DEV_STAGES).filter((id) => parseStageId(id).world === world),
+]
 
 export const isBossStage = (id: string) => parseStageId(id).stage % STAGES_PER_WORLD === 0
 

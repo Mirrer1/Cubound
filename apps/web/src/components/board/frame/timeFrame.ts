@@ -1,10 +1,13 @@
 import { brazierEnd, brazierLightEnd } from './brazierFrame'
 import { clamp01, smooth } from './curveFrame'
 import { fireEnd } from './fireFrame'
+import { kegEnd } from './kegFrame'
 import {
   type PathEvent,
   SECONDS,
   type Segment,
+  WARP,
+  WIND,
   boxPath,
   cellsOf,
   playerPath,
@@ -15,12 +18,6 @@ import {
 } from './pathFrame'
 import { same } from '@/game/rules'
 import type { GameEvent, GameState, Point } from '@/game/types'
-
-// 내 이동 연출 뒤에 붙는 바람에 밀려 미끄러지는 시간과 기대서 버티는 시간
-export const WIND = { slide: 0.3, brace: 0.3 }
-
-// 짝 칸으로 가라앉는 시간, 짝인 칸에서 솟아오르는 시간, 잠기는 층 수
-export const WARP = { sink: 0.2, rise: 0.2, depth: 0.6 }
 
 // over는 버둥마다 그 수의 자리보다 더 솟는 몫, peak는 솟는 데 쓰는 몫, fill은 잠긴 상자 위로 땅이 드러나는 지점
 // lead는 상자가 칸에 닿기 전에 미리 가라앉는 시간, 닿는 순간 이미 진흙에 밀려 들어간 모습
@@ -443,6 +440,7 @@ export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
       (events.some((e) => e.type === 'melted') ? MELT_SECONDS : 0),
     brazierLightEnd(events),
     brazierEnd(events),
+    kegEnd(events, moveSeconds(events, swamp)),
   )
 
 // 물이 바뀌는 수의 꼭지, 수면, 새로 잠긴 칸이 어는 진행도, 드러나는 칸이 녹는 진행도와 그 뒤 돌 밑 판이 녹는 진행도, 물이 그대로인 수는 모두 1

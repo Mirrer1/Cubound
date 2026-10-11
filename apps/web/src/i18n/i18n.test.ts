@@ -72,6 +72,14 @@ describe('사전', () => {
 
     expect(missing).toEqual([])
   })
+
+  it.each(Object.keys(DICTIONARIES))('%s의 스테이지 이름은 서로 겹치지 않는다', (code) => {
+    const names = Object.entries(DICTIONARIES[code as Language])
+      .filter(([key]) => key.startsWith('stage.'))
+      .map(([, name]) => name)
+
+    expect(names.filter((name, i) => names.indexOf(name) !== i)).toEqual([])
+  })
 })
 
 describe('sentencesOf', () => {

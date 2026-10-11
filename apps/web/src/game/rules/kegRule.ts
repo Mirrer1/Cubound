@@ -123,7 +123,11 @@ export const blastKegs = (burning: Point[], state: GameState, events: GameEvent[
     }
   }
 
-  const base: GameState = { ...state, kegs: kegs.filter((k) => !has(blown, k)) }
+  const base: GameState = {
+    ...state,
+    kegs: kegs.filter((k) => !has(blown, k)),
+    scorched: [...state.scorched, ...blown.map(({ x, y }) => ({ x, y }))],
+  }
   const { player } = base
   const pusher = blown.find((k) => sideOf(k, player))
   const direction = pusher && sideOf(pusher, player)

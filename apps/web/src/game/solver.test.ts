@@ -357,6 +357,19 @@ describe('solve 화약통', () => {
     expect(solved.status).toBe('solved')
     expect(solved.status === 'solved' && solved.moves).toBe(7)
   })
+
+  it('터진 자리만 다른 상태는 같은 상태로 본다', () => {
+    // 평지에서 화약통을 (2,0)에서 터뜨리거나 (3,0)으로 밀고 터뜨려도 높이와 화약통은 같은 판
+    const flat: Stage = {
+      ...KEG,
+      heights: [[0, 0, 0, 0, 0, 0, 0]],
+      fire: ['@......'],
+      goal: { x: 6, y: 0 },
+    }
+    const result = deadEnds(flat)
+
+    expect(result.status === 'ok' && result.states).toBe(38)
+  })
 })
 
 describe('kegBlocks', () => {

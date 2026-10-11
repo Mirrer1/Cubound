@@ -6,6 +6,7 @@ import BoardCell from './BoardCell'
 import BoardClear from './BoardClear'
 import { type BehindGoal } from './BoardFloor'
 import BoardIceStone from './BoardIceStone'
+import BoardKeg from './BoardKeg'
 import BoardLadder from './BoardLadder'
 import BoardSeed from './BoardSeed'
 import BoardSluice from './BoardSluice'
@@ -199,7 +200,10 @@ const Board = ({
       {cubeFirst(
         underWall(scene.tramFrames, heights).reduce(
           (ordered, p) => cubeFirst(ordered, p),
-          scene.box ? cubeFirst(cells, scene.box.cell) : cells,
+          [scene.box?.cell, scene.kegFrame?.cell].reduce(
+            (ordered, p) => (p ? cubeFirst(ordered, p) : ordered),
+            cells,
+          ),
         ),
         scene.cube.cell,
         scene.cube.last,
@@ -249,6 +253,22 @@ const Board = ({
                     <BoardBox key={`${frame.to.x}-${frame.to.y}`} x={frame.x} y={frame.y} />
                   ),
                 )}
+                {over.kegs.map((frame) => (
+                  <BoardKeg
+                    key={`${frame.to.x}-${frame.to.y}`}
+                    part="keg"
+                    x={frame.x}
+                    y={frame.y}
+                    swell={frame.look.swell}
+                    heat={frame.look.heat}
+                    cords={frame.look.cords}
+                    ember={frame.look.ember}
+                    ashTo={frame.look.ashTo}
+                    ash={frame.look.ash}
+                    trailU={frame.look.trail.u}
+                    trailV={frame.look.trail.v}
+                  />
+                ))}
                 {over.whirlBoxes.map((frame) => (
                   <BoardWhirlpool key={`${frame.to.x}-${frame.to.y}`} part="boat" {...frame} />
                 ))}

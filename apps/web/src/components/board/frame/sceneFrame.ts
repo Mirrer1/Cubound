@@ -14,6 +14,7 @@ import { SLIDE_DEG, playerFrame, squashTransform } from './cubeFrame'
 import { type Chain, smooth } from './curveFrame'
 import { fireScene } from './fireFrame'
 import { burnRect, guideRect, lockRect } from './guideFrame'
+import { slideChain } from './iceFrame'
 import {
   iceCovers,
   iceCoversAt,
@@ -24,6 +25,7 @@ import {
   stoneFrames,
   thawingBoxes,
 } from './iceStoneFrame'
+import { kegScene, movingKeg } from './kegFrame'
 import { mushroomFrames } from './mushroomFrame'
 import { cellsOf, has, playerPath, same, totalSeconds } from './pathFrame'
 import { restartDrop } from './restartFrame'
@@ -31,8 +33,22 @@ import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFram
 import { fadeLanes, sluiceScene, tapFronts } from './sluiceFrame'
 import { boxSink, swampFrame } from './swampFrame'
 import { moorLooks, tetherFrames } from './tetherFrame'
-import { type SwampTime, elapsedAt, playerSegments, pullStart, stepProgress } from './timeFrame'
-import { behindCube, tramBeside, tramFramesOf, tramProgress } from './tramFrame'
+import {
+  type SwampTime,
+  elapsedAt,
+  moveSeconds,
+  playerSegments,
+  pullStart,
+  stepProgress,
+} from './timeFrame'
+import {
+  behindCube,
+  frontOf,
+  slideFront,
+  tramBeside,
+  tramFramesOf,
+  tramProgress,
+} from './tramFrame'
 import { vineFrames } from './vineFrame'
 import { rippleOf } from './waterFrame'
 import { leanOf, pulledBeside, whirlFrames } from './whirlpoolFrame'
@@ -214,6 +230,28 @@ export const sceneFrame = ({
     elapsed: fire.elapsed,
   })
 
+  const keg = kegScene({
+    before,
+    game,
+    events,
+    moving,
+    dropping,
+    t,
+    stepT,
+    elapsed: fire.elapsed,
+    move: moveSeconds(events, swampSeconds) - swampSeconds.lead,
+  })
+  const pushedKeg = movingKeg(keg, slideChain(events, chain))
+  const kegFrame = pushedKeg && {
+    ...toScreen({ x: pushedKeg.x, y: pushedKeg.y }, pushedKeg.level),
+    to: pushedKeg.to,
+    look: pushedKeg.look,
+    cell:
+      pushedKeg.event.type === 'slid' && cellsOf(pushedKeg.event) > 1
+        ? slideFront(pushedKeg.event, pushedKeg.gone * cellsOf(pushedKeg.event))
+        : frontOf(pushedKeg.event.from, pushedKeg.event.to),
+  }
+
   // 돌이 밀리고 끌리고 녹는 동안 얼고 녹는 칸, 그 위에 선 큐브가 얼음 판 높이로 내려앉는 거리
   const iceT = moving ? icePhase(events, t, swampSeconds) : 1
   const covers = moving
@@ -346,6 +384,8 @@ export const sceneFrame = ({
     crackView,
     fire,
     brazier,
+    keg,
+    kegFrame,
     seedFrame,
     faded,
     vineFrame,

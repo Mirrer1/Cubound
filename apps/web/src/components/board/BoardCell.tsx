@@ -6,6 +6,7 @@ import BoardBrazier from './BoardBrazier'
 import BoardFire from './BoardFire'
 import BoardFloor, { type BehindGoal } from './BoardFloor'
 import BoardIceStone from './BoardIceStone'
+import BoardKeg from './BoardKeg'
 import BoardLadder from './BoardLadder'
 import BoardPit from './BoardPit'
 import BoardSeed from './BoardSeed'
@@ -74,6 +75,7 @@ const BoardCell = ({
   ladder,
   fire,
   brazier,
+  keg,
   vine,
   seed,
   ambient,
@@ -131,6 +133,7 @@ const BoardCell = ({
     0.4,
   )
   const boxTop = y - TILE.layer - brazier.lift
+  const ashMark = Math.max(brazier.mark, keg.mark)
 
   return (
     <g>
@@ -183,10 +186,10 @@ const BoardCell = ({
           {fire.kind && (
             <BoardFire part="floor" x={x} y={y} parity={parity} {...fire} kind={fire.kind} />
           )}
-          {brazier.mark > 0 && (
+          {ashMark > 0 && (
             <polygon
               points={blockFaces(x, y, TILE.width * ASH_MARK, 0).top}
-              opacity={brazier.mark}
+              opacity={ashMark}
               style={{ fill: markFill }}
             />
           )}
@@ -234,6 +237,25 @@ const BoardCell = ({
           )}
         </g>
       )}
+      {keg.dust >= 0 && (
+        <BoardKeg part="dust" x={x} y={y} s={keg.dust} du={keg.dustU} dv={keg.dustV} />
+      )}
+      {keg.on && (
+        <g opacity={keg.opacity}>
+          <BoardKeg
+            part="keg"
+            x={x}
+            y={y - keg.lift * TILE.layer}
+            swell={keg.swell}
+            heat={keg.heat}
+            cords={keg.cords}
+            ember={keg.ember}
+            ashTo={keg.ashTo}
+            ash={keg.ash}
+          />
+        </g>
+      )}
+      {keg.burst >= 0 && <BoardKeg part="burst" x={x} y={y} s={keg.burst} />}
       {brazier.burn >= 0 && (
         <BoardBrazier part="box" x={x} y={boxTop} hint={1} burn={brazier.burn} />
       )}

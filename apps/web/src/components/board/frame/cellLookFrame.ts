@@ -3,11 +3,12 @@ import { type BrazierLook, brazierLookOf } from './brazierFrame'
 import { type LadderLook, ladderLookOf } from './carryFrame'
 import type { boardCells } from './cellFrame'
 import { crackFrame, crackLeft, sinkAt } from './crackFrame'
-import { clamp01, smooth } from './curveFrame'
+import { clamp01, lerp, smooth } from './curveFrame'
 import { landingCellKey, wallHeight } from './fillFrame'
 import { type FireLook, NO_FIRE, fireLookOf } from './fireFrame'
 import { frostAt } from './iceFrame'
 import { frostGround, frostPatches } from './iceStoneFrame'
+import { type KegLook, caughtHeat, dustOf, kegDrop, kegLookOf } from './kegFrame'
 import { has, same } from './pathFrame'
 import { restartDrop } from './restartFrame'
 import type { sceneFrame } from './sceneFrame'
@@ -108,6 +109,11 @@ export interface CellLook {
   ladder: LadderLook
   fire: FireLook
   brazier: BrazierLook
+  keg: KegLook & {
+    dust: number // 깎이는 칸 흙먼지가 인 뒤 흐른 초, -1이면 없음
+    dustU: number // 화약통 반대쪽
+    dustV: number
+  }
   vine: VineCell
   seed: SeedCell
   ambient: {
@@ -174,7 +180,13 @@ export const cellLook = ({
     const was = crackLeft(scene.before, cell.p)
     // 상자가 만든 바닥, 처음부터 구멍이던 칸과 무너진 뒤 메워진 칸
     const wasCrack = (stage.cracks?.[cell.p.y]?.[cell.p.x] ?? '.') !== '.'
-    const fire = fireLookOf(scene.fire, cell.p)
+    const caught = caughtHeat(scene.keg, cell.p)
+    const lit = fireLookOf(scene.fire, cell.p)
+    // 폭발로 불이 붙는 숯의 열, 화약통이 터진 뒤부터
+    const fire =
+      caught === null
+        ? lit
+        : { ...lit, heat: lerp(has(scene.fire.warmBefore, cell.p) ? 0.5 : 0, 1, caught) }
     const isFilled =
       game.heights[cell.p.y][cell.p.x] >= 0 &&
       (stage.heights[cell.p.y][cell.p.x] < 0 ||
@@ -186,9 +198,11 @@ export const cellLook = ({
     // 솟거나 재시작으로 내려가는 씨앗 칸은 그 순간 높이
     const seedHere = scene.seedFrame.get(cell.key)
     const seedShift = seedHere ? cell.h - seedHere.level : 0
+    const dropped = kegDrop(scene.keg, cell.p)
     const cellY =
       cell.y -
       raised * TILE.layer +
+      dropped * TILE.layer +
       sinkAt(scene.crackView, cell.p) +
       crackFall +
       seedShift * TILE.layer
@@ -203,6 +217,8 @@ export const cellLook = ({
     // 판이 차오르거나 내려가는 칸의 드러나는 구덩이 벽
     const pitShown = cell.pit || (vine?.kind === 'grown' && vine.rise < 1)
 
+    const dust = dustOf(scene.keg, cell.p)
+    const kegs = scene.kegFrame && same(scene.kegFrame.cell, cell.p) ? [scene.kegFrame] : []
     const tram = scene.tramFrames.find((frame) => same(frame.cell, cell.p)) ?? null
     const drawCube = same(scene.cube.cell, cell.p) && !scene.home
     const drawBoxes = scene.boxFrames.filter((frame) => same(frame.cell, cell.p))
@@ -224,7 +240,7 @@ export const cellLook = ({
       droppingBox >= 0 ? restartDrop(t, droppingBox + 1, boxes.length, game.stones.length) : null
     // 재시작하면 제자리에서 사라지는 메운 칸, 큐브와 같은 빠르기로 돌아오는 무너졌던 칸
     const restored =
-      scene.dropping && !seedHere
+      scene.dropping && !seedHere && dropped === 0
         ? Math.sign(scene.before.heights[cell.p.y][cell.p.x] - heights[cell.p.y][cell.p.x])
         : 0
     const stillBox = boxHere && !movedBoxHere && boxDrop === null
@@ -236,12 +252,13 @@ export const cellLook = ({
       drawCube ||
       goalEffect ||
       boxDrop !== null ||
+      kegs.length > 0 ||
       tram !== null
 
     const look: CellLook = {
       x: cell.x,
       y: cellY,
-      h: cell.h - seedShift + raised,
+      h: cell.h - seedShift + raised - dropped,
       parity: (cell.p.x + cell.p.y) % 2 === 1,
       goal: same(cell.p, stage.goal),
       faded: has(scene.faded, cell.p),
@@ -339,6 +356,12 @@ export const cellLook = ({
         boxHere: stillBox,
         p: cell.p,
       }),
+      keg: {
+        ...kegLookOf(scene.keg, cell.p),
+        dust: dust?.s ?? -1,
+        dustU: dust?.du ?? 0,
+        dustV: dust?.dv ?? 0,
+      },
       vine: vineCellOf(vine),
       seed: seedCellOf(scene, game, cell, seedHere, pickedHere),
       ambient: ambientHere
@@ -369,6 +392,7 @@ export const cellLook = ({
         stones,
         thawBoxes,
         boxDrop,
+        kegs,
         goalEffect,
         overlay,
         waterDepth: water.depth,

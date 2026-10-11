@@ -70,6 +70,10 @@
   --color-ash-top: #c4bdb4;
   --color-ash-left: #9c958c;
   --color-ash-right: #b0a9a0;
+  /* 화약통 몸통, 몸통보다 10% 흰 뚜껑, 마개 */
+  --color-keg: #b38662;
+  --color-keg-lid: #bb9272;
+  --color-keg-plug: #a4452e;
   --color-stove-top: #a9a39b;
   --color-stove-bed: #cfc8bf;
   --color-stove-left: #7d776f;

@@ -1,10 +1,9 @@
 import { clamp01 } from './curveFrame'
-import { totalSeconds } from './pathFrame'
+import { WIND, totalSeconds } from './pathFrame'
 import { swampTime } from './swampFrame'
 import {
   NO_SWAMP,
   type SwampTime,
-  WIND,
   elapsedAt,
   moveSeconds,
   playerSegments,

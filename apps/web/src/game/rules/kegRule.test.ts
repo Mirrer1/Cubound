@@ -205,6 +205,28 @@ describe('move 화약통 폭발', () => {
     ])
   })
 
+  it('터진 화약통 자리를 남긴다', () => {
+    const { state } = move(at(BLAST_STAGE, FIRE_ON), 'left')
+
+    expect(state.scorched).toEqual([{ x: 2, y: 1 }])
+  })
+
+  it('연쇄로 터진 화약통 자리도 모두 남긴다', () => {
+    const stage: Stage = {
+      ...BLAST_STAGE,
+      entities: [
+        { type: 'keg', x: 2, y: 1 },
+        { type: 'keg', x: 3, y: 1 },
+      ],
+    }
+    const { state } = move(at(stage, FIRE_ON), 'left')
+
+    expect(state.scorched).toEqual([
+      { x: 2, y: 1 },
+      { x: 3, y: 1 },
+    ])
+  })
+
   it('평지와 터진 자리 높이는 그대로다', () => {
     const stage: Stage = {
       ...BLAST_STAGE,

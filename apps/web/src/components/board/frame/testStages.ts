@@ -386,3 +386,26 @@ export const TIDE_STAGE: Stage = {
 
 // 왔다 갔다 네 수, 밀물 판의 물때 한 번
 export const SHUTTLE: Direction[] = ['right', 'left', 'right', 'left']
+
+// 화약통 (2,1) 둘레 위 두 층, 오른쪽 한 층, 아래 숯 벽, 숯 (3,2)가 타는 중이면 다음 수에 불이 (2,2)로 옴
+export const KEG_STAGE: Stage = {
+  version: 1,
+  id: 'test-keg',
+  name: '화약통',
+  heights: [
+    [1, 1, 2, 0, 0],
+    [1, 1, 0, 1, 0],
+    [0, 0, 0, 0, 0],
+  ],
+  fire: ['.....', '.....', '..##.'],
+  start: { x: 1, y: 0 },
+  goal: { x: 4, y: 0 },
+  entities: [{ type: 'keg', x: 2, y: 1 }],
+}
+
+// 숯이 타는 판에서 한 수, 아래로 가면 화약통 옆이라 밀려남
+export const blast = (stage: Partial<Stage> = {}, direction: Direction = 'left') => {
+  const prev = { ...createState({ ...KEG_STAGE, ...stage }), burning: [{ x: 3, y: 2 }] }
+  const { state: game, events } = move(prev, direction)
+  return { prev, game, events }
+}

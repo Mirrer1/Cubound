@@ -31,6 +31,7 @@ const MID = {
   flame: 0,
   charred: [],
   kegs: [],
+  scorched: [],
   trams: [],
   swamps: [],
   mushrooms: [],
@@ -843,6 +844,7 @@ describe('restoreSession 화약통', () => {
   it('깎인 높이와 화약통 자리와 심지 남은 수를 그대로 이어간다', () => {
     expect(blown.heights[0][3]).toBe(0)
     expect(blown.kegs).toEqual([])
+    expect(blown.scorched).toEqual([{ x: 2, y: 0 }])
     expect(restoreSession(toSession(blown), KEG_STAGE)).toEqual(blown)
     expect(lit.kegs).toEqual([{ x: 2, y: 0, fuse: true, lit: 3 }])
     expect(restoreSession(toSession(lit), FUSE_STAGE)).toEqual(lit)
@@ -853,6 +855,23 @@ describe('restoreSession 화약통', () => {
     const session = { ...toSession(start), kegs: undefined }
 
     expect(restoreSession(session, KEG_STAGE)).toEqual(start)
+  })
+
+  it('터진 자리가 없던 때 저장한 것은 빈 목록으로 읽는다', () => {
+    const session = { ...toSession(blown), scorched: undefined }
+
+    expect(restoreSession(session, KEG_STAGE)).toEqual({ ...blown, scorched: [] })
+  })
+
+  it('터진 자리가 판 밖이거나 화약통보다 많으면 버린다', () => {
+    const session = toSession(blown)
+    const twice = [
+      { x: 2, y: 0 },
+      { x: 2, y: 0 },
+    ]
+
+    expect(restoreSession({ ...session, scorched: [{ x: 9, y: 0 }] }, KEG_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, scorched: twice }, KEG_STAGE)).toBeNull()
   })
 
   it('심지 남은 수가 0에서 4 밖이거나 화약통이 판보다 많으면 버린다', () => {

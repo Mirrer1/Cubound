@@ -8,16 +8,19 @@ import { fillingCellKey } from './fillFrame'
 import { sceneFrame } from './sceneFrame'
 import { swampTime } from './swampFrame'
 import {
+  KEG_STAGE,
   LIFT_STAGE,
   SLUICE_STAGE,
   STONE_STAGE,
   TRAM_STAGE,
   WHIRL_STAGE,
+  blast,
   lastMove,
 } from './testStages'
 import { SLUICE, durationOf, sluiceStart } from './timeFrame'
 import { railDirsOf } from './tramFrame'
 import { vineLooks } from './vineFrame'
+import { TILE } from '@/game/iso'
 import { createState } from '@/game/rules'
 import type { GameEvent, GameState, Stage, Tram } from '@/game/types'
 
@@ -396,5 +399,28 @@ describe('cellLook 화로', () => {
     const cells = looks(game)
     expect(cells.get('1-0')!.look.brazier).toMatchObject({ on: true, lift: 8, covered: 1 })
     expect(cells.get('2-0')!.look.brazier).toMatchObject({ on: false, lift: 0, burn: -1 })
+  })
+})
+
+describe('cellLook 화약통', () => {
+  it('깎인 칸은 터지기 전 높이에서 한 층 내려앉는다', () => {
+    const { prev, game, events } = blast()
+    const at = (t: number) => looks(game, prev, events, t).get('2-0')!.look
+    const before = at(0)
+    const after = at(0.999)
+
+    expect(before.h).toBe(2)
+    expect(after.y - before.y).toBeCloseTo(TILE.layer, 0)
+    expect(after.h).toBeCloseTo(1, 1)
+    expect(at(0).keg.dust).toBe(-1)
+  })
+
+  it('재시작하면 깎인 칸은 흐려지지 않고 제 높이로 솟는다', () => {
+    const { game } = blast()
+    const start = createState(KEG_STAGE)
+    const look = looks(start, game, [], 0.05, true).get('2-0')!.look
+
+    expect(look.ground.blockOpacity).toBe(1)
+    expect(look.h).toBeLessThan(2)
   })
 })

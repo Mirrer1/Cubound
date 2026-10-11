@@ -46,6 +46,7 @@ import type { SolveResult } from '@/game/solver'
 import type { Direction, GameState, Stage } from '@/game/types'
 import { directionFromKey } from '@/platform/input'
 import { localSessionStorage } from '@/platform/storage'
+import { DEV_STAGES } from '@/stages'
 import { useGameStore } from '@/store/gameStore'
 
 interface DevControllerProps {
@@ -98,9 +99,15 @@ const DevController = ({ game }: DevControllerProps) => {
   const restarting = useGameStore((s) => s.restarting)
   const guideOpen = useGameStore((s) => s.guideStep !== null)
   const move = useGameStore((s) => s.move)
+  const script = DEV_STAGES[game.stage.id]?.script
   const cached = useMemo(
-    () => (shown ? pickSolution(game.stage, solutions[game.stage.id]) : null),
-    [game.stage, shown],
+    () =>
+      !shown
+        ? null
+        : script
+          ? ({ status: 'solved', moves: script.length, path: script } as const)
+          : pickSolution(game.stage, solutions[game.stage.id]),
+    [game.stage, shown, script],
   )
   const result = cached ?? (found?.stage === game.stage ? found.result : null)
   const trace = useMemo(

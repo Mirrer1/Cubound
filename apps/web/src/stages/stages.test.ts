@@ -23,7 +23,7 @@ import { stageTextKey, worldTextKey } from '@/i18n'
 import { en } from '@/i18n/en'
 
 const STAGES = Object.entries(
-  import.meta.glob<Stage>('./**/*.json', { eager: true, import: 'default' }),
+  import.meta.glob<Stage>('./world-*/*.json', { eager: true, import: 'default' }),
 )
 
 const MADE_IDS = new Set(STAGES.map(([, stage]) => stage.id))

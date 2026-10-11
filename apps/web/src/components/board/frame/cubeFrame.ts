@@ -1,5 +1,6 @@
 import { type Chain, NO_CHAIN, clamp01, easeIn, easeOut, lerp } from './curveFrame'
 import { slideChain, slideSpan, squashAt } from './iceFrame'
+import { blastLean, blastSegments, blastWarps } from './kegFrame'
 import {
   CAP_TOP_IDLE,
   capHeight,
@@ -13,6 +14,8 @@ import {
 } from './mushroomFrame'
 import {
   type PathEvent,
+  SECONDS,
+  WARP,
   cellsOf,
   hopCells,
   hopSpan,
@@ -23,7 +26,7 @@ import {
 import { PLANT_SEED, seedLift } from './seedFrame'
 import { inSwamp, swampTime } from './swampFrame'
 import { ridePhase } from './switchFrame'
-import { WARP, elapsedAt, playerSegments, riseProgress, rises, warpAt } from './timeFrame'
+import { elapsedAt, moveSeconds, playerSegments, riseProgress, rises, warpAt } from './timeFrame'
 import { carriedBy, carryOf, frontOf, slideFront, slidingCell, tramProgress } from './tramFrame'
 import { windLean, windSpan } from './windFrame'
 import { TILE } from '@/game/iso'
@@ -73,30 +76,45 @@ const pathFrame = (
   }
   if (t >= 1) return still
 
-  const segments = playerSegments(events)
+  const swamp = swampTime(prev, game)
+  // 폭발에 밀려나는 수는 내 이동 뒤 터지는 순간까지 기다렸다 밀려 가는 길
+  const move = moveSeconds(events, swamp) - swamp.lead
+  const segments = blastSegments(events, playerSegments(events), move, player)
   const startLevel = prev ? standHeight(prev, prev.player) : endLevel
   const pathLevel = segments.reduce((level, s) => levelAfter(level, s.event), startLevel)
-  const swamp = swampTime(prev, game)
   // 이동이 끝난 뒤 칸과 같이 오르는 씨앗이 솟는 몫
   const seedUp = seedLift(events, player, 'player')
   const pathEnd = endLevel - seedUp
+  const warped = events.find((e) => e.type === 'warped')
+  // 높이가 다른 짝 칸 사이의 차이, 솟는 동안의 몫
+  const warpShift =
+    warped?.type === 'warped' ? standHeight(game, warped.to) - standHeight(game, warped.from) : 0
   // 이동 경로로 설명되지 않는 나머지 높이 차이는 칸과 같은 속도로 따라가는 발판 몫
   const risen = seedUp * riseProgress(events, t, swamp)
-  const riding = (pathEnd - pathLevel) * ridePhase(game, events, player, t, swamp) + risen
+  const riding =
+    (pathEnd - warpShift - pathLevel) * ridePhase(game, events, player, t, swamp) + risen
   // 연출이 이동보다 길면 제 길을 다 간 자리에서 기다리는 큐브
   const elapsed = elapsedAt(events, swamp, t)
 
   // 바람에 밀리거나 기대는 때는 내 이동 연출이 다 끝난 뒤
   const wind = windSpan(events, swamp)
-  const lean = windLean(events, swamp, t)
+  const lean = windLean(events, swamp, t) ?? blastLean(events, move, player, elapsed)
   const braced = events.find((e) => e.type === 'braced')
   // 기울기 제외, 늪에 묶이거나 숨어서 버틴 수, 늪은 버둥 리듬이 끊기는 탓
   if (braced?.type === 'braced' && lean !== null && !inSwamp(game, player) && !braced.sheltered) {
     return { ...still, level: pathEnd + risen, direction: braced.direction, angle: lean * TILT }
   }
+  const blastBraced = events.find((e) => e.type === 'blastBraced')
+  if (blastBraced?.type === 'blastBraced' && lean !== null) {
+    return {
+      ...still,
+      level: pathEnd + risen,
+      direction: blastBraced.direction,
+      angle: lean * TILT,
+    }
+  }
 
-  const warped = events.find((e) => e.type === 'warped')
-  const warpStart = warpAt(events)
+  const warpStart = blastWarps(events) ? totalSeconds(segments) : warpAt(events)
   // 내 이동에서 순간이동한 뒤 바람에 밀리면 그때부터는 밀리는 길
   const ownWarp = wind !== null && warpStart !== null && warpStart < wind.from
   const waitAt = segments.findIndex((s) => s.wait)
@@ -233,6 +251,13 @@ const pathFrame = (
   const blocked = events.find((e) => e.type === 'blocked')
   if (blocked?.type === 'blocked') {
     return { ...held, direction: blocked.direction, angle: Math.sin(Math.PI * t) * TILT }
+  }
+  // 불 붙은 큐브가 화약통에 불을 옮기는 수, 폭발까지 긴 수라 기울기는 이동 시간 몫
+  const torchedKeg = events.find((e) => e.type === 'torchedKeg')
+  if (torchedKeg?.type === 'torchedKeg') {
+    const direction = directionBetween(torchedKeg.from, torchedKeg.to)
+    const bump = Math.sin(Math.PI * clamp01(elapsed / SECONDS.torched))
+    return { ...held, direction, angle: bump * TILT }
   }
   const torched = events.find((e) => e.type === 'torched')
   if (torched?.type === 'torched') {

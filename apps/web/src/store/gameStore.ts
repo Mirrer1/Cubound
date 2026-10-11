@@ -10,9 +10,9 @@ import { STAGES } from '@/stages'
 // 기다리는 입력 하나, 더 받으면 손을 뗀 뒤에도 큐브가 움직여 이동 수를 까먹는 탓
 const MAX_QUEUE = 1
 
-// 연출 중 들어온 입력의 대기열, 바람에 밀린 수는 밀린 곳을 보기 전 입력이라 버림 대상, 버틴 수는 받는 입력
+// 연출 중 들어온 입력의 대기열, 바람이나 폭발에 밀린 수는 밀린 곳을 보기 전 입력이라 버림 대상, 버틴 수는 받는 입력
 export const queueInput = (queue: Direction[], direction: Direction, events: GameEvent[]) =>
-  queue.length >= MAX_QUEUE || events.some((e) => e.type === 'blown')
+  queue.length >= MAX_QUEUE || events.some((e) => e.type === 'blown' || e.type === 'blasted')
     ? queue
     : [...queue, direction]
 

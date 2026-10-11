@@ -17,6 +17,12 @@ export const SECONDS = {
   rowed: 0.3,
 }
 
+// 내 이동 연출 뒤에 붙는 바람에 밀려 미끄러지는 시간과 기대서 버티는 시간
+export const WIND = { slide: 0.3, brace: 0.3 }
+
+// 짝 칸으로 가라앉는 시간, 짝인 칸에서 솟아오르는 시간, 잠기는 층 수
+export const WARP = { sink: 0.2, rise: 0.2, depth: 0.6 }
+
 // 상자와 큐브가 나란히 가는 칸당 같은 속도, max는 아주 긴 미끄러짐의 상한
 const SLIDE = { perCell: 0.14, max: 1.2 }
 
@@ -62,8 +68,14 @@ export const segmentsOf = (path: PathEvent[]): Segment[] =>
 
 export const totalSeconds = (segments: Segment[]) => segments.reduce((sum, s) => sum + s.seconds, 0)
 
+const blastCut = (events: GameEvent[]) => {
+  const at = events.findIndex((e) => e.type === 'blasted')
+  return at < 0 ? events : events.slice(0, at)
+}
+
+// 폭발에 밀려 간 길 제외, 그 길은 kegFrame 몫
 export const playerPath = (events: GameEvent[]) =>
-  events.filter(
+  blastCut(events).filter(
     (e): e is PathEvent =>
       e.type === 'moved' ||
       e.type === 'fell' ||

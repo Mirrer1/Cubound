@@ -96,9 +96,10 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     e.currentTarget.blur()
     openGuide()
   }
-  // 얼마 못 간 판은 묻지 않고 바로 재시작
+  // 얼마 못 간 판과 사람이 쓰는 개발 서버는 묻지 않고 바로 재시작, 자동화 브라우저는 확인 카드 검사 대상
   const askOrRestart = useCallback(() => {
-    if (guideStep === null && (game?.moves ?? 0) >= ASK_FROM_MOVES) setAsking(true)
+    const quick = import.meta.env.DEV && !navigator.webdriver
+    if (!quick && guideStep === null && (game?.moves ?? 0) >= ASK_FROM_MOVES) setAsking(true)
     else restart()
   }, [game, guideStep, restart])
   const toggleOverview = useCallback(() => {

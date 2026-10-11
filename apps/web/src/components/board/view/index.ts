@@ -144,3 +144,16 @@ export {
   ambientLoops,
   ambientPlan,
 } from './ambientView'
+export {
+  BURST_RINGS,
+  burstLook,
+  burstSparks,
+  dustPuffs,
+  isoEllipse,
+  KEG_HEIGHT,
+  KEG_SHAPE,
+  kegBlocks,
+  kegCordSpan,
+  kegCords,
+  kegTrail,
+} from './kegView'

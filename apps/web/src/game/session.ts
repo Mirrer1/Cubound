@@ -41,6 +41,7 @@ export interface Session {
   flame?: number // 예전 저장에는 없는 값
   charred?: Point[] // 예전 저장에는 없는 값
   kegs?: Keg[] // 예전 저장에는 없는 값
+  scorched?: Point[] // 예전 저장에는 없는 값
   trams: TramSpot[]
   swamps?: Point[] // 예전 저장에는 없는 값
   mushrooms?: Point[] // 예전 저장에는 없는 값
@@ -87,6 +88,7 @@ export const toSession = (game: GameState): Session => ({
   flame: game.flame,
   charred: game.charred,
   kegs: game.kegs,
+  scorched: game.scorched,
   trams: game.trams,
   swamps: game.swamps,
   mushrooms: game.mushrooms,
@@ -315,13 +317,15 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     return typeof fuse === 'boolean' && isCount(lit) && lit <= (fuse ? FUSE : 0)
   }
   const kegs = saved.kegs === undefined ? start.kegs : listOf(saved.kegs, isKeg, kegCount)
+  const scorched = saved.scorched === undefined ? [] : listOf(saved.scorched, inMap, kegCount)
   const mostMelt = stage.rules?.melt ?? -1
   if (melt !== null && !(isCount(melt) && (melt as number) <= mostMelt)) return null
 
   if (!boxes || !ladders || !leaningLadders || !seeds || !planted || !tethered || !plugged) {
     return null
   }
-  if (!stones || !iced || !sparks || !burning || !ashes || !charred || !kegs) return null
+  if (!stones || !iced || !sparks || !burning || !ashes || !charred || !kegs || !scorched)
+    return null
   if (new Set(plugged.map(({ x, y }) => `${x},${y}`)).size !== plugged.length) return null
   const tiedToBox = (boat: Point) => boxes.some(({ x, y }) => x === boat.x && y === boat.y)
   if (tethered.length !== stagePosts.length || !tethered.every(tiedToBox)) return null
@@ -350,6 +354,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     flame: flame as number,
     charred: charred.map(({ x, y }) => ({ x, y })),
     kegs: kegs.map(({ x, y, fuse, lit }) => ({ x, y, fuse, lit })),
+    scorched: scorched.map(({ x, y }) => ({ x, y })),
     trams: (savedTrams as TramSpot[]).map(({ id, at, dir }) => ({ id, at, dir })),
     swamps:
       savedSwamps === undefined ? swamps : (savedSwamps as Point[]).map(({ x, y }) => ({ x, y })),

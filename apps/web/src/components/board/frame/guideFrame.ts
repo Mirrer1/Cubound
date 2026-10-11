@@ -1,6 +1,7 @@
 import {
   BRAZIER,
   CUBE,
+  KEG_SHAPE,
   LADDER_TIP,
   PIT_FLOOR,
   PLATE,
@@ -55,6 +56,11 @@ const reachOf = (game: GameState, p: Point, floating: boolean) => {
   if (mushroom) {
     const pose = mushroomPose(player ? 2 : 0, has(game.mushrooms, p) ? 0 : 1)
     reaches.push(pose.stem + pose.thick + halfTop(TILE.width * pose.cap))
+  }
+  if (has(game.kegs, p)) {
+    const body = KEG_SHAPE.bodyHeight + halfTop(TILE.width * KEG_SHAPE.body)
+    const lid = KEG_SHAPE.bodyHeight + KEG_SHAPE.lidHeight + halfTop(TILE.width * KEG_SHAPE.lid)
+    reaches.push(Math.max(body, lid))
   }
   if (has(game.stones, p)) {
     const peak = stoneSteps(0, 0, floating ? STONE.floatCut : 0, 1)[2]

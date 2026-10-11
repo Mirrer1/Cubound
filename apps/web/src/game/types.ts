@@ -141,6 +141,7 @@ export interface GameState {
   flame: number // 큐브 불의 남은 수, 0은 꺼진 불
   charred: Point[] // 재가 된 상자 자리
   kegs: Keg[]
+  scorched: Point[] // 터진 화약통 자리, 그림에만 쓰는 값
   trams: TramSpot[]
   swamps: Point[] // 남아 있는 늪 칸, 상자가 가라앉은 칸은 제외
   mushrooms: Point[] // 남아 있는 버섯 칸, 시드는 판에서 밟힌 칸은 제외

@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import { SLIDE_DEG, directionBetween, playerFrame, squashTransform } from './cubeFrame'
+import { KEG, kegStart } from './kegFrame'
 import { CAP_TOP_IDLE, MUSHROOM_STAND } from './mushroomFrame'
+import { WIND } from './pathFrame'
 import { swampFrame } from './swampFrame'
 import { switchCells, switchProgress } from './switchFrame'
 import {
   CHAIN_STAGE,
   HOP_STAGE,
   ICE_STAGE,
+  KEG_STAGE,
   LIFT_STAGE,
   PLANT,
   RIDE,
@@ -19,6 +22,7 @@ import {
   SWAMP_STAGE,
   TRAM_STAGE,
   WARP_STAGE,
+  blast,
   board,
   gust,
   hop,
@@ -26,11 +30,11 @@ import {
   leaveSwamp,
   ride,
 } from './testStages'
-import { durationOf, riseProgress } from './timeFrame'
+import { NO_SWAMP, durationOf, moveSeconds, riseProgress } from './timeFrame'
 import { tramProgress } from './tramFrame'
 import { TILE } from '@/game/iso'
 import { createState, move } from '@/game/rules'
-import type { GameState, Stage } from '@/game/types'
+import type { GameEvent, GameState, Stage } from '@/game/types'
 
 describe('playerFrame', () => {
   it('여러 칸을 미끄러지는 큐브는 지금 걸친 두 칸 중 앞 칸의 순서로 그린다', () => {
@@ -356,6 +360,19 @@ describe('playerFrame 순간이동', () => {
       cell: exit,
       fade: 1,
     })
+  })
+
+  it('높이가 다른 짝 칸은 들어간 칸 높이에서 걷고 가라앉는다', () => {
+    for (const heights of [[[1, 1, 1, 0, 0]], [[0, 0, 0, 1, 1]]]) {
+      const prev = createState({ ...WARP_STAGE, heights })
+      const { state, events } = move(prev, 'right')
+      for (let t = 0; t <= 1; t += 0.01) {
+        const { cell, level, fade } = playerFrame(prev, state, events, t)
+        if (cell.x !== entry.x) continue
+        if (fade === 1) expect(level).toBeCloseTo(heights[0][1])
+        else expect(level).toBeLessThan(heights[0][1])
+      }
+    }
   })
 
   it('순간이동이 없는 이동에서는 내내 또렷하다', () => {
@@ -765,6 +782,59 @@ describe('playerFrame 바람', () => {
     expect(at(own).level).toBeCloseTo(1)
     expect(at(own + 0.1 / total).level).toBeCloseTo(1)
     expect(at(1).level).toBe(0)
+  })
+})
+
+describe('playerFrame 폭발', () => {
+  const at = (events: GameEvent[], elapsed: number) => elapsed / durationOf(events)
+
+  it('내 이동을 마치고 기다렸다가 터지는 순간부터 구르지 않고 밀려난다', () => {
+    const { prev, game, events } = blast({}, 'down')
+    const blastFrom = kegStart(events, moveSeconds(events, NO_SWAMP)) + KEG.flash
+
+    expect(playerFrame(prev, game, events, at(events, blastFrom - 0.02))).toMatchObject({
+      x: 1,
+      y: 1,
+      level: 1,
+    })
+    const sliding = playerFrame(prev, game, events, at(events, blastFrom + WIND.slide / 2))
+    expect(sliding.x).toBeCloseTo(0.5, 1)
+    expect(sliding.level).toBe(1)
+    expect(sliding.angle).toBeCloseTo(0.24)
+    expect(playerFrame(prev, game, events, 1)).toMatchObject({ x: 0, y: 1, level: 1 })
+  })
+
+  it('밀릴 자리가 막히면 터지는 순간 기울었다 돌아온다', () => {
+    const stage: Partial<Stage> = {
+      heights: [
+        [1, 1, 2, 0, 0],
+        [2, 1, 0, 1, 0],
+        [0, 0, 0, 0, 0],
+      ],
+    }
+    const { prev, game, events } = blast(stage, 'down')
+    const blastFrom = kegStart(events, moveSeconds(events, NO_SWAMP)) + KEG.flash
+    const lean = playerFrame(prev, game, events, at(events, blastFrom + WIND.brace / 2))
+
+    expect(lean).toMatchObject({ x: 1, y: 1, direction: 'left' })
+    expect(lean.angle).toBeCloseTo(0.24)
+  })
+
+  it('불 붙은 큐브가 화약통에 불을 옮기면 밀기 시간 안에 기울었다 돌아온다', () => {
+    const prev = {
+      ...createState({
+        ...KEG_STAGE,
+        heights: [[0, 0, 0, 0, 0]],
+        fire: undefined,
+        start: { x: 1, y: 0 },
+        entities: [{ type: 'keg', x: 2, y: 0, fuse: true }],
+      }),
+      flame: 4,
+    }
+    const { state: game, events } = move(prev, 'right')
+
+    expect(playerFrame(prev, game, events, at(events, 0.13)).angle).toBeCloseTo(0.24)
+    expect(playerFrame(prev, game, events, at(events, 0.27)).angle).toBeCloseTo(0)
   })
 })
 

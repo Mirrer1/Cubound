@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { BRAZIER, PIT_FLOOR, PLATE, pileReach } from '../view'
+import { BRAZIER, KEG_SHAPE, PIT_FLOOR, PLATE, pileReach } from '../view'
 import { TAP } from '../view'
 import { burnRect, guideRect, lockFocus, lockRect } from './guideFrame'
 import { LOCK_STAGE, SLUICE_STAGE, WHIRL_STAGE } from './testStages'
@@ -47,6 +47,14 @@ describe('guideRect', () => {
     const foot = center + (TILE.width * 0.8) / 4
     expect(rect.y + rect.height / 2).toBeCloseTo((tip + foot) / 2)
     expect(rect.y + rect.height).toBeCloseTo(center + TILE.height / 2 + 12)
+  })
+
+  it('화약통 칸은 뚜껑 뒤 꼭짓점까지 위로 넓힌다', () => {
+    const stage: Stage = { ...FLAT, entities: [{ type: 'keg', ...MID }] }
+    const lid = KEG_SHAPE.bodyHeight + KEG_SHAPE.lidHeight + (TILE.width * KEG_SHAPE.lid) / 4
+
+    expect(spanOf(createState(stage), MID).above).toBeCloseTo(lid + 12)
+    expect(spanOf(createState(stage), MID).below).toBe(spanOf(createState(FLAT), MID).below)
   })
 
   it('재가 된 숯 벽 칸은 빈 칸과 같다', () => {

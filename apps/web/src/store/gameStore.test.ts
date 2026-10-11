@@ -77,6 +77,17 @@ describe('queueInput', () => {
     expect(queueInput([], 'up', blown)).toEqual([])
     expect(queueInput([], 'up', braced)).toEqual(['up'])
   })
+
+  it('폭발에 밀려난 수의 연출 중 입력은 버리고 버틴 수는 받는다', () => {
+    const blasted: GameEvent[] = [
+      moved,
+      { type: 'blasted', from: { x: 1, y: 0 }, to: { x: 0, y: 0 }, direction: 'left' },
+    ]
+    const braced: GameEvent[] = [moved, { type: 'blastBraced', direction: 'left' }]
+
+    expect(queueInput([], 'up', blasted)).toEqual([])
+    expect(queueInput([], 'up', braced)).toEqual(['up'])
+  })
 })
 
 // 브라우저 localStorage를 쓰는 저장소, 테스트마다 빈 것으로 교체
