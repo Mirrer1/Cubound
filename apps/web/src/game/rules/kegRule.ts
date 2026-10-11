@@ -86,19 +86,25 @@ export const torchKeg = (state: GameState, to: Point): MoveResult | null => {
 
 const sideOf = (from: Point, to: Point) => SIDES.find((side) => same(step(from, side), to))
 
-// 수 끝의 화약통, 심지 줄기와 불 닿음과 연쇄 폭발, burning은 이번 수 불 계산 전의 불붙은 숯
-export const blastKegs = (burning: Point[], state: GameState, events: GameEvent[]): MoveResult => {
+// 수 끝의 화약통, 심지 줄기와 같은 높이 불 닿음과 연쇄 폭발, before는 이번 수 불 계산 전 상태
+export const blastKegs = (before: GameState, state: GameState, events: GameEvent[]): MoveResult => {
   if (state.kegs.length === 0) return { state, events: [] }
 
   const out: GameEvent[] = []
   const due = state.kegs.filter((k) => k.lit === 1)
   const fire = [
-    ...burning,
+    ...before.burning,
     ...state.burning,
     ...events.flatMap((e) => (e.type === 'kindled' ? [e.at] : [])),
   ]
   const touched = events.flatMap((e) => (e.type === 'torchedKeg' ? [e.to] : []))
-  const hot = (k: Point) => has(touched, k) || SIDES.some((side) => has(fire, step(k, side)))
+  const level = (k: Point) => floorAt(state, k)
+  const hot = (k: Point) =>
+    has(touched, k) ||
+    SIDES.some((side) => {
+      const p = step(k, side)
+      return has(fire, p) && before.heights[p.y][p.x] === level(k)
+    })
 
   const kegs: Keg[] = state.kegs.map((k) => {
     const { x, y } = k
@@ -115,10 +121,12 @@ export const blastKegs = (burning: Point[], state: GameState, events: GameEvent[
   if (blown.length === 0) {
     return { state: out.length > 0 ? { ...state, kegs } : state, events: out }
   }
-  // 둘레의 화약통은 심지와 무관하게 같은 수에 연쇄
+  // 같은 높이 둘레의 화약통은 심지와 무관하게 같은 수에 연쇄
   for (let i = 0; i < blown.length; i++) {
     for (const side of SIDES) {
-      const near = kegs.find((k) => same(k, step(blown[i], side)) && !has(blown, k))
+      const near = kegs.find(
+        (k) => same(k, step(blown[i], side)) && !has(blown, k) && level(k) === level(blown[i]),
+      )
       if (near) blown.push(near)
     }
   }
@@ -156,7 +164,7 @@ export const blastKegs = (burning: Point[], state: GameState, events: GameEvent[
       if (h === undefined || has(blown, p)) continue
       const c = fireAt(base.stage, p)
       if ((c === '#' || c === '=') && !has(base.ashes, p)) {
-        if (isFresh(base, p) && !has(caught, p)) {
+        if (isFresh(base, p) && h === level(keg) && !has(caught, p)) {
           caught.push(p)
           fresh.push(p)
         }

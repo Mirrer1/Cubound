@@ -7,11 +7,11 @@ export const FLAME = 4
 
 export const burnsBox = (state: GameState) => state.flame > 0 && state.stage.rules?.burnBox === true
 
-// 불 붙은 큐브가 숯 벽 쪽으로 미는 수, 한 층 위까지의 벽만 해당하고 큐브는 제자리
+// 불 붙은 큐브가 숯 벽 쪽으로 미는 수, 큐브가 선 높이와 같은 바닥의 벽만 해당하고 큐브는 제자리
 export const torch = (state: GameState, to: Point): MoveResult | null => {
   if (state.flame === 0 || fireAt(state.stage, to) !== '#') return null
   if (state.ashes.some((a) => same(a, to)) || state.burning.some((b) => same(b, to))) return null
-  if ((floorAt(state, to) ?? Infinity) > standHeight(state, state.player) + 1) return null
+  if (floorAt(state, to) !== standHeight(state, state.player)) return null
   return {
     state: { ...state, moves: state.moves + 1 },
     events: [{ type: 'torched', from: state.player, to }],

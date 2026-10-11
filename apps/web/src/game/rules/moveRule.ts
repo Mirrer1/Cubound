@@ -99,7 +99,7 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
   const torched = events.flatMap((e) => (e.type === 'torched' ? [e.to] : []))
   const { state: burnt, events: fireEvents } = burnFire(settled, torched)
   const { state: flamed, events: flameEvents } = burnFlame(burnt, fireEvents)
-  const { state: blasted, events: kegEvents } = blastKegs(settled.burning, flamed, [
+  const { state: blasted, events: kegEvents } = blastKegs(settled, flamed, [
     ...events,
     ...fireEvents,
   ])

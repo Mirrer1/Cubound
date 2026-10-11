@@ -34,6 +34,11 @@ const FLAT: Stage = {
 }
 
 const CHAIN: Partial<Stage> = {
+  heights: [
+    [1, 1, 2, 0, 0],
+    [1, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+  ],
   entities: [
     { type: 'keg', x: 2, y: 1 },
     { type: 'keg', x: 3, y: 1 },
@@ -375,7 +380,14 @@ describe('kegLookOf 재 자국', () => {
 
 describe('caughtHeat', () => {
   it('둘레 숯은 화약통이 터지는 순간부터 불이 붙는다', () => {
-    const stage: Partial<Stage> = { fire: ['..#..', '.....', '..##.'] }
+    const stage: Partial<Stage> = {
+      heights: [
+        [1, 1, 0, 0, 0],
+        [1, 1, 0, 1, 0],
+        [0, 0, 0, 0, 0],
+      ],
+      fire: ['..#..', '.....', '..##.'],
+    }
     const { prev, game, events } = blast(stage)
     const heat = (s: number) =>
       caughtHeat(sceneAt(prev, game, events, startOf(events) + s), { x: 2, y: 0 })

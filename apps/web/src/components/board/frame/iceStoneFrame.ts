@@ -17,7 +17,7 @@ import {
 import { frontOf } from './tramFrame'
 import { FLOAT, floatGone, floatLevel } from './waterFrame'
 import { TILE, toScreen } from '@/game/iso'
-import { isIce, waterLevel } from '@/game/rules'
+import { freezes, isIce, waterLevel } from '@/game/rules'
 import type { Direction, GameEvent, GameState, Point, Stage } from '@/game/types'
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
@@ -71,6 +71,7 @@ export const frozenCells = (state: GameState) => {
       const p = { x: stone.x - OFFSET[toward].x, y: stone.y - OFFSET[toward].y }
       const key = keyOf(p)
       if (cells.has(key) || !isWet(state, p) || isWhirl(state.stage, p)) continue
+      if (!freezes(state, stone, p)) continue
       if (!has(state.stones, p)) cells.set(key, toward)
     }
   }
@@ -505,8 +506,7 @@ export const laneShown = (
     const offLine = (q: Point) =>
       state.stones.some((s) => {
         const own = lanes.get(keyOf(s))
-        const near = Math.abs(s.x - q.x) + Math.abs(s.y - q.y) === 1
-        return near && !(own && own.whirl === lane.whirl && own.axis === lane.axis)
+        return freezes(state, s, q) && !(own && own.whirl === lane.whirl && own.axis === lane.axis)
       })
     const toward = OFFSET[lane.toward]
     for (let q = { x: p.x + toward.x, y: p.y + toward.y }; lanes.has(keyOf(q));) {

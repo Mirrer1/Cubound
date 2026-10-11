@@ -286,6 +286,28 @@ describe('move 불이 번지지 않는 숯', () => {
     expect(state.heights[1][3]).toBe(0)
   })
 
+  it.each([
+    ['한 층 높은', [0, 0, 1, 1, 1, 0]],
+    ['한 층 낮은', [1, 1, 0, 0, 0, 1]],
+  ])('불씨 칸에서 %s 숯으로 번지지 않는다', (_, row) => {
+    const stage: Stage = { ...LINE_STAGE, heights: [[...row], row] }
+    const { state, events } = move(createState(stage), 'down')
+
+    expect(events).toContainEqual({ type: 'kindled', at: { x: 1, y: 1 } })
+    expect(state.burning).toEqual([])
+  })
+
+  it.each([
+    ['한 층 높은', [0, 0, 0, 1, 1, 0]],
+    ['한 층 낮은', [1, 1, 1, 0, 0, 1]],
+  ])('불붙은 숯에서 %s 숯으로 번지지 않는다', (_, row) => {
+    const stage: Stage = { ...LINE_STAGE, heights: [[...row], row] }
+    const { state } = play(stage, ['down', 'up', 'down'])
+
+    expect(state.ashes).toEqual([{ x: 2, y: 1 }])
+    expect(state.burning).toEqual([])
+  })
+
   it('사다리를 기대 놓은 숯에는 불이 번지지 않는다', () => {
     const before = {
       ...createState(BRIDGE_STAGE),

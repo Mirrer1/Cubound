@@ -26,11 +26,17 @@ export const isWater = (state: GameState, { x, y }: Point) => {
 
 export const hasStone = (state: GameState, p: Point) => state.stones.some((s) => same(s, p))
 
+// 돌 하나가 맞닿은 물 칸을 얼리는지, 뜬 돌은 물 높이, 땅 위 돌은 칸 높이가 그 칸 물 높이와 같은 경우
+export const freezes = (state: GameState, stone: Point, p: Point) =>
+  Math.abs(stone.x - p.x) + Math.abs(stone.y - p.y) === 1 &&
+  (isWater(state, stone) ? waterLevel(state, stone) : state.heights[stone.y][stone.x]) ===
+    waterLevel(state, p)
+
 // 얼음 돌 둘레의 물 칸, 소용돌이 판정은 whirlpoolRule과의 순환 탓에 엔티티 칸 기준
 export const isFrozen = (state: GameState, p: Point) =>
   isWater(state, p) &&
   !state.stage.entities.some((e) => e.type === 'whirlpool' && same(e, p)) &&
-  state.stones.some((s) => Math.abs(s.x - p.x) + Math.abs(s.y - p.y) === 1)
+  state.stones.some((s) => freezes(state, s, p))
 
 export const isOpenWater = (state: GameState, p: Point) => isWater(state, p) && !isFrozen(state, p)
 

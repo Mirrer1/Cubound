@@ -90,6 +90,27 @@ describe('isFrozen', () => {
     expect(isFrozen(state, { x: 1, y: 2 })).toBe(false)
   })
 
+  it('땅 위 돌은 물 높이와 같은 땅에서만 얼리고 한 층 높은 둑에서는 못 얼린다', () => {
+    const stage = {
+      ...POND,
+      heights: [
+        [2, 1, 0],
+        [0, 0, 0],
+      ],
+      entities: [{ type: 'iceStone' as const, x: 0, y: 0 }],
+    }
+    const bank = createState({ ...stage, water: 1 })
+    const level = createState({
+      ...stage,
+      water: 1,
+      entities: [{ type: 'iceStone', x: 1, y: 0 }],
+    })
+
+    expect(isFrozen(level, { x: 1, y: 1 })).toBe(true)
+    expect(isFrozen(bank, { x: 0, y: 1 })).toBe(false)
+    expect(isFrozen(createState({ ...stage, water: 2 }), { x: 0, y: 1 })).toBe(true)
+  })
+
   it('소용돌이 칸은 얼지 않는다', () => {
     const state = createState({
       ...POND,

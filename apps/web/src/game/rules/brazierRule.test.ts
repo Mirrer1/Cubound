@@ -129,21 +129,18 @@ describe('move 화로', () => {
     expect(flamesOf(stage, ['right', 'right', 'left'])).toEqual([4, 3, 4])
   })
 
-  it('한 층 높은 숯 벽과 낮은 숯 벽에는 붙고 두 층 높은 숯 벽에는 막힌다', () => {
-    const at = (h: number, rest: Partial<Stage> = {}) =>
-      play(line('.@#......', { heights: [[0, 0, h, 0, 0, 0, 0, 0, 0]], ...rest }), [
-        'right',
-        'right',
-      ]).events
+  it('큐브가 선 높이와 같은 바닥의 숯 벽에만 붙고 한 층 높거나 낮은 숯 벽에는 막힌다', () => {
+    const at = (h: number) =>
+      play(line('.@#......', { heights: [[0, 0, h, 0, 0, 0, 0, 0, 0]] }), ['right', 'right']).events
     const torched: GameEvent = { type: 'torched', from: p(1, 0), to: p(2, 0) }
 
-    expect(at(1)).toContainEqual(torched)
-    expect(at(2)).toEqual([{ type: 'blocked', direction: 'right' }])
-    const high = play(line('.@#......', { heights: [[1, 1, 0, 0, 0, 0, 0, 0, 0]] }), [
+    expect(at(0)).toContainEqual(torched)
+    expect(at(1)).toEqual([{ type: 'blocked', direction: 'right' }])
+    const low = play(line('.@#......', { heights: [[1, 1, 0, 0, 0, 0, 0, 0, 0]] }), [
       'right',
       'right',
     ])
-    expect(high.events).toContainEqual(torched)
+    expect(low.events).toEqual([{ type: 'blocked', direction: 'right' }])
   })
 
   it('옆을 지나가거나 숯 다리를 밟아서는 불이 안 붙는다', () => {

@@ -43,14 +43,14 @@ export const checkFire = (ctx: CheckContext) => {
 
   const onFire = (p: { x: number; y: number }) => (rows[p.y]?.[p.x] ?? '.') !== '.'
 
-  // 맞닿은 숯 높이 차 한 층까지
+  // 맞닿은 숯은 같은 높이
   for (const { x, y } of cells) {
     for (const q of [
       { x: x + 1, y },
       { x, y: y + 1 },
     ]) {
-      if (onFire(q) && Math.abs(grid[y][x] - grid[q.y][q.x]) >= 2) {
-        add(`맞닿은 불씨나 숯 (${x},${y})과 (${q.x},${q.y})의 높이 차가 두 층 이상이다`)
+      if (onFire(q) && grid[y][x] !== grid[q.y][q.x]) {
+        add(`맞닿은 불씨나 숯 (${x},${y})과 (${q.x},${q.y})의 높이가 다르다`)
       }
     }
   }

@@ -56,6 +56,15 @@ describe('frozenCells', () => {
     ])
   })
 
+  it('한 층 높은 둑 위 돌 둘레는 얼지 않는다', () => {
+    const heights = STONE_STAGE.heights.map((row, y) =>
+      row.map((h, x) => (x === 3 && y === 1 ? 2 : h)),
+    )
+    const cells = frozenCells(createState(withEntities([stone(3, 1)], { heights })))
+
+    expect(cells.size).toBe(0)
+  })
+
   it('소용돌이 칸은 얼지 않는다', () => {
     const cells = frozenCells(
       createState(withEntities([stone(3, 2), { type: 'whirlpool', x: 4, y: 2 }])),
@@ -396,6 +405,14 @@ describe('laneShown', () => {
 
     expect(laneShown(pullLanes(stage), game, game, 1).get('2-2')).toBe(0)
     expect(laneShown(pullLanes(stage), game, game, 1).get('3-2')).toBe(1)
+  })
+
+  it('한 층 높은 둑 위 돌은 띠를 끊지 않는다', () => {
+    const stage = whirl([stone(3, 1)])
+    const heights = stage.heights.map((row, y) => row.map((h, x) => (x === 3 && y === 1 ? 2 : h)))
+    const game = createState({ ...stage, heights })
+
+    expect(laneShown(pullLanes(stage), game, game, 1).get('2-2')).toBe(1)
   })
 
   it('줄 안에 뜬 돌의 제 얼음은 띠를 끊지 않는다', () => {

@@ -38,9 +38,11 @@ export const burnFire = (state: GameState, torched: Point[] = []): MoveResult =>
 
   const chasing = state.stage.rules?.chase === true
 
-  // 쫓아오는 판의 갈림길은 큐브와 가장 가까운 갈래만, 거리가 같으면 모두
+  // 같은 높이 숯으로만, 쫓아오는 판의 갈림길은 큐브와 가장 가까운 갈래만, 거리가 같으면 모두
   const spread = (from: Point) => {
-    const fresh = SIDES.map((side) => step(from, side)).filter((to) => isFresh(state, to))
+    const fresh = SIDES.map((side) => step(from, side)).filter(
+      (to) => isFresh(state, to) && state.heights[to.y][to.x] === state.heights[from.y][from.x],
+    )
     const nearest = Math.min(...fresh.map((to) => distance(to, player)))
     for (const to of fresh) {
       if (caught.some((c) => same(c.to, to)) || has(torched, to)) continue

@@ -24,4 +24,4 @@ export {
   windLeft,
 } from './limitRule'
 export { move } from './moveRule'
-export { isFrozen, same } from './cellRule'
+export { freezes, isFrozen, same } from './cellRule'

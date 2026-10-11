@@ -35,6 +35,20 @@ const BLAST_STAGE: Stage = {
   entities: [{ type: 'keg', x: 2, y: 1 }],
 }
 
+// BLAST_STAGE에서 (3,1)을 낮춰 화약통 둘이 같은 높이, 둘째 화약통 오른쪽 (4,1)은 한 층
+const CHAIN_STAGE: Stage = {
+  ...BLAST_STAGE,
+  heights: [
+    [1, 1, 2, 1, 0],
+    [1, 1, 0, 0, 1],
+    [0, 0, 0, 0, 0],
+  ],
+  entities: [
+    { type: 'keg', x: 2, y: 1 },
+    { type: 'keg', x: 3, y: 1 },
+  ],
+}
+
 const FIRE_ON: Partial<GameState> = { burning: [{ x: 3, y: 2 }] }
 
 const at = (stage: Stage, state: Partial<GameState> = {}): GameState => ({
@@ -213,7 +227,7 @@ describe('move 화약통 폭발', () => {
 
   it('연쇄로 터진 화약통 자리도 모두 남긴다', () => {
     const stage: Stage = {
-      ...BLAST_STAGE,
+      ...CHAIN_STAGE,
       entities: [
         { type: 'keg', x: 2, y: 1 },
         { type: 'keg', x: 3, y: 1 },
@@ -233,7 +247,7 @@ describe('move 화약통 폭발', () => {
       heights: [
         [1, 1, 2, 0, 0],
         [1, 0, 1, 1, 0],
-        [0, 0, 0, 0, 0],
+        [0, 0, 1, 1, 0],
       ],
     }
     const { state, events } = move(at(stage, FIRE_ON), 'left')
@@ -251,6 +265,13 @@ describe('move 화약통 폭발', () => {
     expect(explodedOf(events)).toHaveLength(1)
   })
 
+  it('이번 수에 재가 되어 꺼진 숯 다리 옆으로 밀어 넣어도 터진다', () => {
+    const stage: Stage = { ...PUSH_STAGE, fire: ['.....', '.....', '...=.'] }
+    const { events } = move(at(stage, { burning: [{ x: 3, y: 2 }] }), 'right')
+
+    expect(explodedOf(events)).toHaveLength(1)
+  })
+
   it('켜진 불씨 칸 옆 화약통이 터진다', () => {
     const stage: Stage = { ...PUSH_STAGE, fire: ['..*..', '.....', '.....'], start: { x: 1, y: 0 } }
     const { events } = move(createState(stage), 'right')
@@ -258,13 +279,48 @@ describe('move 화약통 폭발', () => {
     expect(explodedOf(events)).toHaveLength(1)
   })
 
-  it('둘레의 숯은 깎이지 않고 불이 붙는다', () => {
+  it('같은 높이 둘레의 숯은 깎이지 않고 불이 붙는다', () => {
+    const stage: Stage = {
+      ...BLAST_STAGE,
+      heights: [
+        [1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 0],
+        [0, 0, 1, 1, 0],
+      ],
+      fire: ['..#..', '.....', '..##.'],
+    }
+    const { state, events } = move(at(stage, FIRE_ON), 'left')
+
+    expect(state.heights[0][2]).toBe(1)
+    expect(state.burning).toContainEqual({ x: 2, y: 0 })
+    expect(explodedOf(events)[0].caught).toEqual([{ x: 2, y: 0 }])
+  })
+
+  it('높이가 다른 둘레의 숯은 불도 안 붙고 깎이지도 않는다', () => {
     const stage: Stage = { ...BLAST_STAGE, fire: ['..#..', '.....', '..##.'] }
     const { state, events } = move(at(stage, FIRE_ON), 'left')
 
     expect(state.heights[0][2]).toBe(2)
-    expect(state.burning).toContainEqual({ x: 2, y: 0 })
-    expect(explodedOf(events)[0].caught).toEqual([{ x: 2, y: 0 }])
+    expect(state.burning).not.toContainEqual({ x: 2, y: 0 })
+    expect(explodedOf(events)[0].caught).toEqual([])
+  })
+
+  it.each([
+    ['한 층 높은', 1, 0],
+    ['한 층 낮은', 0, 1],
+  ])('%s 칸의 숯불은 화약통을 터뜨리지 않는다', (_, keg, fire) => {
+    const stage: Stage = {
+      ...BLAST_STAGE,
+      heights: [
+        [1, 1, 2, 0, 0],
+        [1, 1, keg, 1, 0],
+        [0, 0, fire, fire, 0],
+      ],
+    }
+    const { state, events } = move(at(stage, FIRE_ON), 'left')
+
+    expect(explodedOf(events)).toEqual([])
+    expect(kegsOf(state)).toEqual([{ x: 2, y: 1 }])
   })
 
   it('상자가 선 칸은 상자째 한 층 내려앉는다', () => {
@@ -281,7 +337,20 @@ describe('move 화약통 폭발', () => {
     expect(state.boxes).toEqual([{ x: 3, y: 1 }])
   })
 
-  it('둘레의 화약통은 같은 수에 이어서 터진다', () => {
+  it('같은 높이 둘레의 화약통은 같은 수에 이어서 터진다', () => {
+    const { state, events } = move(at(CHAIN_STAGE, FIRE_ON), 'left')
+
+    expect(state.kegs).toEqual([])
+    expect(explodedOf(events).map((e) => e.at)).toEqual([
+      { x: 2, y: 1 },
+      { x: 3, y: 1 },
+    ])
+    expect(state.heights[1][3]).toBe(0)
+    expect(state.heights[0][3]).toBe(0)
+    expect(state.heights[1][4]).toBe(0)
+  })
+
+  it('한 층 높은 둘레의 화약통은 안 터지고 칸과 같이 한 층 내려앉는다', () => {
     const stage: Stage = {
       ...BLAST_STAGE,
       entities: [
@@ -291,13 +360,24 @@ describe('move 화약통 폭발', () => {
     }
     const { state, events } = move(at(stage, FIRE_ON), 'left')
 
-    expect(state.kegs).toEqual([])
-    expect(explodedOf(events).map((e) => e.at)).toEqual([
-      { x: 2, y: 1 },
-      { x: 3, y: 1 },
-    ])
-    expect(state.heights[1][3]).toBe(1)
-    expect(state.heights[0][3]).toBe(0)
+    expect(explodedOf(events).map((e) => e.at)).toEqual([{ x: 2, y: 1 }])
+    expect(kegsOf(state)).toEqual([{ x: 3, y: 1 }])
+    expect(state.heights[1][3]).toBe(0)
+  })
+
+  it('한 층 낮은 둘레의 화약통은 안 터진다', () => {
+    const stage: Stage = {
+      ...CHAIN_STAGE,
+      heights: [
+        [1, 1, 2, 1, 0],
+        [1, 1, 1, 0, 1],
+        [0, 0, 1, 1, 0],
+      ],
+    }
+    const { state, events } = move(at(stage, FIRE_ON), 'left')
+
+    expect(explodedOf(events).map((e) => e.at)).toEqual([{ x: 2, y: 1 }])
+    expect(kegsOf(state)).toEqual([{ x: 3, y: 1 }])
   })
 
   it('두 화약통 둘레가 겹치는 칸은 두 층 깎인다', () => {
@@ -496,7 +576,7 @@ describe('move 심지 화약통', () => {
 
   it('폭발 둘레의 심지 화약통은 바로 터진다', () => {
     const stage: Stage = {
-      ...BLAST_STAGE,
+      ...CHAIN_STAGE,
       entities: [
         { type: 'keg', x: 2, y: 1 },
         { type: 'keg', x: 3, y: 1, fuse: true },
