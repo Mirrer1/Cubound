@@ -15,6 +15,7 @@ import {
   totalSeconds,
 } from './pathFrame'
 import { restartDuration } from './restartFrame'
+import { standHeight } from '@/game/rules'
 import type { GameEvent, GameState, Point } from '@/game/types'
 
 // 시안의 0.4초 폭발 단계를 늘린 배수, 그림 단계 초는 시안 기준
@@ -306,6 +307,7 @@ export interface KegFrame {
   to: Point
   event: PathEvent
   gone: number // 지금 구간에서 간 몫
+  sunk: boolean // 떠난 칸 높이 아래로 내려간 동안
   look: KegLook
 }
 
@@ -318,18 +320,20 @@ export const movingKeg = (scene: KegScene, chain: Chain): KegFrame | null => {
   if (!step) return null
 
   const { event, index, p } = step
-  const at = (q: Point) => before.heights[q.y][q.x]
+  const at = (q: Point) => standHeight(before, q)
   const fromLevel = index === 0 ? at(path[0].from) : at(event.from)
   const toLevel = event.type === 'pushed' && event.result === 'fell' ? at(event.to) : fromLevel
   const to = path[path.length - 1].to
+  // 떨어지는 화약통은 상자처럼 끝에서 가속
+  const level = p < 0.6 ? fromLevel : lerp(fromLevel, toLevel, easeIn((p - 0.6) / 0.4))
   return {
     x: lerp(event.from.x, event.to.x, p),
     y: lerp(event.from.y, event.to.y, p),
-    // 떨어지는 화약통은 상자처럼 끝에서 가속
-    level: p < 0.6 ? fromLevel : lerp(fromLevel, toLevel, easeIn((p - 0.6) / 0.4)),
+    level,
     to,
     event,
     gone: p,
+    sunk: level < fromLevel,
     look: {
       ...kegLookOf(scene, to),
       on: true,

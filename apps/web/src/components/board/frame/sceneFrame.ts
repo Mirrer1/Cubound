@@ -242,15 +242,19 @@ export const sceneFrame = ({
     move: moveSeconds(events, swampSeconds) - swampSeconds.lead,
   })
   const pushedKeg = movingKeg(keg, slideChain(events, chain))
-  const kegFrame = pushedKeg && {
-    ...toScreen({ x: pushedKeg.x, y: pushedKeg.y }, pushedKeg.level),
-    to: pushedKeg.to,
-    look: pushedKeg.look,
-    cell:
-      pushedKeg.event.type === 'slid' && cellsOf(pushedKeg.event) > 1
-        ? slideFront(pushedKeg.event, pushedKeg.gone * cellsOf(pushedKeg.event))
-        : frontOf(pushedKeg.event.from, pushedKeg.event.to),
-  }
+  const kegFront =
+    pushedKeg &&
+    (pushedKeg.event.type === 'slid' && cellsOf(pushedKeg.event) > 1
+      ? slideFront(pushedKeg.event, pushedKeg.gone * cellsOf(pushedKeg.event))
+      : frontOf(pushedKeg.event.from, pushedKeg.event.to))
+  const kegFrame = pushedKeg &&
+    kegFront && {
+      ...toScreen({ x: pushedKeg.x, y: pushedKeg.y }, pushedKeg.level),
+      to: pushedKeg.to,
+      look: pushedKeg.look,
+      // 앞쪽 높은 칸에서 뒤 칸으로 떨어지는 동안은 뒤 칸 순서, 떠난 칸 턱에 가리는 화약통
+      cell: pushedKeg.sunk && same(kegFront, pushedKeg.event.from) ? pushedKeg.event.to : kegFront,
+    }
 
   // 돌이 밀리고 끌리고 녹는 동안 얼고 녹는 칸, 그 위에 선 큐브가 얼음 판 높이로 내려앉는 거리
   const iceT = moving ? icePhase(events, t, swampSeconds) : 1

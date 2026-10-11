@@ -49,12 +49,23 @@ describe('guideRect', () => {
     expect(rect.y + rect.height).toBeCloseTo(center + TILE.height / 2 + 12)
   })
 
-  it('화약통 칸은 뚜껑 뒤 꼭짓점까지 위로 넓힌다', () => {
-    const stage: Stage = { ...FLAT, entities: [{ type: 'keg', ...MID }] }
-    const lid = KEG_SHAPE.bodyHeight + KEG_SHAPE.lidHeight + (TILE.width * KEG_SHAPE.lid) / 4
-
-    expect(spanOf(createState(stage), MID).above).toBeCloseTo(lid + 12)
-    expect(spanOf(createState(stage), MID).below).toBe(spanOf(createState(FLAT), MID).below)
+  it('화약통은 통 가운데를 사각형 가운데에 두고 옆면은 넣지 않는다', () => {
+    const stage: Stage = {
+      ...FLAT,
+      heights: [
+        [0, 0, 0],
+        [0, 0, -1],
+        [0, -1, -1],
+      ],
+      entities: [{ type: 'keg', ...MID }],
+    }
+    const rect = guideRect(createState(stage), MID)
+    const center = toScreen(MID, 0).y
+    const tip =
+      center - KEG_SHAPE.bodyHeight - KEG_SHAPE.lidHeight - (TILE.width * KEG_SHAPE.lid) / 4
+    const foot = center + (TILE.width * KEG_SHAPE.body) / 4
+    expect(rect.y + rect.height / 2).toBeCloseTo((tip + foot) / 2)
+    expect(rect.y + rect.height).toBeCloseTo(center + TILE.height / 2 + 12)
   })
 
   it('재가 된 숯 벽 칸은 빈 칸과 같다', () => {

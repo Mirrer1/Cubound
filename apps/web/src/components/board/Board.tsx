@@ -200,10 +200,11 @@ const Board = ({
       {cubeFirst(
         underWall(scene.tramFrames, heights).reduce(
           (ordered, p) => cubeFirst(ordered, p),
-          [scene.box?.cell, scene.kegFrame?.cell].reduce(
-            (ordered, p) => (p ? cubeFirst(ordered, p) : ordered),
-            cells,
-          ),
+          [
+            scene.box?.cell,
+            scene.kegFrame?.cell,
+            ...scene.iceStone.stones.map((stone) => stone.cell),
+          ].reduce((ordered, p) => (p ? cubeFirst(ordered, p) : ordered), cells),
         ),
         scene.cube.cell,
         scene.cube.last,

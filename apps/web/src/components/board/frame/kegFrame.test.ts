@@ -237,6 +237,47 @@ describe('kegLookOf', () => {
     expect(frame?.look.trail.v).toBe(0)
   })
 
+  it('올라간 승강 발판에서 밀리는 화약통은 발판 높이에서 출발한다', () => {
+    const stage: Stage = {
+      ...FLAT,
+      heights: [
+        [0, 0, 0, 0, 0],
+        [1, 1, 0, 1, 1],
+        [0, 0, 0, 0, 0],
+      ],
+      entities: [
+        { type: 'keg', x: 0, y: 0 },
+        { type: 'keg', x: 2, y: 1 },
+        { type: 'switch', x: 0, y: 0, target: 'l' },
+        { type: 'lift', x: 2, y: 1, id: 'l' },
+      ],
+    }
+    const prev = createState(stage)
+    const { state: game, events } = move(prev, 'right')
+    const frame = movingKeg(sceneAt(prev, game, events, 0.13), { in: false, out: false })
+
+    expect(frame?.level).toBe(1)
+  })
+
+  it('뒤쪽 낮은 칸으로 떨어지는 화약통은 떠난 칸 높이 아래로 내려가면 sunk', () => {
+    const stage: Stage = {
+      ...FLAT,
+      heights: [
+        [0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+      ],
+      start: { x: 2, y: 2 },
+    }
+    const prev = createState(stage)
+    const { state: game, events } = move(prev, 'up')
+    const at = (elapsed: number) =>
+      movingKeg(sceneAt(prev, game, events, elapsed), { in: false, out: false })
+
+    expect(at(0.05)?.sunk).toBe(false)
+    expect(at(0.25)?.sunk).toBe(true)
+  })
+
   it('심지에 불이 붙는 수는 끝이 서서히 달아오른다', () => {
     const stage: Stage = { ...FLAT, entities: [{ type: 'keg', x: 2, y: 1, fuse: true }] }
     const prev = { ...createState(stage), flame: 4 }

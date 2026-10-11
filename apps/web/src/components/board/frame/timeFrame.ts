@@ -1,7 +1,7 @@
 import { brazierEnd, brazierLightEnd } from './brazierFrame'
 import { clamp01, smooth } from './curveFrame'
 import { fireEnd } from './fireFrame'
-import { kegEnd } from './kegFrame'
+import { kegEnd, kegPath } from './kegFrame'
 import {
   type PathEvent,
   SECONDS,
@@ -156,6 +156,7 @@ export const touchAt = (events: GameEvent[], p: Point) => {
     playerSegments(events),
     segmentsOf(boxPath(events)),
     segmentsOf(stonePath(events)),
+    segmentsOf(kegPath(events)),
   ]) {
     let start = 0
     for (const { event, seconds, wait } of segments) {
