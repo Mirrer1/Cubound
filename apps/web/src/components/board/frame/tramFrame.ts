@@ -108,6 +108,14 @@ export const tramFramesOf = ({ trams, before, game, tramPhase, fade }: TramView)
     }
   })
 
+// 미끄러지는 발판 밑으로 비치는 들어가는 칸 레일은 제외
+export const nextRailsOf = (frames: { from: Point; to: Point; next: Point }[]) =>
+  new Set(
+    frames
+      .filter((frame) => same(frame.from, frame.to) || !same(frame.next, frame.to))
+      .map((frame) => `${frame.next.x}-${frame.next.y}`),
+  )
+
 // 큐브가 떠나는 발판은 떠나는 칸 순서, 앞 칸으로 미끄러지는 발판이 큐브 위에 그려지는 것 방지
 export const behindCube = <T extends { from: Point; cell: Point }>(frames: T[], cube: Point) =>
   frames.map((frame) => (same(frame.from, cube) ? { ...frame, cell: frame.from } : frame))

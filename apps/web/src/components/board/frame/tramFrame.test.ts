@@ -5,6 +5,7 @@ import { playerFrame } from './cubeFrame'
 import { board, ride } from './testStages'
 import {
   behindCube,
+  nextRailsOf,
   railDirsOf,
   slidingCell,
   tramBeside,
@@ -155,6 +156,18 @@ describe('behindCube', () => {
   it('큐브와 무관한 발판은 그대로 둔다', () => {
     const frame = { from: { x: 2, y: 1 }, cell: { x: 2, y: 2 } }
     expect(behindCube([frame], { x: 4, y: 1 })[0].cell).toEqual({ x: 2, y: 2 })
+  })
+})
+
+describe('nextRailsOf', () => {
+  it('멈춘 발판은 다음 칸 레일을 밝힌다', () => {
+    const frame = { from: { x: 2, y: 1 }, to: { x: 2, y: 1 }, next: { x: 3, y: 1 } }
+    expect(nextRailsOf([frame])).toEqual(new Set(['3-1']))
+  })
+
+  it('미끄러지는 발판은 들어가는 칸 레일을 밝히지 않는다', () => {
+    const frame = { from: { x: 2, y: 1 }, to: { x: 3, y: 1 }, next: { x: 3, y: 1 } }
+    expect(nextRailsOf([frame])).toEqual(new Set())
   })
 })
 

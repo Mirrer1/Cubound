@@ -44,6 +44,7 @@ import {
 import {
   behindCube,
   frontOf,
+  nextRailsOf,
   slideFront,
   tramBeside,
   tramFramesOf,
@@ -167,7 +168,7 @@ export const sceneFrame = ({
     tramFramesOf({ trams, before, game, tramPhase, fade: cubeDrop?.opacity ?? 1 }),
     cube.cell,
   )
-  const nextRails = new Set(tramFrames.map((frame) => `${frame.next.x}-${frame.next.y}`))
+  const nextRails = nextRailsOf(tramFrames)
 
   const cubeLevel = cube.level + (cubeDrop?.lift ?? 0)
   const cubeScreen = toScreen({ x: cube.x, y: cube.y }, cubeLevel)
