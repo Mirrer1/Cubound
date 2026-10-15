@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #E9E7E2; }
+  a { color: #3A3936; }
+  a:hover { color: #6E93AB; }
+</style>
+</helmet>
+<div style="background:#E9E7E2;color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 90px;min-height:100vh">
+  <div style="max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:44px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#66645F">
+      <span style="white-space:nowrap">CUBOUND · FLOOR</span>
+      <span style="white-space:nowrap">층마다 한 단씩 · 1–11단 규칙</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:900px">
+      <span style="font-size:34px;font-weight:400;letter-spacing:-0.01em">바닥 색 · 층마다 한 단씩 짙게</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.7;word-break:keep-all;text-wrap:pretty">단 = 칸 높이 − 그 판의 가장 낮은 땅 + 1. 판 높이 차는 10층까지라 1~11단입니다. 단마다 색을 정해 두지 않고 아래 규칙으로 계산합니다. 1~5단과 챕터마다의 d는 세 번째 시안 그대로이고, 같은 d로 11단까지 이었습니다.</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:12px">
+      <sc-for list="{{ rules }}" as="r" hint-placeholder-count="4">
+        <div style="background:#F2F1EE;border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:15px;font-weight:400">{{ r.k }}</span>
+          <span style="font-size:13.5px;color:#5F5D59;line-height:1.6;word-break:keep-all;text-wrap:pretty;white-space:pre-line">{{ r.v }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em;white-space:nowrap">CHAPTER 2 · 10-10</span>
+        <span style="font-size:24px;font-weight:400">가장 높은 판</span>
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.12em;color:#66645F;white-space:nowrap">높이 0~7 · 1~8단</span>
+      </div>
+      <div style="background:{{ tall.bg }};border-radius:16px;padding:20px;display:flex;justify-content:center;overflow:hidden">
+        <div style="width:{{ tall.imgW }};max-width:100%;aspect-ratio:{{ tall.ar }};background-image:{{ tall.img }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+      </div>
+    </div>
+
+    <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="4">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em;white-space:nowrap">CHAPTER {{ c.n }}</span>
+          <span style="font-size:24px;font-weight:400">{{ c.name }}</span>
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.12em;color:#66645F;white-space:nowrap">d = {{ c.d }} · 판 {{ c.board }}</span>
+        </div>
+
+        <div style="background:{{ c.bg }};border-radius:16px;padding:20px;display:flex;justify-content:center;overflow:hidden">
+          <div style="width:{{ c.imgW }};max-width:100%;aspect-ratio:{{ c.ar }};background-image:{{ c.img }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(420px, 1fr));gap:12px">
+          <div style="background:#F2F1EE;border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:6px">
+            <div style="display:grid;grid-template-columns:40px repeat(4, minmax(0,1fr));gap:8px">
+              <span></span>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.14em;color:#66645F">TOP</span>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.14em;color:#66645F">TOP-ALT</span>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.14em;color:#66645F">LEFT</span>
+              <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.14em;color:#66645F">RIGHT</span>
+            </div>
+            <sc-for list="{{ c.steps }}" as="s" hint-placeholder-count="11">
+              <div style="display:grid;grid-template-columns:40px repeat(4, minmax(0,1fr));gap:8px;align-items:center">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:12px">{{ s.k }}</span>
+                <sc-for list="{{ s.v }}" as="v" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:6px;min-width:0">
+                    <div style="flex:none;width:22px;height:18px;border-radius:5px;background:{{ v }};box-shadow:inset 0 0 0 1px rgba(58,57,54,0.08)"></div>
+                    <span style="font-family:'IBM Plex Mono', monospace;font-size:11px">{{ v }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+          <div style="background:#F2F1EE;border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:4px">
+            <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.14em;color:#66645F">점검 (OKLab 거리)</span>
+            <sc-for list="{{ c.checks }}" as="k" hint-placeholder-count="6">
+              <div style="display:flex;flex-direction:column;gap:2px;padding:4px 0;border-bottom:1px solid #E6E3DE">
+                <span style="font-size:12.5px;line-height:1.5;color:#5F5D59;word-break:keep-all">{{ k.k }}</span>
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:12px;line-height:1.5;color:{{ k.c }};word-break:keep-all">{{ k.v }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background:#F2F1EE;border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;overflow-x:auto">
+          <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.14em;color:#66645F">바닥 위 요소 · 1–11단 윗면과의 거리 (붉은 수 = 0.03 미만이고 1단보다 가까움)</span>
+          <div style="min-width:760px;display:flex;flex-direction:column;gap:4px">
+            <sc-for list="{{ c.els }}" as="e" hint-placeholder-count="8">
+              <div style="display:grid;grid-template-columns:110px repeat(11, minmax(0,1fr));gap:4px;align-items:center">
+                <div style="display:flex;align-items:center;gap:6px"><div style="flex:none;width:12px;height:12px;border-radius:3px;background:{{ e.f }}"></div><span style="font-size:12px">{{ e.n }}</span></div>
+                <sc-for list="{{ e.on }}" as="o" hint-placeholder-count="11">
+                  <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;text-align:center;padding:3px 0;border-radius:4px;background:{{ o.bg }};color:{{ o.tc }}">{{ o.d }}</span>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <sc-for list="{{ c.strips }}" as="sp" hint-placeholder-count="1">
+          <div style="background:{{ c.bg }};border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+              <span style="font-size:15px;font-weight:400">{{ sp.n }}</span>
+              <span style="font-size:12.5px;color:#5F5D59;line-height:1.5;word-break:keep-all">{{ sp.note }}</span>
+            </div>
+            <sc-for list="{{ sp.rows }}" as="row" hint-placeholder-count="1">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <span style="font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.1em;color:#3A3936">{{ row.label }}</span>
+                <div style="display:grid;grid-template-columns:repeat(11, minmax(0,1fr));gap:6px">
+                  <sc-for list="{{ row.cells }}" as="p" hint-placeholder-count="11">
+                    <div style="display:flex;flex-direction:column;gap:2px;align-items:center;min-width:0">
+                      <div style="width:100%;aspect-ratio:{{ p.ar }};background-image:{{ p.img }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                      <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;color:{{ p.tc }}">{{ p.k }} · {{ p.d }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font-size:22px;font-weight:400">구현용 규칙</span>
+      <div style="background:#F2F1EE;border-radius:16px;padding:18px 20px;font-family:'IBM Plex Mono', monospace;font-size:12px;line-height:1.75;display:flex;flex-direction:column;overflow-x:auto">
+        <sc-for list="{{ tokens }}" as="l" hint-placeholder-count="14"><span style="white-space:pre">{{ l }}</span></sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const toLin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    const fromLin = v => { v = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055; return Math.max(0, Math.min(255, Math.round(v * 255))); };
+    const LC = {};
+    const lab = h => LC[h] || (LC[h] = (() => { const [r, g, b] = [1, 3, 5].map(i => toLin(parseInt(h.slice(i, i + 2), 16)));
+      const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+      return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s]; })());
+    const hex = ([L, a, b]) => { const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3, m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3, s = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+      const r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, bb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+      return '#' + [r, g, bb].map(fromLin).map(v => v.toString(16).padStart(2, '0')).join(''); };
+    const dE = (p, q) => { const A = lab(p), B = lab(q); return Math.hypot(A[0] - B[0], A[1] - B[1], A[2] - B[2]); };
+    const Lo = h => lab(h)[0];
+    const NT = 11, TN = Array.from({ length: NT }, (_, i) => String(i + 1));
+    // tier n = tier-1 colours with OKLab L − (n−1)·d, a and b kept. even tiers swap top / top-alt
+    const build = (c, d0, n) => { const o = {}; for (let i = 0; i < n; i++) { const m = h => { const [L, a, b] = lab(h); return hex([L - i * d0, a, b]); }; o[String(i + 1)] = i % 2 ? { t: m(c.a), a: m(c.t), l: m(c.l), r: m(c.r) } : { t: m(c.t), a: m(c.a), l: m(c.l), r: m(c.r) }; } return o; };
+    // d (unchanged from the 3rd sheet): start at 1.5 × tier-1 checker, +0.0005 until tiers 1–5 neighbours (after hex rounding, against the largest checker of tiers 1–5) are all ≥ 1.5 ×
+    const findD = c => { let d0 = 1.5 * dE(c.t, c.a);
+      for (let n = 0; n < 40; n++, d0 += 0.0005) { const o = build(c, d0, 5), k5 = TN.slice(0, 5), chk = Math.max(...k5.map(s => dE(o[s].t, o[s].a)));
+        const mn = Math.min(...[0, 1, 2, 3].map(i => Math.min(dE(o[k5[i]].t, o[k5[i + 1]].a), dE(o[k5[i]].a, o[k5[i + 1]].t)))); if (mn / chk >= 1.5) break; }
+      return d0; };
+    const parse = s => s.trim().split('\n').map(r => r.trim().split(/\s+/).map(Number));
+    const B1 = `-1 -1  0 -1 -1 -1 -1 -1 -1  0  0  0
+-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+ 1  1  0  1  0  0  0  0  0  0  0  1
+ 1  1  0  1  0  0  0 -1  0  0  0  1
+ 1  1  0  1  0  1  0 -1  1  0  0  1
+ 1  1  0  1  0  0  0 -1  0  0  0  1
+ 1  1  0  1  0  1  0 -1  1  0  0  1
+ 1  1  0  0  0  0  0 -1  0  0  0  1
+ 1  1  1  1  1  1  1  1  1  1  1  1`;
+    const B2 = ` 0  1  1  1  1  1  1  1
+ 0  0  0  0  0  0  1  1
+ 0  0  1  0  0  0  0  1
+ 0  0  0  0  0  1  0  1
+ 1  0  0  0  0  0  0  1
+ 1  1  0  1  1  1  1  1
+-1 -1  0 -1 -1 -1 -1 -1
+ 1  1 -1  0  0  0  0 -1
+ 1  1  1  0 -1  0  0 -1
+ 1  1  1  0  0  0  1  1`;
+    const B3 = ` 1  2  2  2  2  2  2 -1 -1 -1  3  3  3  2  2  3
+ 1  2  1  1  1  1  1  1  1  1  1  1  0  0  0  1
+ 1  1  1  1  1  1  2 -1 -1 -1  3  1  0  1  0  1
+ 2  1  2  1  1  2  2 -1 -1 -1  3  1  1  1  1  1
+ 2  1  1  1  1  2  2 -1 -1 -1  3  1  1  1  1  3
+ 2  2  2  2  1  2  2 -1 -1 -1  2  2  2  2  2  2
+-1 -1 -1 -1  0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+-1 -1 -1 -1  0  0  2 -1 -1 -1 -1 -1 -1 -1 -1 -1
+-1 -1 -1 -1  0  1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1`;
+    const B4 = ` 2  2  2  2  2  3 -1 -1  2  2  2  2
+ 2  2  2  2  2  3 -1 -1 -1  1 -1  2
+ 2  2  2  2  2  3 -1 -1  2  2  2 -1
+ 2  2  2  2  2  3 -1 -1  2  2  2 -1
+ 2  2  2  2  2  3 -1 -1  2  2  2 -1
+ 3  3  3  3  2 -1 -1 -1  2  2  2 -1
+ 2  2  2  2  2 -1 -1 -1  2  2  2 -1
+ 2  2  2  2 -1  1  2  2  2  2  2 -1
+ 2  2  2  2  2  3  1  1  2 -1 -1 -1
+-1 -1 -1 -1  3  1  1  1  1  1  1 -1
+-1 -1 -1 -1  3  1  1  1  1  1  1 -1
+-1 -1 -1 -1  3  1  1  1  1  1  1 -1
+-1 -1 -1 -1  3  1  1  1  2  1  1 -1
+-1 -1 -1 -1 -1  1  1  1 -1  1  1 -1`;
+    const B10 = `-1 -1 -1 -1 -1 -1 -1 -1 -1  5 -1  3  3  3  4  2  2  1  1  1 -1 -1 -1 -1 -1 -1 -1 -1
+ 5  4  4  7 -1 -1 -1 -1 -1  5 -1  3  3  3  0 -1  2  1  1  1 -1 -1 -1 -1 -1 -1 -1 -1
+-1 -1  4 -1 -1 -1 -1 -1 -1  5 -1  3  3  3  0 -1  2  2  1  1 -1 -1 -1 -1 -1 -1 -1  1
+-1 -1  4  4  4 -1 -1 -1  5  5 -1  3  3  5  0 -1 -1  2  2  1 -1  4 -1  1  1  1 -1  1
+-1  4  4 -1  4  4  4  3  4  4 -1  3  3  3  0 -1 -1 -1  2  2 -1  1  1  1 -1  1  1  1
+-1 -1 -1 -1 -1 -1 -1 -1 -1  4 -1  3  3  3  0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+-1 -1 -1 -1 -1 -1 -1 -1 -1  5 -1  3  3  3  0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1`;
+    const wl = h => { const [L, a, b] = lab(h); return { t: h, l: hex([L - 0.14, a, b]), r: hex([L - 0.07, a, b]) }; };
+    const CH = [
+      { n: 1, name: '돌 위의 첫걸음', board: '3-5', g: B1, bg: '#e9e7e2', t: '#edebe6', a: '#e7e5e0', l: '#c6c3bc', r: '#d9d6d0', els: {}, focus: [] },
+      { n: 2, name: '풀이 우거진 길', board: '6-3', g: B2, bg: '#e2e6db', t: '#eaebe0', a: '#e2e5da', l: '#bfc1b4', r: '#d2d4c8', els: { '늪 진흙': wl('#a8a690'), '덩굴': { t: '#d3cdb4', l: '#a8a18a', r: '#bfb9a1' }, '버섯 갓': wl('#d9b8a6') }, focus: ['덩굴'] },
+      { n: 3, name: '물이 차오르는 길', board: '13-8', g: B3, bg: '#d9e7e8', t: '#dfedee', a: '#d9e7e7', l: '#b3c3c4', r: '#c7d6d7', els: { '얕은 물 (물 1)': wl('#c1d9d4'), '물 2': wl('#a9c0bc'), '물 3': wl('#92a9a4'), '얼음 돌': { t: '#ebf1f4', l: '#96a0a5', r: '#bcc6ca' } }, focus: ['얕은 물 (물 1)'] },
+      { n: 4, name: '불을 건너는 길', board: '17-10', g: B4, bg: '#efe2d3', t: '#f4e8d9', a: '#eee1d3', l: '#ccbdac', r: '#ded0c0', els: { '숯': { t: '#7a6d61', l: '#5e544a', r: '#6c6156' }, '재': { t: '#c4bdb4', l: '#9c958c', r: '#b0a9a0' }, '화로': { t: '#a9a39b', l: '#7d776f', r: '#928c84' }, '화약통': { t: '#b38662', l: '#8b6a4c', r: '#a07b58' } }, focus: ['재'] }
+    ];
+    const COMMON = { '큐브': { t: '#8fb3c9', l: '#6d8a9c', r: '#7fa0b4' }, '도구': { t: '#e3cd8e', l: '#b9a46a', r: '#cfb97c' }, '구멍': { t: '#4a4845', l: '#4a4845', r: '#4a4845' }, '기계 틀': { t: '#e5e2db', l: '#c9c5bd', r: '#dcd9d2' }, '기계 몸': { t: '#fcfbf8', l: '#dfdbd3', r: '#f3f1eb' }, '얼음': { t: '#ddeef5', l: '#b8d2dd', r: '#cce3eb' } };
+    const LV = 30, HW = 52, HH = 26, TK = 16;
+    // cells: [{ x, y, h, S: {t,a,l,r} }], base = lowest h
+    const svg = (cells, base) => {
+      cells.sort((p, q) => (p.x + p.y) - (q.x + q.y) || p.x - q.x);
+      const polys = []; let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      cells.forEach(({ x, y, h, S }) => {
+        const cx = (x - y) * HW, cy = (x + y) * HH - (h - base) * LV, H = (h - base) * LV + TK;
+        const N = [cx, cy - HH], E = [cx + HW, cy], So = [cx, cy + HH], W = [cx - HW, cy], dn = p => [p[0], p[1] + H];
+        polys.push([[W, So, dn(So), dn(W)], S.l], [[So, E, dn(E), dn(So)], S.r], [[N, E, So, W], (x + y) % 2 ? S.a : S.t]);
+        x0 = Math.min(x0, cx - HW); x1 = Math.max(x1, cx + HW); y0 = Math.min(y0, cy - HH); y1 = Math.max(y1, cy + HH + H);
+      });
+      const pad = 6, vb = [x0 - pad, y0 - pad, x1 - x0 + 2 * pad, y1 - y0 + 2 * pad].map(v => Math.round(v));
+      const s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb.join(' ') + '">' + polys.map(([pts, f]) => '<polygon points="' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + '" fill="' + f + '"/>').join('') + '</svg>';
+      return { img: 'url("data:image/svg+xml,' + encodeURIComponent(s) + '")', ar: vb[2] + ' / ' + vb[3], w: vb[2] };
+    };
+    const board = (g, st) => { const mn = Math.min(...[].concat(...g).filter(v => v >= 0)), cells = [];
+      g.forEach((row, y) => row.forEach((h, x) => { if (h >= 0) cells.push({ x, y, h, S: st[TN[Math.min(h - mn, NT - 1)]] }); }));
+      return svg(cells, mn); };
+    const pair = (S, E) => svg([{ x: 0, y: 0, h: 0, S }, { x: 1, y: 0, h: 0, S: { t: E.t, a: E.t, l: E.l, r: E.r } }], 0);
+    const dist = (f, st) => TN.map(s => Math.min(dE(f, st[s].t), dE(f, st[s].a)));
+    const f3 = v => v.toFixed(3), r2 = v => v.toFixed(2) + '×';
+    // one colour set per element: lightness first (dC ±0.01, hue ±5°), same shift on top / left / right.
+    // must stay ≥ 0.06 from 도구 and from the chapter's other elements; maximise the worst tier
+    const suggest = (E, st, others, sep) => { let best = null; sep = sep || 0.06;
+      for (let dL = -0.12; dL <= 0.1201; dL += 0.01) for (let dC = -0.01; dC <= 0.0101; dC += 0.005) for (let dH = -5; dH <= 5; dH += 5) {
+        const mv = h => { const [L, a, b] = lab(h), C = Math.hypot(a, b), hh = Math.atan2(b, a), C2 = Math.max(0, C + dC), hh2 = hh + dH * Math.PI / 180; return hex([L + dL, C2 * Math.cos(hh2), C2 * Math.sin(hh2)]); };
+        const t = mv(E.t); if (dE(t, E.t) > 0.06 || others.some(o => dE(t, o) < sep)) continue;
+        const ds = dist(t, st), w = Math.min(...ds), sc = Math.min(w, 0.05) - dE(t, E.t) * 0.15;
+        if (!best || sc > best.sc) best = { sc, w, ds, ch: dE(t, E.t), E2: { t, l: mv(E.l), r: mv(E.r) } };
+      }
+      return best; };
+    const CLOW = {}, LOWS = [], tokens = ['/* 바닥 n단 (n = 칸 높이 − 판의 가장 낮은 땅 + 1, 1–11) */', 'L_n = L_1 − (n − 1) × d   (OKLab, a와 b는 1단 그대로 · top / top-alt / left / right 네 색 모두)', '짝수 단: top ↔ top-alt 바꿔 칠함 ((x + y) 홀수 = top-alt 규칙은 그대로)', ''];
+    let dRows = [];
+    const chapters = CH.map(c => {
+      const d0 = findD(c), st = build(c, d0, NT), im = board(parse(c.g), st);
+      dRows.push('CHAPTER ' + c.n + '  d = ' + f3(d0) + '  (바둑판 두 색 거리 ' + f3(dE(c.t, c.a)) + ' × ' + (d0 / dE(c.t, c.a)).toFixed(2) + ')');
+      const chk = Math.max(...TN.map(s => dE(st[s].t, st[s].a)));
+      const e1 = TN.slice(0, -1).map((s, i) => Math.min(dE(st[s].t, st[TN[i + 1]].a), dE(st[s].a, st[TN[i + 1]].t)) / chk);
+      const ts = TN.map(s => Math.min(Lo(st[s].t), Lo(st[s].a)) - Lo(st[s].r));
+      const firstDark = TN.find(s => Math.max(Lo(st[s].t), Lo(st[s].a)) < Lo(c.l));
+      const checks = [
+        { k: 'd (한 단 밝기)', v: f3(d0), c: '#3A3936' },
+        { k: '이웃 단 (변이 맞닿음) 1–2 … 10–11', v: e1.map(r2).join(' '), c: Math.min(...e1) >= 1.45 ? '#3A3936' : '#A4452E' },
+        { k: '윗면 − 오른쪽 옆면 밝기 (가장 작은 단)', v: '+' + f3(Math.min(...ts)) + ' · 11단까지 윗면이 옆면보다 어두워지는 단 없음', c: Math.min(...ts) > 0.02 ? '#3A3936' : '#A4452E' },
+        { k: '11단 윗면 밝기 (1단 → 11단)', v: f3(Lo(c.t)) + ' → ' + f3(Lo(st['11'].t)), c: '#3A3936' },
+        { k: '윗면이 1단 왼쪽 옆면보다 어두워지는 단', v: firstDark ? firstDark + '단부터' : '없음', c: firstDark ? '#A4452E' : '#3A3936' }
+      ];
+      const ELS = Object.assign({}, COMMON, c.els);
+      const els = Object.entries(ELS).map(([n, E]) => { const ds = dist(E.t, st);
+        return { n, f: E.t, ds, on: ds.map((v, i) => ({ d: v.toFixed(2), bg: st[TN[i]].t, tc: v < 0.03 && v < ds[0] - 0.003 ? '#A4452E' : '#66645F' })) }; });
+      const newLow = els.filter(e => !c.focus.includes(e.n) && c.els[e.n] && e.on.some(o => o.tc === '#A4452E')).map(e => e.n);
+      els.filter(e => COMMON[e.n] && e.on.some(o => o.tc === '#A4452E')).forEach(e => { const ks = e.on.map((o, i) => o.tc === '#A4452E' ? (i + 1) + '단' : null).filter(Boolean); (CLOW[e.n] = CLOW[e.n] || []).push(c.n + '장 ' + ks.join('·')); });
+      const strips = c.focus.concat(newLow).map(n => {
+        const E = ELS[n], ds = dist(E.t, st), mk = (EE, dd) => TN.map((s, i) => { const p = pair(st[s], EE); return { k: s + '단', d: dd[i].toFixed(2), tc: dd[i] < 0.03 && dd[i] < dd[0] - 0.003 ? '#A4452E' : '#66645F', img: p.img, ar: p.ar }; });
+        const rows = [{ label: '지금 ' + E.t, cells: mk(E, ds) }], wmin = Math.min(...ds);
+        let note = '가장 가까운 단 ' + (ds.indexOf(wmin) + 1) + '단 · ' + wmin.toFixed(3);
+        if (wmin < 0.03) { const others = Object.values(COMMON).map(v => v.t).concat(Object.entries(c.els).filter(([k]) => k !== n).map(([, v]) => v.t)), sg0 = suggest(E, st, others), sg = sg0 || suggest(E, st, others, 0.045), relaxed = !sg0 && !!sg;
+          if (sg) { const d2 = sg.ds, still = d2.map((v, i) => v < 0.03 ? (i + 1) + '단' : null).filter(Boolean);
+            rows.push({ label: '제안 ' + sg.E2.t + ' / ' + sg.E2.l + ' / ' + sg.E2.r, cells: mk(sg.E2, d2) });
+            note += (relaxed ? ' → 다른 요소와 0.06 이상 떨어지는 색이 없어 0.045로 낮춰 찾은 제안' : ' → 제안(밝기 위주)') + ': 가장 가까운 단 ' + Math.min(...d2).toFixed(3) + ', 지금 색과 ' + sg.ch.toFixed(3) + ' 차이' + (still.length ? ' · 그래도 가까운 단 ' + still.join(', ') : '');
+            LOWS.push('CHAPTER ' + c.n + ' ' + n + ': ' + E.t + ' → ' + sg.E2.t + ' (왼 ' + sg.E2.l + ', 오 ' + sg.E2.r + ')' + (still.length ? ' · 남는 단 ' + still.join(', ') : ' · 모든 단 0.03 이상') + (relaxed ? ' · 다른 요소와 0.045 이상(0.06 기준 못 지킴)' : '')); }
+          else { const close = ds.map((v, i) => v < 0.03 ? (i + 1) + '단' : null).filter(Boolean); note += ' → 지금 색과 0.06 안에서 다른 요소와 떨어지는 색을 찾지 못해 제안 없음 · 가까운 단 ' + close.join(', ');
+            LOWS.push('CHAPTER ' + c.n + ' ' + n + ': 제안 없음 (지금 색 0.06 안에서 기계 틀·같은 챕터 요소와 겹침) · 가까운 단 ' + close.join(', ')); } }
+        return { n: n + (newLow.includes(n) ? ' · 11단까지 이어 새로 가까워짐' : ''), note, rows };
+      });
+      tokens.push('/* CHAPTER ' + c.n + ' · ' + c.name + ' */  1단 ' + [c.t, c.a, c.l, c.r].join(' / ') + '  ·  d = ' + f3(d0));
+      return { n: c.n, name: c.name, board: c.board, d: f3(d0), bg: c.bg, img: im.img, ar: im.ar, imgW: im.w + 'px', steps: TN.map(s => ({ k: s + '단', v: [st[s].t, st[s].a, st[s].l, st[s].r] })), checks, els, strips };
+    });
+    const c2 = CH[1], tall = Object.assign({ bg: c2.bg }, (() => { const im = board(parse(B10), build(c2, findD(c2), NT)); return { img: im.img, ar: im.ar, imgW: im.w + 'px' }; })());
+    tokens.push('', '/* 새 챕터 */', 'd = 그 챕터 1단 바둑판 두 색(top, top-alt)의 OKLab 거리 × 1.5에서 시작해, 1–5단 이웃 단 거리가 (hex 반올림 뒤) 바둑판 거리의 1.5배 이상이 될 때까지 0.0005씩 늘린 값');
+    const rules = [
+      { k: '규칙', v: 'n단 = 1단 네 색에서 OKLab L만 (n − 1) × d 내림, a와 b는 그대로.\n짝수 단은 top과 top-alt를 바꿔 칠함.\nn = 칸 높이 − 판의 가장 낮은 땅 + 1, 1~11.' },
+      { k: '챕터별 d', v: dRows.join('\n') },
+      { k: '11단까지 이어 보니', v: '네 색을 같은 만큼 내리므로 윗면은 모든 단에서 옆면보다 밝습니다. 몇 단부터는 윗면이 1단의 왼쪽 옆면보다 어두워집니다(챕터 점검 칸 마지막 줄). 2장과 4장은 6단 위로 이웃 단 거리가 1.42~1.43배로 1.5배보다 조금 작아집니다(짙어질수록 바둑판 두 색 거리가 커져서). 값은 고치지 않았습니다.' },
+      { k: '새 챕터의 d', v: '그 챕터 바닥 1단 두 색 거리 × 1.5에서 시작해, 1~5단 이웃 단이 반올림 뒤에도 1.5배 이상이 될 때까지 조금씩 늘립니다(지금 네 챕터도 같은 방법).' },
+      { k: '요소 색 제안 (챕터 안에서 한 벌)', v: (LOWS.length ? LOWS.join('\n') : '0.03 아래로 가는 요소 없음') + '\n밝기 위주로만 옮겼습니다(지금 색과 0.06 안, 채도 ±0.01, 색조 ±5°, 공통 요소·같은 챕터 요소와 0.06 이상). 바닥이 11단에 걸쳐 밝기 0.94 → 0.6대까지 내려가므로, 중간 밝기 요소는 밝기만으로 모든 단을 비켜 갈 수 없습니다. 남는 단은 위에 적었습니다. 실제 판은 대부분 1~4단이라 남는 단이 높은 단이면 판에서 만날 일이 적습니다.' },
+      { k: '공통 요소', v: (Object.keys(CLOW).length ? Object.entries(CLOW).map(([k, v]) => k + ' · ' + v.join(', ')).join('\n') : '0.03 아래로 가는 공통 요소 없음') + '\n공통 요소(큐브, 도구, 구멍, 기계, 얼음)는 모든 챕터에서 한 벌이라 챕터마다 바꾸지 않았습니다. 고친다면 네 챕터를 함께 보고 한 값으로 정해야 합니다.' }
+    ];
+    return { rules, chapters, tall, tokens };
+  }
+}
+</script>
+</body>
+</html>
