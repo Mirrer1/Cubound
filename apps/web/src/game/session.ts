@@ -3,16 +3,19 @@ import {
   FUSE,
   SEED_WAIT,
   STRUGGLES,
+  barCells,
   createState,
   readCracks,
   readMushrooms,
   readSwamps,
 } from './rules'
 import type {
+  Bar,
   Carried,
   Crack,
   Direction,
   GameState,
+  HeldLift,
   Keg,
   LeaningLadder,
   PlantedSeed,
@@ -42,6 +45,8 @@ export interface Session {
   charred?: Point[] // 예전 저장에는 없는 값
   kegs?: Keg[] // 예전 저장에는 없는 값
   scorched?: Point[] // 예전 저장에는 없는 값
+  bars?: Bar[] // 예전 저장에는 없는 값
+  held?: HeldLift[] // 예전 저장에는 없는 값
   trams: TramSpot[]
   swamps?: Point[] // 예전 저장에는 없는 값
   mushrooms?: Point[] // 예전 저장에는 없는 값
@@ -89,6 +94,8 @@ export const toSession = (game: GameState): Session => ({
   charred: game.charred,
   kegs: game.kegs,
   scorched: game.scorched,
+  bars: game.bars,
+  held: game.held,
   trams: game.trams,
   swamps: game.swamps,
   mushrooms: game.mushrooms,
@@ -318,6 +325,27 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   }
   const kegs = saved.kegs === undefined ? start.kegs : listOf(saved.kegs, isKeg, kegCount)
   const scorched = saved.scorched === undefined ? [] : listOf(saved.scorched, inMap, kegCount)
+  // 세 칸 막대는 달군 쇠 판 한정
+  const isBar = (value: unknown): value is Bar => {
+    if (!inMap(value)) return false
+    const { dir, length, level, heat } = value as Bar
+    return (
+      DIRECTIONS.includes(dir) &&
+      (length === 2 || (length === 3 && stage.rules?.forge === true)) &&
+      Number.isInteger(level) &&
+      level >= -1 &&
+      (heat === null || heat === 'head' || heat === 'tail')
+    )
+  }
+  const barCount = countOf(stage, 'bar')
+  const bars = saved.bars === undefined ? start.bars : listOf(saved.bars, isBar, barCount)
+  const isHeld = (value: unknown): value is HeldLift =>
+    isObject(value) && typeof value.id === 'string' && typeof value.up === 'boolean'
+  const held = saved.held === undefined ? [] : listOf(saved.held, isHeld, countOf(stage, 'lift'))
+  if (!bars || bars.length !== barCount || !held) return null
+  const onBridge = (value: unknown): value is Point =>
+    isObject(value) &&
+    bars.some((bar) => barCells(bar).some(({ x, y }) => x === value.x && y === value.y))
   const mostMelt = stage.rules?.melt ?? -1
   if (melt !== null && !(isCount(melt) && (melt as number) <= mostMelt)) return null
 
@@ -336,7 +364,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   if (!isCount(saved.moves) || !isCount(saved.pushes) || !isCount(saved.climbs)) return null
   if (saved.rides !== undefined && !isCount(saved.rides)) return null
   if (saved.dirUses !== undefined && !isCount(saved.dirUses)) return null
-  if (!onFloor(saved.player)) return null
+  if (!onFloor(saved.player) && !onBridge(saved.player)) return null
 
   return {
     stage,
@@ -354,6 +382,8 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     flame: flame as number,
     charred: charred.map(({ x, y }) => ({ x, y })),
     kegs: kegs.map(({ x, y, fuse, lit }) => ({ x, y, fuse, lit })),
+    bars: bars.map(({ x, y, dir, length, level, heat }) => ({ x, y, dir, length, level, heat })),
+    held: held.map(({ id, up }) => ({ id, up })),
     scorched: scorched.map(({ x, y }) => ({ x, y })),
     trams: (savedTrams as TramSpot[]).map(({ id, at, dir }) => ({ id, at, dir })),
     swamps:

@@ -1,14 +1,18 @@
 import type { GameState, Point, Stage } from '../types'
-import { hasBox, hasKeg, hasStone, same } from './cellRule'
+import { hasBar, hasBox, hasKeg, hasStone, same } from './cellRule'
 
 export const doors = (stage: Stage) => stage.entities.filter((e) => e.type === 'door')
 
 export const lifts = (stage: Stage) => stage.entities.filter((e) => e.type === 'lift')
 
 const isPressed = (state: GameState, p: Point) =>
-  same(state.player, p) || hasBox(state, p) || hasStone(state, p) || hasKeg(state, p)
+  same(state.player, p) ||
+  hasBox(state, p) ||
+  hasStone(state, p) ||
+  hasKeg(state, p) ||
+  hasBar(state, p)
 
-const isSwitchOn = (state: GameState, target: string) =>
+export const isSwitchOn = (state: GameState, target: string) =>
   state.stage.entities.some(
     (e) => e.type === 'switch' && e.target === target && isPressed(state, e),
   )
@@ -18,8 +22,9 @@ export const isDoorOpen = (state: GameState, id: string) =>
   isSwitchOn(state, id) ||
   doors(state.stage).some((door) => door.id === id && isPressed(state, door))
 
-// 위에 선 큐브와 상자도 칸 높이를 따라 함께 오르내리는 발판
-export const isLiftRaised = (state: GameState, id: string) => isSwitchOn(state, id)
+// 위에 선 큐브와 상자도 칸 높이를 따라 함께 오르내리는 발판, 막대가 걸쳐 멈춘 발판은 예외
+export const isLiftRaised = (state: GameState, id: string) =>
+  state.held.find((h) => h.id === id)?.up ?? isSwitchOn(state, id)
 
 export const isClosedDoor = (state: GameState, p: Point) =>
   doors(state.stage).some((door) => same(door, p) && !isDoorOpen(state, door.id))

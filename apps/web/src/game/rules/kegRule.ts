@@ -1,5 +1,5 @@
 import type { Direction, GameEvent, GameState, Keg, MoveResult, Point } from '../types'
-import { hasBox, hasKeg, hasStone, same, step } from './cellRule'
+import { hasBar, hasBox, hasKeg, hasStone, same, step } from './cellRule'
 import { crumble } from './crackRule'
 import { fireAt, isFireBlocked, isFresh } from './fireRule'
 import { isIce } from './iceRule'
@@ -27,6 +27,7 @@ const kegLanding = (state: GameState, p: Point, level: number): number | null =>
     hasBox(state, p) ||
     hasStone(state, p) ||
     hasKeg(state, p) ||
+    hasBar(state, p) ||
     state.ladders.some((l) => same(l, p)) ||
     state.leaningLadders.some((l) => same(l, p)) ||
     same(p, state.stage.goal) ||
@@ -150,7 +151,8 @@ export const blastKegs = (before: GameState, state: GameState, events: GameEvent
     !isFireBlocked(base, to) &&
     !hasBox(base, to) &&
     !hasStone(base, to) &&
-    !hasKeg(base, to)
+    !hasKeg(base, to) &&
+    !hasBar(base, to)
 
   const heights = base.heights.map((row) => [...row])
   const caught: Point[] = []

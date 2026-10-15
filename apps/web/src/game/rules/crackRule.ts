@@ -1,9 +1,9 @@
 import type { GameEvent, GameState, MoveResult, Point } from '../types'
-import { hasBox, hasKeg, hasStone, same } from './cellRule'
+import { hasBar, hasBox, hasKeg, hasStone, same } from './cellRule'
 
 // 칸을 딛는 것, 상자 위에 선 큐브는 제외
 const restingOn = (state: GameState, p: Point) =>
-  hasBox(state, p) || hasStone(state, p) || hasKeg(state, p)
+  hasBox(state, p) || hasStone(state, p) || hasKeg(state, p) || hasBar(state, p)
     ? 'box'
     : same(state.player, p)
       ? 'player'

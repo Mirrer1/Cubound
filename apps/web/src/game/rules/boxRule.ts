@@ -1,6 +1,6 @@
 import type { Direction, GameEvent, GameState, MoveResult, Point } from '../types'
 import { burnsBox } from './brazierRule'
-import { hasBox, hasKeg, hasStone, isFrozen, isOpenWater, same, step } from './cellRule'
+import { hasBar, hasBox, hasKeg, hasStone, isFrozen, isOpenWater, same, step } from './cellRule'
 import { isFireBlocked } from './fireRule'
 import { isIce } from './iceRule'
 import { isMushroom, wither } from './mushroomRule'
@@ -21,6 +21,7 @@ export const boxLanding = (state: GameState, p: Point, level: number): number | 
     hasBox(state, p) ||
     hasStone(state, p) ||
     hasKeg(state, p) ||
+    hasBar(state, p) ||
     state.ladders.some((l) => same(l, p)) ||
     state.leaningLadders.some((l) => same(l, p)) ||
     state.seeds.some((s) => same(s, p)) ||
@@ -83,7 +84,8 @@ const slideBox = (
   }
 }
 
-export const pushBox = (state: GameState, box: Point, direction: Direction): MoveResult | null => {
+// 큐브는 제자리인 상자 한 칸 옮기기, 미끄러짐과 낙하와 메우기 포함
+export const shoveBox = (state: GameState, box: Point, direction: Direction): MoveResult | null => {
   const boxFloor = floorAt(state, box) ?? 0
   const first = step(box, direction)
   const entry = boxLanding(state, first, boxFloor)
@@ -138,12 +140,10 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
         : null
   const fillHeight = landing < 0 ? launch : landing
 
-  // 미끄러짐과 낙하까지 밀기 한 번
   const iced = state.iced.filter((p) => !same(p, box))
   const pushing: GameState = {
     ...state,
     iced,
-    pushes: state.pushes + 1,
     mushrooms: wither(state, flight?.sprung ?? []),
   }
   const next: GameState = burnt
@@ -166,5 +166,13 @@ export const pushBox = (state: GameState, box: Point, direction: Direction): Mov
               iced: isFrozen(state, stop) ? [...iced, stop] : iced,
             }
 
-  return walk(next, box, boxFloor, direction, events)
+  return { state: next, events }
+}
+
+// 미끄러짐과 낙하까지 밀기 한 번
+export const pushBox = (state: GameState, box: Point, direction: Direction): MoveResult | null => {
+  const shoved = shoveBox(state, box, direction)
+  if (!shoved) return null
+  const pushed: GameState = { ...shoved.state, pushes: state.pushes + 1 }
+  return walk(pushed, box, floorAt(state, box) ?? 0, direction, shoved.events)
 }

@@ -5,6 +5,7 @@ import { zoneIndexAt } from '@/game/camera'
 import { type Hidden, type HiddenKind, hiddenFills, hiddenObjects } from '@/game/occlusion'
 import { createState, move } from '@/game/rules'
 import {
+  barFloats,
   deadEnds,
   filledFloods,
   floodBlocks,
@@ -17,7 +18,7 @@ import {
   tideTraps,
 } from '@/game/solver'
 import type { Direction, Stage } from '@/game/types'
-import { validateStage } from '@/game/validate'
+import { heightWarnings, validateStage } from '@/game/validate'
 
 const STAGES_DIR = 'src/stages'
 
@@ -79,11 +80,34 @@ const zoneMoves = (stage: Stage, path: Direction[]) => {
 
   const counts = zones.map(() => 0)
   // 제한만 빼고 남기는 판을 바꾸는 규칙, 빼면 버섯과 덩굴이 그대로라 다른 길로 새는 풀이
-  const { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock, tide, chase } =
-    stage.rules ?? {}
+  const {
+    swampDeepen,
+    mushroomWither,
+    vineStop,
+    seedGrow,
+    wind,
+    plug,
+    melt,
+    lock,
+    tide,
+    chase,
+    forge,
+  } = stage.rules ?? {}
   let state = createState({
     ...stage,
-    rules: { swampDeepen, mushroomWither, vineStop, seedGrow, wind, plug, melt, lock, tide, chase },
+    rules: {
+      swampDeepen,
+      mushroomWither,
+      vineStop,
+      seedGrow,
+      wind,
+      plug,
+      melt,
+      lock,
+      tide,
+      chase,
+      forge,
+    },
   })
   let zone = zoneIndexAt(zones, state.player, 0)
 
@@ -137,6 +161,12 @@ const check = (file: string): Summary | null => {
     const blocked = kegBlocks(stage)
     row('화약통 막힘', blocked.status === 'ok' ? `${blocked.count}` : '탐색 한도 초과')
   }
+
+  if (stage.entities.some((e) => e.type === 'bar')) {
+    const floats = barFloats(stage)
+    row('막대 뜸', floats.status === 'ok' ? `${floats.count}` : '탐색 한도 초과')
+  }
+  heightWarnings(stage.heights).forEach((warning) => row('높이 알림', warning))
 
   const started = Date.now()
   const solved = solve(stage)

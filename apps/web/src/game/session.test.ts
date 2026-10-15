@@ -32,6 +32,8 @@ const MID = {
   charred: [],
   kegs: [],
   scorched: [],
+  bars: [],
+  held: [],
   trams: [],
   swamps: [],
   mushrooms: [],
@@ -823,6 +825,33 @@ describe('restoreSession 화로', () => {
     expect(restoreSession({ ...session, flame: 5 }, BRAZIER_STAGE)).toBeNull()
     expect(restoreSession({ ...session, flame: -1 }, BRAZIER_STAGE)).toBeNull()
     expect(restoreSession({ ...session, charred: twice }, BRAZIER_STAGE)).toBeNull()
+  })
+})
+
+describe('restoreSession 막대', () => {
+  // 막대 (1,0)-(2,0)을 밀어 두 칸 구덩이에 다리를 놓는 판
+  const BAR_STAGE: Stage = {
+    version: 1,
+    id: '19-1',
+    heights: [[0, 0, 0, -1, -1, 0]],
+    start: { x: 0, y: 0 },
+    goal: { x: 5, y: 0 },
+    entities: [{ type: 'bar', x: 1, y: 0, axis: 'x' }],
+  }
+  const onBridge = played(BAR_STAGE, ['right', 'right', 'right'])
+
+  it('막대 자리와 높이를 이어가고 다리 위 큐브도 이어간다', () => {
+    expect(onBridge.player).toEqual({ x: 3, y: 0 })
+    expect(restoreSession(toSession(onBridge), BAR_STAGE)).toEqual(onBridge)
+  })
+
+  it('막대가 판보다 적거나 세 칸 막대가 보스 판 밖이면 버린다', () => {
+    const session = toSession(onBridge)
+
+    expect(restoreSession({ ...session, bars: [] }, BAR_STAGE)).toBeNull()
+    expect(
+      restoreSession({ ...session, bars: [{ ...onBridge.bars[0], length: 3 }] }, BAR_STAGE),
+    ).toBeNull()
   })
 })
 

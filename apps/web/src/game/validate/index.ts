@@ -1,4 +1,5 @@
 import type { Stage } from '../types'
+import { checkBars } from './barCheck'
 import { checkCracks } from './crackCheck'
 import { checkEntities } from './entityCheck'
 import { checkFire } from './fireCheck'
@@ -18,6 +19,7 @@ import { checkWater } from './waterCheck'
 import { checkWhirlpools } from './whirlpoolCheck'
 import { checkZones } from './zoneCheck'
 
+export { heightWarnings } from './heightCheck'
 export { STAGE_VERSION } from './stageCheck'
 
 export type ValidateResult = { ok: true; stage: Stage } | { ok: false; errors: string[] }
@@ -47,6 +49,7 @@ export const validateStage = (data: unknown): ValidateResult => {
   checkSluices(ctx)
   checkFire(ctx)
   checkKegs(ctx)
+  checkBars(ctx)
   checkBest(ctx)
   checkRules(ctx)
   checkGuides(ctx)

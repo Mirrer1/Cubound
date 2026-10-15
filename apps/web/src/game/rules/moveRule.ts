@@ -1,7 +1,8 @@
 import type { Direction, GameEvent, GameState, MoveResult } from '../types'
+import { pushBar, settleBars } from './barRule'
 import { pushBox } from './boxRule'
 import { burnFlame, torch } from './brazierRule'
-import { hasBox, hasKeg, hasStone, isOpenWater, isWater, step } from './cellRule'
+import { barAt, hasBox, hasKeg, hasStone, isOpenWater, isWater, step } from './cellRule'
 import { crumble } from './crackRule'
 import { burnFire, isFireBlocked } from './fireRule'
 import { meltStones, pushStone, settleIce } from './iceStoneRule'
@@ -11,7 +12,7 @@ import { climbsLeft, dirLeft, limitBlocked, movesLeft, pushesLeft, ridesLeft } f
 import { hop, isMushroom, spring } from './mushroomRule'
 import { riseSeeds } from './seedRule'
 import { floodsPlayer, sluiceEvents } from './sluiceRule'
-import { floorAt, standHeight } from './stateRule'
+import { floorAt, isBridge, standHeight } from './stateRule'
 import { struggling } from './swampRule'
 import { doors, isClosedDoor, isDoorOpen, isLiftRaised, lifts } from './switchRule'
 import { withinReach } from './tetherRule'
@@ -46,6 +47,14 @@ const moveOnce = (state: GameState, direction: Direction): MoveResult => {
       ? row(state, to, direction)
       : blocked
   }
+  // 다리가 아닌 막대 칸은 같은 높이에서 밀기만 가능
+  const bar = barAt(state, to)
+  if (bar >= 0 && !isBridge(state, state.bars[bar])) {
+    if (state.bars[bar].level !== fromHeight) return blocked
+    if (pushesLeft(state) === 0) return limitBlocked(state, direction, 'pushes')
+    return pushBar(state, bar, to, direction) ?? blocked
+  }
+
   const torched = torch(state, to)
   if (torched) return torched
   if (toFloor === null || isClosedDoor(state, to) || isFireBlocked(state, to)) return blocked
@@ -103,11 +112,13 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
     ...events,
     ...fireEvents,
   ])
+  const { state: barred, events: barEvents } = settleBars(before, settled, blasted, [
+    ...events,
+    ...fireEvents,
+  ])
   // 물에 잠긴 골은 언 칸이나 배로 올라서도 못 들어가는 집
   const moved =
-    blasted.cleared && isWater(blasted, blasted.stage.goal)
-      ? { ...blasted, cleared: false }
-      : blasted
+    barred.cleared && isWater(barred, barred.stage.goal) ? { ...barred, cleared: false } : barred
 
   const doorEvents: GameEvent[] = doors(before.stage)
     .map((door) => ({
@@ -137,6 +148,7 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
       ...fireEvents,
       ...flameEvents,
       ...kegEvents,
+      ...barEvents,
       ...doorEvents,
       ...liftEvents,
       ...sluiceEvents(before, moved),

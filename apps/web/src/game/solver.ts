@@ -1,4 +1,4 @@
-import { TIDE_EVERY, WIND_EVERY, createState, move, waterLevel } from './rules'
+import { TIDE_EVERY, WIND_EVERY, createState, isFloating, move, waterLevel } from './rules'
 import type { Direction, GameEvent, GameState, Point, Stage } from './types'
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
@@ -15,7 +15,7 @@ const points = (list: Point[]) =>
     .sort()
     .join(' ')
 
-// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개와 녹는 얼음과 갑문과 밀물과 쫓아오는 불과 타는 짐은 유지
+// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개와 녹는 얼음과 갑문과 밀물과 쫓아오는 불과 타는 짐과 달군 쇠는 유지
 // 제한이 너무 작을 때도 진짜 최소 이동 수를 얻는 방법
 const forSearch = (stage: Stage): Stage => {
   const {
@@ -30,6 +30,7 @@ const forSearch = (stage: Stage): Stage => {
     tide,
     chase,
     burnBox,
+    forge,
   } = stage.rules ?? {}
   return {
     ...stage,
@@ -44,7 +45,8 @@ const forSearch = (stage: Stage): Stage => {
       lock ||
       tide ||
       chase ||
-      burnBox
+      burnBox ||
+      forge
         ? {
             swampDeepen,
             mushroomWither,
@@ -57,6 +59,7 @@ const forSearch = (stage: Stage): Stage => {
             tide,
             chase,
             burnBox,
+            forge,
           }
         : undefined,
   }
@@ -127,6 +130,16 @@ const stateKey = (state: GameState, deep = true) => {
       : []),
     ...(state.trams.length > 0
       ? [state.trams.map(({ at, dir }) => `${at}${dir > 0 ? '+' : '-'}`).join(' ')]
+      : []),
+    ...(state.bars.length > 0
+      ? [
+          state.bars
+            .map(
+              ({ x, y, dir, length, level, heat }) => `${x},${y},${dir},${length},${level},${heat}`,
+            )
+            .join(' '),
+          state.held.map(({ id, up }) => `${id}${up ? '+' : '-'}`).join(' '),
+        ]
       : []),
   ].join('|')
 }
@@ -451,6 +464,22 @@ export const kegBlocks = (stage: Stage, { maxStates = 1_000_000 } = {}): CountRe
     stage,
     (_, events) => {
       if (events.some((e) => e.type === 'blocked' && e.pit)) count += 1
+    },
+    { maxStates },
+  )
+  return done ? { status: 'ok', count } : { status: 'limit' }
+}
+
+// 닿을 수 있는 모든 상태에서 막대가 받침 없는 다리가 된 이동 수
+export const barFloats = (stage: Stage, { maxStates = 1_000_000 } = {}): CountResult => {
+  let count = 0
+  const done = eachMove(
+    stage,
+    (moved, events) => {
+      const changed = events.some(
+        (e) => e.type === 'barPushed' || e.type === 'barSettled' || e.type === 'barStretched',
+      )
+      if (changed && moved.bars.some((bar) => isFloating(moved, bar))) count += 1
     },
     { maxStates },
   )

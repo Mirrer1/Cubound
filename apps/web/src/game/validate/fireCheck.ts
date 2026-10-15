@@ -60,7 +60,8 @@ export const checkFire = (ctx: CheckContext) => {
 
   entities.forEach((entity, i) => {
     if (!isObject(entity) || !isInt(entity.x) || !isInt(entity.y)) return
-    const bridgeBox = entity.type === 'box' && rows[entity.y]?.[entity.x] === '='
+    const bridgeBox =
+      (entity.type === 'box' || entity.type === 'bar') && rows[entity.y]?.[entity.x] === '='
     if (onFire({ x: entity.x, y: entity.y }) && !bridgeBox) {
       add(`entities[${i}]가 불씨나 숯 칸에 있다`)
     }

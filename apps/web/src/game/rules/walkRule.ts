@@ -1,5 +1,5 @@
 import type { Direction, GameEvent, GameState, LeaningLadder, MoveResult, Point } from '../types'
-import { hasBox, hasStone, same, step } from './cellRule'
+import { hasBar, hasBox, hasStone, same, step } from './cellRule'
 import { slidePlayer } from './iceRule'
 import { floorAt, standHeight } from './stateRule'
 import { isSwamp } from './swampRule'
@@ -31,9 +31,9 @@ export const arrive = (
     events.push({ type: 'fell', from: rest, to: landed, drop })
   }
 
-  // 짝 칸 이동 제외 경우, 상자 위에 선 큐브와 나올 칸이 상자나 얼음 돌로 막힌 큐브
+  // 짝 칸 이동 제외 경우, 상자 위에 선 큐브와 나올 칸이 상자나 얼음 돌이나 막대로 막힌 큐브
   const exit = warpExit(state.stage, stop)
-  const blockedExit = exit && (hasBox(state, exit) || hasStone(state, exit))
+  const blockedExit = exit && (hasBox(state, exit) || hasStone(state, exit) || hasBar(state, exit))
   const warped = exit && !hasBox(state, stop) && !blockedExit ? exit : null
   const at = warped ?? stop
   if (warped) events.push({ type: 'warped', from: stop, to: warped })

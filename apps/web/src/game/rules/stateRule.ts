@@ -1,5 +1,5 @@
-import type { Crack, Entity, GameState, Point, Stage } from '../types'
-import { hasBox, isFrozen, isIced, isOpenWater, isWater, same } from './cellRule'
+import type { Bar, Crack, Entity, GameState, Point, Stage } from '../types'
+import { barAt, barCells, hasBox, isFrozen, isIced, isOpenWater, isWater, same } from './cellRule'
 import { readSparks } from './fireRule'
 import { waterLevel } from './sluiceRule'
 import { isLiftRaised } from './switchRule'
@@ -10,7 +10,7 @@ import { vines } from './vineRule'
 type Lift = Extract<Entity, { type: 'lift' }>
 
 // 필드 밖과 말뚝 칸은 undefined, 바닥 없는 칸은 -1, 물 칸은 뜬 상자 바닥 높이, 언 칸은 물가 땅 높이, 움직이는 발판이 선 칸은 발판 높이, 올라간 엘리베이터 발판은 한 층 위
-export const rawHeight = (state: GameState, p: Point): number | undefined => {
+export const groundHeight = (state: GameState, p: Point): number | undefined => {
   const h = state.heights[p.y]?.[p.x]
   if (h === undefined || isPost(state.stage, p)) return undefined
   if (isWater(state, p)) {
@@ -25,6 +25,18 @@ export const rawHeight = (state: GameState, p: Point): number | undefined => {
 
   const lift = state.stage.entities.find((e): e is Lift => e.type === 'lift' && same(e, p))
   return lift && isLiftRaised(state, lift.id) ? h + 1 : h
+}
+
+// 밑이 다 구덩이인 막대, 큐브만 건너는 다리
+export const isBridge = (state: GameState, bar: Bar) =>
+  barCells(bar).every((c) => (groundHeight(state, c) ?? -1) < 0)
+
+// 땅 높이에 다리 막대 높이를 더한 높이
+export const rawHeight = (state: GameState, p: Point): number | undefined => {
+  const h = groundHeight(state, p)
+  if (h === undefined || h >= 0) return h
+  const bar = state.bars[barAt(state, p)]
+  return bar && isBridge(state, bar) ? bar.level : h
 }
 
 export const floorAt = (state: GameState, p: Point) => {
@@ -76,6 +88,21 @@ export const createState = (stage: Stage): GameState => ({
     e.type === 'keg' ? [{ x: e.x, y: e.y, fuse: e.fuse === true, lit: 0 }] : [],
   ),
   scorched: [],
+  bars: stage.entities.flatMap((e) =>
+    e.type === 'bar'
+      ? [
+          {
+            x: e.x,
+            y: e.y,
+            dir: e.axis === 'x' ? ('right' as const) : ('down' as const),
+            length: 2,
+            level: stage.heights[e.y][e.x],
+            heat: null,
+          },
+        ]
+      : [],
+  ),
+  held: [],
   trams: trams(stage).map(({ id, cells, dir, x, y }) => ({
     id,
     at: cells.findIndex((cell) => same(cell, { x, y })),

@@ -20,6 +20,7 @@ export type Entity = (
   | { type: 'iceStone' }
   | { type: 'sluice' }
   | { type: 'keg'; fuse?: true } // fuse는 불이 닿고 4수 뒤에 터지는 심지 화약통
+  | { type: 'bar'; axis: 'x' | 'y' } // x, y는 두 칸 쇠막대의 왼쪽이나 위쪽 끝
 ) &
   Point
 
@@ -44,6 +45,7 @@ export interface StageRules {
   tide?: boolean // 4수마다 판 전체 물이 차고 빠지는 판
   chase?: boolean // 불이 큐브와 가까워지는 숯으로만 번지는 판
   burnBox?: boolean // 불 붙은 큐브가 민 상자가 재가 되는 판
+  forge?: boolean // 불붙은 숯에 닿은 막대가 세 칸으로 늘어나는 판
 }
 
 export interface Stage {
@@ -115,6 +117,18 @@ export interface Keg extends Point {
   lit: number // 심지 불이 터지기까지 남은 수, 0은 안 붙은 심지
 }
 
+export interface Bar extends Point {
+  dir: Direction // 꼬리 끝 x, y에서 머리 끝 쪽
+  length: number
+  level: number // 막대가 얹힌 높이, 밑이 다 구덩이면 다리 높이
+  heat: 'head' | 'tail' | null // 달궈져 늘어날 끝
+}
+
+export interface HeldLift {
+  id: string
+  up: boolean
+}
+
 export type Carried = 'ladder' | 'seed'
 
 // 솟는 칸과 함께 올라간 것
@@ -142,6 +156,8 @@ export interface GameState {
   charred: Point[] // 재가 된 상자 자리
   kegs: Keg[]
   scorched: Point[] // 터진 화약통 자리, 그림에만 쓰는 값
+  bars: Bar[]
+  held: HeldLift[] // 막대가 걸쳐 제자리에 멈춘 엘리베이터 발판
   trams: TramSpot[]
   swamps: Point[] // 남아 있는 늪 칸, 상자가 가라앉은 칸은 제외
   mushrooms: Point[] // 남아 있는 버섯 칸, 시드는 판에서 밟힌 칸은 제외
@@ -203,6 +219,15 @@ export type GameEvent =
   | { type: 'exploded'; at: Point; lowered: Point[]; caught: Point[] } // 연쇄 순서대로 하나씩, lowered는 한 층 깎인 칸, caught는 불이 붙은 숯
   | { type: 'blasted'; from: Point; to: Point; direction: Direction } // 폭발에 밀려 to 쪽으로 간 이동, 그 이동의 이벤트는 바로 뒤
   | { type: 'blastBraced'; direction: Direction } // 밀릴 자리가 막혀 폭발을 버틴 수
+  | { type: 'barPushed'; bar: number; from: Bar; to: Bar; pivot: Point | null } // bar는 bars 순서, pivot은 돌기의 축 칸
+  | { type: 'barSettled'; bar: number; from: number; to: number } // 밑 칸이 바뀌어 달라진 막대 높이
+  | { type: 'barHeated'; bar: number; end: 'head' | 'tail' }
+  | {
+      type: 'barStretched'
+      bar: number
+      at: Point // 늘어난 칸
+      shoved: { subject: 'player' | 'box'; from: Point; to: Point } | null
+    }
   | { type: 'tram'; id: string; from: Point; to: Point }
   | { type: 'grew'; id: string; at: Point } // 덩굴이 한 칸 뻗어 메운 칸
   | { type: 'planted'; at: Point; direction: Direction } // direction은 턱 쪽으로 민 방향

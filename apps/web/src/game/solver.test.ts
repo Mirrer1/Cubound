@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createState, move } from './rules'
 import {
+  barFloats,
   deadEnds,
   eachMove,
   filledFloods,
@@ -381,6 +382,56 @@ describe('kegBlocks', () => {
 
   it('구덩이가 없으면 0', () => {
     expect(kegBlocks({ ...PIT, heights: [[0, 0, 0, 0, 0]] })).toEqual({ status: 'ok', count: 0 })
+  })
+})
+
+// 막대 (1,0)-(2,0)을 밀어 두 칸 구덩이 (3,0)-(4,0)에 다리를 놓는 판
+const BAR: Stage = {
+  version: 1,
+  id: 'test-solver-bar',
+  heights: [[0, 0, 0, -1, -1, 0, 0]],
+  start: { x: 0, y: 0 },
+  goal: { x: 6, y: 0 },
+  entities: [{ type: 'bar', x: 1, y: 0, axis: 'x' }],
+}
+
+// 불씨 (1,1)을 밟아 숯 벽 (1,0)을 태우면 막대 (2,0)-(3,0)이 세 칸이 되어 세 칸 구덩이를 건너는 판
+const FORGE: Stage = {
+  version: 1,
+  id: 'test-solver-forge',
+  heights: [
+    [0, 0, 0, 0, -1, -1, -1, 0],
+    [0, 0, -1, -1, -1, -1, -1, -1],
+  ],
+  fire: ['.#......', '.*......'],
+  start: { x: 0, y: 1 },
+  goal: { x: 7, y: 0 },
+  entities: [{ type: 'bar', x: 2, y: 0, axis: 'x' }],
+  rules: { forge: true, moveLimit: 99 },
+}
+
+describe('solve 막대', () => {
+  it('막대 자리와 높이를 상태로 보고 다리를 놓아 건넌다', () => {
+    const solved = solve(BAR)
+
+    expect(solved.status === 'solved' && solved.moves).toBe(6)
+  })
+
+  it('달군 쇠 판은 이동 제한을 빼도 늘어나는 규칙을 남긴다', () => {
+    expect(solve(FORGE).status).toBe('solved')
+    expect(solve({ ...FORGE, rules: undefined }).status).toBe('unsolvable')
+  })
+})
+
+describe('barFloats', () => {
+  it('긴 구덩이 위로는 막대가 밀리지 않아 0', () => {
+    const long: Stage = { ...BAR, heights: [[0, 0, 0, -1, -1, -1, 0]] }
+
+    expect(barFloats(long)).toEqual({ status: 'ok', count: 0 })
+  })
+
+  it('두 칸 구덩이 다리는 0', () => {
+    expect(barFloats(BAR)).toEqual({ status: 'ok', count: 0 })
   })
 })
 

@@ -2,7 +2,14 @@ export { isDoorOpen, isLiftRaised } from './switchRule'
 export { nextTramSpot } from './tramRule'
 export { STRUGGLES } from './swampRule'
 export { waterLevel } from './sluiceRule'
-export { createState, readCracks, readMushrooms, readSwamps, standHeight } from './stateRule'
+export {
+  createState,
+  isBridge,
+  readCracks,
+  readMushrooms,
+  readSwamps,
+  standHeight,
+} from './stateRule'
 export { burnFire } from './fireRule'
 export { FLAME } from './brazierRule'
 export { FUSE } from './kegRule'
@@ -24,4 +31,5 @@ export {
   windLeft,
 } from './limitRule'
 export { move } from './moveRule'
-export { freezes, isFrozen, same } from './cellRule'
+export { barCells, freezes, isFrozen, same } from './cellRule'
+export { isFloating } from './barRule'

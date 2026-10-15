@@ -18,6 +18,7 @@ export const checkRules = ({ data, add }: CheckContext) => {
         tide,
         chase,
         burnBox,
+        forge,
       } = data.rules
       if (moveLimit !== undefined) {
         if (!(isInt(moveLimit) && moveLimit > 0)) add('rules.moveLimit은 양의 정수여야 한다')
@@ -68,6 +69,9 @@ export const checkRules = ({ data, add }: CheckContext) => {
       }
       if (burnBox !== undefined && typeof burnBox !== 'boolean') {
         add('rules.burnBox는 참이나 거짓이어야 한다')
+      }
+      if (forge !== undefined && typeof forge !== 'boolean') {
+        add('rules.forge는 참이나 거짓이어야 한다')
       }
     }
   }

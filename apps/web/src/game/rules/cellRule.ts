@@ -1,4 +1,4 @@
-import type { Direction, GameState, Point } from '../types'
+import type { Bar, Direction, GameState, Point } from '../types'
 import { waterLevel } from './sluiceRule'
 
 const OFFSETS: Record<Direction, Point> = {
@@ -18,6 +18,19 @@ export const step = (p: Point, direction: Direction) => ({
 export const hasBox = (state: GameState, p: Point) => state.boxes.some((box) => same(box, p))
 
 export const hasKeg = (state: GameState, p: Point) => state.kegs.some((keg) => same(keg, p))
+
+// 꼬리 끝부터 머리 끝까지의 막대 칸
+export const barCells = (bar: Bar): Point[] =>
+  Array.from({ length: bar.length }, (_, i) => ({
+    x: bar.x + OFFSETS[bar.dir].x * i,
+    y: bar.y + OFFSETS[bar.dir].y * i,
+  }))
+
+// 칸을 차지한 막대의 bars 순서, 없으면 -1
+export const barAt = (state: GameState, p: Point) =>
+  state.bars.findIndex((bar) => barCells(bar).some((c) => same(c, p)))
+
+export const hasBar = (state: GameState, p: Point) => barAt(state, p) >= 0
 
 export const isWater = (state: GameState, { x, y }: Point) => {
   const h = state.stage.heights[y]?.[x]
