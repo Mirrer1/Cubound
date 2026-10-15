@@ -1,6 +1,7 @@
 import type { VineKind } from '../frame/vineFrame'
 import { CUBE } from './cubeView'
 import { blend, checker, shade } from './shadeView'
+import { floorFaces } from './tierView'
 import { TILE, isoDelta } from '@/game/iso'
 import type { Direction } from '@/game/types'
 
@@ -122,6 +123,7 @@ export const cellFaces = (
   crack: boolean,
   crackStage: number,
   parity: boolean,
+  tier: number,
 ) => {
   // 닳은 단계 사이는 앞뒤 단계 색을 섞은 색
   const worn = Math.min(1, Math.floor(crackStage))
@@ -133,15 +135,13 @@ export const cellFaces = (
     )
   const plain = grownVine
     ? vineFaces(vineHard)
-    : surface
-      ? SURFACES[surface]
-      : crack
-        ? { top: crackFace('top'), left: crackFace('left'), right: crackFace('right') }
-        : {
-            top: parity ? 'var(--color-floor-top-alt)' : 'var(--color-floor-top)',
-            left: 'var(--color-floor-left)',
-            right: 'var(--color-floor-right)',
-          }
+    : surface === 'hole'
+      ? { ...floorFaces(tier, parity), top: SURFACES.hole.top }
+      : surface
+        ? SURFACES[surface]
+        : crack
+          ? { top: crackFace('top'), left: crackFace('left'), right: crackFace('right') }
+          : floorFaces(tier, parity)
   // 체크 무늬 제외, 토큰 둘로 이미 번갈아 있는 바닥과 한 칸뿐인 구멍과 마디로 세이는 덩굴
   const evenOdd = crack || (surface !== null && surface !== 'hole')
   return evenOdd ? { ...plain, top: checker(plain.top, parity) } : plain

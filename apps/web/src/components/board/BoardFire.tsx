@@ -15,6 +15,7 @@ import {
   charTone,
   emberKeyframes,
   fireStyle,
+  floorFaces,
   glowOf,
   isoPoint,
   logQuads,
@@ -138,6 +139,7 @@ interface BoardFireProps extends Omit<FireLook, 'kind'> {
   x: number
   y: number // 칸 윗면 중심
   parity: boolean
+  tier: number
 }
 
 const BoardFire = ({
@@ -146,6 +148,7 @@ const BoardFire = ({
   x,
   y,
   parity,
+  tier,
   heat,
   lit,
   stand,
@@ -168,7 +171,7 @@ const BoardFire = ({
   )
   const pieces = lumpTops(x, y + bridge.drop, bridge.pieces)
   const logs = logQuads(x, y, parity)
-  const floorTop = parity ? 'var(--color-floor-top-alt)' : 'var(--color-floor-top)'
+  const floorTop = floorFaces(tier, parity).top
   const pileTop = y - CHAR_WALL.height
 
   return part === 'pile' ? (

@@ -38,6 +38,7 @@ export {
 } from './cellView'
 export { CUBE, type CubeFace, rollingCubeFaces, tiltOnTop, type TopTilt } from './cubeView'
 export { blend, checker, darken, dim, shade } from './shadeView'
+export { floorFaces, floorTier, lowestOf } from './tierView'
 export {
   ASH_LUMPS,
   ASH_MARK,

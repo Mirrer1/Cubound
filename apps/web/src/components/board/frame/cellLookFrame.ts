@@ -1,4 +1,13 @@
-import { type AmbientKind, ICE, idleRipples, postBands, rippleCycle, waterLook } from '../view'
+import {
+  type AmbientKind,
+  ICE,
+  floorTier,
+  idleRipples,
+  lowestOf,
+  postBands,
+  rippleCycle,
+  waterLook,
+} from '../view'
 import { type BrazierLook, brazierLookOf } from './brazierFrame'
 import { type LadderLook, ladderLookOf } from './carryFrame'
 import type { boardCells } from './cellFrame'
@@ -33,6 +42,7 @@ export interface CellLook {
   y: number
   h: number
   parity: boolean
+  tier: number // 바닥 층 색 단 1~8, 높이가 바뀌는 중에는 소수
   goal: boolean
   faded: boolean
   hidden: boolean // 상자가 메우는 중인 칸
@@ -164,6 +174,7 @@ export const cellLook = ({
   const tideAt = tideLookOf(scene, { game, t })
   const patches = scene.moving ? frostPatches(scene.before, game, events, t, swampSeconds) : null
   const cycle = rippleCycle(ripples.size)
+  const lowest = lowestOf(stage)
 
   return (cell: ReturnType<typeof boardCells>[number]) => {
     const capHere = scene.caps.find((capFrame) => same(capFrame.cell, cell.p))
@@ -255,11 +266,13 @@ export const cellLook = ({
       kegs.length > 0 ||
       tram !== null
 
+    const h = cell.h - seedShift + raised - dropped
     const look: CellLook = {
       x: cell.x,
       y: cellY,
-      h: cell.h - seedShift + raised - dropped,
+      h,
       parity: (cell.p.x + cell.p.y) % 2 === 1,
+      tier: floorTier(h, lowest),
       goal: same(cell.p, stage.goal),
       faded: has(scene.faded, cell.p),
       hidden: isFilled && movedBoxHere && scene.before.heights[cell.p.y][cell.p.x] < 0,

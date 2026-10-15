@@ -283,7 +283,12 @@ const Board = ({
                   />
                 ))}
                 {over.stones.map((frame) => (
-                  <BoardIceStone key={`${frame.to.x}-${frame.to.y}`} part="stone" {...frame} />
+                  <BoardIceStone
+                    key={`${frame.to.x}-${frame.to.y}`}
+                    part="stone"
+                    {...frame}
+                    tier={look.tier}
+                  />
                 ))}
                 {over.boxDrop && (
                   <g opacity={over.boxDrop.opacity}>

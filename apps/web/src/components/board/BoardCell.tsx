@@ -26,6 +26,7 @@ import {
   blend,
   boatLook,
   cellFaces,
+  floorFaces,
   frostWidth,
   isPit,
   leanShift,
@@ -55,6 +56,7 @@ const BoardCell = ({
   y,
   h,
   parity,
+  tier,
   goal,
   faded,
   hidden,
@@ -108,7 +110,7 @@ const BoardCell = ({
     knot: vine.knot,
     opacity: vine.opacity,
   }
-  const baseFaces = cellFaces(surface, grownVine, vine.hard, crack.on, crack.stage, parity)
+  const baseFaces = cellFaces(surface, grownVine, vine.hard, crack.on, crack.stage, parity, tier)
   // 물에 잠긴 집 칸의 땅 높이 윗면, 수면 이음매로 짙은 골 색이 비치지 않는 물빛
   const faces =
     goal && sluice.sunk > 0
@@ -127,11 +129,7 @@ const BoardCell = ({
   // 물가 땅보다 조금 낮은 언 판 윗면
   const iceTop = y - water.depth * TILE.layer + ICE.below
   const boat = boatLook(water.depth)
-  const markFill = blend(
-    parity ? 'var(--color-floor-top-alt)' : 'var(--color-floor-top)',
-    'var(--color-ash-top)',
-    0.4,
-  )
+  const markFill = blend(floorFaces(tier, parity).top, 'var(--color-ash-top)', 0.4)
   const boxTop = y - TILE.layer - brazier.lift
   const ashMark = Math.max(brazier.mark, keg.mark)
 
@@ -184,7 +182,15 @@ const BoardCell = ({
             mudY={mudY}
           />
           {fire.kind && (
-            <BoardFire part="floor" x={x} y={y} parity={parity} {...fire} kind={fire.kind} />
+            <BoardFire
+              part="floor"
+              x={x}
+              y={y}
+              parity={parity}
+              tier={tier}
+              {...fire}
+              kind={fire.kind}
+            />
           )}
           {ashMark > 0 && (
             <polygon
@@ -215,7 +221,15 @@ const BoardCell = ({
       )}
       {fire.kind === 'wall' && (
         <g ref={fadeRef} style={fade}>
-          <BoardFire part="pile" x={x} y={y} parity={parity} {...fire} kind={fire.kind} />
+          <BoardFire
+            part="pile"
+            x={x}
+            y={y}
+            parity={parity}
+            tier={tier}
+            {...fire}
+            kind={fire.kind}
+          />
         </g>
       )}
       {box && (
@@ -238,7 +252,7 @@ const BoardCell = ({
         </g>
       )}
       {keg.dust >= 0 && (
-        <BoardKeg part="dust" x={x} y={y} s={keg.dust} du={keg.dustU} dv={keg.dustV} />
+        <BoardKeg part="dust" x={x} y={y} tier={tier} s={keg.dust} du={keg.dustU} dv={keg.dustV} />
       )}
       {keg.on && (
         <g opacity={keg.opacity}>
@@ -262,7 +276,7 @@ const BoardCell = ({
       {iceStone.patch > 0 && (
         <polygon
           points={blockFaces(x, y, TILE.width * frostWidth(iceStone.patch), 0).top}
-          style={{ fill: blend('var(--color-floor-top)', 'var(--color-ice)', 0.55) }}
+          style={{ fill: blend(floorFaces(tier, false).top, 'var(--color-ice)', 0.55) }}
           opacity={iceStone.patch}
         />
       )}
@@ -279,6 +293,7 @@ const BoardCell = ({
             opacity={1}
             wake={[]}
             ring={null}
+            tier={tier}
           />
         </g>
       )}

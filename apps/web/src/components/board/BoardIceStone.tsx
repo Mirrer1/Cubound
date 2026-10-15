@@ -9,6 +9,7 @@ import {
   type StoneTone,
   WATER,
   blend,
+  floorFaces,
   frostWidth,
   icePlate,
   ringPath,
@@ -37,7 +38,7 @@ type BoardIceStoneProps =
   | ({ part: 'stone' } & Pick<
       StoneFrame,
       'x' | 'y' | 'scale' | 'cut' | 'slab' | 'bare' | 'frost' | 'opacity' | 'wake' | 'ring'
-    >)
+    > & { tier: number })
   | {
       part: 'boat'
       x: number
@@ -108,7 +109,7 @@ const BoardIceStone = (props: BoardIceStoneProps) => {
       {props.frost > 0 && (
         <polygon
           points={blockFaces(props.x, props.y, TILE.width * frostWidth(props.frost), 0).top}
-          style={{ fill: blend('var(--color-floor-top)', 'var(--color-ice)', 0.55) }}
+          style={{ fill: blend(floorFaces(props.tier, false).top, 'var(--color-ice)', 0.55) }}
           opacity={props.frost}
         />
       )}

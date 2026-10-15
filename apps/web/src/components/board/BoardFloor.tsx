@@ -55,7 +55,7 @@ type Faces = { top: string; left: string; right: string }
 
 interface BoardFloorProps extends Omit<
   CellLook,
-  'parity' | 'faded' | 'hidden' | 'box' | 'pit' | 'ladder' | 'fire' | 'brazier' | 'keg'
+  'parity' | 'tier' | 'faded' | 'hidden' | 'box' | 'pit' | 'ladder' | 'fire' | 'brazier' | 'keg'
 > {
   behindGoal?: BehindGoal | null
   faces: Faces
@@ -213,7 +213,7 @@ const BoardFloor = ({
               <BoardGoal
                 x={behindGoal.x}
                 y={behindGoal.y - sunkLift(behindGoal.depth)}
-                top={cellFaces('hole', false, 0, false, 0, behindGoal.parity).top}
+                top={cellFaces('hole', false, 0, false, 0, behindGoal.parity, 1).top}
                 sunk={behindGoal.sunk}
                 depth={behindGoal.depth}
                 film={surfaceShown(behindGoal.depth)}

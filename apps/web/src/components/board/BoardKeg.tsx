@@ -7,6 +7,7 @@ import {
   burstSparks,
   dim,
   dustPuffs,
+  floorFaces,
   isoEllipse,
   kegBlocks,
   kegCordSpan,
@@ -84,6 +85,7 @@ interface DustProps {
   part: 'dust'
   x: number
   y: number // 칸 윗면 중심
+  tier: number
   s: number
   du: number
   dv: number
@@ -243,7 +245,7 @@ const Burst = ({ x, y, s }: Omit<BurstProps, 'part'>) => {
   )
 }
 
-const Dust = ({ x, y, s, du, dv }: Omit<DustProps, 'part'>) => (
+const Dust = ({ x, y, tier, s, du, dv }: Omit<DustProps, 'part'>) => (
   <g>
     {dustPuffs(x, y, du, dv, s).map((puff, i) =>
       puff.opacity > 0 ? (
@@ -256,8 +258,8 @@ const Dust = ({ x, y, s, du, dv }: Omit<DustProps, 'part'>) => (
           opacity={puff.opacity}
           style={{
             fill: puff.light
-              ? blend('var(--color-floor-left)', 'var(--color-ash-top)', 0.45)
-              : blend('var(--color-floor-top)', 'var(--color-ash-top)', 0.35),
+              ? blend(floorFaces(tier, false).left, 'var(--color-ash-top)', 0.45)
+              : blend(floorFaces(tier, false).top, 'var(--color-ash-top)', 0.35),
           }}
         />
       ) : null,

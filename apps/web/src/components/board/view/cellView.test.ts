@@ -75,29 +75,36 @@ describe('isPit', () => {
 
 describe('cellFaces', () => {
   it('보통 바닥은 번갈아 두 토큰을 쓰고 체크 무늬를 더하지 않는다', () => {
-    expect(cellFaces(null, false, 0, false, 0, false).top).toBe('var(--color-floor-top)')
-    expect(cellFaces(null, false, 0, false, 0, true).top).toBe('var(--color-floor-top-alt)')
+    expect(cellFaces(null, false, 0, false, 0, false, 1).top).toBe('var(--color-floor-1-top)')
+    expect(cellFaces(null, false, 0, false, 0, true, 1).top).toBe('var(--color-floor-1-top-alt)')
   })
 
   it('구멍은 체크 무늬를 더하지 않는다', () => {
-    expect(cellFaces('hole', false, 0, false, 0, true).top).toBe('var(--color-goal)')
+    expect(cellFaces('hole', false, 0, false, 0, true, 1).top).toBe('var(--color-goal)')
+  })
+
+  it('구멍 옆면은 그 칸 단의 바닥 옆면', () => {
+    expect(cellFaces('hole', false, 0, false, 0, false, 3).left).toBe('var(--color-floor-3-left)')
+    expect(cellFaces('hole', false, 0, false, 0, false, 3).right).toBe('var(--color-floor-3-right)')
   })
 
   it('얼음 같은 제 색 칸은 한 칸씩 번갈아 어둡게 한다', () => {
-    expect(cellFaces('ice', false, 0, false, 0, true).top).toBe(checker('var(--color-ice)', true))
-    expect(cellFaces('ice', false, 0, false, 0, false).top).toBe('var(--color-ice)')
+    expect(cellFaces('ice', false, 0, false, 0, true, 1).top).toBe(
+      checker('var(--color-ice)', true),
+    )
+    expect(cellFaces('ice', false, 0, false, 0, false, 1).top).toBe('var(--color-ice)')
   })
 
   it('자란 덩굴은 굳은 만큼 굳은 덩굴 색으로 바뀐다', () => {
-    expect(cellFaces(null, true, 0, false, 0, false).left).toBe('var(--color-vine-left)')
-    expect(cellFaces(null, true, 1, false, 0, false).left).toBe('var(--color-vine-hard-left)')
-    expect(cellFaces(null, true, 0.5, false, 0, false).left).toContain(
+    expect(cellFaces(null, true, 0, false, 0, false, 1).left).toBe('var(--color-vine-left)')
+    expect(cellFaces(null, true, 1, false, 0, false, 1).left).toBe('var(--color-vine-hard-left)')
+    expect(cellFaces(null, true, 0.5, false, 0, false, 1).left).toContain(
       'var(--color-vine-hard-left)',
     )
   })
 
   it('무너지는 칸은 닳은 단계 사이 색을 섞는다', () => {
-    const faces = cellFaces(null, false, 0, true, 0.5, false)
+    const faces = cellFaces(null, false, 0, true, 0.5, false, 1)
 
     expect(faces.left).toContain('var(--color-crack-left-0)')
     expect(faces.left).toContain('var(--color-crack-left-1)')

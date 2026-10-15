@@ -170,6 +170,19 @@ describe('cellLook', () => {
     expect(look.ground.blockOpacity).toBeCloseTo(1 - smooth(0.4))
   })
 
+  it('바닥 층 색은 가장 낮은 땅부터 한 층마다 한 단', () => {
+    const cells = looks(createState(LIFT_STAGE))
+    expect(cells.get('0-0')!.look.tier).toBe(1)
+    expect(cells.get('1-0')!.look.tier).toBe(2)
+  })
+
+  it('높이가 바뀌는 칸의 단은 그 순간 높이를 따라 이어 바뀐다', () => {
+    const { prev, game, events } = lastMove(LIFT_STAGE, ['down'])
+    const { look } = looks(game, prev, events, 0.5).get('2-1')!
+    expect(look.tier).toBe(look.h + 1)
+    expect(look.tier % 1).not.toBe(0)
+  })
+
   it('발판이 선 칸은 위에 발판을 얹어 그린다', () => {
     const { look, over } = looks(createState(TRAM_STAGE)).get('1-1')!
     expect(look.pit.rail).not.toBe('')
