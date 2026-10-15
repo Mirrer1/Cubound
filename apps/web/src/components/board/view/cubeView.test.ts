@@ -7,6 +7,16 @@ const roundPoints = (points: string) =>
   points.split(/[ ,]/).map((v) => Math.round(Number(v) * 100) / 100)
 
 describe('rollingCubeFaces', () => {
+  it('다리 축으로 흔들면 윗면이 축과 수직으로 옮겨 가고 각이 0이면 그대로', () => {
+    const plain = rollingCubeFaces(1, 1, 0, 'right', 0)
+    const axis = { x: 1, y: 1, axis: 0, z: -6.5 }
+    expect(rollingCubeFaces(1, 1, 0, 'right', 0, { ...axis, angle: 0 })).toEqual(plain)
+    const top = (faces: typeof plain) => faces.find((f) => f.face === 'top')!.points
+    expect(top(rollingCubeFaces(1, 1, 0, 'right', 0, { ...axis, angle: 0.07 }))).not.toBe(
+      top(plain),
+    )
+  })
+
   it('회전하지 않으면 정지한 큐브 블록과 같은 세 면을 그린다', () => {
     const faces = rollingCubeFaces(2, 1, 1, 'right', 0)
     const { x, y } = toScreen({ x: 2, y: 1 }, 1)

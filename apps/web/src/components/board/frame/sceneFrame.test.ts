@@ -36,6 +36,7 @@ const sceneOf = (
     game,
     prevGame,
     events,
+    prevEvents: [],
     t,
     chain: NO_CHAIN,
     restarting: more.restarting ?? false,

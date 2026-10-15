@@ -175,6 +175,7 @@ const DevController = ({ game }: DevControllerProps) => {
       game: state,
       prevGame: null,
       events: [],
+      prevEvents: [],
       turn: turn + 1,
       animating: false,
       restarting: false,

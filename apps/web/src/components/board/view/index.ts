@@ -36,7 +36,14 @@ export {
   spotPoints,
   STOP,
 } from './cellView'
-export { CUBE, type CubeFace, rollingCubeFaces, tiltOnTop, type TopTilt } from './cubeView'
+export {
+  CUBE,
+  type CubeFace,
+  type CubeRoll,
+  rollingCubeFaces,
+  tiltOnTop,
+  type TopTilt,
+} from './cubeView'
 export { blend, checker, darken, dim, shade } from './shadeView'
 export { floorFaces, floorTier, lowestOf } from './tierView'
 export {
@@ -158,3 +165,18 @@ export {
   kegCords,
   kegTrail,
 } from './kegView'
+export {
+  BAR,
+  BAR_HEIGHT,
+  type BarFace,
+  type BarFlat,
+  type BarLayer,
+  type BarPiece,
+  type BarPose,
+  barCuts,
+  barPieces,
+  barTone,
+  flatLook,
+  footprintCells,
+  frontCell,
+} from './barView'

@@ -68,6 +68,7 @@ const looks = (
     game,
     prevGame,
     events,
+    prevEvents: [],
     t,
     chain: NO_CHAIN,
     restarting,

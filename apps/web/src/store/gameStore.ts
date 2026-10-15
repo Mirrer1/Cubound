@@ -21,6 +21,7 @@ interface GameStore {
   game: GameState | null
   prevGame: GameState | null // 연출 시작 전 상태
   events: GameEvent[]
+  prevEvents: GameEvent[] // 앞 수 이벤트, 늘어난 다음 수에 식는 달군 쇠
   turn: number
   animating: boolean
   restarting: boolean // 처음 자리로 내려앉는 연출 중
@@ -40,6 +41,7 @@ const fresh = (game: GameState, turn: number) => ({
   game,
   prevGame: null,
   events: [],
+  prevEvents: [],
   turn: turn + 1,
   animating: false,
   restarting: false,
@@ -52,6 +54,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   game: null,
   prevGame: null,
   events: [],
+  prevEvents: [],
   turn: 0,
   animating: false,
   restarting: false,
@@ -83,6 +86,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         prevGame: game,
         game: result.state,
         events: result.events,
+        prevEvents: events,
         turn: turn + 1,
         animating: true,
         chained,

@@ -99,6 +99,7 @@
   --color-heat-hot: #f8b04c;
   --color-heat-core: #fcdd86;
   --color-heat-ring: #c77a45;
+  --color-heat-hi: #d98e4e;
   --color-ash-top: #c4bdb4;
   --color-ash-left: #9c958c;
   --color-ash-right: #b0a9a0;
@@ -106,6 +107,10 @@
   --color-keg: #b38662;
   --color-keg-lid: #bb9272;
   --color-keg-plug: #a4452e;
+  /* 쇠막대 몸, 몸보다 18% 짙은 받침, 윗모서리 광택 */
+  --color-iron: #4c5259;
+  --color-iron-base: #3e4349;
+  --color-iron-sheen: #8c9095;
   --color-stove-top: #a9a39b;
   --color-stove-bed: #cfc8bf;
   --color-stove-left: #7d776f;

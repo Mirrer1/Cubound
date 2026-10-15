@@ -102,6 +102,34 @@ export const tiltOnTop =
     return { x: tx - fx + 0, y: ty - fy + 0 }
   }
 
+// 다리 막대와 한 몸으로 흔들리는 축, x, y는 축이 지나는 칸 좌표, axis는 축 방향 라디안, z는 축 높이 px
+export interface CubeRoll {
+  x: number
+  y: number
+  axis: number
+  z: number
+  angle: number
+  dip?: number // 다리가 큐브 무게로 가라앉은 px
+}
+
+// 축을 기준으로 돈 칸 좌표와 높이, 높이는 칸 높이 단위
+const rollAbout = (roll: CubeRoll, [wx, wy, wz]: Vec): Vec => {
+  const ca = Math.cos(roll.axis)
+  const sa = Math.sin(roll.axis)
+  const u = (wx - roll.x) * ca + (wy - roll.y) * sa
+  const w = -(wx - roll.x) * sa + (wy - roll.y) * ca
+  const h = wz - roll.z / TILE.height
+  const c = Math.cos(roll.angle)
+  const s = Math.sin(roll.angle)
+  const w2 = w * c - h * s
+  const h2 = w * s + h * c
+  return [
+    roll.x + u * ca - w2 * sa,
+    roll.y + u * sa + w2 * ca,
+    (roll.z - (roll.dip ?? 0)) / TILE.height + h2,
+  ]
+}
+
 // (x, y)는 칸 좌표, level은 바닥 높이, angle은 라디안
 export const rollingCubeFaces = (
   x: number,
@@ -109,12 +137,12 @@ export const rollingCubeFaces = (
   level: number,
   direction: Direction,
   angle: number,
+  roll: CubeRoll | null = null,
 ): CubeFace[] => {
   const lift = H * (Math.abs(Math.cos(angle)) + Math.abs(Math.sin(angle)))
   const toScreen = ([vx, vy, vz]: Vec) => {
-    const wx = x + vx
-    const wy = y + vy
-    const wz = level * CUBE + lift + vz
+    const at: Vec = [x + vx, y + vy, level * CUBE + lift + vz]
+    const [wx, wy, wz] = roll ? rollAbout(roll, at) : at
     return `${round(((wx - wy) * TILE.width) / 2)},${round(((wx + wy) * TILE.height) / 2 - wz * TILE.height)}`
   }
 

@@ -14,7 +14,7 @@ import {
   stepAt,
   totalSeconds,
 } from './pathFrame'
-import { restartDuration } from './restartFrame'
+import { restartDrop, restartDuration } from './restartFrame'
 import { standHeight } from '@/game/rules'
 import type { GameEvent, GameState, Point } from '@/game/types'
 
@@ -260,14 +260,21 @@ export const kegLookOf = (scene: KegScene, p: Point): KegLook => {
   const mark = markOf(scene, p, s)
   const was = kegAt(before, originOf(path, p))
   const now = kegAt(game, p)
-  const keg = dropping ? now : (now ?? (blast ? was : undefined))
-  if (!keg) return { ...NO_KEG, mark }
-
   if (dropping) {
-    // 그 자리에 서 있던 화약통은 그대로, 나머지는 깎인 칸과 같은 박자로 차오름
-    const opacity = kegAt(before, p) ? 1 : scene.restore
-    return { ...NO_KEG, on: true, fuse: keg.fuse, cords: keg.fuse ? 4 : 0, opacity, mark }
+    // 건드린 화약통만 마지막 상자와 같은 차례로 처음 자리 위에서 내려앉는 재시작
+    const left = kegAt(before, p)
+    const keg = now ?? left
+    if (!keg) return { ...NO_KEG, mark }
+    const look = { ...NO_KEG, on: true, fuse: keg.fuse, cords: keg.fuse ? 4 : 0, mark }
+    if (!now) return { ...look, opacity: 1 - scene.restore }
+    if (left && JSON.stringify(left) === JSON.stringify(now)) return look
+    const { boxes, stones } = game
+    const drop = restartDrop(scene.t, boxes.length, boxes.length, stones.length)
+    return { ...look, opacity: drop.opacity, lift: drop.lift }
   }
+
+  const keg = now ?? (blast ? was : undefined)
+  if (!keg) return { ...NO_KEG, mark }
 
   const lit = was?.lit ?? 0
   const kindled = events.some((e) => e.type === 'fuseLit' && same(e.at, p))

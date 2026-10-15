@@ -1,3 +1,4 @@
+import { barEnd, barTouchAt, turnSegments } from './barFrame'
 import { brazierEnd, brazierLightEnd } from './brazierFrame'
 import { clamp01, smooth } from './curveFrame'
 import { fireEnd } from './fireFrame'
@@ -98,7 +99,8 @@ export const playerSegments = (events: GameEvent[]): Segment[] => {
   const path = playerPath(events)
   const landing = boxLanding(events)
   const last = path.at(-1)
-  if (!landing || !last || !same(last.to, landing.to)) return behindStone(events, segmentsOf(path))
+  if (!landing || !last || !same(last.to, landing.to))
+    return behindStone(events, turnSegments(events, segmentsOf(path)))
 
   const { before, tile } = lastTile(last)
   const approach = segmentsOf([...path.slice(0, -1), ...(before ? [before] : [])])
@@ -165,7 +167,8 @@ export const touchAt = (events: GameEvent[], p: Point) => {
       start += seconds
     }
   }
-  return { arrive, leave }
+  const bar = barTouchAt(events, p)
+  return { arrive: arrive ?? bar.arrive, leave: leave ?? bar.leave }
 }
 
 // 스위치가 눌리거나 풀린 뒤 문과 발판이 따라 움직이는 시간
@@ -442,6 +445,7 @@ export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
     brazierLightEnd(events),
     brazierEnd(events),
     kegEnd(events, moveSeconds(events, swamp)),
+    barEnd(events),
   )
 
 // 물이 바뀌는 수의 꼭지, 수면, 새로 잠긴 칸이 어는 진행도, 드러나는 칸이 녹는 진행도와 그 뒤 돌 밑 판이 녹는 진행도, 물이 그대로인 수는 모두 1

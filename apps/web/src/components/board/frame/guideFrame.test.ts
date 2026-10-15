@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { BRAZIER, KEG_SHAPE, PIT_FLOOR, PLATE, pileReach } from '../view'
+import { BAR_HEIGHT, BRAZIER, KEG_SHAPE, PIT_FLOOR, PLATE, pileReach } from '../view'
 import { TAP } from '../view'
 import { burnRect, guideRect, lockFocus, lockRect } from './guideFrame'
 import { LOCK_STAGE, SLUICE_STAGE, WHIRL_STAGE } from './testStages'
@@ -31,6 +31,15 @@ const spanOf = (game: GameState, p: Point, surface = 0) => {
 }
 
 describe('guideRect', () => {
+  it('막대는 차지한 두 칸을 다 감싸고 막대 높이까지 올린다', () => {
+    const game = createState({ ...FLAT, entities: [{ type: 'bar', x: 0, y: 1, axis: 'x' }] })
+    const rect = guideRect(game, MID)
+    expect(guideRect(game, { x: 0, y: 1 })).toEqual(rect)
+    expect(rect.x).toBeCloseTo(toScreen({ x: 0, y: 1 }, 0).x - TILE.width / 2 - 12)
+    expect(rect.x + rect.width).toBeCloseTo(toScreen(MID, 0).x + TILE.width / 2 + 12)
+    expect(toScreen(MID, 0).y - rect.y).toBeGreaterThan(BAR_HEIGHT + 12)
+  })
+
   it('서 있는 숯 벽은 숯 더미 가운데를 사각형 가운데에 두고 옆면은 넣지 않는다', () => {
     const stage = {
       ...FLAT,

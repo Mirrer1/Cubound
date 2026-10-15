@@ -336,7 +336,7 @@ describe('kegDrop', () => {
     expect(kegLookOf(scene(1), { x: 2, y: 1 }).lift).toBeCloseTo(0)
   })
 
-  it('재시작하면 화약통은 깎인 칸과 같은 박자로 차오르고 재 자국은 옅어진다', () => {
+  it('재시작하면 터진 화약통은 처음 자리 위에서 내려앉고 재 자국은 깎인 칸과 같이 옅어진다', () => {
     const { game } = blast()
     const start = createState(KEG_STAGE)
     const scene = (t: number) =>
@@ -353,12 +353,13 @@ describe('kegDrop', () => {
       })
     const keg = { x: 2, y: 1 }
 
-    for (const t of [0.1, 0.3, 0.5]) {
+    const lifts = [0.1, 0.3, 0.5].map((t) => {
       const look = kegLookOf(scene(t), keg)
-      expect(look.opacity).toBeCloseTo(1 - kegDrop(scene(t), { x: 2, y: 0 }))
-      expect(look.mark).toBeCloseTo(1 - look.opacity)
-      expect(look.lift).toBe(0)
-    }
+      expect(look.mark).toBeCloseTo(kegDrop(scene(t), { x: 2, y: 0 }))
+      return look.lift
+    })
+    expect(lifts[0]).toBeGreaterThan(lifts[1])
+    expect(lifts[1]).toBeGreaterThan(lifts[2])
     expect(kegLookOf(scene(1), keg)).toMatchObject({ opacity: 1, mark: 0 })
   })
 

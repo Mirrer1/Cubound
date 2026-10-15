@@ -1,3 +1,4 @@
+import { shoveSegments } from './barFrame'
 import { type Chain, NO_CHAIN, clamp01, easeIn, easeOut, lerp } from './curveFrame'
 import { slideChain, slideSpan, squashAt } from './iceFrame'
 import { blastLean, blastSegments, blastWarps } from './kegFrame'
@@ -79,7 +80,12 @@ const pathFrame = (
   const swamp = swampTime(prev, game)
   // 폭발에 밀려나는 수는 내 이동 뒤 터지는 순간까지 기다렸다 밀려 가는 길
   const move = moveSeconds(events, swamp) - swamp.lead
-  const segments = blastSegments(events, playerSegments(events), move, player)
+  const segments = blastSegments(
+    events,
+    shoveSegments(events, playerSegments(events)),
+    move,
+    player,
+  )
   const startLevel = prev ? standHeight(prev, prev.player) : endLevel
   const pathLevel = segments.reduce((level, s) => levelAfter(level, s.event), startLevel)
   // 이동이 끝난 뒤 칸과 같이 오르는 씨앗이 솟는 몫

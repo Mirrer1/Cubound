@@ -1,5 +1,5 @@
 import { TILE } from './iso'
-import { same, waterLevel } from './rules'
+import { barCells, same, waterLevel } from './rules'
 import { eachMove } from './solver'
 import type { GameState, Point, Stage } from './types'
 
@@ -60,6 +60,9 @@ export const fadedCells = (
     ),
     ...filled.flatMap((p) => occludingCells(shown, p, shown[p.y][p.x], boxes)),
     ...game.kegs.flatMap((k) => occludingCells(shown, k, shown[k.y][k.x] + 1, boxes)),
+    ...game.bars.flatMap((bar) =>
+      barCells(bar).flatMap((c) => occludingCells(shown, c, bar.level + 1, boxes)),
+    ),
     // 큐브에서 멀리 서 있는 숯 벽
     ...(game.stage.fire ?? []).flatMap((row, y) =>
       [...row].flatMap((c, x) =>

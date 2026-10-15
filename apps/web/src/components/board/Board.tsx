@@ -1,5 +1,6 @@
 import { type CSSProperties, useEffect, useMemo } from 'react'
 
+import BoardBar from './BoardBar'
 import BoardBox from './BoardBox'
 import BoardBrazier from './BoardBrazier'
 import BoardCell from './BoardCell'
@@ -16,6 +17,7 @@ import BoardWater from './BoardWater'
 import BoardWhirlpool from './BoardWhirlpool'
 import {
   type Tram,
+  barKeys,
   boardCells,
   cellLook,
   coversRope,
@@ -54,6 +56,7 @@ interface BoardProps {
   game: GameState
   prevGame: GameState | null
   events: GameEvent[]
+  prevEvents: GameEvent[]
   turn: number
   onAnimationEnd: () => void
   queued: number // 기다리는 입력 수
@@ -68,6 +71,7 @@ const Board = ({
   game,
   prevGame,
   events,
+  prevEvents,
   turn,
   onAnimationEnd,
   queued,
@@ -108,6 +112,7 @@ const Board = ({
     game,
     prevGame,
     events,
+    prevEvents,
     t,
     chain,
     restarting,
@@ -143,9 +148,11 @@ const Board = ({
     [scene.box, events, vines],
   )
 
+  // 다리 막대가 걸친 구덩이 칸, 그 위의 막대와 큐브를 그리는 자리
+  const bareKeys = barKeys(scene.bar)
   const cells = useMemo(
-    () => boardCells(heights, scene.before.heights, railDirs, vines, fillingKey),
-    [heights, scene.before.heights, railDirs, vines, fillingKey],
+    () => boardCells(heights, scene.before.heights, railDirs, vines, fillingKey, bareKeys),
+    [heights, scene.before.heights, railDirs, vines, fillingKey, bareKeys],
   )
 
   const plan = useMemo(() => ambientPlan(stage, cycleOf(parseStageId(stage.id).world)), [stage])
@@ -211,190 +218,202 @@ const Board = ({
       ).map((cell) => {
         const { cellY, look, over } = lookOf(cell)
         const taps = tapLooks.filter((tap) => same(tap.cell, cell.p))
-
-        return (
-          <BoardCell
-            key={cell.key}
-            {...look}
-            behindGoal={sunkGoal && isFrontOfGoal(cell.p) ? sunkGoal : null}
-          >
-            {over.overlay || taps.length > 0 ? (
-              <>
-                {over.tram && (
-                  <g opacity={over.tram.opacity}>
-                    <BoardTram
-                      x={over.tram.x}
-                      y={over.tram.y}
-                      depth={over.tram.depth}
-                      dx={over.tram.dx}
-                      dy={over.tram.dy}
-                    />
-                  </g>
-                )}
-                {over.drawBoxes.map((frame) =>
-                  scene.box && same(frame.to, scene.box.to) && scene.boxShown !== null ? (
-                    <g
-                      key={`${frame.to.x}-${frame.to.y}`}
-                      ref={scene.rowLean ? leanLoop : undefined}
-                      className={scene.rowLean ? 'whirl-lean' : undefined}
-                      style={rowLean}
-                    >
-                      <BoardWater part="box" x={frame.x} y={frame.y} shown={scene.boxShown} />
-                    </g>
-                  ) : brazier.boss ? (
-                    <BoardBrazier
-                      key={`${frame.to.x}-${frame.to.y}`}
-                      part="box"
-                      x={frame.x}
-                      y={frame.y}
-                      hint={burnOf(frame.to) >= 0 ? 1 : 0}
-                      burn={burnOf(frame.to)}
-                    />
-                  ) : (
-                    <BoardBox key={`${frame.to.x}-${frame.to.y}`} x={frame.x} y={frame.y} />
-                  ),
-                )}
-                {over.kegs.map((frame) => (
-                  <BoardKeg
+        const content =
+          over.overlay || taps.length > 0 ? (
+            <>
+              {over.bars.map((bar, i) => (
+                <BoardBar key={i} {...bar} />
+              ))}
+              {over.tram && (
+                <g opacity={over.tram.opacity}>
+                  <BoardTram
+                    x={over.tram.x}
+                    y={over.tram.y}
+                    depth={over.tram.depth}
+                    dx={over.tram.dx}
+                    dy={over.tram.dy}
+                  />
+                </g>
+              )}
+              {over.drawBoxes.map((frame) =>
+                scene.box && same(frame.to, scene.box.to) && scene.boxShown !== null ? (
+                  <g
                     key={`${frame.to.x}-${frame.to.y}`}
-                    part="keg"
+                    ref={scene.rowLean ? leanLoop : undefined}
+                    className={scene.rowLean ? 'whirl-lean' : undefined}
+                    style={rowLean}
+                  >
+                    <BoardWater part="box" x={frame.x} y={frame.y} shown={scene.boxShown} />
+                  </g>
+                ) : brazier.boss ? (
+                  <BoardBrazier
+                    key={`${frame.to.x}-${frame.to.y}`}
+                    part="box"
                     x={frame.x}
                     y={frame.y}
-                    swell={frame.look.swell}
-                    heat={frame.look.heat}
-                    cords={frame.look.cords}
-                    ember={frame.look.ember}
-                    ashTo={frame.look.ashTo}
-                    ash={frame.look.ash}
-                    trailU={frame.look.trail.u}
-                    trailV={frame.look.trail.v}
+                    hint={burnOf(frame.to) >= 0 ? 1 : 0}
+                    burn={burnOf(frame.to)}
                   />
-                ))}
-                {over.whirlBoxes.map((frame) => (
-                  <BoardWhirlpool key={`${frame.to.x}-${frame.to.y}`} part="boat" {...frame} />
-                ))}
-                {over.thawBoxes.map((thaw) => (
-                  <BoardWater
-                    key={`${thaw.to.x}-${thaw.to.y}`}
-                    part="box"
-                    x={cell.x}
-                    y={thaw.y}
-                    shown={thaw.shown}
-                  />
-                ))}
-                {over.stones.map((frame) => (
-                  <BoardIceStone
-                    key={`${frame.to.x}-${frame.to.y}`}
-                    part="stone"
-                    {...frame}
-                    tier={look.tier}
-                  />
-                ))}
-                {over.boxDrop && (
-                  <g opacity={over.boxDrop.opacity}>
-                    {over.waterDepth > 0 ? (
-                      <BoardWater
-                        part="box"
-                        x={cell.x}
-                        y={cellY - (over.waterDepth + over.boxDrop.lift) * TILE.layer}
-                        shown={Math.min(TILE.layer, WATER.lip + over.boxDrop.lift * TILE.layer)}
-                      />
-                    ) : (
+                ) : (
+                  <BoardBox key={`${frame.to.x}-${frame.to.y}`} x={frame.x} y={frame.y} />
+                ),
+              )}
+              {over.kegs.map((frame) => (
+                <BoardKeg
+                  key={`${frame.to.x}-${frame.to.y}`}
+                  part="keg"
+                  x={frame.x}
+                  y={frame.y}
+                  swell={frame.look.swell}
+                  heat={frame.look.heat}
+                  cords={frame.look.cords}
+                  ember={frame.look.ember}
+                  ashTo={frame.look.ashTo}
+                  ash={frame.look.ash}
+                  trailU={frame.look.trail.u}
+                  trailV={frame.look.trail.v}
+                />
+              ))}
+              {over.whirlBoxes.map((frame) => (
+                <BoardWhirlpool key={`${frame.to.x}-${frame.to.y}`} part="boat" {...frame} />
+              ))}
+              {over.thawBoxes.map((thaw) => (
+                <BoardWater
+                  key={`${thaw.to.x}-${thaw.to.y}`}
+                  part="box"
+                  x={cell.x}
+                  y={thaw.y}
+                  shown={thaw.shown}
+                />
+              ))}
+              {over.stones.map((frame) => (
+                <BoardIceStone
+                  key={`${frame.to.x}-${frame.to.y}`}
+                  part="stone"
+                  {...frame}
+                  tier={look.tier}
+                />
+              ))}
+              {over.boxDrop && (
+                <g opacity={over.boxDrop.opacity}>
+                  {over.waterDepth > 0 ? (
+                    <BoardWater
+                      part="box"
+                      x={cell.x}
+                      y={cellY - (over.waterDepth + over.boxDrop.lift) * TILE.layer}
+                      shown={Math.min(TILE.layer, WATER.lip + over.boxDrop.lift * TILE.layer)}
+                    />
+                  ) : (
+                    <BoardBrazier
+                      part="box"
+                      x={cell.x}
+                      y={cellY - TILE.layer - over.boxDrop.lift * TILE.layer - look.brazier.lift}
+                      hint={0}
+                      burn={-1}
+                    />
+                  )}
+                </g>
+              )}
+              <g
+                ref={cubeLean && over.drawCube ? leanLoop : undefined}
+                className={cubeLean && over.drawCube ? 'whirl-lean' : undefined}
+                style={over.drawCube ? cubeLean : undefined}
+              >
+                {over.drawCube && (
+                  <g
+                    opacity={(scene.cubeDrop ? scene.cubeDrop.opacity : 1) * scene.cube.fade}
+                    transform={`translate(0 ${scene.cubeSink - scene.cube.lift}) ${scene.cubeSquash}`}
+                  >
+                    {scene.cubeHeat.length > 0 && (
                       <BoardBrazier
-                        part="box"
-                        x={cell.x}
-                        y={cellY - TILE.layer - over.boxDrop.lift * TILE.layer - look.brazier.lift}
-                        hint={0}
-                        burn={-1}
+                        part="cubePool"
+                        x={scene.cubeScreen.x}
+                        y={scene.cubeScreen.y}
+                        strength={brazier.glow.strength}
+                        dip={brazier.glow.dip}
+                      />
+                    )}
+                    {scene.cubeFaces.map((f) => (
+                      <polygon
+                        key={f.face}
+                        points={f.points}
+                        style={{ fill: shade('player', f.face) }}
+                      />
+                    ))}
+                    {(scene.cubeHeat.length > 0 || brazier.glow.last > 0) && (
+                      <BoardBrazier
+                        part="cubeGlow"
+                        x={scene.cubeScreen.x}
+                        y={scene.cubeScreen.y - TILE.layer}
+                        bands={scene.cubeHeat}
+                        strength={brazier.glow.strength}
+                        dip={brazier.glow.dip}
+                        spark={brazier.glow.spark}
+                        last={brazier.glow.last}
                       />
                     )}
                   </g>
                 )}
-                <g
-                  ref={cubeLean && over.drawCube ? leanLoop : undefined}
-                  className={cubeLean && over.drawCube ? 'whirl-lean' : undefined}
-                  style={over.drawCube ? cubeLean : undefined}
-                >
-                  {over.drawCube && (
-                    <g
-                      opacity={(scene.cubeDrop ? scene.cubeDrop.opacity : 1) * scene.cube.fade}
-                      transform={`translate(0 ${scene.cubeSink - scene.cube.lift}) ${scene.cubeSquash}`}
-                    >
-                      {scene.cubeHeat.length > 0 && (
-                        <BoardBrazier
-                          part="cubePool"
-                          x={scene.cubeScreen.x}
-                          y={scene.cubeScreen.y}
-                          strength={brazier.glow.strength}
-                          dip={brazier.glow.dip}
-                        />
-                      )}
-                      {scene.cubeFaces.map((f) => (
-                        <polygon
-                          key={f.face}
-                          points={f.points}
-                          style={{ fill: shade('player', f.face) }}
-                        />
-                      ))}
-                      {(scene.cubeHeat.length > 0 || brazier.glow.last > 0) && (
-                        <BoardBrazier
-                          part="cubeGlow"
-                          x={scene.cubeScreen.x}
-                          y={scene.cubeScreen.y - TILE.layer}
-                          bands={scene.cubeHeat}
-                          strength={brazier.glow.strength}
-                          dip={brazier.glow.dip}
-                          spark={brazier.glow.spark}
-                          last={brazier.glow.last}
-                        />
-                      )}
-                    </g>
-                  )}
-                  {over.drawCube && scene.carriedOpacity > 0 && (
-                    <g opacity={scene.carriedOpacity * scene.cube.fade}>
-                      {scene.carried === 'seed' ? (
-                        <BoardSeed
-                          x={scene.carriedBase.x}
-                          y={scene.carriedBase.y}
-                          part="seed"
-                          tilt={scene.bump}
-                        />
-                      ) : (
-                        <BoardLadder
-                          x={scene.carriedBase.x}
-                          y={scene.carriedBase.y - 2}
-                          tilt={scene.ladderBump}
-                        />
-                      )}
-                    </g>
-                  )}
-                  {over.drawCube && scene.plantedSeed && scene.plantedSeed.opacity > 0 && (
-                    <g
-                      opacity={scene.plantedSeed.opacity}
-                      transform={`translate(${scene.plantedSeed.x} ${scene.plantedSeed.y}) scale(${scene.plantedSeed.scale}) translate(${-scene.plantedSeed.x} ${-scene.plantedSeed.y})`}
-                    >
+                {over.drawCube && scene.carriedOpacity > 0 && (
+                  <g opacity={scene.carriedOpacity * scene.cube.fade}>
+                    {scene.carried === 'seed' ? (
                       <BoardSeed
-                        x={scene.plantedSeed.x}
-                        y={scene.plantedSeed.y}
+                        x={scene.carriedBase.x}
+                        y={scene.carriedBase.y}
                         part="seed"
-                        tilt={scene.plantTilt}
+                        tilt={scene.bump}
                       />
-                    </g>
-                  )}
-                </g>
-                {taps.map((tap) => (
-                  <BoardSluice
-                    key={`${tap.device.x}-${tap.device.y}`}
-                    part="tap"
-                    x={tap.look.x}
-                    y={tap.look.y}
-                    open={tap.look.sluice.open}
-                    turn={tap.look.sluice.turn}
-                  />
-                ))}
-                {over.goalEffect && <BoardClear x={cell.x} y={cell.y} />}
-              </>
-            ) : undefined}
+                    ) : (
+                      <BoardLadder
+                        x={scene.carriedBase.x}
+                        y={scene.carriedBase.y - 2}
+                        tilt={scene.ladderBump}
+                      />
+                    )}
+                  </g>
+                )}
+                {over.drawCube && scene.plantedSeed && scene.plantedSeed.opacity > 0 && (
+                  <g
+                    opacity={scene.plantedSeed.opacity}
+                    transform={`translate(${scene.plantedSeed.x} ${scene.plantedSeed.y}) scale(${scene.plantedSeed.scale}) translate(${-scene.plantedSeed.x} ${-scene.plantedSeed.y})`}
+                  >
+                    <BoardSeed
+                      x={scene.plantedSeed.x}
+                      y={scene.plantedSeed.y}
+                      part="seed"
+                      tilt={scene.plantTilt}
+                    />
+                  </g>
+                )}
+              </g>
+              {taps.map((tap) => (
+                <BoardSluice
+                  key={`${tap.device.x}-${tap.device.y}`}
+                  part="tap"
+                  x={tap.look.x}
+                  y={tap.look.y}
+                  open={tap.look.sluice.open}
+                  turn={tap.look.sluice.turn}
+                />
+              ))}
+              {over.goalEffect && <BoardClear x={cell.x} y={cell.y} />}
+            </>
+          ) : undefined
+
+        return cell.bare ? (
+          <g key={cell.key}>{content}</g>
+        ) : (
+          <BoardCell
+            key={cell.key}
+            {...look}
+            behindGoal={sunkGoal && isFrontOfGoal(cell.p) ? sunkGoal : null}
+            under={
+              over.lips.length > 0
+                ? over.lips.map((lip, i) => <BoardBar key={i} {...lip} />)
+                : undefined
+            }
+          >
+            {content}
           </BoardCell>
         )
       })}

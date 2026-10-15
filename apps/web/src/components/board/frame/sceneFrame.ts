@@ -1,4 +1,5 @@
 import { CUBE_HEAT, type Lane, cubeHeatBands, floatShownAt, rollingCubeFaces } from '../view'
+import { barScene } from './barFrame'
 import { boxFramesOf, movingBox } from './boxFrame'
 import { bowlLift, brazierScene } from './brazierFrame'
 import {
@@ -62,6 +63,7 @@ interface SceneView {
   game: GameState
   prevGame: GameState | null
   events: GameEvent[]
+  prevEvents: GameEvent[]
   t: number
   chain: Chain
   restarting: boolean
@@ -77,6 +79,7 @@ export const sceneFrame = ({
   game,
   prevGame,
   events,
+  prevEvents,
   t,
   chain,
   restarting,
@@ -282,7 +285,29 @@ export const sceneFrame = ({
     standSink(crackView, cube.x, cube.y) +
     iceSink(covers, game, cube.x, cube.y) -
     bowlLift(stage, cube.x, cube.y)
-  const cubeFaces = rollingCubeFaces(cube.x, cube.y, cubeLevel, cube.direction, cube.angle)
+  const bar = barScene({
+    before,
+    game,
+    events,
+    prevEvents,
+    moving,
+    dropping,
+    t,
+    elapsed: fire.elapsed,
+    chain: slideChain(events, chain),
+    ashed: fire.ashed,
+    keg,
+    stepT,
+    cube,
+  })
+  const cubeFaces = rollingCubeFaces(
+    cube.x,
+    cube.y,
+    cubeLevel,
+    cube.direction,
+    cube.angle,
+    bar.roll,
+  )
   const { glow } = brazier
   const cubeHeat =
     glow.strength > 0
@@ -391,6 +416,7 @@ export const sceneFrame = ({
     brazier,
     keg,
     kegFrame,
+    bar,
     seedFrame,
     faded,
     vineFrame,

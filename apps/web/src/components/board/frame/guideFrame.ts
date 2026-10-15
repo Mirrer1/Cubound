@@ -1,4 +1,6 @@
 import {
+  BAR,
+  BAR_HEIGHT,
   BRAZIER,
   CUBE,
   KEG_SHAPE,
@@ -20,7 +22,7 @@ import { fireKindAt } from './fireFrame'
 import { MUSHROOM_STAND, mushroomPose } from './mushroomFrame'
 import { has, same } from './pathFrame'
 import { TILE, toScreen } from '@/game/iso'
-import { isDoorOpen, isLiftRaised, readMushrooms, waterLevel } from '@/game/rules'
+import { barCells, isDoorOpen, isLiftRaised, readMushrooms, waterLevel } from '@/game/rules'
 import type { GameState, Point, Stage } from '@/game/types'
 
 const GUIDE_MARGIN = 12
@@ -62,6 +64,9 @@ const reachOf = (game: GameState, p: Point, floating: boolean) => {
     const lid = KEG_SHAPE.bodyHeight + KEG_SHAPE.lidHeight + halfTop(TILE.width * KEG_SHAPE.lid)
     reaches.push(Math.max(body, lid))
   }
+  if (game.bars.some((bar) => has(barCells(bar), p))) {
+    reaches.push(BAR_HEIGHT + halfTop(TILE.width * BAR.base.width))
+  }
   if (has(game.stones, p)) {
     const peak = stoneSteps(0, 0, floating ? STONE.floatCut : 0, 1)[2]
     reaches.push(-peak.y + halfTop(peak.width))
@@ -98,7 +103,7 @@ const dropOf = (game: GameState, p: Point, surface: number, depth: number) => {
 }
 
 // 가이드가 비추는 칸의 사각형, 윗면이나 수면과 그 위에 선 것, 드러난 옆면에 같은 여백
-export const guideRect = (game: GameState, p: Point) => {
+const cellRect = (game: GameState, p: Point) => {
   // 바닥 없는 칸은 덩굴 길이나 발판 길의 팬 구덩이
   const surface = surfaceOf(game, p)
   const floating = waterLook(game.stage, p, (q) => waterLevel(game, q)).depth > 0
@@ -131,6 +136,18 @@ export const guideRect = (game: GameState, p: Point) => {
   const bottom = y + TILE.height / 2 + drop + GUIDE_MARGIN
 
   return { x, y: top, width, height: bottom - top }
+}
+
+// 막대 칸은 막대가 차지한 칸 전부를 감싼 사각형
+export const guideRect = (game: GameState, p: Point) => {
+  const bar = game.bars.find((b) => has(barCells(b), p))
+  if (!bar) return cellRect(game, p)
+  const rects = barCells(bar).map((c) => cellRect(game, c))
+  const x = Math.min(...rects.map((r) => r.x))
+  const y = Math.min(...rects.map((r) => r.y))
+  const right = Math.max(...rects.map((r) => r.x + r.width))
+  const bottom = Math.max(...rects.map((r) => r.y + r.height))
+  return { x, y, width: right - x, height: bottom - y }
 }
 
 // 타는 짐 가이드가 비추는 상자와 맞닿은 화로, 두 칸 모두 윗면까지만

@@ -159,3 +159,22 @@ describe('move 클리어 기록', () => {
     expect(store().turn).toBe(turn)
   })
 })
+
+describe('앞 수 이벤트', () => {
+  beforeEach(() => {
+    store().enter('1-3')
+    store().closeGuide()
+  })
+
+  it('다음 수에 앞 수 이벤트를 남기고 재시작하면 비운다', () => {
+    store().move('up')
+    const first = store().events
+    store().finishAnimation()
+    store().move('up')
+
+    expect(store().prevEvents).toBe(first)
+
+    store().restart()
+    expect(store().prevEvents).toEqual([])
+  })
+})

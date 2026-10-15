@@ -227,6 +227,18 @@ describe('fadedCells', () => {
     })
   })
 
+  it('큐브에서 먼 막대도 칸마다 상자처럼 가리는 앞 칸을 모은다', () => {
+    const state = {
+      ...createState(STAGE),
+      bars: [{ x: 1, y: 2, dir: 'right' as const, length: 2, level: 0, heat: null }],
+    }
+
+    expect(fadedCells(raise([[3, 2, 2]]), { x: 0, y: 0 }, 0, state, [])).toContainEqual({
+      x: 3,
+      y: 2,
+    })
+  })
+
   it('큐브에서 먼 서 있는 숯 벽도 상자처럼 가리는 앞 칸을 모으고 재가 되면 뺀다', () => {
     const state = createState({ ...STAGE, fire: ['.*..', '....', '..#.', '....'] })
     const heights = raise([[3, 2, 2]])

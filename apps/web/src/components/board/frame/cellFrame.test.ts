@@ -20,9 +20,18 @@ describe('boardCells', () => {
       h: 1,
       rail: '',
       pit: false,
+      bare: false,
       p: { x: 1, y: 0 },
       key: '1-0',
     })
+  })
+
+  it('막대가 걸친 구덩이 칸은 칸 없이 그 위만 그리는 자리로 둔다', () => {
+    const heights = [[0, -1, -1]]
+    const cells = boardCells(heights, heights, new Map(), NO_VINES, null, '1-0')
+
+    expect(cells.map((cell) => cell.key)).toEqual(['0-0', '1-0'])
+    expect(cells[1]).toMatchObject({ h: 0, bare: true, pit: false })
   })
 
   it('발판 길 칸은 높이 0의 구덩이로 둔다', () => {

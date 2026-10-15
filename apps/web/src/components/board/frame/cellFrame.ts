@@ -4,12 +4,14 @@ import type { Point } from '@/game/types'
 
 // x, y는 화면 좌표, p는 칸 좌표, 다시 구멍이 되는 메운 칸은 사라지기 전 높이
 // 구덩이로 그리는 칸, 발판 길과 아직 바닥 없는 덩굴 길
+// bare는 칸 없이 그 위에 걸친 것만 그리는 구덩이 칸, bareKeys는 그런 칸 키를 띄어 이은 값
 export const boardCells = (
   heights: number[][],
   beforeHeights: number[][],
   railDirs: Map<string, string>,
   vines: Map<string, VineLook>,
   fillingKey: string | null,
+  bareKeys = '',
 ) =>
   heights
     .flatMap((row, y) =>
@@ -18,8 +20,10 @@ export const boardCells = (
         const rail = railDirs.get(key) ?? ''
         const now = key === fillingKey ? beforeHeights[y][x] : heights[y][x]
         const pit = rail !== '' || (vines.has(key) && now < 0)
-        const h = pit ? 0 : Math.max(now, beforeHeights[y][x])
-        return { ...toScreen({ x, y }, h), h, rail, pit, p: { x, y }, key }
+        const raw = pit ? 0 : Math.max(now, beforeHeights[y][x])
+        const bare = raw < 0 && bareKeys.split(' ').includes(key)
+        const h = bare ? 0 : raw
+        return { ...toScreen({ x, y }, h), h, rail, pit, bare, p: { x, y }, key }
       }),
     )
     .filter((cell) => cell.h >= 0)

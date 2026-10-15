@@ -107,3 +107,4 @@ export {
 } from './whirlpoolFrame'
 export { meltDisplay, type StoneFrame } from './iceStoneFrame'
 export { tideDisplay } from './tideFrame'
+export { type BarDraw, type BarScene, barKeys, barsAt, lipsAt } from './barFrame'

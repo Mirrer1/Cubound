@@ -50,6 +50,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const restart = useGameStore((s) => s.restart)
   const prevGame = useGameStore((s) => s.prevGame)
   const events = useGameStore((s) => s.events)
+  const prevEvents = useGameStore((s) => s.prevEvents)
   const turn = useGameStore((s) => s.turn)
   const finishAnimation = useGameStore((s) => s.finishAnimation)
   const queued = useGameStore((s) => s.queue.length)
@@ -256,6 +257,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
               game={game}
               prevGame={prevGame}
               events={events}
+              prevEvents={prevEvents}
               turn={turn}
               onAnimationEnd={finishAnimation}
               queued={queued}

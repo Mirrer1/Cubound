@@ -1,4 +1,5 @@
 import { BOX_SINK } from '../view'
+import { shoveClock } from './barFrame'
 import { type CrackView, standSink } from './crackFrame'
 import { type Chain, NO_CHAIN, easeIn, lerp, smooth } from './curveFrame'
 import { slideChain } from './iceFrame'
@@ -60,7 +61,7 @@ export const movingBox = (
   const segments = segmentsOf(path)
   const swamp = swampTime(prev, game)
   // 상자가 제자리에 앉으면 바로 드러나는 메운 바닥, 큐브는 그 뒤에 그 칸으로 이동
-  const elapsed = elapsedAt(events, swamp, t)
+  const elapsed = shoveClock(events, elapsedAt(events, swamp, t))
   const carry = carryOf(events, path.at(-1)?.to ?? null)
   const ride = carry === null ? 0 : tramProgress(events, t, swamp)
   const settled = elapsed >= totalSeconds(segments) && (carry === null || ride >= 1)

@@ -8,6 +8,7 @@ import {
   rippleCycle,
   waterLook,
 } from '../view'
+import { barsAt, lipsAt } from './barFrame'
 import { type BrazierLook, brazierLookOf } from './brazierFrame'
 import { type LadderLook, ladderLookOf } from './carryFrame'
 import type { boardCells } from './cellFrame'
@@ -230,6 +231,8 @@ export const cellLook = ({
 
     const dust = dustOf(scene.keg, cell.p)
     const kegs = scene.kegFrame && same(scene.kegFrame.cell, cell.p) ? [scene.kegFrame] : []
+    const bars = barsAt(scene.bar, cell.p)
+    const lips = lipsAt(scene.bar, cell.p)
     const tram = scene.tramFrames.find((frame) => same(frame.cell, cell.p)) ?? null
     const drawCube = same(scene.cube.cell, cell.p) && !scene.home
     const drawBoxes = scene.boxFrames.filter((frame) => same(frame.cell, cell.p))
@@ -264,6 +267,7 @@ export const cellLook = ({
       goalEffect ||
       boxDrop !== null ||
       kegs.length > 0 ||
+      bars.length > 0 ||
       tram !== null
 
     const h = cell.h - seedShift + raised - dropped
@@ -406,6 +410,8 @@ export const cellLook = ({
         thawBoxes,
         boxDrop,
         kegs,
+        bars,
+        lips,
         goalEffect,
         overlay,
         waterDepth: water.depth,

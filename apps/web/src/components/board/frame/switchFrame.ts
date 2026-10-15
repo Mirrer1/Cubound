@@ -11,10 +11,20 @@ import {
   touchAt,
 } from './timeFrame'
 import { TILE } from '@/game/iso'
-import { isDoorOpen, isLiftRaised } from '@/game/rules'
+import { barCells, isDoorOpen, isLiftRaised } from '@/game/rules'
 import type { Entity, GameEvent, GameState, Point, Stage } from '@/game/types'
 
 // cells 중 한 칸이 pressed 상태가 되는 시각, 이 이동에서 닿지 않는 칸뿐이면 null
+const barMemo = new WeakMap<GameState, Set<string>>()
+
+const barCellsOf = (state: GameState) => {
+  const known = barMemo.get(state)
+  if (known) return known
+  const cells = new Set(state.bars.flatMap((bar) => barCells(bar).map((c) => `${c.x},${c.y}`)))
+  barMemo.set(state, cells)
+  return cells
+}
+
 const pressedAt = (events: GameEvent[], cells: Point[], pressed: boolean) => {
   const times = cells
     .map((p) => (pressed ? touchAt(events, p).arrive : touchAt(events, p).leave))
@@ -155,7 +165,8 @@ export const switchLookOf = (
       same(state.player, cell.p) ||
       has(state.boxes, cell.p) ||
       has(state.stones, cell.p) ||
-      has(state.kegs, cell.p)
+      has(state.kegs, cell.p) ||
+      barCellsOf(state).has(`${cell.p.x},${cell.p.y}`)
     const doorDepth = (state: GameState) =>
       entity?.type === 'door' && isDoorOpen(state, entity.id) ? 0 : TILE.layer
     // 상자가 얹힌 칸도 찾도록 entity와 따로 보는 발판
