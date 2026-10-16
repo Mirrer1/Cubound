@@ -90,6 +90,10 @@ export const es: Partial<Texts> = {
   'guide.keg': 'Si el fuego llega a un barril, el suelo de alrededor baja un nivel',
   'guide.fuse':
     'Una mecha encendida estalla tras {n} movimientos, así que elige dónde hacerla estallar',
+  'guide.bar': 'Empuja la barra para moverla una casilla',
+  'guide.barTurn': 'Empuja un extremo de la barra desde un lado y girará',
+  'guide.barBridge': 'Pon la barra sobre un hoyo y se volverá un puente',
+  'guide.forge': 'Si el fuego llega a una barra, se calienta y crece una casilla',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',

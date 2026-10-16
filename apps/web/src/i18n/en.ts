@@ -81,6 +81,10 @@ export const en = {
   'guide.burnBox': 'Push a box while on fire and the box burns away',
   'guide.keg': 'When fire reaches a keg, the ground around it drops one level',
   'guide.fuse': 'A lit fuse blows after {n} moves, so choose where to set it off',
+  'guide.bar': 'Push a bar to move it one tile at a time',
+  'guide.barTurn': 'Push the end of a bar from the side and it swings around',
+  'guide.barBridge': 'Put a bar over a pit and it becomes a bridge',
+  'guide.forge': 'When fire reaches a bar, it heats up and grows one tile longer',
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',

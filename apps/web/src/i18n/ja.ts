@@ -80,6 +80,10 @@ export const ja: Partial<Texts> = {
   'guide.burnBox': '火がついたまま箱を押すと、箱は燃えて消えます',
   'guide.keg': '火薬樽に火が届くと、まわりの地面が一段削れます',
   'guide.fuse': '導火線に火がつくと {n} 手で爆発するので、爆発させる場所を選びましょう',
+  'guide.bar': '棒は押すと一マスずつ動きます',
+  'guide.barTurn': '棒の端を横から押すと、くるりと回ります',
+  'guide.barBridge': '棒を穴の上に置くと橋になります',
+  'guide.forge': '棒に火が届くと、熱されて一マス伸びます',
 
   'chapter.1': '石を踏む道',
   'chapter.2': '草が茂る道',

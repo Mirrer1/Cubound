@@ -80,6 +80,10 @@ export const ko: Partial<Texts> = {
   'guide.burnBox': '불이 붙은 채 상자를 밀면 상자가 타서 사라져요',
   'guide.keg': '화약통에 불이 닿으면 둘레 땅이 한 층 깎여요',
   'guide.fuse': '심지에 불이 붙으면 {n}수 뒤에 터지니 터뜨릴 자리를 골라요',
+  'guide.bar': '막대를 밀면 한 칸씩 움직여요',
+  'guide.barTurn': '막대 끝을 옆에서 밀면 빙글 돌아가요',
+  'guide.barBridge': '막대를 구덩이 위에 놓으면 다리가 돼요',
+  'guide.forge': '막대에 불이 닿으면 달궈져서 한 칸 늘어나요',
 
   'chapter.1': '돌 위의 첫걸음',
   'chapter.2': '풀이 우거진 길',

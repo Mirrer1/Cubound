@@ -80,6 +80,10 @@ export const zhHans: Partial<Texts> = {
   'guide.burnBox': '带着火推箱子，箱子会烧掉消失',
   'guide.keg': '火碰到火药桶，四周的地面就会削低一层',
   'guide.fuse': '导火索点燃后 {n} 步就会爆炸，选好引爆的位置',
+  'guide.bar': '推铁棒，它会一格一格地移动',
+  'guide.barTurn': '从侧面推铁棒的一端，它会转过来',
+  'guide.barBridge': '把铁棒放在坑上就成了桥',
+  'guide.forge': '火碰到铁棒，铁棒会烧热并伸长一格',
 
   'chapter.1': '踏石之路',
   'chapter.2': '草木丛生之路',
