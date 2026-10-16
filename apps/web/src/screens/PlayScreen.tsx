@@ -116,10 +116,10 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
     setAsking(false)
     restart()
   }
-  // 가이드와 카드가 떠 있는 동안은 스와이프 무시, 제스처마다 지우는 앞 판정
+  // 가이드와 카드가 떠 있는 동안과 마우스는 스와이프 무시, 제스처마다 지우는 앞 판정
   const handlePointerDown = (e: PointerEvent<HTMLElement>) => {
     swiped.current = false
-    if (guideStep !== null || asking || game?.cleared) return
+    if (guideStep !== null || asking || game?.cleared || e.pointerType === 'mouse') return
     swipeStart.current = { x: e.clientX, y: e.clientY }
   }
   // 최소 거리를 넘는 순간의 판정, 시작점을 비워 한 제스처에 한 칸

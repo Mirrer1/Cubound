@@ -170,12 +170,12 @@ test.describe('모바일', () => {
     await swipe(page, x, y, 60, -60)
     await expect(moves).toContainText('1')
 
-    // 버튼 안에서 끝나는 짧은 드래그도 스와이프라 눌리지 않는 재시작
-    await page.mouse.move(x, y)
+    // 마우스로 끄는 것은 스와이프가 아닌 입력
+    await page.mouse.move(195, 420)
     await page.mouse.down()
-    await page.mouse.move(x + 30, y - 20, { steps: 4 })
+    await page.mouse.move(255, 360, { steps: 4 })
     await page.mouse.up()
     await page.waitForTimeout(400)
-    await expect(moves).toContainText('2')
+    await expect(moves).toContainText('1')
   })
 })
