@@ -159,14 +159,14 @@ describe('barScene', () => {
     expect(barsAt(sceneAt(before, state, events, SECONDS.pushed), { x: 3, y: 1 })).toHaveLength(1)
   })
 
-  it('끝을 옆에서 밀면 반대쪽 끝을 축으로 돌고 도는 동안은 가장 앞 칸 하나에 그린다', () => {
+  it('끝을 옆에서 밀면 반대쪽 끝을 축으로 돌고 도는 동안은 축 쪽 조각을 축 칸에 그린다', () => {
     const before = createState({ ...FLAT, start: { x: 2, y: 2 } })
     const { state, events } = move(before, 'up')
     const keysAt = (s: number) => barKeys(sceneAt(before, state, events, s))
-    expect(keysAt(0)).toBe('2-1')
+    expect(keysAt(0)).toBe('1-1 2-1')
     expect(barKeys(sceneAt(state, state, [], 0))).toBe('1-0 1-1')
-    // 돌기 동안은 쓸고 가는 칸 중 가장 앞 칸인 큐브 칸에 한 덩이, 큐브가 그 앞
-    expect(keysAt(TURN_SECONDS / 2)).toBe('2-1')
+    // 돌기 동안은 축 칸과 나머지 조각이 걸친 가장 앞 칸, 큐브가 그 앞
+    expect(keysAt(TURN_SECONDS / 2)).toBe('1-1 2-1')
   })
 
   it('두 칸 구덩이 위로 밀면 뒤 절반에 바닥 높이까지 내려앉아 다리가 된다', () => {

@@ -1,3 +1,5 @@
+import { useId } from 'react'
+
 import { Pool } from './BoardFire'
 import { type BarPiece, barTone, flatLook } from './view'
 import { useLoop } from '@/hooks/useLoop'
@@ -18,6 +20,7 @@ interface BoardBarProps {
 
 const BoardBar = ({ piece, opacity, heat, waiting }: BoardBarProps) => {
   const breath = useLoop(BREATH, BREATH_MS)
+  const clipId = useId()
   const flats = piece.flats.map(flatLook)
   const under = waiting ? heat * WAIT_HEAT : heat
 
@@ -34,11 +37,18 @@ const BoardBar = ({ piece, opacity, heat, waiting }: BoardBarProps) => {
       {piece.pool && heat > 0 && (
         <Pool x={piece.pool.x} y={piece.pool.y} scale={0.95} opacity={0.1 * heat} />
       )}
-      {piece.faces.map((face, i) => (
-        <polygon key={i} points={face.points} style={{ fill: barTone(face, under) }} />
-      ))}
+      {piece.clip && (
+        <clipPath id={clipId}>
+          <polygon points={piece.clip} />
+        </clipPath>
+      )}
+      <g clipPath={piece.clip ? `url(#${clipId})` : undefined}>
+        {piece.faces.map((face, i) => (
+          <polygon key={i} points={face.points} style={{ fill: barTone(face, under) }} />
+        ))}
+      </g>
       {waiting && heat > 0 && (
-        <g ref={breath}>
+        <g ref={breath} clipPath={piece.clip ? `url(#${clipId})` : undefined}>
           {piece.faces.map((face, i) => (
             <polygon key={i} points={face.points} style={{ fill: barTone(face, heat) }} />
           ))}

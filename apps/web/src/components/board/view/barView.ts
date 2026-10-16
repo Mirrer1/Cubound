@@ -1,5 +1,6 @@
 import { blend, shade } from './shadeView'
 import { TILE } from '@/game/iso'
+import { same } from '@/game/rules'
 import type { Point } from '@/game/types'
 
 // 받침과 몸의 폭은 칸 폭 배, 높이는 px, 몸은 받침보다 inset만큼 짧은 길이
@@ -29,7 +30,8 @@ export interface BarPose {
   z: number // 밑면 높이 px
   sag: { at: number; angle: number } | null // at은 가운데에서 받침 모서리까지 거리, angle은 양수면 머리 쪽이 처지는 각
   lips: number // 다리 끝이 가장자리에 얹힌 진하기
-  hold?: Point // 돌 때 막대 전체를 한 덩이로 그리는 칸
+  hold?: Point // 막대 전체를 한 덩이로 그리는 칸
+  turn?: { cut: number; side: number; pivot: Point; front: Point } // 돌 때 cut에서 나눈 두 조각, side 쪽은 축 칸 pivot
   dip?: number // 큐브 무게로 가라앉은 px, 가장자리에 얹힌 끝은 제자리
 }
 
@@ -53,6 +55,7 @@ export interface BarPiece {
   flats: BarFlat[] // 막대 밑에 깔리는 평면
   pool: Point | null // 달군 쇠 발밑 빛의 화면 자리, 막대 칸 가운데가 든 조각
   faces: BarFace[]
+  clip?: string // 면이 보이는 화면 영역
 }
 
 const ZU = TILE.height
@@ -167,10 +170,15 @@ export const barCuts = (pose: BarPose): number[] => {
 }
 
 const cellAt = (pose: BarPose, u: number): Point =>
-  pose.hold ?? {
-    x: Math.round(pose.x + u * Math.cos(pose.angle)),
-    y: Math.round(pose.y + u * Math.sin(pose.angle)),
-  }
+  pose.hold ??
+  (pose.turn
+    ? (u - pose.turn.cut) * pose.turn.side > 0
+      ? pose.turn.pivot
+      : pose.turn.front
+    : {
+        x: Math.round(pose.x + u * Math.cos(pose.angle)),
+        y: Math.round(pose.y + u * Math.sin(pose.angle)),
+      })
 
 // 받침 바닥이 닿는 칸, 길이와 폭 방향으로 0.25칸마다 잰 자리
 export const footprintCells = (pose: BarPose): Point[] => {
@@ -279,6 +287,29 @@ export const barPieces = (pose: BarPose): BarPiece[] => {
     const u = -pose.span / 2 + i
     const [x, y] = floor(u, 0, 0)
     pieceAt(cellAt(pose, u)).pool = { x, y }
+  }
+
+  if (pose.turn) {
+    const { cut, side, pivot, front } = pose.turn
+    const whole = layers.flatMap(({ layer, span, width, h }) =>
+      prism(pose, layer, span, width, h, [true, true]),
+    )
+    const lead = frontCell([pivot, front])
+    const back = same(lead, pivot) ? front : pivot
+    pieceAt(back).faces = whole
+    if (!same(lead, back)) {
+      // 나중에 그리는 칸 쪽 절반만 보이는 영역, 먼저 그린 막대 위에 덮는 자리
+      const far = cut + (same(lead, pivot) ? side : -side) * 4
+      const ground = placer({ ...pose, sag: null })
+      pieceAt(lead).faces = whole
+      pieceAt(lead).clip = join([
+        ground(cut, -4, 0),
+        ground(cut, 4, 0),
+        ground(far, 4, 0),
+        ground(far, -4, 0),
+      ])
+    }
+    return [...pieces.values()]
   }
 
   const cuts = pose.hold ? [-half, half] : barCuts(pose)

@@ -56,6 +56,15 @@ describe('barPieces', () => {
     expect(pieces.map((p) => p.cell)).toEqual([{ x: 1, y: 0 }])
   })
 
+  it('돌 때는 먼저 그리는 칸에 막대 전체, 나중 칸에 자기 쪽만 보이는 막대 전체를 그린다', () => {
+    const turn = { cut: 0.2, side: 1, pivot: { x: 1, y: 0 }, front: { x: 0, y: 1 } }
+    const pieces = barPieces({ ...REST, angle: Math.PI / 4, turn })
+    const at = (x: number, y: number) => pieces.find((p) => p.cell.x === x && p.cell.y === y)!
+    expect(at(1, 0).faces).toEqual(at(0, 1).faces)
+    expect(at(1, 0).clip).toBeUndefined()
+    expect(at(0, 1).clip).toBeDefined()
+  })
+
   it('처진 막대는 받치는 칸에 그늘과 닿는 띠를 깐다', () => {
     const pieces = barPieces({ ...REST, sag: { at: 0, angle: BAR.sag } })
     expect(pieces[0].flats.map((f) => f.kind)).toEqual(['shadow', 'contact'])

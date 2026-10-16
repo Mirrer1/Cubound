@@ -169,11 +169,20 @@ const pushPose = (before: GameState, game: GameState, e: Pushed, p: number): Bar
 
   const da = turnOf(from.angle, to.angle)
   const spun = turned(from, e.pivot, da * p)
-  // 돌며 쓸고 가는 칸 중 가장 앞 칸, 그보다 늦게 그려지는 바닥에 덮이지 않는 자리
-  const pivot = e.pivot
-  const sweep = Array.from({ length: 9 }, (_, i) => turned(from, pivot, (da * i) / 8))
-  const hold = frontCell(sweep.flatMap(footprintCells))
-  return { ...shape, x: spun.x, y: spun.y, angle: spun.angle, hold }
+  const pose = { ...shape, x: spun.x, y: spun.y, angle: spun.angle }
+  const cos = Math.cos(pose.angle)
+  const sin = Math.sin(pose.angle)
+  const side = Math.sign((e.pivot.x - pose.x) * cos + (e.pivot.y - pose.y) * sin)
+  // 축 칸 가운데에서 0.3칸, 축 쪽 조각이 축 칸 밖으로 나가지 않는 자리
+  const cut = side * (pose.span / 2 - 0.3)
+  const mid = (cut - side * (pose.length / 2)) / 2
+  const swing = {
+    ...pose,
+    x: pose.x + mid * cos,
+    y: pose.y + mid * sin,
+    length: 2 * Math.abs(mid - cut),
+  }
+  return { ...pose, turn: { cut, side, pivot: e.pivot, front: frontCell(footprintCells(swing)) } }
 }
 
 // 큐브가 민 막대가 불에 닿기까지의 초, 내 이동이 다 끝난 뒤
