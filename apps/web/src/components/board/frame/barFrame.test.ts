@@ -47,6 +47,7 @@ interface More {
   t?: number
   cube?: Point
   dropping?: boolean
+  ride?: number
 }
 
 const sceneAt = (
@@ -79,6 +80,7 @@ const sceneAt = (
       stepT: 0.5,
     }),
     stepT: 0.5,
+    ride: () => more.ride ?? 0.5,
     cube: more.cube ?? game.player,
   })
 
@@ -144,7 +146,7 @@ describe('restPose', () => {
       inset: 0,
       z: -BAR_HEIGHT,
       sag: null,
-      lips: 1,
+      lips: 0,
     })
   })
 })
@@ -285,5 +287,50 @@ describe('달군 쇠', () => {
     expect(shoveClock(boxed, SECONDS.moved)).toBe(0)
     expect(shoveClock(boxed, SECONDS.moved + FORGE.heat + FORGE.grow)).toBeCloseTo(SECONDS.pushed)
     expect(shoveClock(events, 0.1)).toBe(0.1)
+  })
+})
+
+describe('barScene', () => {
+  it('발판에 실린 막대는 발판이 오르는 진행도를 따라 오른다', () => {
+    const lifted = createState({
+      version: 1,
+      id: 'test-bar-lifts',
+      heights: [
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1],
+      ],
+      start: { x: 2, y: 2 },
+      goal: { x: 5, y: 0 },
+      entities: [
+        { type: 'bar', x: 2, y: 0, axis: 'x' },
+        { type: 'lift', x: 2, y: 0, id: 'a' },
+        { type: 'lift', x: 3, y: 0, id: 'b' },
+        { type: 'switch', x: 0, y: 2, target: 'a' },
+        { type: 'switch', x: 5, y: 2, target: 'b' },
+        { type: 'box', x: 1, y: 2 },
+        { type: 'box', x: 4, y: 2 },
+      ],
+    })
+    const before = (['left', 'right', 'right'] as const).reduce((s, d) => move(s, d).state, lifted)
+    const { state, events } = move(before, 'right')
+    const still = (game: GameState) => topOf(sceneAt(game, game, [], 0, { t: 1 }))
+
+    expect(topOf(sceneAt(before, state, events, 0.1, { ride: 0 }))).toBeCloseTo(still(before))
+    expect(topOf(sceneAt(before, state, events, 0.1, { ride: 1 }))).toBeCloseTo(still(state))
+  })
+})
+
+describe('barScene 축 칸이 앞인 돌기', () => {
+  it('뒤쪽으로 도는 끝은 축 칸이 아니라 끝이 지나는 칸 차례에 그린다', () => {
+    const before = stateOf({ start: { x: 2, y: 0 } }, [{ type: 'bar', x: 1, y: 0, axis: 'y' }])
+    const { events, state } = move(before, 'left')
+    const pivot = { x: 1, y: 1 }
+
+    expect(events).toContainEqual(expect.objectContaining({ type: 'barPushed', pivot }))
+    for (const elapsed of [0.02, TURN_SECONDS / 2]) {
+      const cells = sceneAt(before, state, events, elapsed).draws[0].pieces.map((p) => p.cell)
+      expect(cells.some((c) => c.x + c.y < pivot.x + pivot.y)).toBe(true)
+    }
   })
 })

@@ -97,7 +97,7 @@ export const restPose = (state: GameState, bar: Bar): BarPose => {
     inset: bridge ? 0 : BAR.body.inset,
     z: bar.level * TILE.layer - (bridge ? BAR_HEIGHT : 0),
     sag: bridge ? null : sagOf(cells.map((c) => groundOf(state, c) >= bar.level)),
-    lips: bridge ? 1 : 0,
+    lips: 0,
   }
 }
 
@@ -153,7 +153,7 @@ const pushSeconds = (e: Pushed) =>
 const pushPose = (before: GameState, game: GameState, e: Pushed, p: number): BarPose => {
   const from = restPose(before, e.from)
   const to = restPose(game, e.to)
-  const bridged = to.lips > from.lips
+  const bridged = to.inset < from.inset
   const z =
     to.z < from.z
       ? bridged
@@ -182,7 +182,11 @@ const pushPose = (before: GameState, game: GameState, e: Pushed, p: number): Bar
     y: pose.y + mid * sin,
     length: 2 * Math.abs(mid - cut),
   }
-  return { ...pose, turn: { cut, side, pivot: e.pivot, front: frontCell(footprintCells(swing)) } }
+  // 축 칸을 뺀 도는 끝 칸, 축 칸이 앞이어도 끝이 큐브를 덮지 않는 차례
+  const { pivot } = e
+  const away = footprintCells(swing).filter((c) => !same(c, pivot))
+  const front = frontCell(away.length > 0 ? away : [pivot])
+  return { ...pose, turn: { cut, side, pivot, front } }
 }
 
 // 큐브가 민 막대가 불에 닿기까지의 초, 내 이동이 다 끝난 뒤
@@ -281,6 +285,7 @@ interface BarView {
   ashed: Point[] // 이 수에 재가 되는 숯
   keg: KegScene
   stepT: number
+  ride: (p: Point) => number // 그 칸 발판이 오르내리는 진행도
   cube: { x: number; y: number }
 }
 
@@ -324,7 +329,10 @@ const settleProgress = (view: BarView, cells: Point[]) => {
   const dropped = Math.max(0, ...cells.map((c) => kegDrop(view.keg, c)))
   if (view.keg.blasts.some((b) => cells.some((c) => has(b.lowered, c)))) return clamp01(dropped)
   if (cells.some((c) => has(view.ashed, c))) return smooth(clamp01(view.elapsed / FIRE.ash))
-  return view.stepT
+  const lift = cells.find((c) =>
+    view.game.stage.entities.some((e) => e.type === 'lift' && same(e, c)),
+  )
+  return lift ? view.ride(lift) : view.stepT
 }
 
 // 그 순간 판 전체의 막대 모습과 다리 위 큐브 흔들림

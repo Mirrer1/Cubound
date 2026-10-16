@@ -33,6 +33,7 @@ import { restartDrop } from './restartFrame'
 import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFrame'
 import { fadeLanes, sluiceScene, tapFronts } from './sluiceFrame'
 import { boxSink, swampFrame } from './swampFrame'
+import { ridePhase } from './switchFrame'
 import { moorLooks, tetherFrames } from './tetherFrame'
 import {
   type SwampTime,
@@ -298,6 +299,7 @@ export const sceneFrame = ({
     ashed: fire.ashed,
     keg,
     stepT,
+    ride: (p) => ridePhase(game, events, p, t, swampSeconds),
     cube,
   })
   const cubeFaces = rollingCubeFaces(

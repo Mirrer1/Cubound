@@ -100,6 +100,19 @@ export const passDip = (events: GameEvent[], p: Point, t: number, swamp: SwampTi
 export const switchCells = (stage: Stage, target: string): Point[] =>
   stage.entities.filter((e) => e.type === 'switch' && e.target === target)
 
+type Lift = Extract<Entity, { type: 'lift' }>
+
+// 막대가 함께 얹힌 발판들의 스위치 칸, 막대가 없으면 그 발판의 스위치 칸
+const liftSwitchCells = (game: GameState, lift: Lift) => {
+  const bar = game.bars.find((b) => barCells(b).some((c) => same(c, lift)))
+  const ids = bar
+    ? game.stage.entities
+        .filter((e): e is Lift => e.type === 'lift' && barCells(bar).some((c) => same(c, e)))
+        .map((e) => e.id)
+    : [lift.id]
+  return ids.flatMap((id) => switchCells(game.stage, id))
+}
+
 // 그 칸의 발판이 오르내리는 진행도, 물이 바뀌는 수는 수면 진행도, 발판 칸이 아니면 이동 전체
 export const ridePhase = (
   game: GameState,
@@ -109,18 +122,10 @@ export const ridePhase = (
   swamp: SwampTime,
 ) => {
   if (sluiceStart(events) !== null) return sluicePhase(events, t, swamp).level
-  const lift = game.stage.entities.find(
-    (e): e is Extract<Entity, { type: 'lift' }> => e.type === 'lift' && same(e, p),
-  )
+  const lift = game.stage.entities.find((e): e is Lift => e.type === 'lift' && same(e, p))
   return lift === undefined
     ? t
-    : switchProgress(
-        events,
-        switchCells(game.stage, lift.id),
-        isLiftRaised(game, lift.id),
-        t,
-        swamp,
-      )
+    : switchProgress(events, liftSwitchCells(game, lift), isLiftRaised(game, lift.id), t, swamp)
 }
 
 export interface SwitchLook {
@@ -170,16 +175,14 @@ export const switchLookOf = (
     const doorDepth = (state: GameState) =>
       entity?.type === 'door' && isDoorOpen(state, entity.id) ? 0 : TILE.layer
     // 상자가 얹힌 칸도 찾도록 entity와 따로 보는 발판
-    const lift = stage.entities.find(
-      (e): e is Extract<Entity, { type: 'lift' }> => e.type === 'lift' && same(e, cell.p),
-    )
+    const lift = stage.entities.find((e): e is Lift => e.type === 'lift' && same(e, cell.p))
     const liftLevel = (state: GameState) =>
       lift !== undefined && isLiftRaised(state, lift.id) ? 1 : 0
     const warp = stage.entities.find(
       (e): e is Extract<Entity, { type: 'warp' }> => e.type === 'warp' && same(e, cell.p),
     )
     const liftPhase =
-      lift === undefined ? 1 : linkedPhase(switchCells(stage, lift.id), isLiftRaised(game, lift.id))
+      lift === undefined ? 1 : linkedPhase(liftSwitchCells(game, lift), isLiftRaised(game, lift.id))
     const switchPhase =
       entity?.type === 'switch' && scene.dropping
         ? back

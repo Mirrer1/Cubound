@@ -299,12 +299,17 @@ export const barPieces = (pose: BarPose): BarPiece[] => {
     pieceAt(back).faces = whole
     if (!same(lead, back)) {
       // 나중에 그리는 칸 쪽 절반만 보이는 영역, 먼저 그린 막대 위에 덮는 자리
-      const far = cut + (same(lead, pivot) ? side : -side) * 4
+      // 축 칸이 나중이면 축 칸 전체가 보이는 자리, 축 칸 땅이 먼저 그린 막대를 덮는 탓
+      const edge = same(lead, pivot)
+        ? side *
+          (pose.span / 2 - (Math.abs(Math.cos(pose.angle)) + Math.abs(Math.sin(pose.angle))) / 2)
+        : cut
+      const far = edge + (same(lead, pivot) ? side : -side) * 4
       const ground = placer({ ...pose, sag: null })
       pieceAt(lead).faces = whole
       pieceAt(lead).clip = join([
-        ground(cut, -4, 0),
-        ground(cut, 4, 0),
+        ground(edge, -4, 0),
+        ground(edge, 4, 0),
         ground(far, 4, 0),
         ground(far, -4, 0),
       ])

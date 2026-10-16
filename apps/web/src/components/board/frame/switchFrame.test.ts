@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { movingBox } from './boxFrame'
-import { passDip, pressProgress, switchCells, switchProgress } from './switchFrame'
+import { passDip, pressProgress, ridePhase, switchCells, switchProgress } from './switchFrame'
 import { LIFT_STAGE, SLIDE_SWITCH_STAGE } from './testStages'
-import { createState, move } from '@/game/rules'
+import { NO_SWAMP } from './timeFrame'
+import { createState, isLiftRaised, move } from '@/game/rules'
 import type { Stage } from '@/game/types'
 
 describe('switchProgress', () => {
@@ -185,5 +186,43 @@ describe('passDip', () => {
     const values = Array.from({ length: 101 }, (_, i) => passDip(events, at, i / 100))
 
     expect(Math.max(...values)).toBeGreaterThan(0.5)
+  })
+})
+
+describe('ridePhase', () => {
+  const stage: Stage = {
+    version: 1,
+    id: 'test-bar-lifts',
+    heights: [
+      [1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1, 1],
+    ],
+    start: { x: 2, y: 2 },
+    goal: { x: 5, y: 0 },
+    entities: [
+      { type: 'bar', x: 2, y: 0, axis: 'x' },
+      { type: 'lift', x: 2, y: 0, id: 'a' },
+      { type: 'lift', x: 3, y: 0, id: 'b' },
+      { type: 'switch', x: 0, y: 2, target: 'a' },
+      { type: 'switch', x: 5, y: 2, target: 'b' },
+      { type: 'box', x: 1, y: 2 },
+      { type: 'box', x: 4, y: 2 },
+    ],
+  }
+
+  it('막대가 함께 얹힌 두 발판은 나중 스위치에 맞춰 같이 오른다', () => {
+    const before = (['left', 'right', 'right'] as const).reduce(
+      (s, d) => move(s, d).state,
+      createState(stage),
+    )
+    const { state, events } = move(before, 'right')
+
+    expect(isLiftRaised(state, 'a')).toBe(true)
+    for (let t = 0; t <= 1; t += 0.05) {
+      expect(ridePhase(state, events, { x: 2, y: 0 }, t, NO_SWAMP)).toBeCloseTo(
+        ridePhase(state, events, { x: 3, y: 0 }, t, NO_SWAMP),
+      )
+    }
   })
 })
