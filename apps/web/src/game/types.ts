@@ -184,7 +184,7 @@ export type GameEvent =
   | { type: 'climbed'; from: Point; to: Point; via: 'box' | 'ladder' }
   | { type: 'slid'; subject: 'player' | 'box' | 'stone' | 'keg'; from: Point; to: Point } // 얼음 위 미끄러짐, 이웃하지 않을 수도 있는 from과 to
   | { type: 'pushed'; from: Point; to: Point; result: 'slid' | 'fell' | 'filled' | 'floated' } // floated는 땅에서 물에 떨어져 뜬 상자
-  | { type: 'cracked'; at: Point; left: number; gone: boolean } // gone은 바닥 없는 칸이 되었는지 여부
+  | { type: 'cracked'; at: Point; left: number; gone: boolean; worn?: true } // gone은 바닥 없는 칸이 되었는지 여부, worn은 이미 다 닳은 칸에 올라선 수
   | { type: 'struggled'; at: Point } // 늪에서 제자리에 선 수
   | { type: 'sank'; at: Point } // 늪에 밀려 들어가 가라앉는 상자
   | { type: 'pickedUp'; at: Point; item: Carried }
@@ -219,7 +219,7 @@ export type GameEvent =
   | { type: 'exploded'; at: Point; lowered: Point[]; caught: Point[] } // 연쇄 순서대로 하나씩, lowered는 한 층 깎인 칸, caught는 불이 붙은 숯
   | { type: 'blasted'; from: Point; to: Point; direction: Direction } // 폭발에 밀려 to 쪽으로 간 이동, 그 이동의 이벤트는 바로 뒤
   | { type: 'blastBraced'; direction: Direction } // 밀릴 자리가 막혀 폭발을 버틴 수
-  | { type: 'barPushed'; bar: number; from: Bar; to: Bar; pivot: Point | null } // bar는 bars 순서, pivot은 돌기의 축 칸
+  | { type: 'barPushed'; bar: number; from: Bar; to: Bar; pivot: Point | null; tip?: true } // bar는 bars 순서, pivot은 돌기의 축 칸, tip은 한쪽 끝이 낮은 땅에 닿게 기우는 수
   | { type: 'barSettled'; bar: number; from: number; to: number } // 밑 칸이 바뀌어 달라진 막대 높이
   | { type: 'barHeated'; bar: number; end: 'head' | 'tail' }
   | {

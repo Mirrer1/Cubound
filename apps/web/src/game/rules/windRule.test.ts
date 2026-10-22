@@ -372,7 +372,7 @@ describe('move 바람', () => {
   })
 
   it('무너지는 칸은 바람이 옮긴 뒤의 자리를 본다', () => {
-    // 사다리를 놓아 제자리에 선 수에 바람에 밀려 떠난 칸도 닳는 경우
+    // 사다리를 놓아 제자리에 선 수에 바람에 밀려 올라선 칸이 닳는 경우
     const state = gusty(
       {
         heights: [
@@ -380,14 +380,14 @@ describe('move 바람', () => {
           [0, 0, 0, 0, 0, 0],
           [0, 0, 0, 0, 0, 0],
         ],
-        cracks: ['......', '...2..', '......'],
+        cracks: ['......', '..2...', '......'],
       },
       { player: { x: 3, y: 1 }, carrying: 'ladder' },
     )
     const { state: next, events } = move(state, 'up')
 
     expect(next.player).toEqual({ x: 2, y: 1 })
-    expect(events).toContainEqual({ type: 'cracked', at: { x: 3, y: 1 }, left: 1, gone: false })
+    expect(events).toContainEqual({ type: 'cracked', at: { x: 2, y: 1 }, left: 1, gone: false })
   })
 
   it('이동으로 밟은 무너지는 칸을 같은 수에 바람에 밀려 떠나면 한 번 닳는다', () => {
