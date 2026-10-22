@@ -177,6 +177,16 @@ describe('tramBeside', () => {
     expect(tramBeside([{ cell: { x: 4, y: 3 } }], { x: 5, y: 1 })).toBe(false)
     expect(tramBeside([{ cell: { x: 5, y: 1 } }], { x: 5, y: 1 })).toBe(false)
   })
+
+  it('앞으로 떠나는 중인 칸 바로 앞의 발판은 거짓이다', () => {
+    const front = [{ cell: { x: 5, y: 5 } }]
+    expect(tramBeside(front, { x: 6, y: 4 }, { x: 5, y: 4 })).toBe(false)
+    expect(tramBeside(front, { x: 6, y: 4 })).toBe(true)
+  })
+
+  it('뒤로 들어서는 줄 옆의 발판은 그대로 참이다', () => {
+    expect(tramBeside([{ cell: { x: 6, y: 3 } }], { x: 5, y: 4 })).toBe(true)
+  })
 })
 
 describe('underWall', () => {

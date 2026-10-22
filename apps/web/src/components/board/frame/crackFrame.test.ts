@@ -8,6 +8,7 @@ import {
   crackProgress,
   crackSink,
   crackThickness,
+  crumbleShown,
   sinkAt,
   standSink,
 } from './crackFrame'
@@ -331,5 +332,24 @@ describe('standSink', () => {
   it('칸 사이를 지나는 동안은 앞뒤 칸을 섞는다', () => {
     expect(standSink(view, 0.5, 1)).toBeCloseTo(deep / 2)
     expect(standSink(view, 1, 0.25)).toBeCloseTo(deep * 0.25)
+  })
+})
+
+describe('crumbleShown', () => {
+  const at = { x: 1, y: 1 }
+  const view = (was: number, left: number, phase: number) => ({
+    game: { cracks: left >= 0 ? [{ ...at, left }] : [] },
+    before: { cracks: was >= 0 ? [{ ...at, left: was }] : [] },
+    crackPhase: phase,
+  })
+
+  it('이 수에 무너지는 칸은 무너지는 진하기를 따른다', () => {
+    expect(crumbleShown(view(0, -1, 0.7), at)).toBe(crackFrame(0, -1, 0.7).opacity)
+    expect(crumbleShown(view(0, -1, 0.7), at)).toBeLessThan(1)
+  })
+
+  it('무너지지 않는 칸은 1이다', () => {
+    expect(crumbleShown(view(1, 0, 0.7), at)).toBe(1)
+    expect(crumbleShown(view(-1, -1, 0.7), at)).toBe(1)
   })
 })

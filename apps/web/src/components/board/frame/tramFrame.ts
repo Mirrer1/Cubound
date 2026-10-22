@@ -133,10 +133,16 @@ export const underWall = (
   })
 
 // 큐브 옆 같은 깊이 칸을 지나는 발판, 큐브를 같은 깊이 칸 중 맨 나중에 그려야 하는 경우
-export const tramBeside = (frames: { cell: Point }[], cube: Point) =>
+// leaving은 앞으로 떠나는 중인 칸, 그 바로 앞 칸의 발판은 큐브 앞에 그리는 경우
+export const tramBeside = (frames: { cell: Point }[], cube: Point, leaving: Point | null = null) =>
   frames.some(
     ({ cell }) =>
       !same(cell, cube) &&
+      !(
+        leaving &&
+        (same(cell, { x: leaving.x, y: leaving.y + 1 }) ||
+          same(cell, { x: leaving.x + 1, y: leaving.y }))
+      ) &&
       Math.abs(cell.x - cube.x) <= 1 &&
       Math.abs(cell.y - cube.y) <= 1 &&
       cell.x + cell.y === cube.x + cube.y,

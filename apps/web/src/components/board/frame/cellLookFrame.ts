@@ -12,7 +12,7 @@ import { barsAt, lipsAt } from './barFrame'
 import { type BrazierLook, brazierLookOf } from './brazierFrame'
 import { type LadderLook, ladderLookOf } from './carryFrame'
 import type { boardCells } from './cellFrame'
-import { crackFrame, crackLeft, phaseOf, sinkAt } from './crackFrame'
+import { crackFrame, crackLeft, crumbleShown, phaseOf, sinkAt } from './crackFrame'
 import { clamp01, lerp, smooth } from './curveFrame'
 import { landingCellKey, wallHeight } from './fillFrame'
 import { type FireLook, NO_FIRE, fireLookOf } from './fireFrame'
@@ -116,6 +116,8 @@ export interface CellLook {
     railNext: boolean // 발판이 다음 수에 들어올 칸
     wallLeft: number // 0 이상이면 위 칸 쪽에 세우는 구덩이 벽, -1이면 벽 없는 칸
     wallRight: number // 0 이상이면 왼 칸 쪽에 세우는 구덩이 벽, -1이면 벽 없는 칸
+    wallLeftShown: number
+    wallRightShown: number
   }
   ladder: LadderLook
   fire: FireLook
@@ -361,6 +363,8 @@ export const cellLook = ({
         railNext: scene.nextRails.has(cell.key),
         wallLeft: pitShown ? wallHeight(walls, cell.p.x, cell.p.y - 1) : -1,
         wallRight: pitShown ? wallHeight(walls, cell.p.x - 1, cell.p.y) : -1,
+        wallLeftShown: crumbleShown(scene.crackView, { x: cell.p.x, y: cell.p.y - 1 }),
+        wallRightShown: crumbleShown(scene.crackView, { x: cell.p.x - 1, y: cell.p.y }),
       },
       ladder: ladderLookOf(scene, game, back, cell, pickedHere),
       fire: isFilled ? NO_FIRE : fire,

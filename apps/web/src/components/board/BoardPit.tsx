@@ -42,6 +42,8 @@ interface BoardPitProps {
   railNext: boolean // 발판이 다음 수에 들어올 칸
   pitWallLeft: number // 0 이상이면 위 칸 쪽에 세우는 구덩이 벽, -1이면 벽 없는 칸
   pitWallRight: number // 0 이상이면 왼 칸 쪽에 세우는 구덩이 벽, -1이면 벽 없는 칸
+  pitWallLeftShown: number
+  pitWallRightShown: number
   vine: VineKind | null // 덩굴 뿌리나 길 칸
   grownVine: boolean
   vineRise: number // 판이 구덩이에서 차오른 정도
@@ -56,6 +58,8 @@ const BoardPit = ({
   railNext,
   pitWallLeft,
   pitWallRight,
+  pitWallLeftShown,
+  pitWallRightShown,
   vine,
   grownVine,
   vineRise,
@@ -72,10 +76,16 @@ const BoardPit = ({
         style={{ fill: 'var(--color-pit-floor)' }}
       />
       {pitWallLeft >= 0 && (
-        <polygon points={wallPoints(x, y, 1)} style={{ fill: 'var(--color-pit-wall-left)' }} />
+        <polygon
+          points={wallPoints(x, y, 1)}
+          style={{ fill: 'var(--color-pit-wall-left)', opacity: pitWallLeftShown }}
+        />
       )}
       {pitWallRight >= 0 && (
-        <polygon points={wallPoints(x, y, -1)} style={{ fill: 'var(--color-pit-wall-right)' }} />
+        <polygon
+          points={wallPoints(x, y, -1)}
+          style={{ fill: 'var(--color-pit-wall-right)', opacity: pitWallRightShown }}
+        />
       )}
       {rails.map(([dx, dy]) => (
         <polygon

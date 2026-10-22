@@ -127,6 +127,13 @@ const shakeAt = (view: CrackView, p: Point) => {
 
 export const phaseOf = (view: CrackView, p: Point) => view.phaseAt?.(p) ?? view.crackPhase
 
+// 이 수에 무너지는 칸의 남은 진하기, 그 칸 쪽 구덩이 벽도 같은 진하기
+export const crumbleShown = (view: CrackView, p: Point) => {
+  const was = crackLeft(view.before, p)
+  const left = crackLeft(view.game, p)
+  return was >= 0 && left < 0 ? crackFrame(was, left, phaseOf(view, p)).opacity : 1
+}
+
 // 닳을수록 내려앉는 무너지는 칸, 그 위에 선 것도 같은 만큼 하강
 export const sinkAt = (view: CrackView, p: Point) => {
   const left = crackLeft(view.game, p)

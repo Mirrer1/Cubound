@@ -295,6 +295,13 @@ export const sceneFrame = ({
     lanes: fadeLanes(laneShown(sluice.lanes, before, game, iceT), sluice.laneFade),
   }
 
+  const leaving = { x: Math.floor(cube.x), y: Math.floor(cube.y) }
+  // 내려앉은 칸에서 앞으로 떠나는 큐브, 그 칸을 가리던 발판 뒤 순서 유지
+  const sunkLeaving =
+    (cube.direction === 'right' || cube.direction === 'down') &&
+    standSink(crackView, leaving.x, leaving.y) > 0
+      ? leaving
+      : null
   const cubeSink =
     standSink(crackView, cube.x, cube.y) +
     iceSink(covers, game, cube.x, cube.y) -
@@ -402,7 +409,7 @@ export const sceneFrame = ({
     // 같은 깊이 옆 칸으로 끌려가는 배와 돌이 큐브 아래를 덮지 않는 순서
     cube:
       pulledBeside([...whirl.boxes, ...iceStone.stones.filter((s) => s.pulled)], cube.cell) ||
-      tramBeside(tramFrames, cube.cell)
+      tramBeside(tramFrames, cube.cell, sunkLeaving)
         ? { ...cube, last: true }
         : cube,
     cubeCell,
