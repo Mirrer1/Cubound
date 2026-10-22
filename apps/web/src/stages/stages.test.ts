@@ -35,7 +35,7 @@ describe('스테이지 데이터', () => {
     expect(result.ok ? [] : result.errors).toEqual([])
   })
 
-  // 탐색이 5초 안팎인 10월드 네 요소 판에 맞춘 넉넉한 시간 제한
+  // 혼자 35초, 전체 테스트 안에서 45초 안팎인 190에 맞춘 넉넉한 시간 제한
   it.each(STAGES)(
     '%s는 풀 수 있고 best가 최소 이동 수와 같다',
     (_, stage) => {
@@ -44,7 +44,7 @@ describe('스테이지 데이터', () => {
       expect(result.status).toBe('solved')
       expect(stage.best).toBe(result.status === 'solved' ? result.moves : undefined)
     },
-    40000,
+    60000,
   )
 
   it.each(STAGES)('%s의 id가 파일 경로와 맞다', (path, stage) => {
