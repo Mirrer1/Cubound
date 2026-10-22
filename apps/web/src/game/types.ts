@@ -219,7 +219,15 @@ export type GameEvent =
   | { type: 'exploded'; at: Point; lowered: Point[]; caught: Point[] } // 연쇄 순서대로 하나씩, lowered는 한 층 깎인 칸, caught는 불이 붙은 숯
   | { type: 'blasted'; from: Point; to: Point; direction: Direction } // 폭발에 밀려 to 쪽으로 간 이동, 그 이동의 이벤트는 바로 뒤
   | { type: 'blastBraced'; direction: Direction } // 밀릴 자리가 막혀 폭발을 버틴 수
-  | { type: 'barPushed'; bar: number; from: Bar; to: Bar; pivot: Point | null; tip?: true } // bar는 bars 순서, pivot은 돌기의 축 칸, tip은 한쪽 끝이 낮은 땅에 닿게 기우는 수
+  | {
+      type: 'barPushed'
+      bar: number // bars 순서
+      from: Bar
+      to: Bar
+      pivot: Point | null // 돌기의 축 칸
+      tip?: true // 한쪽 끝이 낮은 땅에 닿게 기우는 수
+      bridge?: true // 다리로 내려앉는 수
+    }
   | { type: 'barSettled'; bar: number; from: number; to: number } // 밑 칸이 바뀌어 달라진 막대 높이
   | { type: 'barHeated'; bar: number; end: 'head' | 'tail' }
   | {

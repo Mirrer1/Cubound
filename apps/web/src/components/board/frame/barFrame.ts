@@ -36,6 +36,11 @@ const FELL = SECONDS.fell
 // 옆을 밀어 90도 도는 초, 따라 들어가는 큐브도 같은 길이
 export const TURN_SECONDS = 0.34
 
+// 세 칸 막대가 도는 초, 끝이 더 멀리 도는 몫
+const LONG_TURN_SECONDS = 0.45
+
+const turnSeconds = (bar: Bar) => (bar.length > 2 ? LONG_TURN_SECONDS : TURN_SECONDS)
+
 // 막혀서 끝이 밀렸다 돌아오는 각
 const NUDGE = (5 * Math.PI) / 180
 
@@ -166,10 +171,15 @@ const turnOf = (from: number, to: number) => {
 
 // 밀린 막대가 걸리는 초
 const pushSeconds = (e: Pushed) =>
-  e.to.level < e.from.level ? FELL : e.pivot ? TURN_SECONDS : SECONDS.pushed
+  e.to.level < e.from.level ? FELL : e.pivot ? turnSeconds(e.from) : SECONDS.pushed
 
 // 낮은 땅에 닿게 기우는 막대, 밀기 30%부터 밀리는 내내 기울고 밀기 뒤 짧게 마저 내려앉는 시간
 const TIP = { from: 0.3, tail: 0.15 }
+
+// 다리가 되는 막대가 밀림을 마친 뒤 구덩이로 내려앉는 초, 밀리는 동안 땅 위 끝이 땅에 묻히지 않는 차례
+export const SINK_SECONDS = 0.12
+
+const sinkEnd = (e: Pushed) => (e.bridge ? pushSeconds(e) + SINK_SECONDS : 0)
 
 const tipEnd = (e: Pushed) => (e.tip ? pushSeconds(e) + (e.pivot ? 0 : TIP.tail) : 0)
 
@@ -179,22 +189,32 @@ const tipProgress = (e: Pushed, elapsed: number) => {
   return smooth(clamp01((elapsed - start) / (tipEnd(e) - start)))
 }
 
-// 밀리는 막대 모습, 다리로 내려앉는 몫은 밀기 30%부터, 떨어지는 몫은 끝에서 가속
-const pushPose = (before: GameState, game: GameState, e: Pushed, p: number): BarPose => {
+// 밀리는 막대 모습, 다리로 내려앉는 몫은 sink, 떨어지는 몫은 끝에서 가속
+const pushPose = (
+  before: GameState,
+  game: GameState,
+  e: Pushed,
+  p: number,
+  sink: number,
+): BarPose => {
   const from = restPose(before, e.from)
   const to = restPose(game, e.to)
   const bridged = to.inset < from.inset
   const z =
     to.z < from.z
       ? bridged
-        ? smooth(clamp01((p - 0.3) / 0.7))
+        ? sink
         : p < 0.6
           ? 0
           : easeIn((p - 0.6) / 0.4)
       : smooth(clamp01(p / 0.5))
   // 다리로 내려앉는 막대의 양 끝이 가장자리에 얹히는 몫, 밀기 45%부터
   const reach = bridged ? smooth(clamp01((p - 0.45) / 0.55)) : p
-  const shape = { ...blendPose(from, to, reach, z), sag: blendSag(from.sag, to.sag, p) }
+  const shape = {
+    ...blendPose(from, to, reach, z),
+    inset: lerp(from.inset, to.inset, bridged ? sink : reach),
+    sag: blendSag(from.sag, to.sag, p),
+  }
   if (!e.pivot) return { ...shape, x: lerp(from.x, to.x, p), y: lerp(from.y, to.y, p) }
 
   const da = turnOf(from.angle, to.angle)
@@ -246,17 +266,21 @@ export const barTouchAt = (events: GameEvent[], p: Point) => {
 }
 
 // 도는 막대를 따라 들어가는 큐브 구간
-export const turnSegments = (events: GameEvent[], segments: Segment[]): Segment[] =>
-  events.some((e) => e.type === 'barPushed' && e.pivot) && segments[0]?.event.type === 'moved'
-    ? [{ ...segments[0], seconds: TURN_SECONDS }, ...segments.slice(1)]
+export const turnSegments = (events: GameEvent[], segments: Segment[]): Segment[] => {
+  const turn = events.find((e): e is Pushed => e.type === 'barPushed' && e.pivot !== null)
+  return turn && segments[0]?.event.type === 'moved'
+    ? [{ ...segments[0], seconds: turnSeconds(turn.from) }, ...segments.slice(1)]
     : segments
+}
 
 // 막대 연출이 끝나는 초, 이동 몫보다 늦게 끝나는 몫만
 export const barEnd = (events: GameEvent[]) => {
   const start = forgeStart(events)
   return Math.max(
     0,
-    ...events.map((e) => (e.type === 'barPushed' ? Math.max(pushSeconds(e), tipEnd(e)) : 0)),
+    ...events.map((e) =>
+      e.type === 'barPushed' ? Math.max(pushSeconds(e), tipEnd(e), sinkEnd(e)) : 0,
+    ),
     start === null ? 0 : start + FORGE.heat + FORGE.grow,
   )
 }
@@ -464,7 +488,8 @@ export const barScene = (view: BarView) => {
     let pose: BarPose
     const push = pushed ? moveEase(clamp01(elapsed / pushSeconds(pushed)), chain) : 0
     if (pushed) {
-      pose = pushPose(before, game, pushed, push)
+      const sink = smooth(clamp01((elapsed - pushSeconds(pushed)) / SINK_SECONDS))
+      pose = pushPose(before, game, pushed, push, sink)
       if (pushed.tip) {
         const final = restPose(game, pushed.to)
         // 도는 막대는 무너지는 칸 기울기가 풀리는 곡선과 같은 곡선, 합친 기울기가 한 방향으로만 바뀜

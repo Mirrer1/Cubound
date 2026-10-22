@@ -107,8 +107,17 @@ export const pushBar = (
     const h = next.heights[c.y]?.[c.x] ?? -1
     return h >= 0 && h < placed.level
   })
+  const bridge = isBridge(next, placed) && !isBridge(state, bar)
   return walk(next, cell, floor, direction, [
-    { type: 'barPushed', bar: index, from: bar, to: placed, pivot, ...(tip ? { tip: true } : {}) },
+    {
+      type: 'barPushed',
+      bar: index,
+      from: bar,
+      to: placed,
+      pivot,
+      ...(tip ? { tip: true } : {}),
+      ...(bridge ? { bridge: true } : {}),
+    },
   ])
 }
 

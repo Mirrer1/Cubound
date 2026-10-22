@@ -258,6 +258,13 @@ describe('move 막대 높이', () => {
     ])
   })
 
+  it('다리가 되는 밀기에만 내려앉는 표시를 단다', () => {
+    const before = run(createState(PIT_STAGE), ['right']).state
+
+    expect(move(before, 'right').events[0]).toMatchObject({ type: 'barPushed', bridge: true })
+    expect(move(createState(PIT_STAGE), 'right').events[0]).not.toHaveProperty('bridge')
+  })
+
   it('끝 너머에 받칠 땅이 없는 구덩이 위로는 못 민다', () => {
     const wide = { ...BAR_STAGE, heights: withRow(2, [0, 0, 0, 0, -1, -1, -1]) }
     const hanging = move(createState(wide), 'right').state

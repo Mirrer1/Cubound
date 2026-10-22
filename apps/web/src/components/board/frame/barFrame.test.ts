@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { BAR, BAR_HEIGHT } from '../view'
 import {
   FORGE,
+  SINK_SECONDS,
   TURN_SECONDS,
   barEnd,
   barKeys,
@@ -188,7 +189,7 @@ describe('barScene', () => {
     expect(keysAt(TURN_SECONDS / 2)).toBe('1-1 2-1')
   })
 
-  it('두 칸 구덩이 위로 밀면 뒤 절반에 바닥 높이까지 내려앉아 다리가 된다', () => {
+  it('두 칸 구덩이 위로 밀면 밀림을 마친 뒤 바닥 높이까지 내려앉아 다리가 된다', () => {
     const before = stateOf(
       {
         heights: [
@@ -204,12 +205,14 @@ describe('barScene', () => {
     const slid = move(flat, 'right')
     const drop = (s: number) =>
       topOf(sceneAt(before, state, events, s)) - topOf(sceneAt(flat, slid.state, slid.events, s))
-    // 앞 절반은 처진 채 바닥 위, 처짐의 들림 몫만 차이
+    // 밀리는 동안은 바닥 위, 다 밀린 뒤 내려앉음
     expect(Math.abs(drop(SECONDS.pushed * 0.4))).toBeLessThan(3)
-    expect(topOf(sceneAt(before, state, events, SECONDS.pushed))).toBeCloseTo(
+    expect(drop(SECONDS.pushed)).toBeLessThan(0)
+    const settled = SECONDS.pushed + SINK_SECONDS
+    expect(topOf(sceneAt(before, state, events, settled))).toBeCloseTo(
       topOf(sceneAt(state, state, [], 0)),
     )
-    expect(drop(SECONDS.pushed)).toBeGreaterThan(0)
+    expect(drop(settled)).toBeGreaterThan(0)
   })
 
   it('막혀서 못 돌면 끝이 들렸다 제자리로 돌아온다', () => {
