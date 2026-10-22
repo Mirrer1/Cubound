@@ -82,6 +82,15 @@ describe('move 막대 밀기', () => {
     expect(events[0]).toMatchObject({ type: 'barPushed', pivot: null })
   })
 
+  it('한쪽 끝이 낮은 땅 위에 걸치게 밀리면 기울어 닿는 표시를 단다', () => {
+    const stage: Stage = { ...BAR_STAGE, heights: withRow(2, [1, 1, 1, 1, 0, 0, 0]) }
+    const tipped = move(createState(stage), 'right').events[0]
+    const flat = move(createState(BAR_STAGE), 'right').events[0]
+
+    expect(tipped).toMatchObject({ type: 'barPushed', tip: true })
+    expect(flat).not.toHaveProperty('tip')
+  })
+
   it('반대쪽 끝에서 길이 방향으로도 밀린다', () => {
     const start = at(BAR_STAGE, { player: { x: 4, y: 2 } })
 

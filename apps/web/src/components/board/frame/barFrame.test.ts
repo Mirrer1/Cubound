@@ -17,6 +17,7 @@ import {
 import { NO_CHAIN } from './curveFrame'
 import { kegScene } from './kegFrame'
 import { SECONDS } from './pathFrame'
+import { TILE } from '@/game/iso'
 import { createState, move } from '@/game/rules'
 import type { Entity, GameEvent, GameState, Point, Stage } from '@/game/types'
 
@@ -128,11 +129,27 @@ describe('restPose', () => {
     expect(restPose(game, game.bars[0]).sag).toEqual({ at: 0, angle: BAR.sag })
   })
 
-  it('한 칸만 낮은 땅 위면 낮은 쪽 끝이 처진다', () => {
+  it('한 칸만 낮은 땅 위면 낮은 쪽 받침 끝이 그 땅에 닿게 처진다', () => {
     const game = stateOf({
       heights: [
         [1, 1, 1, 1, 1],
         [1, 0, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+      ],
+    })
+    const pose = restPose(game, { ...game.bars[0], level: 1 })
+    const sag = pose.sag ?? { at: 0, angle: 0 }
+    const tip = Math.abs(-pose.length / 2 - sag.at) * TILE.height
+
+    expect(sag.angle).toBeLessThan(-BAR.sag)
+    expect(tip * Math.sin(-sag.angle)).toBeCloseTo(TILE.layer)
+  })
+
+  it('떠 있는 쪽이 구덩이면 정한 처짐 각이다', () => {
+    const game = stateOf({
+      heights: [
+        [1, 1, 1, 1, 1],
+        [1, -1, 1, 1, 1],
         [1, 1, 1, 1, 1],
       ],
     })

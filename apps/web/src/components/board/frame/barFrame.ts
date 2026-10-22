@@ -83,20 +83,39 @@ const sagOf = (supported: boolean[]): BarPose['sag'] => {
   return null
 }
 
+// 떠 있는 쪽 밑에 땅이 있으면 받침 끝이 그 땅에 닿는 각, 모두 구덩이면 정한 처짐 각
+const touchSag = (
+  sag: BarPose['sag'],
+  grounds: number[],
+  level: number,
+  length: number,
+): BarPose['sag'] => {
+  if (!sag || grounds.length === 0) return sag
+  const drop = (level - Math.max(...grounds)) * TILE.layer
+  const tip = Math.abs((sag.angle > 0 ? length / 2 : -length / 2) - sag.at) * TILE.height
+  const angle = Math.max(BAR.sag, Math.asin(Math.min(1, drop / tip)))
+  return { ...sag, angle: Math.sign(sag.angle) * angle }
+}
+
 // 멈춰 있는 막대 모습
 export const restPose = (state: GameState, bar: Bar): BarPose => {
   const cells = barCells(bar)
   const n = cells.length
   const bridge = isBridge(state, bar)
+  const length = bridge ? n : n - 1 + BAR.reach * 2
+  const below = cells.map((c) => groundOf(state, c))
+  const hanging = below.filter((g) => g < bar.level && g >= 0)
   return {
     x: (cells[0].x + cells[n - 1].x) / 2,
     y: (cells[0].y + cells[n - 1].y) / 2,
     angle: ANGLE[bar.dir],
-    length: bridge ? n : n - 1 + BAR.reach * 2,
+    length,
     span: n - 1,
     inset: bridge ? 0 : BAR.body.inset,
     z: bar.level * TILE.layer - (bridge ? BAR_HEIGHT : 0),
-    sag: bridge ? null : sagOf(cells.map((c) => groundOf(state, c) >= bar.level)),
+    sag: bridge
+      ? null
+      : touchSag(sagOf(below.map((g) => g >= bar.level)), hanging, bar.level, length),
     lips: 0,
   }
 }
@@ -148,6 +167,17 @@ const turnOf = (from: number, to: number) => {
 // 밀린 막대가 걸리는 초
 const pushSeconds = (e: Pushed) =>
   e.to.level < e.from.level ? FELL : e.pivot ? TURN_SECONDS : SECONDS.pushed
+
+// 낮은 땅에 닿게 기우는 막대, 밀기 30%부터 밀리는 내내 기울고 밀기 뒤 짧게 마저 내려앉는 시간
+const TIP = { from: 0.3, tail: 0.15 }
+
+const tipEnd = (e: Pushed) => (e.tip ? pushSeconds(e) + (e.pivot ? 0 : TIP.tail) : 0)
+
+// 밀림과 이어지는 기우는 진행도
+const tipProgress = (e: Pushed, elapsed: number) => {
+  const start = pushSeconds(e) * TIP.from
+  return smooth(clamp01((elapsed - start) / (tipEnd(e) - start)))
+}
 
 // 밀리는 막대 모습, 다리로 내려앉는 몫은 밀기 30%부터, 떨어지는 몫은 끝에서 가속
 const pushPose = (before: GameState, game: GameState, e: Pushed, p: number): BarPose => {
@@ -208,7 +238,8 @@ export const barTouchAt = (events: GameEvent[], p: Point) => {
     if (e.type !== 'barPushed') continue
     const was = has(barCells(e.from), p)
     const now = has(barCells(e.to), p)
-    if (now && !was) arrive = pushSeconds(e)
+    // 낮은 땅에 닿게 기우는 수는 밀림이 끝난 때와 끝이 땅에 닿는 때의 가운데
+    if (now && !was) arrive = e.tip ? (pushSeconds(e) + tipEnd(e)) / 2 : pushSeconds(e)
     if (was && !now) leave = 0
   }
   return { arrive, leave }
@@ -225,7 +256,7 @@ export const barEnd = (events: GameEvent[]) => {
   const start = forgeStart(events)
   return Math.max(
     0,
-    ...events.map((e) => (e.type === 'barPushed' ? pushSeconds(e) : 0)),
+    ...events.map((e) => (e.type === 'barPushed' ? Math.max(pushSeconds(e), tipEnd(e)) : 0)),
     start === null ? 0 : start + FORGE.heat + FORGE.grow,
   )
 }
@@ -287,7 +318,51 @@ interface BarView {
   stepT: number
   ride: (p: Point) => number // 그 칸 발판이 오르내리는 진행도
   cube: { x: number; y: number }
+  sinkAt?: (x: number, y: number) => number // 무너지는 칸이 내려앉은 화면 거리
 }
+
+// 양 끝 칸이 내려앉은 만큼 낮추고 더 꺼진 끝으로 기운 모습, 이미 처진 막대와 다리 제외
+// 축은 덜 꺼진 끝 칸의 안쪽 경계, 꺼진 끝 칸 가운데가 그 깊이만큼 내려가는 각
+// 막대 꼬리와 머리 칸이 내려앉은 화면 거리
+const endSinks = (pose: BarPose, sinkAt: (x: number, y: number) => number) => {
+  const half = pose.span / 2
+  const dx = half * Math.cos(pose.angle)
+  const dy = half * Math.sin(pose.angle)
+  return [sinkAt(pose.x - dx, pose.y - dy), sinkAt(pose.x + dx, pose.y + dy)]
+}
+
+const onCrack = (pose: BarPose, sinkAt: (x: number, y: number) => number) =>
+  endSinks(pose, sinkAt).some((s) => s > 0.01)
+
+// 밀리는 동안은 멈춘 자리 measure로 잰 기울기를 k만큼만, 칸 사이를 지나며 꺼진 끝이 옆 칸 바닥에 묻히지 않게
+const crackTilt = (
+  pose: BarPose,
+  sinkAt: (x: number, y: number) => number,
+  measure = pose,
+  k = 1,
+): BarPose => {
+  if (pose.inset === 0 || pose.span === 0 || k <= 0) return pose
+  const half = pose.span / 2
+  const [tail, head] = endSinks(measure, sinkAt)
+  const diff = head - tail
+  const lowered = { ...pose, z: pose.z - Math.min(tail, head) * k }
+  if (Math.abs(diff) < 0.01) return lowered
+  const reach = pose.span - 0.5
+  const angle = Math.atan2(diff, reach * TILE.height) * k
+  const at = diff > 0 ? 0.5 - half : half - 0.5
+  const pit = pose.sag
+  if (!pit) return { ...lowered, sag: { at, angle } }
+  // 구덩이 처짐이 함께 있으면 두 기울기를 더하고 축은 각의 크기로 나눈 자리
+  if (Math.sign(pit.angle) !== Math.sign(angle)) {
+    return Math.abs(pit.angle) >= Math.abs(angle) ? lowered : { ...lowered, sag: { at, angle } }
+  }
+  const sum = pit.angle + angle
+  const shade = { at: pit.at, angle: pit.angle }
+  return { ...lowered, sag: { at: (pit.at * pit.angle + at * angle) / sum, angle: sum, shade } }
+}
+
+// 밀리는 막대의 기울기가 앞 자리에서 풀리고 새 자리에서 생기는 구간, 끝 칸 가운데가 경계를 넘는 절반에 수평
+const TILT_EDGE = 0.5
 
 const stretchedIn = (events: GameEvent[], index: number) =>
   events.some((e) => e.type === 'barStretched' && e.bar === index)
@@ -387,9 +462,23 @@ export const barScene = (view: BarView) => {
     const final = restPose(game, bar)
 
     let pose: BarPose
+    const push = pushed ? moveEase(clamp01(elapsed / pushSeconds(pushed)), chain) : 0
     if (pushed) {
-      const p = moveEase(clamp01(elapsed / pushSeconds(pushed)), chain)
-      pose = pushPose(before, game, pushed, p)
+      pose = pushPose(before, game, pushed, push)
+      if (pushed.tip) {
+        const final = restPose(game, pushed.to)
+        // 도는 막대는 무너지는 칸 기울기가 풀리는 곡선과 같은 곡선, 합친 기울기가 한 방향으로만 바뀜
+        const q = pushed.pivot ? smooth(push) : tipProgress(pushed, elapsed)
+        const sag = blendSag(restPose(before, pushed.from).sag, final.sag, q)
+        // 곧게 밀리는 막대의 처짐 축은 땅 모서리에 고정, 모서리를 넘어간 몫만 처짐
+        const edge =
+          sag && final.sag && !pushed.pivot
+            ? final.sag.at +
+              (final.x - pose.x) * Math.cos(pose.angle) +
+              (final.y - pose.y) * Math.sin(pose.angle)
+            : null
+        pose = { ...pose, sag: sag && edge !== null ? { ...sag, at: edge } : sag }
+      }
     } else if (!moving) {
       pose = final
     } else {
@@ -408,6 +497,22 @@ export const barScene = (view: BarView) => {
     const nudge = moving && !pushed ? nudgeOf(before, events, i, elapsed) : null
     if (nudge) pose = turned(pose, nudge.pivot, nudge.angle)
     if (wobble && wobble.bar === bar) pose = { ...pose, z: pose.z - wobble.dip, dip: wobble.dip }
+    if (view.sinkAt && pushed) {
+      const fromRest = restPose(before, pushed.from)
+      const toRest = restPose(game, pushed.to)
+      const fromOn = onCrack(fromRest, view.sinkAt)
+      const toOn = onCrack(toRest, view.sinkAt)
+      // 도는 막대는 도는 내내 기울기가 바뀜, 앞뒤 자리가 다 기울면 반씩
+      const edge = !pushed.pivot || (fromOn && toOn) ? TILT_EDGE : 1
+      const out = 1 - smooth(clamp01(push / edge))
+      const into = smooth(clamp01((push - 1 + edge) / edge))
+      pose =
+        fromOn && (out > 0 || !toOn)
+          ? crackTilt(pose, view.sinkAt, fromRest, out)
+          : crackTilt(pose, view.sinkAt, toRest, into)
+    } else if (view.sinkAt) {
+      pose = crackTilt(pose, view.sinkAt)
+    }
 
     // 늘어난 수 끝에도 남는 달궈짐, 다음 수 동안 식는 빛
     const heat = heated
@@ -417,6 +522,9 @@ export const barScene = (view: BarView) => {
         : moving && stretchedIn(prevEvents, i)
           ? 1 - smooth(t)
           : 0
+    // 크게 기운 막대는 칸 조각 이음매가 벌어져 비치니 한 덩이
+    const tilted = pose.sag && !pose.turn && !pose.hold && Math.abs(pose.sag.angle) > BAR.sag + 0.01
+    if (tilted) pose = { ...pose, hold: frontCell(footprintCells(pose)) }
     return { pieces: barPieces(pose), opacity: 1, heat, waiting: bar.heat !== null }
   })
 

@@ -102,8 +102,13 @@ export const pushBar = (
   const floor = floorAt(next, cell)
   if (floor === null) return null
 
+  // 한쪽 끝 밑이 막대보다 낮은 땅이면 기울어 닿는 연출 몫
+  const tip = barCells(placed).some((c) => {
+    const h = next.heights[c.y]?.[c.x] ?? -1
+    return h >= 0 && h < placed.level
+  })
   return walk(next, cell, floor, direction, [
-    { type: 'barPushed', bar: index, from: bar, to: placed, pivot },
+    { type: 'barPushed', bar: index, from: bar, to: placed, pivot, ...(tip ? { tip: true } : {}) },
   ])
 }
 

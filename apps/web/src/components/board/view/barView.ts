@@ -28,7 +28,11 @@ export interface BarPose {
   span: number // 양 끝 칸 가운데 사이 거리
   inset: number // 몸이 받침보다 짧은 길이, 다리는 0
   z: number // 밑면 높이 px
-  sag: { at: number; angle: number } | null // at은 가운데에서 받침 모서리까지 거리, angle은 양수면 머리 쪽이 처지는 각
+  sag: {
+    at: number
+    angle: number
+    shade?: { at: number; angle: number } // 다른 기울기와 합친 처짐에서 그늘을 까는 처짐 몫
+  } | null // at은 가운데에서 받침 모서리까지 거리, angle은 양수면 머리 쪽이 처지는 각
   lips: number // 다리 끝이 가장자리에 얹힌 진하기
   hold?: Point // 막대 전체를 한 덩이로 그리는 칸
   turn?: { cut: number; side: number; pivot: Point; front: Point } // 돌 때 cut에서 나눈 두 조각, side 쪽은 축 칸 pivot
@@ -241,9 +245,10 @@ export const barPieces = (pose: BarPose): BarPiece[] => {
   }
 
   if (pose.sag) {
-    const side = pose.sag.angle > 0 ? -1 : 1
-    const opacity = Math.min(1, Math.abs(pose.sag.angle) / BAR.sag)
-    const { at } = pose.sag
+    const shade = pose.sag.shade ?? pose.sag
+    const side = shade.angle > 0 ? -1 : 1
+    const opacity = Math.min(1, Math.abs(shade.angle) / BAR.sag)
+    const { at } = shade
     const shadow: [number, number] = [at + side * BAR.shadow, at].sort((a, b) => a - b) as [
       number,
       number,
@@ -253,10 +258,11 @@ export const barPieces = (pose: BarPose): BarPiece[] => {
       number,
     ]
     const host = pieceAt(cellAt(pose, at + (side * BAR.shadow) / 2))
-    host.flats.push(
-      { kind: 'shadow', opacity, points: flat(pose, shadow, BAR.base.width, 0) },
-      { kind: 'contact', opacity, points: flat(pose, contact, BAR.base.width, 0) },
-    )
+    host.flats.push({ kind: 'shadow', opacity, points: flat(pose, shadow, BAR.base.width, 0) })
+    // 낮은 땅에 닿게 크게 기운 막대는 모서리에서 떠 닿는 띠 제외
+    if (Math.abs(shade.angle) <= BAR.sag + 1e-6) {
+      host.flats.push({ kind: 'contact', opacity, points: flat(pose, contact, BAR.base.width, 0) })
+    }
   }
 
   if (pose.lips > 0) {
