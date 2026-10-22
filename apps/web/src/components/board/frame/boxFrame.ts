@@ -1,6 +1,6 @@
 import { BOX_SINK } from '../view'
 import { shoveClock } from './barFrame'
-import { type CrackView, standSink } from './crackFrame'
+import { type CrackView, crackClip, standSink } from './crackFrame'
 import { type Chain, NO_CHAIN, easeIn, lerp, smooth } from './curveFrame'
 import { slideChain } from './iceFrame'
 import { hopClear, hopLevel, hopLift, hopProgress } from './mushroomFrame'
@@ -139,6 +139,7 @@ interface BoxView {
   tramFrames: { x: number; y: number; to: Point; cell: Point }[]
   boxes: Point[]
   crackView: CrackView
+  heights: number[][] // 이동 전 칸 높이, 무너진 칸도 원래 높이로 보는 값
   iceDrop: number // 언 칸으로 밀려 가며 얼음 판 높이로 내려앉는 거리
   bowl: number // 화로 그릇 위로 오른 거리
 }
@@ -150,6 +151,7 @@ export const boxFramesOf = ({
   tramFrames,
   boxes,
   crackView,
+  heights,
   iceDrop,
   bowl,
 }: BoxView) => {
@@ -170,12 +172,19 @@ export const boxFramesOf = ({
               (sinkingBox ? BOX_SINK * sinkingBox.deep : 0),
             to: box.to,
             cell: box.cell,
+            clip: crackClip(crackView, heights, box.x, box.y),
           },
         ]
       : []),
     // 발판과 한 몸이라 판 위에 얹어 그리는 발판 위 상자
     ...tramFrames
       .filter((frame) => has(boxes, frame.to) && !(box && same(box.to, frame.to)))
-      .map((frame) => ({ x: frame.x, y: frame.y - TILE.layer, to: frame.to, cell: frame.cell })),
+      .map((frame) => ({
+        x: frame.x,
+        y: frame.y - TILE.layer,
+        to: frame.to,
+        cell: frame.cell,
+        clip: null,
+      })),
   ]
 }

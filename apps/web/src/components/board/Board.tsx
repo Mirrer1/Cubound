@@ -235,44 +235,63 @@ const Board = ({
                   />
                 </g>
               )}
-              {over.drawBoxes.map((frame) =>
-                scene.box && same(frame.to, scene.box.to) && scene.boxShown !== null ? (
-                  <g
-                    key={`${frame.to.x}-${frame.to.y}`}
-                    ref={scene.rowLean ? leanLoop : undefined}
-                    className={scene.rowLean ? 'whirl-lean' : undefined}
-                    style={rowLean}
-                  >
-                    <BoardWater part="box" x={frame.x} y={frame.y} shown={scene.boxShown} />
-                  </g>
-                ) : brazier.boss ? (
-                  <BoardBrazier
-                    key={`${frame.to.x}-${frame.to.y}`}
-                    part="box"
+              {over.drawBoxes.map((frame) => (
+                <g
+                  key={`${frame.to.x}-${frame.to.y}`}
+                  clipPath={
+                    frame.clip ? `url(#crack-box-clip-${frame.to.x}-${frame.to.y})` : undefined
+                  }
+                >
+                  {frame.clip && (
+                    <clipPath id={`crack-box-clip-${frame.to.x}-${frame.to.y}`}>
+                      <polygon points={frame.clip} />
+                    </clipPath>
+                  )}
+                  {scene.box && same(frame.to, scene.box.to) && scene.boxShown !== null ? (
+                    <g
+                      ref={scene.rowLean ? leanLoop : undefined}
+                      className={scene.rowLean ? 'whirl-lean' : undefined}
+                      style={rowLean}
+                    >
+                      <BoardWater part="box" x={frame.x} y={frame.y} shown={scene.boxShown} />
+                    </g>
+                  ) : brazier.boss ? (
+                    <BoardBrazier
+                      part="box"
+                      x={frame.x}
+                      y={frame.y}
+                      hint={burnOf(frame.to) >= 0 ? 1 : 0}
+                      burn={burnOf(frame.to)}
+                    />
+                  ) : (
+                    <BoardBox x={frame.x} y={frame.y} />
+                  )}
+                </g>
+              ))}
+              {over.kegs.map((frame) => (
+                <g
+                  key={`${frame.to.x}-${frame.to.y}`}
+                  clipPath={frame.clip ? 'url(#crack-keg-clip)' : undefined}
+                >
+                  {frame.clip && (
+                    <clipPath id="crack-keg-clip">
+                      <polygon points={frame.clip} />
+                    </clipPath>
+                  )}
+                  <BoardKeg
+                    part="keg"
                     x={frame.x}
                     y={frame.y}
-                    hint={burnOf(frame.to) >= 0 ? 1 : 0}
-                    burn={burnOf(frame.to)}
+                    swell={frame.look.swell}
+                    heat={frame.look.heat}
+                    cords={frame.look.cords}
+                    ember={frame.look.ember}
+                    ashTo={frame.look.ashTo}
+                    ash={frame.look.ash}
+                    trailU={frame.look.trail.u}
+                    trailV={frame.look.trail.v}
                   />
-                ) : (
-                  <BoardBox key={`${frame.to.x}-${frame.to.y}`} x={frame.x} y={frame.y} />
-                ),
-              )}
-              {over.kegs.map((frame) => (
-                <BoardKeg
-                  key={`${frame.to.x}-${frame.to.y}`}
-                  part="keg"
-                  x={frame.x}
-                  y={frame.y}
-                  swell={frame.look.swell}
-                  heat={frame.look.heat}
-                  cords={frame.look.cords}
-                  ember={frame.look.ember}
-                  ashTo={frame.look.ashTo}
-                  ash={frame.look.ash}
-                  trailU={frame.look.trail.u}
-                  trailV={frame.look.trail.v}
-                />
+                </g>
               ))}
               {over.whirlBoxes.map((frame) => (
                 <BoardWhirlpool key={`${frame.to.x}-${frame.to.y}`} part="boat" {...frame} />
@@ -287,12 +306,19 @@ const Board = ({
                 />
               ))}
               {over.stones.map((frame) => (
-                <BoardIceStone
+                <g
                   key={`${frame.to.x}-${frame.to.y}`}
-                  part="stone"
-                  {...frame}
-                  tier={look.tier}
-                />
+                  clipPath={
+                    frame.clip ? `url(#crack-stone-clip-${frame.to.x}-${frame.to.y})` : undefined
+                  }
+                >
+                  {frame.clip && (
+                    <clipPath id={`crack-stone-clip-${frame.to.x}-${frame.to.y}`}>
+                      <polygon points={frame.clip} />
+                    </clipPath>
+                  )}
+                  <BoardIceStone part="stone" {...frame} tier={look.tier} />
+                </g>
               ))}
               {over.boxDrop && (
                 <g opacity={over.boxDrop.opacity}>
@@ -314,7 +340,13 @@ const Board = ({
                   )}
                 </g>
               )}
+              {over.drawCube && scene.cubeClip && (
+                <clipPath id="crack-cube-clip">
+                  <polygon points={scene.cubeClip} />
+                </clipPath>
+              )}
               <g
+                clipPath={over.drawCube && scene.cubeClip ? 'url(#crack-cube-clip)' : undefined}
                 ref={cubeLean && over.drawCube ? leanLoop : undefined}
                 className={cubeLean && over.drawCube ? 'whirl-lean' : undefined}
                 style={over.drawCube ? cubeLean : undefined}

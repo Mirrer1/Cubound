@@ -16,7 +16,6 @@ import BoardWater from './BoardWater'
 import BoardWhirlpool from './BoardWhirlpool'
 import { type CellLook, crackThickness, swampCollar } from './frame'
 import {
-  QUARTER,
   SHARD,
   blend,
   cellFaces,
@@ -100,7 +99,7 @@ const BoardFloor = ({
   // 원래 땅 위에 볏짚빛으로 얹히는 씨앗으로 솟은 층, 옆면 색이 바뀌는 자리가 경계
   const seedRise = seed.land * TILE.layer
   const split = crackSplit(crack.on, crack.broken, crack.stage)
-  const quarters = crackQuarters(x, y, split, crack.stage, crack.seed)
+  const quarters = crack.on && crack.broken === 0 ? crackQuarters(x, y, split, crack.seed) : []
   const shards = crackShards(x, y, crack.broken, depth)
   const collar = swamp.risen >= 0 ? swampCollar(swamp.risen) * swamp.deep : 0
 
@@ -168,7 +167,7 @@ const BoardFloor = ({
             y={y}
             width={TILE.width}
             depth={depth}
-            top={split > 0 ? dim(faces.top, 9) : faces.top}
+            top={crack.on && crack.broken === 0 ? dim(faces.top, 9) : faces.top}
             left={faces.left}
             right={faces.right}
           />
@@ -303,8 +302,8 @@ const BoardFloor = ({
             key={quarter.key}
             x={quarter.x}
             y={quarter.y}
-            width={TILE.width * QUARTER.scale}
-            depth={QUARTER.depth}
+            width={quarter.width}
+            depth={quarter.depth}
             top={faces.top}
             left={faces.left}
             right={faces.right}

@@ -12,7 +12,7 @@ import { barsAt, lipsAt } from './barFrame'
 import { type BrazierLook, brazierLookOf } from './brazierFrame'
 import { type LadderLook, ladderLookOf } from './carryFrame'
 import type { boardCells } from './cellFrame'
-import { crackFrame, crackLeft, sinkAt } from './crackFrame'
+import { crackFrame, crackLeft, phaseOf, sinkAt } from './crackFrame'
 import { clamp01, lerp, smooth } from './curveFrame'
 import { landingCellKey, wallHeight } from './fillFrame'
 import { type FireLook, NO_FIRE, fireLookOf } from './fireFrame'
@@ -62,7 +62,7 @@ export interface CellLook {
     broken: number // 네 조각으로 갈라져 벌어진 정도
     fall: number // 무너지며 아래로 내려간 화면 거리
     shadow: number // 무너진 자리에 깔리는 그림자 진하기
-    seed: number // 자국 자리를 칸마다 어긋나게 하는 값
+    seed: number // 들리는 조각 자리, 붙은 칸끼리 다른 조각
   }
   swamp: {
     on: boolean
@@ -204,7 +204,7 @@ export const cellLook = ({
       (stage.heights[cell.p.y][cell.p.x] < 0 ||
         (wasCrack && left < 0) ||
         (fire.kind === 'bridge' && has(game.ashes, cell.p)))
-    const crumble = crackFrame(was, left, scene.crackPhase)
+    const crumble = crackFrame(was, left, phaseOf(scene.crackView, cell.p))
     const { raised, device } = deviceAt(cell)
     const crackFall = crumble.fall * TILE.layer
     // 솟거나 재시작으로 내려가는 씨앗 칸은 그 순간 높이
@@ -305,7 +305,7 @@ export const cellLook = ({
         broken: crumble.broken,
         fall: crackFall,
         shadow: crumble.shadow,
-        seed: (cell.p.x * 3 + cell.p.y * 5) % 4,
+        seed: (cell.p.x * 2 + cell.p.y * 3) % 4,
       },
       swamp: {
         on: swamp,

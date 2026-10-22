@@ -241,6 +241,7 @@ export interface StoneFrame {
   cell: Point // 덮이는 순서가 맞게 그리는 칸
   wake: { x: number; y: number; width: number; opacity: number }[] // 수면 위 물테
   ring: { x: number; y: number; size: number; opacity: number } | null // 칸 폭 배수 크기
+  clip?: string | null // 내려앉은 칸에 걸친 동안 남기는 영역
 }
 
 interface StoneView {
@@ -250,6 +251,8 @@ interface StoneView {
   t: number
   swamp: SwampTime
   waterAt?: WaterAt // 그 순간 칸의 물 높이, 물이 바뀌는 수에 쓰는 값
+  sinkAt?: (x: number, y: number) => number // 무너지는 칸이 내려앉은 화면 거리
+  clipAt?: (x: number, y: number) => string | null // 내려앉은 칸에 걸친 동안 남기는 영역
 }
 
 const surfaceY = (game: GameState, p: Point) =>
@@ -314,7 +317,7 @@ const pushedFrame = (view: StoneView, prev: GameState, elapsed: number): StoneFr
 
   return {
     x: screen.x,
-    y: screen.y + (wet ? PULL_DIP * Math.sin(Math.PI * p) : 0),
+    y: screen.y + (wet ? PULL_DIP * Math.sin(Math.PI * p) : 0) + (view.sinkAt?.(at.x, at.y) ?? 0),
     scale: 1,
     cut: STONE.floatCut * slab,
     slab,
@@ -326,6 +329,7 @@ const pushedFrame = (view: StoneView, prev: GameState, elapsed: number): StoneFr
     cell: frontOf(event.from, event.to),
     wake: [],
     ring: null,
+    clip: view.clipAt?.(at.x, at.y) ?? null,
   }
 }
 

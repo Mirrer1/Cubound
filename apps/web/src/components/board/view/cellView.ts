@@ -12,7 +12,8 @@ const QUARTERS: [number, number][] = [
   [0.25, 0.25],
   [-0.25, 0.25],
 ]
-export const QUARTER = { scale: 0.485, depth: 4, rise: 4 }
+// 밟기 전과 한 번 밟은 뒤 조각 크기, 들린 조각의 밟기 전과 한 번 밟은 뒤 높이
+export const QUARTER = { scale: 0.485, worn: 0.47, lower: 2, rise: 4 }
 
 // 무너질 때만 갈라지는 네 조각, 가만히 있을 때 갈라 두면 붙은 칸이 줄눈처럼 보이는 탓
 const SHARDS: [number, number][] = [
@@ -151,24 +152,27 @@ export const cellFaces = (
 export const crackSplit = (crack: boolean, crackBroken: number, crackStage: number) =>
   crack && crackBroken === 0 ? clamp01(crackStage) : 0
 
-export const crackQuarters = (
-  x: number,
-  y: number,
-  split: number,
-  crackStage: number,
-  crackSeed: number,
-) =>
-  split > 0
-    ? QUARTERS.map(([u, v], i) => {
-        const d = isoDelta(u, v)
-        const lifted = (i - crackSeed + 4) % 4 < Math.round(crackStage)
-        return {
-          key: i,
-          x: x + d.x * (1 + split * 0.025),
-          y: y + d.y * (1 + split * 0.025) - (lifted ? split * QUARTER.rise : 0),
-        }
-      })
-    : []
+// 밟기 전부터 나뉜 네 조각과 칸마다 정한 들린 조각 하나, 밟힌 만큼 넓어지는 틈과 더 들리는 그 조각, 새로 들리는 옆 조각
+export const crackQuarters = (x: number, y: number, split: number, crackSeed: number) => {
+  const scale = QUARTER.scale + (QUARTER.worn - QUARTER.scale) * split
+  return QUARTERS.map(([u, v], i) => {
+    const d = isoDelta(u, v)
+    const order = (i - crackSeed + 4) % 4
+    const lift =
+      order === 0
+        ? QUARTER.lower + (QUARTER.rise - QUARTER.lower) * split
+        : order === 1
+          ? QUARTER.lower * split
+          : 0
+    return {
+      key: i,
+      x: x + d.x * (1 + split * 0.025),
+      y: y + d.y * (1 + split * 0.025) - lift,
+      width: TILE.width * scale,
+      depth: lift,
+    }
+  })
+}
 
 export const crackShards = (x: number, y: number, crackBroken: number, depth: number) =>
   crackBroken > 0

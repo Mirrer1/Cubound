@@ -124,24 +124,30 @@ describe('crackSplit', () => {
 })
 
 describe('crackQuarters', () => {
-  it('갈라지지 않으면 조각이 없다', () => {
-    expect(crackQuarters(0, 0, 0, 1, 0)).toEqual([])
-  })
-
-  it('밟힌 단계 수만큼 조각이 들린다', () => {
-    const quarters = crackQuarters(0, 0, 1, 1, 0)
+  it('밟기 전에는 고른 크기의 네 조각 중 칸마다 정한 하나만 살짝 들려 있다', () => {
+    const quarters = crackQuarters(0, 0, 0, 0)
     const d = isoDelta(-0.25, -0.25)
 
     expect(quarters).toHaveLength(4)
-    expect(quarters[0]).toEqual({ key: 0, x: d.x * 1.025, y: d.y * 1.025 - QUARTER.rise })
-    expect(quarters[1].y).toBe(isoDelta(0.25, -0.25).y * 1.025)
+    expect(quarters[0]).toEqual({
+      key: 0,
+      x: d.x,
+      y: d.y - QUARTER.lower,
+      width: TILE.width * QUARTER.scale,
+      depth: QUARTER.lower,
+    })
+    expect(quarters[1].y).toBe(isoDelta(0.25, -0.25).y)
   })
 
-  it('들리는 조각은 칸마다 어긋난다', () => {
-    const quarters = crackQuarters(0, 0, 1, 1, 1)
+  it('한 번 밟으면 틈이 넓어지고 들려 있던 조각은 더 들리고 그 옆 조각이 새로 들리며 들린 조각만 옆면이 있다', () => {
+    const quarters = crackQuarters(0, 0, 1, 1)
 
-    expect(quarters[0].y).toBe(isoDelta(-0.25, -0.25).y * 1.025)
+    expect(quarters[0].width).toBeCloseTo(TILE.width * QUARTER.worn)
     expect(quarters[1].y).toBe(isoDelta(0.25, -0.25).y * 1.025 - QUARTER.rise)
+    expect(quarters[2].y).toBe(isoDelta(0.25, 0.25).y * 1.025 - QUARTER.lower)
+    expect(quarters[3].y).toBe(isoDelta(-0.25, 0.25).y * 1.025)
+    expect(quarters[0].y).toBe(isoDelta(-0.25, -0.25).y * 1.025)
+    expect(quarters.map((q) => q.depth)).toEqual([0, QUARTER.rise, QUARTER.lower, 0])
   })
 })
 

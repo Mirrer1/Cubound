@@ -111,8 +111,38 @@ export const playerSegments = (events: GameEvent[]): Segment[] => {
   return [...approach.map((s) => ({ ...s, seconds: s.seconds * slower })), ...segmentsOf([tile])]
 }
 
-// 이동보다 길게 두는 칸이 무너지는 순간, 한 단계 닳는 변화는 이동 길이 안
-const CRUMBLE_SECONDS = 0.36
+// 닳기 시작한 뒤 무너지는 칸이 무너지는 시간과 한 단계 닳는 시간
+const CRUMBLE_SECONDS = 0.44
+
+const WEAR_SECONDS = 0.38
+
+type Cracked = Extract<GameEvent, { type: 'cracked' }>
+
+// 무너지는 칸이 닳기 시작하는 때, at이 없으면 이 수의 첫 무너지는 칸
+// 올라서는 칸은 닿는 때, 한 칸 걷기만 경계를 넘는 걸음 절반, 무너지는 칸은 떠나며 경계를 넘는 때
+export const crackLeave = (events: GameEvent[], at?: Point) => {
+  const player = playerSegments(events)
+  const crack = events.find((e): e is Cracked => e.type === 'cracked' && (!at || same(e.at, at)))
+  if (!crack) return totalSeconds(player) / 2
+
+  const bar = barTouchAt(events, crack.at)
+  const barAt = crack.gone ? bar.leave : bar.arrive
+  if (barAt !== null) return barAt
+
+  const paths = [boxPath(events), stonePath(events), kegPath(events)].map(segmentsOf)
+  for (const segments of [player, ...paths]) {
+    let start = 0
+    for (const { event, seconds } of segments) {
+      const cells = Math.max(1, cellsOf(event))
+      if (!crack.gone && same(event.to, crack.at)) {
+        return start + seconds - (event.type === 'moved' && cells === 1 ? seconds / 2 : 0)
+      }
+      if (crack.gone && same(event.from, crack.at)) return start + seconds / (2 * cells)
+      start += seconds
+    }
+  }
+  return totalSeconds(player) / 2
+}
 
 // 미끄러져 지나온 칸에 남는 서리 자국이 옅어지는 시간
 export const FROST_FADE = 0.2
@@ -402,7 +432,6 @@ export const moveSeconds = (events: GameEvent[], swamp: SwampTime) =>
         ? SECONDS[e.type]
         : 0,
     ),
-    ...events.map((e) => (e.type === 'cracked' && e.gone ? CRUMBLE_SECONDS : 0)),
     ...events.map((e) => (e.type === 'struggled' ? SWAMP.struggle : 0)),
     ...frostStamps(events).map((stamp) => stamp.at + FROST_FADE),
   ) +
@@ -437,11 +466,35 @@ export const freezeEnd = (events: GameEvent[]) => {
 // 이동이 다 끝난 뒤 얼음 돌이 녹아 사라지는 시간
 export const MELT_SECONDS = 0.42
 
+// 무너지는 칸이 다 닳거나 무너지는 때, 이동 진행도를 늦추지 않게 moveSeconds 밖 몫
+const crackEnd = (events: GameEvent[]) =>
+  Math.max(
+    0,
+    ...events.map((e) =>
+      e.type === 'cracked'
+        ? e.worn
+          ? totalSeconds(playerSegments(events)) + SHAKE_SECONDS
+          : crackLeave(events, e.at) + (e.gone ? CRUMBLE_SECONDS : WEAR_SECONDS)
+        : 0,
+    ),
+  )
+
+// 다 닳은 칸에 올라선 수에 칸이 흔들리는 시간, 큐브가 닿은 뒤부터
+export const SHAKE_SECONDS = 0.5
+
+// 흔들림 진행도, 흔들리지 않는 수는 0
+export const shakeProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
+  if (!events.some((e) => e.type === 'cracked' && e.worn)) return 0
+  const start = totalSeconds(playerSegments(events))
+  return clamp01((t * durationOf(events, swamp) - start) / SHAKE_SECONDS)
+}
+
 export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
   Math.max(
     moveSeconds(events, swamp) +
       (rises(events) ? RISE_SECONDS : 0) +
       (events.some((e) => e.type === 'melted') ? MELT_SECONDS : 0),
+    crackEnd(events),
     brazierLightEnd(events),
     brazierEnd(events),
     kegEnd(events, moveSeconds(events, swamp)),

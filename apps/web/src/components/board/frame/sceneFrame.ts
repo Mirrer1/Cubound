@@ -10,9 +10,9 @@ import {
   pickUpProgress,
   rollingTilt,
 } from './carryFrame'
-import { crackProgress, standSink } from './crackFrame'
+import { crackClip, crackProgress, standSink } from './crackFrame'
 import { SLIDE_DEG, playerFrame, squashTransform } from './cubeFrame'
-import { type Chain, smooth } from './curveFrame'
+import { type Chain, easeOut, smooth } from './curveFrame'
 import { fireScene } from './fireFrame'
 import { burnRect, guideRect, lockRect } from './guideFrame'
 import { slideChain } from './iceFrame'
@@ -41,6 +41,7 @@ import {
   moveSeconds,
   playerSegments,
   pullStart,
+  shakeProgress,
   stepProgress,
 } from './timeFrame'
 import {
@@ -209,8 +210,14 @@ export const sceneFrame = ({
   const rowed = events.some((e) => e.type === 'rowed' && same(e.from, before.player))
   const rowLean = left && rowed ? cubeLean : null
 
-  const crackPhase = moving ? crackProgress(events, stepT) : 1
-  const crackView = { game, before, crackPhase }
+  const crackPhase = !moving ? 1 : restarting ? easeOut(t) : crackProgress(events, t, swampSeconds)
+  const phaseAt =
+    moving && !restarting ? (p: Point) => crackProgress(events, t, swampSeconds, p) : undefined
+  const shaking = phaseAt
+    ? events.flatMap((e) => (e.type === 'cracked' && e.worn ? [e.at] : []))
+    : []
+  const shakePhase = shakeProgress(events, t, swampSeconds)
+  const crackView = { game, before, crackPhase, phaseAt, shaking, shakePhase }
   const fire = fireScene({
     before,
     game,
@@ -252,9 +259,13 @@ export const sceneFrame = ({
     (pushedKeg.event.type === 'slid' && cellsOf(pushedKeg.event) > 1
       ? slideFront(pushedKeg.event, pushedKeg.gone * cellsOf(pushedKeg.event))
       : frontOf(pushedKeg.event.from, pushedKeg.event.to))
+  const kegScreen = pushedKeg && toScreen({ x: pushedKeg.x, y: pushedKeg.y }, pushedKeg.level)
   const kegFrame = pushedKeg &&
+    kegScreen &&
     kegFront && {
-      ...toScreen({ x: pushedKeg.x, y: pushedKeg.y }, pushedKeg.level),
+      x: kegScreen.x,
+      y: kegScreen.y + standSink(crackView, pushedKeg.x, pushedKeg.y),
+      clip: crackClip(crackView, before.heights, pushedKeg.x, pushedKeg.y),
       to: pushedKeg.to,
       look: pushedKeg.look,
       // 앞쪽 높은 칸에서 뒤 칸으로 떨어지는 동안은 뒤 칸 순서, 떠난 칸 턱에 가리는 화약통
@@ -277,6 +288,8 @@ export const sceneFrame = ({
           t,
           swamp: swampSeconds,
           waterAt: sluice.waterAt,
+          sinkAt: (x, y) => standSink(crackView, x, y),
+          clipAt: (x, y) => crackClip(crackView, before.heights, x, y),
         }),
     thawing: moving ? thawingBoxes(before, game, iceT) : [],
     lanes: fadeLanes(laneShown(sluice.lanes, before, game, iceT), sluice.laneFade),
@@ -301,6 +314,7 @@ export const sceneFrame = ({
     stepT,
     ride: (p) => ridePhase(game, events, p, t, swampSeconds),
     cube,
+    sinkAt: (x, y) => standSink(crackView, x, y),
   })
   const cubeFaces = rollingCubeFaces(
     cube.x,
@@ -337,7 +351,16 @@ export const sceneFrame = ({
   )
   const iceDrop = box ? iceSink(covers, game, box.x, box.y) : 0
   const bowl = box ? bowlLift(stage, box.x, box.y) : 0
-  const boxFrames = boxFramesOf({ box, sinkingBox, tramFrames, boxes, crackView, iceDrop, bowl })
+  const boxFrames = boxFramesOf({
+    box,
+    sinkingBox,
+    tramFrames,
+    boxes,
+    crackView,
+    heights: before.heights,
+    iceDrop,
+    bowl,
+  })
   const boxShown = box ? floatShownAt(stage, box, sluice.waterAt) : null
   const tethers = tetherFrames({ prev: moving ? prevGame : null, game, box, t, dropping })
   const moor = moorLooks(stage, tethers)
@@ -390,6 +413,7 @@ export const sceneFrame = ({
     cubeScreen,
     cubeSquash,
     cubeSink,
+    cubeClip: crackClip(crackView, before.heights, cube.x, cube.y),
     cubeFaces,
     cubeHeat,
     pickedUp,

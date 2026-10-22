@@ -299,6 +299,7 @@ describe('boxFramesOf', () => {
       tramFrames: [],
       boxes: [],
       crackView: NO_CRACK,
+      heights: [[0, 0, 0]],
       iceDrop: 0,
       bowl: 0,
       ...over,
@@ -311,7 +312,7 @@ describe('boxFramesOf', () => {
 
   it('밀리는 상자는 그 순간 화면 자리에서 떠오른 만큼 올려 그린다', () => {
     expect(view({ box: BOX })).toEqual([
-      { x: pushed.x, y: pushed.y - TILE.layer - 5, to: BOX.to, cell: BOX.cell },
+      { x: pushed.x, y: pushed.y - TILE.layer - 5, to: BOX.to, cell: BOX.cell, clip: null },
     ])
   })
 
@@ -333,11 +334,21 @@ describe('boxFramesOf', () => {
     )
   })
 
+  it('내려앉은 칸에 걸친 밀리는 상자는 앞 칸 가장자리에서 잘린다', () => {
+    const crackView = {
+      game: { cracks: [{ x: 2, y: 0, left: 1 }] },
+      before: { cracks: [{ x: 2, y: 0, left: 1 }] },
+      crackPhase: 1,
+    }
+
+    expect(view({ box: BOX, crackView, heights: [[0, 0, 0, 0]] })[0].clip).not.toBeNull()
+  })
+
   it('발판 위의 상자는 발판 판 위에 얹어 그린다', () => {
     const tram = { x: 40, y: 50, to: { x: 3, y: 0 }, cell: { x: 3, y: 0 } }
 
     expect(view({ tramFrames: [tram], boxes: [{ x: 3, y: 0 }] })).toEqual([
-      { x: 40, y: 50 - TILE.layer, to: tram.to, cell: tram.cell },
+      { x: 40, y: 50 - TILE.layer, to: tram.to, cell: tram.cell, clip: null },
     ])
   })
 

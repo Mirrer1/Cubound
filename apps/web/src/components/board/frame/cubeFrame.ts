@@ -1,4 +1,5 @@
 import { shoveSegments } from './barFrame'
+import { crackSunk } from './crackFrame'
 import { type Chain, NO_CHAIN, clamp01, easeIn, easeOut, lerp } from './curveFrame'
 import { slideChain, slideSpan, squashAt } from './iceFrame'
 import { blastLean, blastSegments, blastWarps } from './kegFrame'
@@ -222,9 +223,9 @@ const pathFrame = (
             : hopped
               ? hopAngle(cells, gone * cells)
               : (Math.PI / 2) * p,
-      // 솟는 수는 이동이 끝나면 들어선 칸, 그 칸의 말뚝이 큐브 앞에 남는 순서
+      // 솟는 수와 내려앉은 칸에 들어선 수는 이동이 끝나면 들어선 칸, 앞 칸에 가리는 순서
       cell:
-        rises(events) && p >= 1
+        (rises(events) || crackSunk(game, event.to)) && p >= 1
           ? event.to
           : below
             ? front === event.to
