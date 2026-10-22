@@ -286,6 +286,26 @@ describe('move 불이 번지지 않는 숯', () => {
     expect(state.heights[1][3]).toBe(0)
   })
 
+  it('재가 되는 불 옆에서 덮여 못 붙은 숯을 재 이벤트에 함께 낸다', () => {
+    // 수마다 나온 이벤트를 모두 모은 목록
+    const allEvents = (from: Stage) => {
+      let state = createState(from)
+      return (['down', 'up', 'down', 'up'] as Direction[]).flatMap((d) => {
+        const result = move(state, d)
+        state = result.state
+        return result.events
+      })
+    }
+    const stage: Stage = { ...BRIDGE_STAGE, entities: [{ type: 'box', x: 3, y: 1 }] }
+
+    expect(allEvents(stage)).toContainEqual({
+      type: 'ashed',
+      cells: [{ x: 2, y: 1 }],
+      smothered: [{ x: 3, y: 1 }],
+    })
+    expect(allEvents(BRIDGE_STAGE).find((e) => e.type === 'ashed')).not.toHaveProperty('smothered')
+  })
+
   it.each([
     ['한 층 높은', [0, 0, 1, 1, 1, 0]],
     ['한 층 낮은', [1, 1, 0, 0, 0, 1]],

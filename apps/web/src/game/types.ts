@@ -207,7 +207,7 @@ export type GameEvent =
   | { type: 'thawed'; cells: Point[] } // 이번 수에 녹아 물로 돌아간 칸
   | { type: 'kindled'; at: Point } // 큐브가 밟아 켜진 불씨 칸
   | { type: 'caught'; from: Point; to: Point } // from에서 번져 불붙은 숯 to
-  | { type: 'ashed'; cells: Point[] } // 재가 된 숯
+  | { type: 'ashed'; cells: Point[]; smothered?: Point[] } // 재가 된 숯, smothered는 그 옆에서 덮여 못 붙은 숯
   | { type: 'torched'; from: Point; to: Point } // 불 붙은 큐브가 from에서 불을 옮긴 숯 벽 to
   | { type: 'ignited'; at: Point; by: 'brazier' | 'fire' } // 큐브에 붙거나 4로 다시 찬 불, fire는 번진 불
   | { type: 'doused'; at: Point } // 큐브 불의 남은 수가 0이 된 수

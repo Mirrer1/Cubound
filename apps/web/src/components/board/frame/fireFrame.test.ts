@@ -201,6 +201,24 @@ describe('fireLookOf', () => {
     })
   })
 
+  it('상자가 덮은 불 옆 숯은 달아오름이고 옆 불이 재가 되는 수에 불붙음까지 올랐다 꺼진다', () => {
+    const before: GameState = {
+      ...createState({ ...LINE_STAGE, entities: [{ type: 'box', x: 4, y: 1 }] }),
+      sparks: [],
+      burning: [NEAR],
+    }
+    const { state, events } = move(before, 'right')
+    const at = (t: number) => fireLookOf(sceneAt(before, state, events, t), FAR).heat
+    const peak = (FIRE.smother * 0.25) / durationOf(events)
+
+    expect(fireLookOf(sceneAt(before, before, [], 1), FAR).heat).toBe(0.5)
+    expect(events).toContainEqual({ type: 'ashed', cells: [NEAR], smothered: [FAR] })
+    expect(state.burning).not.toContainEqual(FAR)
+    expect(at(0)).toBeCloseTo(0.5)
+    expect(at(peak)).toBeCloseTo(1)
+    expect(at(0.999)).toBeLessThan(0.05)
+  })
+
   it('큐브가 선 불붙은 숯은 불붙음이고 떠나는 수에 큐브가 반 칸 넘게 간 뒤 부서진다', () => {
     const before: GameState = {
       ...createState({ ...LINE_STAGE, fire: ['......', '.*.==.'], start: { x: 4, y: 0 } }),

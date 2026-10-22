@@ -65,10 +65,25 @@ export const burnFire = (state: GameState, torched: Point[] = []): MoveResult =>
       ? state.heights
       : state.heights.map((row, y) => row.map((h, x) => (has(bridges, { x, y }) ? -1 : h)))
 
+  // 재가 되는 불 옆 같은 높이 숯 중 상자나 기댄 사다리가 덮어 못 붙은 칸, 꺼지는 연출 몫
+  const smothered = ashed.flatMap((from) =>
+    SIDES.map((side) => step(from, side)).filter((to) => {
+      const c = fireAt(state.stage, to)
+      return (
+        (c === '#' || c === '=') &&
+        !has(state.burning, to) &&
+        !has(state.ashes, to) &&
+        state.heights[to.y][to.x] === state.heights[from.y][from.x] &&
+        (hasBox(state, to) || state.leaningLadders.some((l) => same(l, to)))
+      )
+    }),
+  )
+  const ash = smothered.length > 0 ? { cells: ashed, smothered } : { cells: ashed }
+
   const events: GameEvent[] = [
     ...(kindled ? [{ type: 'kindled' as const, at: kindled }] : []),
     ...caught.map(({ from, to }) => ({ type: 'caught' as const, from, to })),
-    ...(ashed.length > 0 ? [{ type: 'ashed' as const, cells: ashed }] : []),
+    ...(ashed.length > 0 ? [{ type: 'ashed' as const, ...ash }] : []),
   ]
 
   return {
