@@ -264,7 +264,6 @@ const BoardFloor = ({
             />
           </>
         )}
-        {seed.stalk > 0 && <BoardSeed x={x} y={y} part="stalk" level={seed.stalk} p={seed.bud} />}
         {seed.leaves > 0 && <BoardSeed x={x} y={y} part="leaves" p={seed.leaves} />}
         {(grownVine || vine.kind === 'root') && (
           <BoardVine layer="top" kind={vine.kind!} {...vineProps} />

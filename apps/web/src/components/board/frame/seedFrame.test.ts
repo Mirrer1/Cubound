@@ -9,6 +9,7 @@ import {
   plantingSeed,
   seedFrames,
   seedLayers,
+  stakesOver,
 } from './seedFrame'
 import { PLANT, RIDE, SEED_AT, SEED_STAGE, lastMove } from './testStages'
 import { TILE, isoDelta } from '@/game/iso'
@@ -89,10 +90,22 @@ describe('seedFrames', () => {
     expect(frameAt(moves, 1)).toMatchObject({ level: 1, land: 1, leaves: 1, tree: 0, stakes: 0 })
   })
 
+  it('솟는 수는 이동하는 동안 마지막 말뚝이 사라진 뒤 솟는다', () => {
+    const moves = lastMove(SEED_STAGE, RIDE)
+
+    expect(frameAt(moves, 0.2)?.stakeP).toBeGreaterThan(0)
+    expect(frameAt(moves, 0.2)?.stakeP).toBeLessThan(1)
+    expect(frameAt(moves, 0.4)).toMatchObject({ stakeP: 1, treeP: 0 })
+  })
+
   it('콩나무는 솟으며 줄기가 한 층 늘고 새 싹과 말뚝 넷이 선다', () => {
     const moves = lastMove({ ...SEED_STAGE, rules: { seedGrow: true } }, RIDE)
 
     expect(frameAt(moves, 0.4)).toMatchObject({ stalk: 0, tree: 1, treeNext: 4, treeP: 0 })
+    // 이동하는 동안 마지막 말뚝이 지고 솟으며 새 말뚝 넷
+    expect(frameAt(moves, 0.2)).toMatchObject({ stakes: 1, stakesNext: 0 })
+    expect(frameAt(moves, 0.2)?.stakeP).toBeGreaterThan(0)
+    expect(frameAt(moves, 0.7)).toMatchObject({ stakes: 0, stakesNext: 4 })
     expect(frameAt(moves, 1)).toMatchObject({
       stalk: 1,
       tree: 4,
@@ -205,5 +218,32 @@ describe('심는 씨앗', () => {
 
   it('plantTiltOf는 심는 수가 아니면 없다', () => {
     expect(plantTiltOf(null, { angle: 0.3, direction: 'right' })).toBeUndefined()
+  })
+})
+
+describe('stakesOver', () => {
+  const frames = new Map([['2-2', { stakes: 3, stakesNext: 2 }]])
+
+  it('씨앗 칸에서 앞 칸으로 오가며 앞 칸 순서로 그려지는 큐브는 말뚝을 그 칸으로 가져온다', () => {
+    expect(stakesOver({ x: 2, y: 3 }, { x: 2, y: 2 }, { x: 2, y: 3 }, frames)).toEqual({
+      x: 2,
+      y: 2,
+    })
+    expect(stakesOver({ x: 3, y: 2 }, { x: 3, y: 2 }, { x: 2, y: 2 }, frames)).toEqual({
+      x: 2,
+      y: 2,
+    })
+  })
+
+  it('씨앗 칸 순서로 그리거나 뒤쪽 칸이거나 씨앗 칸을 안 지나면 없다', () => {
+    expect(stakesOver({ x: 2, y: 2 }, { x: 2, y: 3 }, { x: 2, y: 2 }, frames)).toBeNull()
+    expect(stakesOver({ x: 2, y: 1 }, { x: 2, y: 2 }, { x: 2, y: 1 }, frames)).toBeNull()
+    expect(stakesOver({ x: 2, y: 3 }, { x: 2, y: 3 }, { x: 2, y: 4 }, frames)).toBeNull()
+  })
+
+  it('큐브 칸에 제 말뚝이 있으면 옮겨 오지 않는다', () => {
+    const both = new Map([...frames, ['2-3', { stakes: 2, stakesNext: 1 }]])
+
+    expect(stakesOver({ x: 2, y: 3 }, { x: 2, y: 2 }, { x: 2, y: 3 }, both)).toBeNull()
   })
 })

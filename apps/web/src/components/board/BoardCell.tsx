@@ -349,11 +349,16 @@ const BoardCell = ({
       ) : (
         children
       )}
+      {!pit && !hidden && seed.stalk > 0 && (
+        <g ref={fadeRef} style={fade}>
+          <BoardSeed x={x} y={y} part="stalk" level={seed.stalk} p={seed.bud} />
+        </g>
+      )}
       {(seed.stakes > 0 || seed.stakesNext > 0) && (
         <g ref={fadeRef} style={fade}>
           <BoardSeed
-            x={x}
-            y={y}
+            x={x + seed.stakeDx}
+            y={y + seed.stakeDy}
             part="stakes"
             from={seed.stakes}
             to={seed.stakesNext}

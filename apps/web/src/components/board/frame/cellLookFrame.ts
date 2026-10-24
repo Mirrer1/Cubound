@@ -22,14 +22,14 @@ import { type KegLook, caughtHeat, dustOf, kegDrop, kegLookOf } from './kegFrame
 import { has, same } from './pathFrame'
 import { restartDrop } from './restartFrame'
 import type { sceneFrame } from './sceneFrame'
-import { type SeedCell, seedCellOf } from './seedFrame'
+import { type SeedCell, seedCellOf, stakesOver } from './seedFrame'
 import { type SluiceLook, sluiceLookOf, stoneSlab } from './sluiceFrame'
 import { type SwitchLook, switchLookOf } from './switchFrame'
 import { type TideLook, tideLookOf } from './tideFrame'
 import { type SwampTime } from './timeFrame'
 import { type VineCell, vineCellOf } from './vineFrame'
 import { leanOf, whirlLook } from './whirlpoolFrame'
-import { TILE } from '@/game/iso'
+import { TILE, toScreen } from '@/game/iso'
 import { isIce } from '@/game/rules'
 import type { Direction, GameEvent, GameState, Point, Stage } from '@/game/types'
 
@@ -178,6 +178,12 @@ export const cellLook = ({
   const patches = scene.moving ? frostPatches(scene.before, game, events, t, swampSeconds) : null
   const cycle = rippleCycle(ripples.size)
   const lowest = lowestOf(stage)
+  // 씨앗 칸 앞 칸 순서로 그리는 큐브 다음에 옮겨 그리는 그 씨앗 칸 말뚝
+  const staked = stakesOver(scene.cube.cell, scene.before.player, game.player, scene.seedFrame)
+  const stakedFrame = staked ? scene.seedFrame.get(`${staked.x}-${staked.y}`) : undefined
+  const stakedAt = staked
+    ? toScreen(staked, stakedFrame?.level ?? heights[staked.y][staked.x])
+    : null
 
   return (cell: ReturnType<typeof boardCells>[number]) => {
     const capHere = scene.caps.find((capFrame) => same(capFrame.cell, cell.p))
@@ -384,7 +390,18 @@ export const cellLook = ({
         dustV: dust?.dv ?? 0,
       },
       vine: vineCellOf(vine),
-      seed: seedCellOf(scene, game, cell, seedHere, pickedHere),
+      seed: seedCellOf(
+        scene,
+        game,
+        cell,
+        seedHere,
+        pickedHere,
+        staked && same(staked, cell.p)
+          ? { frame: undefined, dx: 0, dy: 0 }
+          : stakedAt && drawCube
+            ? { frame: stakedFrame, dx: stakedAt.x - cell.x, dy: stakedAt.y - cellY }
+            : null,
+      ),
       ambient: ambientHere
         ? {
             kind: ambientHere.kind,

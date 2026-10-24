@@ -190,6 +190,18 @@ export const seedFrames = (
 
   return new Map(
     [...keys].map((key) => {
+      const was = seedLook(prev, key, before)
+      const now = seedLook(game, key, after)
+      // 솟는 칸은 이동하는 동안 마지막 말뚝이 지고, 콩나무는 솟으며 새 말뚝
+      if (!restarting && eventAt('rose', key)) {
+        const frame = blendSeed(was, now, rise)
+        return [
+          key,
+          step < 1 || now.left === 0
+            ? { ...frame, stakes: was.left, stakesNext: 0, stakeP: step }
+            : { ...frame, stakes: 0, stakesNext: now.left, stakeP: rise },
+        ]
+      }
       const p = restarting
         ? t * t * (3 - 2 * t)
         : eventAt('rose', key)
@@ -197,8 +209,28 @@ export const seedFrames = (
           : eventAt('planted', key)
             ? clamp01((step - PLANT_FROM) / (1 - PLANT_FROM))
             : step
-      return [key, blendSeed(seedLook(prev, key, before), seedLook(game, key, after), p)]
+      return [key, blendSeed(was, now, p)]
     }),
+  )
+}
+
+// 큐브가 씨앗 칸과 앞 칸 사이를 오가며 앞 칸 순서로 그려지는 동안 말뚝을 큐브 다음에 그릴 씨앗 칸
+// 큐브 칸에 제 말뚝이 있으면 제외
+export const stakesOver = (
+  cubeCell: Point,
+  from: Point,
+  to: Point,
+  frames: Map<string, Pick<SeedFrame, 'stakes' | 'stakesNext'>>,
+): Point | null => {
+  const staked = (p: Point) => {
+    const frame = frames.get(`${p.x}-${p.y}`)
+    return (frame?.stakes ?? 0) + (frame?.stakesNext ?? 0) > 0
+  }
+  if (staked(cubeCell)) return null
+  return (
+    [from, to].find(
+      (p) => staked(p) && !same(p, cubeCell) && cubeCell.x + cubeCell.y > p.x + p.y,
+    ) ?? null
   )
 }
 
@@ -214,6 +246,8 @@ export interface SeedCell {
   stakes: number // 사라지는 말뚝 수
   stakesNext: number // 들어서는 말뚝 수
   stakeP: number
+  stakeDx: number // 큐브 다음에 그리려 옮겨 온 말뚝의 제 칸까지 화면 거리
+  stakeDy: number
 }
 
 interface SeedScene {
@@ -227,6 +261,7 @@ export const seedCellOf = (
   cell: { p: Point },
   seedHere: SeedFrame | undefined,
   pickedHere: boolean,
+  stakesFrom: { frame: SeedFrame | undefined; dx: number; dy: number } | null = null,
 ): SeedCell => ({
   on: has(game.seeds, cell.p)
     ? 1
@@ -240,7 +275,9 @@ export const seedCellOf = (
   tree: seedHere?.tree ?? 0,
   treeNext: seedHere?.treeNext ?? 0,
   treeP: seedHere?.treeP ?? 1,
-  stakes: seedHere?.stakes ?? 0,
-  stakesNext: seedHere?.stakesNext ?? 0,
-  stakeP: seedHere?.stakeP ?? 1,
+  stakes: (stakesFrom ? stakesFrom.frame : seedHere)?.stakes ?? 0,
+  stakesNext: (stakesFrom ? stakesFrom.frame : seedHere)?.stakesNext ?? 0,
+  stakeP: (stakesFrom ? stakesFrom.frame : seedHere)?.stakeP ?? 1,
+  stakeDx: stakesFrom?.dx ?? 0,
+  stakeDy: stakesFrom?.dy ?? 0,
 })
