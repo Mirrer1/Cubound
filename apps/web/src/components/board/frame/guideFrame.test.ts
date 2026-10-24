@@ -227,6 +227,23 @@ describe('guideRect', () => {
     expect(rect.y + rect.height).toBeCloseTo(center + TILE.height / 2 + 12)
   })
 
+  it('바닥에 놓인 씨앗은 씨앗 가운데를 사각형 가운데에 두고 앞 구덩이 옆면은 뺀다', () => {
+    const stage: Stage = {
+      ...FLAT,
+      heights: [
+        [0, 0, 0],
+        [0, 0, -1],
+        [0, -1, 0],
+      ],
+      entities: [{ type: 'seed', ...MID }],
+    }
+    const rect = guideRect(createState(stage), MID)
+    const center = toScreen(MID, 0).y
+    const foot = center + (TILE.width * 0.24) / 4
+    expect(rect.y + rect.height / 2).toBeCloseTo((center - 26 + foot) / 2)
+    expect(rect.y + rect.height).toBeCloseTo(center + TILE.height / 2 + 12)
+  })
+
   it('닫힌 문은 솟은 높이를 넣고 열린 문은 넣지 않는다', () => {
     const stage: Stage = {
       ...FLAT,
