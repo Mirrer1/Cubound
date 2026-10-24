@@ -84,6 +84,10 @@ describe('cameraHeights', () => {
   it('상자가 메운 구멍은 메운 높이를 그대로 쓴다', () => {
     expect(cameraHeights([[-1, 0]], [[0, 0]])).toEqual([[0, 0]])
   })
+
+  it('덩굴이 자랄 길은 처음부터 바닥으로 세어 자라도 화면 범위가 그대로다', () => {
+    expect(cameraHeights([[0, -1, -1]], [[0, -1, -1]], [{ x: 1, y: 0 }])).toEqual([[0, 0, -1]])
+  })
 })
 
 describe('zoneBox', () => {

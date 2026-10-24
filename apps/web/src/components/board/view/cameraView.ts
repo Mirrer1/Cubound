@@ -43,9 +43,14 @@ export const minTileFor = (view: ViewSize, zoomTile: number) =>
       ? SHORT_MIN_TILE
       : MIN_TILE
 
-// 무너진 칸도 처음 높이로 센 높이, 칸이 사라질 때 화면이 따라 움직이지 않는 이유
-export const cameraHeights = (stage: number[][], heights: number[][]) =>
-  heights.map((row, y) => row.map((h, x) => Math.max(h, stage[y][x])))
+// 무너진 칸도 처음 높이로, 덩굴이 자랄 길도 처음부터 바닥으로 센 높이
+// 칸이 사라지거나 덩굴이 자랄 때 화면이 따라 움직이지 않는 이유
+export const cameraHeights = (stage: number[][], heights: number[][], vinePath: Point[] = []) =>
+  heights.map((row, y) =>
+    row.map((h, x) =>
+      Math.max(h, stage[y][x], vinePath.some((p) => p.x === x && p.y === y) ? 0 : -1),
+    ),
+  )
 
 // 구역 칸이 그려지는 범위, 구역이 없으면 맵 전체
 export const zoneBox = (heights: number[][], zone?: Zone): Box => {

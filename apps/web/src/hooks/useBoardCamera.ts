@@ -49,7 +49,11 @@ export const useBoardCamera = (
   const nextIndex = zones.length > 0 ? zoneIndexAt(zones, focus ?? game.player, zoneIndex) : 0
   if (nextIndex !== zoneIndex) setZoneIndex(nextIndex)
 
-  const heights = cameraHeights(game.stage.heights, game.heights)
+  const heights = cameraHeights(
+    game.stage.heights,
+    game.heights,
+    game.stage.entities.flatMap((e) => (e.type === 'vine' ? e.cells : [])),
+  )
   const [view, setView] = useState<ViewSize>({ width: 0, height: 0 })
   const minTile = minTileFor(view, ZOOM_TILE)
   const { box: home, tile } = homeBox(game.stage.heights, heights, zones, nextIndex, view, minTile)
