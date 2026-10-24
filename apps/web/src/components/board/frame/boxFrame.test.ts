@@ -383,6 +383,7 @@ describe('boxFramesOf', () => {
       heights: [[0, 0, 0]],
       iceDrop: 0,
       bowl: 0,
+      floated: false,
       ...over,
     })
   const pushed = toScreen({ x: 1.5, y: 0 }, 1)

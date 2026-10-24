@@ -155,6 +155,7 @@ interface BoxView {
   heights: number[][] // 이동 전 칸 높이, 무너진 칸도 원래 높이로 보는 값
   iceDrop: number // 언 칸으로 밀려 가며 얼음 판 높이로 내려앉는 거리
   bowl: number // 화로 그릇 위로 오른 거리
+  floated: boolean
 }
 
 // 칸과 따로 움직이는 밀리는 상자와 발판 위 상자의 화면 좌표
@@ -167,6 +168,7 @@ export const boxFramesOf = ({
   heights,
   iceDrop,
   bowl,
+  floated,
 }: BoxView) => {
   const pushedScreen = box ? toScreen({ x: box.x, y: box.y }, box.level) : null
   return [
@@ -185,7 +187,7 @@ export const boxFramesOf = ({
               (sinkingBox ? BOX_SINK * sinkingBox.deep : 0),
             to: box.to,
             cell: box.cell,
-            clip: crackClip(crackView, heights, box.x, box.y),
+            clip: floated ? null : crackClip(crackView, heights, box.x, box.y),
           },
         ]
       : []),

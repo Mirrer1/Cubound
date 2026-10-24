@@ -384,6 +384,7 @@ export const sceneFrame = ({
     heights: before.heights,
     iceDrop,
     bowl,
+    floated: events.some((e) => e.type === 'pushed' && e.result === 'floated'),
   })
   const boxShown = box ? floatShownAt(stage, box, sluice.waterAt) : null
   const tethers = tetherFrames({ prev: moving ? prevGame : null, game, box, t, dropping })
