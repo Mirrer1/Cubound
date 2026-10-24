@@ -180,10 +180,29 @@ const cellRect = (game: GameState, p: Point) => {
   return { x, y: top, width, height: bottom - top }
 }
 
+// 승강 발판은 맞닿은 스위치까지 감싼 사각형
+const liftRect = (game: GameState, p: Point) => {
+  const lift = game.stage.entities.find((e) => e.type === 'lift' && same(e, p))
+  const lever = game.stage.entities.find(
+    (e) =>
+      e.type === 'switch' &&
+      lift?.type === 'lift' &&
+      e.target === lift.id &&
+      Math.abs(e.x - p.x) + Math.abs(e.y - p.y) === 1,
+  )
+  if (!lever) return null
+  const rects = [cellRect(game, p), cellRect(game, lever)]
+  const x = Math.min(...rects.map((r) => r.x))
+  const y = Math.min(...rects.map((r) => r.y))
+  const right = Math.max(...rects.map((r) => r.x + r.width))
+  const bottom = Math.max(...rects.map((r) => r.y + r.height))
+  return { x, y, width: right - x, height: bottom - y }
+}
+
 // 막대 칸은 막대가 차지한 칸 전부를 감싸고 좌우는 받침 네 모서리까지인 사각형
 export const guideRect = (game: GameState, p: Point) => {
   const bar = game.bars.find((b) => has(barCells(b), p))
-  if (!bar) return cellRect(game, p)
+  if (!bar) return liftRect(game, p) ?? cellRect(game, p)
   const cells = barCells(bar)
   const rects = cells.map((c) => cellRect(game, c))
   const ends = [cells[0], cells[cells.length - 1]]
@@ -208,10 +227,15 @@ export const guideRect = (game: GameState, p: Point) => {
   return { x, y, width: right - x, height: bottom - y }
 }
 
-// 짝 칸 가이드가 함께 비추는 나올 칸
+// 짝 칸은 나올 칸, 문은 그 문을 여는 스위치, 가이드가 함께 비추는 칸
 export const pairRect = (game: GameState, p: Point) => {
-  const exit = warpExit(game.stage, p)
-  return exit ? guideRect(game, exit) : null
+  const { entities } = game.stage
+  const door = entities.find((e) => e.type === 'door' && same(e, p))
+  const lever = entities.find(
+    (e) => e.type === 'switch' && door?.type === 'door' && e.target === door.id,
+  )
+  const pair = warpExit(game.stage, p) ?? lever ?? null
+  return pair ? guideRect(game, { x: pair.x, y: pair.y }) : null
 }
 
 // 타는 짐 가이드가 비추는 상자와 맞닿은 화로, 두 칸 모두 윗면까지만

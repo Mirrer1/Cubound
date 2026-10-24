@@ -350,10 +350,10 @@ describe('guideRect', () => {
   it('올라간 승강 발판은 한 층 위에서 잰다', () => {
     const stage: Stage = {
       ...FLAT,
-      start: { x: 0, y: 1 },
+      start: { x: 0, y: 0 },
       entities: [
         { type: 'lift', id: 'a', x: 1, y: 1 },
-        { type: 'switch', target: 'a', x: 0, y: 1 },
+        { type: 'switch', target: 'a', x: 0, y: 0 },
       ],
     }
     const raised = guideRect(createState(stage), MID)
@@ -380,8 +380,28 @@ describe('guideRect 수위 장치', () => {
   })
 })
 
+describe('guideRect 승강 발판', () => {
+  it('승강 발판은 맞닿은 스위치까지 한 사각형으로 감싼다', () => {
+    const stage: Stage = {
+      ...FLAT,
+      entities: [
+        { type: 'switch', x: 1, y: 0, target: 'a' },
+        { type: 'switch', x: 0, y: 2, target: 'a' },
+        { type: 'lift', id: 'a', ...MID },
+      ],
+    }
+    const game = createState(stage)
+    const lift = guideRect(createState(FLAT), MID)
+    const lever = guideRect(game, { x: 1, y: 0 })
+    const rect = guideRect(game, MID)
+    expect(rect.y).toBe(lever.y)
+    expect(rect.y + rect.height).toBe(lift.y + lift.height)
+    expect(rect.x).toBe(Math.min(lift.x, lever.x))
+  })
+})
+
 describe('pairRect', () => {
-  it('짝 칸은 짝의 사각형, 아니면 null', () => {
+  it('짝 칸은 짝의 사각형, 짝도 문도 아니면 null', () => {
     const stage: Stage = {
       ...FLAT,
       entities: [
@@ -392,6 +412,18 @@ describe('pairRect', () => {
     const game = createState(stage)
     expect(pairRect(game, MID)).toEqual(guideRect(game, { x: 2, y: 0 }))
     expect(pairRect(game, { x: 0, y: 0 })).toBeNull()
+  })
+
+  it('문은 그 문을 여는 스위치의 사각형', () => {
+    const stage: Stage = {
+      ...FLAT,
+      entities: [
+        { type: 'switch', x: 0, y: 0, target: 'gate' },
+        { type: 'door', id: 'gate', ...MID },
+      ],
+    }
+    const game = createState(stage)
+    expect(pairRect(game, MID)).toEqual(guideRect(game, { x: 0, y: 0 }))
   })
 })
 
