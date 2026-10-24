@@ -47,8 +47,8 @@ describe('text', () => {
 
 describe('guideText', () => {
   it('터치 기기면 터치 문구를 쓴다', () => {
-    expect(guideText('en', 'move', true)).toBe('Swipe diagonally to roll the cube')
-    expect(guideText('en', 'move', false)).toBe('Use the arrow keys to roll one tile at a time')
+    expect(guideText('en', 'move', true)).toBe('Swipe the screen to move')
+    expect(guideText('en', 'move', false)).toBe('Use the arrow keys to move one tile at a time')
   })
 
   it('터치 문구가 없으면 기본 문구를 쓴다', () => {
@@ -56,8 +56,8 @@ describe('guideText', () => {
   })
 
   it('{n}을 넘긴 숫자로 바꾼다', () => {
-    expect(guideText('en', 'moveLimit', false, 24)).toBe('You have 24 moves to get home')
-    expect(guideText('ko', 'moveLimit', false, 24)).toBe('24번 안에 도착해야 해요')
+    expect(guideText('en', 'moveLimit', false, 24)).toBe('Reach the goal within 24 moves')
+    expect(guideText('ko', 'moveLimit', false, 24)).toBe('24번 안에 목표에 도착해야 해요')
   })
 
   it('문구가 없는 id는 키 이름을 돌려준다', () => {

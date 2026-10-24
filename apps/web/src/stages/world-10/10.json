@@ -85,6 +85,10 @@
     {
       "id": "wind",
       "target": "wind"
+    },
+    {
+      "id": "windHold",
+      "target": "wind"
     }
   ],
   "zones": [
