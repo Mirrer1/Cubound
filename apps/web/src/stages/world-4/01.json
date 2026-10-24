@@ -47,6 +47,6 @@
     }
   ],
   "best": 13,
-  "guides": [{ "id": "tram", "target": { "x": 5, "y": 1 } }],
+  "guides": [{ "id": "tram", "target": { "x": 3, "y": 1 } }],
   "zones": [{ "x": 0, "y": 0, "w": 8, "h": 7 }]
 }

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { BAR_HEIGHT, BRAZIER, KEG_SHAPE, PIT_FLOOR, PLATE, pileReach } from '../view'
+import { BAR_HEIGHT, BRAZIER, KEG_SHAPE, PIT_FLOOR, PLATE, POST, pileReach } from '../view'
 import { TAP } from '../view'
-import { burnRect, guideRect, lockFocus, lockRect } from './guideFrame'
+import { burnRect, guideRect, lockFocus, lockRect, pairRect } from './guideFrame'
 import { LOCK_STAGE, SLUICE_STAGE, WHIRL_STAGE } from './testStages'
 import { TILE, toScreen } from '@/game/iso'
 import { createState } from '@/game/rules'
@@ -31,16 +31,16 @@ const spanOf = (game: GameState, p: Point, surface = 0) => {
 }
 
 describe('guideRect', () => {
-  it('막대는 차지한 두 칸을 다 감싸고 막대 높이까지 올린다', () => {
+  it('막대는 차지한 두 칸을 다 감싸고 좌우는 받침 끝까지, 위는 막대 높이까지 올린다', () => {
     const game = createState({ ...FLAT, entities: [{ type: 'bar', x: 0, y: 1, axis: 'x' }] })
     const rect = guideRect(game, MID)
     expect(guideRect(game, { x: 0, y: 1 })).toEqual(rect)
-    expect(rect.x).toBeCloseTo(toScreen({ x: 0, y: 1 }, 0).x - TILE.width / 2 - 12)
-    expect(rect.x + rect.width).toBeCloseTo(toScreen(MID, 0).x + TILE.width / 2 + 12)
+    expect(rect.x).toBeCloseTo(toScreen({ x: -0.32, y: 1.18 }, 0).x - 12)
+    expect(rect.x + rect.width).toBeCloseTo(toScreen({ x: 1.32, y: 0.82 }, 0).x + 12)
     expect(toScreen(MID, 0).y - rect.y).toBeGreaterThan(BAR_HEIGHT + 12)
   })
 
-  it('서 있는 숯 벽은 숯 더미 가운데를 사각형 가운데에 두고 옆면은 넣지 않는다', () => {
+  it('서 있는 숯 벽은 칸이 아닌 숯 더미 둘레만 감싼다', () => {
     const stage = {
       ...FLAT,
       heights: [
@@ -52,13 +52,45 @@ describe('guideRect', () => {
     }
     const rect = guideRect(createState(stage), MID)
     const center = toScreen(MID, 0).y - TILE.layer
-    const tip = center - pileReach()
-    const foot = center + (TILE.width * 0.8) / 4
-    expect(rect.y + rect.height / 2).toBeCloseTo((tip + foot) / 2)
-    expect(rect.y + rect.height).toBeCloseTo(center + TILE.height / 2 + 12)
+    expect(rect.width).toBeCloseTo(TILE.width * 0.8 + 24)
+    expect(rect.y).toBeCloseTo(center - pileReach() - 12)
+    expect(rect.y + rect.height).toBeCloseTo(center + (TILE.width * 0.8) / 4 + 12)
   })
 
-  it('화약통은 통 가운데를 사각형 가운데에 두고 옆면은 넣지 않는다', () => {
+  it('불씨는 칸이 아닌 화덕 둘레만 감싼다', () => {
+    const stage = { ...FLAT, fire: ['...', '.*.', '...'] }
+    const rect = guideRect(createState(stage), MID)
+    const center = toScreen(MID, 0).y
+    expect(rect.width).toBeCloseTo(TILE.width * 0.6 + 24)
+    expect(rect.y).toBeCloseTo(center - (TILE.width * 0.6) / 4 - 12)
+    expect(rect.y + rect.height).toBeCloseTo(center + (TILE.width * 0.6) / 4 + 12)
+  })
+
+  it('말뚝은 칸이 아닌 말뚝 둘레만 감싼다', () => {
+    const stage: Stage = {
+      ...FLAT,
+      heights: [
+        [1, 1, 0],
+        [1, 1, 0],
+        [1, 1, 0],
+      ],
+      water: 1,
+      entities: [
+        { type: 'box', x: 2, y: 1 },
+        { type: 'post', ...MID, length: 1, boat: { x: 2, y: 1 } },
+      ],
+    }
+    const rect = guideRect(createState(stage), MID)
+    const center = toScreen(MID, 0)
+    const top = center.y - TILE.layer
+    const foot = (TILE.width * POST.width) / 4
+    expect(rect.x + rect.width / 2).toBeCloseTo(center.x)
+    expect(rect.width).toBeCloseTo(TILE.width * POST.width + 48)
+    expect(rect.y).toBeCloseTo(top - POST.height - foot - 24)
+    expect(rect.y + rect.height).toBeCloseTo(top + foot + 24)
+  })
+
+  it('화약통은 칸이 아닌 통 둘레만 감싼다', () => {
     const stage: Stage = {
       ...FLAT,
       heights: [
@@ -72,9 +104,9 @@ describe('guideRect', () => {
     const center = toScreen(MID, 0).y
     const tip =
       center - KEG_SHAPE.bodyHeight - KEG_SHAPE.lidHeight - (TILE.width * KEG_SHAPE.lid) / 4
-    const foot = center + (TILE.width * KEG_SHAPE.body) / 4
-    expect(rect.y + rect.height / 2).toBeCloseTo((tip + foot) / 2)
-    expect(rect.y + rect.height).toBeCloseTo(center + TILE.height / 2 + 12)
+    expect(rect.width).toBeCloseTo(TILE.width * KEG_SHAPE.body + 48)
+    expect(rect.y).toBeCloseTo(tip - 24)
+    expect(rect.y + rect.height).toBeCloseTo(center + (TILE.width * KEG_SHAPE.body) / 4 + 24)
   })
 
   it('재가 된 숯 벽 칸은 빈 칸과 같다', () => {
@@ -124,17 +156,17 @@ describe('guideRect', () => {
     expect(span.below).toBe(flat.below + 2 * TILE.layer)
   })
 
-  it('앞이 빈 칸은 땅 아래 두께까지 넣는다', () => {
+  it('앞이 빈 칸은 그쪽 옆면을 넣지 않는다', () => {
     const stage = {
       ...FLAT,
       heights: [
         [0, 0, 0],
         [0, 1, -1],
-        [0, 0, -1],
+        [0, -1, -1],
       ],
     }
     const span = spanOf(createState(stage), MID, TILE.layer)
-    expect(span.below).toBe(spanOf(createState(FLAT), MID).below + TILE.layer + TILE.lip)
+    expect(span.below).toBe(spanOf(createState(FLAT), MID).below)
   })
 
   it('대각선 앞 칸이 가린 옆면 아래쪽은 넣지 않는다', () => {
@@ -142,20 +174,20 @@ describe('guideRect', () => {
       ...FLAT,
       heights: [
         [0, 0, 0],
-        [0, 1, -1],
-        [0, 0, -1],
+        [0, 2, 0],
+        [0, 0, 0],
       ],
     }
     const covered = {
       ...FLAT,
       heights: [
         [0, 0, 0],
-        [0, 1, -1],
-        [0, 0, 0],
+        [0, 2, 0],
+        [0, 0, 1],
       ],
     }
-    const full = spanOf(createState(open), MID, TILE.layer).below
-    expect(spanOf(createState(covered), MID, TILE.layer).below).toBe(full - TILE.lip / 2)
+    const full = spanOf(createState(open), MID, 2 * TILE.layer).below
+    expect(spanOf(createState(covered), MID, 2 * TILE.layer).below).toBeLessThan(full)
   })
 
   it('바닥 없는 구덩이 칸은 앞이 비면 팬 바닥 깊이만큼 넣는다', () => {
@@ -227,7 +259,7 @@ describe('guideRect', () => {
     expect(rect.y + rect.height).toBeCloseTo(center + TILE.height / 2 + 12)
   })
 
-  it('바닥에 놓인 씨앗은 씨앗 가운데를 사각형 가운데에 두고 앞 구덩이 옆면은 뺀다', () => {
+  it('바닥에 놓인 씨앗은 칸이 아닌 씨앗 둘레만 감싼다', () => {
     const stage: Stage = {
       ...FLAT,
       heights: [
@@ -238,10 +270,48 @@ describe('guideRect', () => {
       entities: [{ type: 'seed', ...MID }],
     }
     const rect = guideRect(createState(stage), MID)
+    const center = toScreen(MID, 0)
+    expect(rect.x + rect.width / 2).toBeCloseTo(center.x)
+    expect(rect.width).toBeCloseTo(TILE.width * 0.24 + 48)
+    expect(rect.y).toBeCloseTo(center.y - 11 - (TILE.width * 0.13) / 4 - 24)
+    expect(rect.y + rect.height).toBeCloseTo(center.y + (TILE.width * 0.24) / 4 + 24)
+  })
+
+  it('짝 칸도 앞 구덩이 쪽 옆면을 빼서 윗면 가운데가 사각형 가운데', () => {
+    const stage: Stage = {
+      ...FLAT,
+      heights: [
+        [0, 0, 0],
+        [0, 0, -1],
+        [0, -1, 0],
+      ],
+      entities: [
+        { type: 'warp', id: 'pair', ...MID },
+        { type: 'warp', id: 'pair', x: 2, y: 0 },
+      ],
+    }
+    const rect = guideRect(createState(stage), MID)
     const center = toScreen(MID, 0).y
-    const foot = center + (TILE.width * 0.24) / 4
-    expect(rect.y + rect.height / 2).toBeCloseTo((center - 26 + foot) / 2)
+    expect(rect.y + rect.height / 2).toBeCloseTo(center)
     expect(rect.y + rect.height).toBeCloseTo(center + TILE.height / 2 + 12)
+  })
+
+  it('짝 칸은 낮은 바닥 쪽으로 드러난 옆면을 넣는다', () => {
+    const stage: Stage = {
+      ...FLAT,
+      heights: [
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0],
+      ],
+      entities: [
+        { type: 'warp', id: 'pair', ...MID },
+        { type: 'warp', id: 'pair', x: 2, y: 0 },
+      ],
+    }
+    const { above, below } = spanOf(createState(stage), MID, TILE.layer)
+    expect(above).toBeCloseTo(TILE.height / 2 + 12)
+    expect(below).toBeCloseTo(TILE.height / 2 + TILE.layer + 12)
   })
 
   it('닫힌 문은 솟은 높이를 넣고 열린 문은 넣지 않는다', () => {
@@ -260,10 +330,21 @@ describe('guideRect', () => {
     expect(open.above).toBe(spanOf(createState(FLAT), MID).above)
   })
 
-  it('버섯 갓이 윗면보다 솟은 만큼 위쪽을 늘린다', () => {
+  it('버섯은 칸이 아닌 갓 둘레만 감싸고 갓이 솟은 만큼 위로 늘린다', () => {
     const stage = { ...FLAT, mushroom: ['...', '.#.', '...'] }
-    const above = spanOf(createState(stage), MID).above
-    expect(above).toBeGreaterThan(spanOf(createState(FLAT), MID).above)
+    const rect = guideRect(createState(stage), MID)
+    const flat = guideRect(createState(FLAT), MID)
+    expect(rect.width).toBeLessThan(flat.width)
+    expect(rect.y).toBeLessThan(flat.y)
+  })
+
+  it('바닥 사다리는 칸이 아닌 사다리 둘레만 감싼다', () => {
+    const stage: Stage = { ...FLAT, entities: [{ type: 'ladder', ...MID }] }
+    const rect = guideRect(createState(stage), MID)
+    const center = toScreen(MID, 0)
+    expect(rect.x + rect.width / 2).toBeCloseTo(center.x)
+    expect(rect.width).toBeCloseTo(TILE.width * 0.68 + 24)
+    expect(rect.y + rect.height).toBeCloseTo(center.y + (TILE.width * 0.68) / 4 + 12)
   })
 
   it('올라간 승강 발판은 한 층 위에서 잰다', () => {
@@ -296,6 +377,21 @@ describe('guideRect 수위 장치', () => {
       toScreen({ x: 0, y: 0 }, 2).y - TAP.height - TAP.wheelDepth - (TILE.width * TAP.wheel) / 4
 
     expect(rect.y).toBeLessThanOrEqual(top - 12)
+  })
+})
+
+describe('pairRect', () => {
+  it('짝 칸은 짝의 사각형, 아니면 null', () => {
+    const stage: Stage = {
+      ...FLAT,
+      entities: [
+        { type: 'warp', id: 'pair', ...MID },
+        { type: 'warp', id: 'pair', x: 2, y: 0 },
+      ],
+    }
+    const game = createState(stage)
+    expect(pairRect(game, MID)).toEqual(guideRect(game, { x: 2, y: 0 }))
+    expect(pairRect(game, { x: 0, y: 0 })).toBeNull()
   })
 })
 
@@ -374,6 +470,6 @@ describe('burnRect', () => {
     expect(rect.x).toBe(Math.min(box.x, brazier.x))
     expect(rect.x + rect.width).toBe(Math.max(box.x + box.width, brazier.x + brazier.width))
     expect(rect.y).toBe(box.y)
-    expect(rect.y + rect.height).toBeLessThan(brazier.y + brazier.height)
+    expect(rect.y + rect.height).toBeLessThanOrEqual(brazier.y + brazier.height)
   })
 })

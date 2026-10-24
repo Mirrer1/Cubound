@@ -7,6 +7,7 @@ import {
   LADDER_TIP,
   PIT_FLOOR,
   PLATE,
+  POST,
   STONE,
   TAP,
   WATER,
@@ -22,7 +23,14 @@ import { fireKindAt } from './fireFrame'
 import { MUSHROOM_STAND, mushroomPose } from './mushroomFrame'
 import { has, same } from './pathFrame'
 import { TILE, toScreen } from '@/game/iso'
-import { barCells, isDoorOpen, isLiftRaised, readMushrooms, waterLevel } from '@/game/rules'
+import {
+  barCells,
+  isDoorOpen,
+  isLiftRaised,
+  readMushrooms,
+  warpExit,
+  waterLevel,
+} from '@/game/rules'
 import type { GameState, Point, Stage } from '@/game/types'
 
 const GUIDE_MARGIN = 12
@@ -87,11 +95,11 @@ const reachOf = (game: GameState, p: Point, floating: boolean) => {
   return Math.max(...reaches)
 }
 
-// 윗면 아래로 드러난 옆면 px, 앞 두 칸과 대각선 앞 칸이 가리는 곳은 제외
-const dropOf = (game: GameState, p: Point, surface: number, depth: number) => {
+// 윗면 아래로 드러난 옆면 px, 앞 두 칸과 대각선 앞 칸이 가리는 곳은 제외, pit은 앞이 빈 쪽 옆면
+const dropOf = (game: GameState, p: Point, surface: number, depth: number, pit = Infinity) => {
   const below = (q: Point) => {
     const other = surfaceOf(game, q)
-    return other === null ? Infinity : surface - other
+    return other === null ? pit : surface - other
   }
   const corner = below({ x: p.x + 1, y: p.y + 1 })
   // 옆면 아래 모서리와 대각선 앞 칸 윗면 모서리가 만나는 곳까지
@@ -100,6 +108,29 @@ const dropOf = (game: GameState, p: Point, surface: number, depth: number) => {
     return corner >= edge ? edge : Math.min((corner + edge) / 2, TILE.height / 2 + corner)
   }
   return Math.max(0, face({ x: p.x, y: p.y + 1 }), face({ x: p.x + 1, y: p.y }))
+}
+
+// 칸 대신 그 둘레만 감쌀 작은 물건, 밑면과 윗면 폭은 칸 단위, 높이 px, 여백 배수
+// 씨앗은 밑동 폭 0.24, 머리 폭 0.13, 높이 11px, 바닥 사다리는 가로 폭 0.68, 뜬 높이 2px, 불씨는 화덕 폭 0.6
+const smallShape = (game: GameState, p: Point) => {
+  if (same(game.player, p) || has(game.boxes, p)) return null
+  if (game.stage.entities.some((e) => e.type === 'post' && same(e, p)))
+    return { foot: POST.width, head: POST.width, height: POST.height, margin: 2 }
+  if (has(game.seeds, p)) return { foot: 0.24, head: 0.13, height: 11, margin: 2 }
+  if (has(readMushrooms(game.stage), p)) {
+    const pose = mushroomPose(0, has(game.mushrooms, p) ? 0 : 1)
+    return { foot: pose.cap, head: pose.cap, height: pose.stem + pose.thick, margin: 2 }
+  }
+  if (has(game.ladders, p)) return { foot: 0.68, head: 0.68, height: 2, margin: 1 }
+  if (has(game.kegs, p)) {
+    const height = KEG_SHAPE.bodyHeight + KEG_SHAPE.lidHeight
+    return { foot: KEG_SHAPE.body, head: KEG_SHAPE.lid, height, margin: 2 }
+  }
+  const fire = fireKindAt(game.stage, p)
+  if (fire === 'wall' && !has(game.ashes, p))
+    return { foot: pileLumps(false)[0].scale, head: 0, height: pileReach(), margin: 1 }
+  if (fire === 'spark') return { foot: 0.6, head: 0.6, height: 0, margin: 1 }
+  return null
 }
 
 // 가이드가 비추는 칸의 사각형, 윗면이나 수면과 그 위에 선 것, 드러난 옆면에 같은 여백
@@ -113,49 +144,74 @@ const cellRect = (game: GameState, p: Point) => {
   const x = center.x - TILE.width / 2 - GUIDE_MARGIN
   const width = TILE.width + GUIDE_MARGIN * 2
 
-  // 얼음 돌과 서 있는 숯 벽, 화약통, 바닥의 씨앗은 그 물건을 가운데에 두고 윗면까지만, 옆면 제외
-  const pile = fireKindAt(game.stage, p) === 'wall' && !has(game.ashes, p)
-  const keg = has(game.kegs, p)
-  const seed = has(game.seeds, p) && !same(game.player, p)
-  if (has(game.stones, p) || pile || keg || seed) {
-    // 0.24는 씨앗 밑동 폭
-    const foot = pile
-      ? pileLumps(false)[0].scale
-      : keg
-        ? KEG_SHAPE.body
-        : seed
-          ? 0.24
-          : STONE.steps[0].width
+  const small = smallShape(game, p)
+  if (small) {
+    const foot = TILE.width * small.foot
+    const head = TILE.width * small.head
+    const margin = GUIDE_MARGIN * small.margin
+    const top = y - small.height - halfTop(head) - margin
+    const bottom = y + halfTop(foot) + margin
+    return {
+      x: center.x - foot / 2 - margin,
+      y: top,
+      width: foot + margin * 2,
+      height: bottom - top,
+    }
+  }
+
+  // 얼음 돌은 돌을 가운데에 두고 윗면까지만, 옆면 제외
+  if (has(game.stones, p)) {
+    const foot = STONE.steps[0].width
     const mid = y + (halfTop(TILE.width * foot) - reach) / 2
     const half = Math.max(mid - (y - reach), y + TILE.height / 2 - mid) + GUIDE_MARGIN
     return { x, y: mid - half, width, height: half * 2 }
   }
 
   const top = y - reach - GUIDE_MARGIN
+  const bridge = fireKindAt(game.stage, p) === 'bridge'
   const drop =
     surface === null
       ? dropOf(game, p, 0, PIT_FLOOR)
-      : dropOf(
-          game,
-          p,
-          surface,
-          fireKindAt(game.stage, p) === 'bridge' ? TILE.lip : surface + TILE.lip,
-        )
+      : bridge
+        ? dropOf(game, p, surface, TILE.lip)
+        : dropOf(game, p, surface, surface + TILE.lip, 0)
   const bottom = y + TILE.height / 2 + drop + GUIDE_MARGIN
 
   return { x, y: top, width, height: bottom - top }
 }
 
-// 막대 칸은 막대가 차지한 칸 전부를 감싼 사각형
+// 막대 칸은 막대가 차지한 칸 전부를 감싸고 좌우는 받침 네 모서리까지인 사각형
 export const guideRect = (game: GameState, p: Point) => {
   const bar = game.bars.find((b) => has(barCells(b), p))
   if (!bar) return cellRect(game, p)
-  const rects = barCells(bar).map((c) => cellRect(game, c))
-  const x = Math.min(...rects.map((r) => r.x))
+  const cells = barCells(bar)
+  const rects = cells.map((c) => cellRect(game, c))
+  const ends = [cells[0], cells[cells.length - 1]]
+  const d = { x: Math.sign(ends[1].x - ends[0].x), y: Math.sign(ends[1].y - ends[0].y) }
+  const half = BAR.base.width / 2
+  const corners = [-1, 1].flatMap((end) =>
+    [-1, 1].map((side) => {
+      const c = ends[end < 0 ? 0 : 1]
+      return toScreen(
+        {
+          x: c.x + d.x * BAR.reach * end + d.y * half * side,
+          y: c.y + d.y * BAR.reach * end + d.x * half * side,
+        },
+        0,
+      ).x
+    }),
+  )
+  const x = Math.min(...corners) - GUIDE_MARGIN
   const y = Math.min(...rects.map((r) => r.y))
-  const right = Math.max(...rects.map((r) => r.x + r.width))
+  const right = Math.max(...corners) + GUIDE_MARGIN
   const bottom = Math.max(...rects.map((r) => r.y + r.height))
   return { x, y, width: right - x, height: bottom - y }
+}
+
+// 짝 칸 가이드가 함께 비추는 나올 칸
+export const pairRect = (game: GameState, p: Point) => {
+  const exit = warpExit(game.stage, p)
+  return exit ? guideRect(game, exit) : null
 }
 
 // 타는 짐 가이드가 비추는 상자와 맞닿은 화로, 두 칸 모두 윗면까지만

@@ -477,15 +477,8 @@ const Board = ({
           fill="none"
         />
       )}
-      {scene.guide && (
-        <rect
-          data-guide="cell"
-          x={scene.guide.x}
-          y={scene.guide.y}
-          width={scene.guide.width}
-          height={scene.guide.height}
-          fill="none"
-        />
+      {[scene.guide, scene.pairGuide].map(
+        (rect, i) => rect && <rect key={i} data-guide="cell" {...rect} fill="none" />,
       )}
     </svg>
   )

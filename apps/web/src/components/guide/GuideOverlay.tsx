@@ -66,6 +66,15 @@ const alignFor = (hole: Hole, width: number) => {
 const sameHole = (a: Hole, b: Hole) =>
   a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height
 
+// 여러 구멍을 다 담는 범위, 카드 자리를 정하는 기준
+const spanOf = (holes: Hole[]) => {
+  const left = Math.min(...holes.map((h) => h.left))
+  const top = Math.min(...holes.map((h) => h.top))
+  const width = Math.max(...holes.map((h) => h.left + h.width)) - left
+  const height = Math.max(...holes.map((h) => h.top + h.height)) - top
+  return { left, top, width, height, borderRadius: 0 }
+}
+
 const stopClick = (e: MouseEvent) => e.stopPropagation()
 
 let pen: CanvasRenderingContext2D | null = null
@@ -106,7 +115,11 @@ const inkOf = (el: Element) => {
 }
 
 const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: GuideOverlayProps) => {
-  const [measured, setMeasured] = useState<{ hole: Hole; place: Place; align: string } | null>(null)
+  const [measured, setMeasured] = useState<{
+    holes: Hole[]
+    place: Place
+    align: string
+  } | null>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const nextRef = useRef<HTMLButtonElement>(null)
   const reduced = useReducedMotion()
@@ -116,10 +129,18 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
   // 판 위 칸을 감싸는 대상, 갑문 두 웅덩이 포함
   const onBoard = targetName === 'cell' || targetName === 'lock'
   const isLast = step === guides.length - 1
-  const hole = measured?.hole
+  const holes = measured?.holes ?? []
+  const hole = holes.length > 0 ? spanOf(holes) : null
   const place = measured?.place ?? 'bottom'
   const align = measured?.align ?? 'justify-center'
   const speed = reduced ? 0.35 : 1
+  const holeRects = holes.map((h) => ({
+    attrX: h.left,
+    attrY: h.top,
+    width: h.width,
+    height: h.height,
+    rx: h.borderRadius,
+  }))
 
   useFocusTrap(cardRef)
 
@@ -136,24 +157,28 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
       const found = container
         ? [...container.querySelectorAll(`[data-guide="${targetName}"]`)]
             .map((el) => inkOf(el) ?? el.getBoundingClientRect())
-            .find((r) => r.width > 0)
-        : undefined
-      if (container && found) {
+            .filter((r) => r.width > 0)
+        : []
+      if (container && found.length > 0) {
         const base = container.getBoundingClientRect()
         const padding = onBoard ? 0 : ELEMENT_PADDING
-        const next = {
-          left: Math.round(found.left - base.left - padding),
-          top: Math.round(found.top - base.top - padding),
-          width: Math.round(found.width + padding * 2),
-          height: Math.round(found.height + padding * 2),
-          borderRadius: Math.round(Math.min(onBoard ? 20 : 14, (found.height + padding * 2) * 0.3)),
-        }
-        const nextPlace = placeFor(next, base.width, base.height, !onBoard)
-        const nextAlign = alignFor(next, base.width)
+        const next = found.map((r) => ({
+          left: Math.round(r.left - base.left - padding),
+          top: Math.round(r.top - base.top - padding),
+          width: Math.round(r.width + padding * 2),
+          height: Math.round(r.height + padding * 2),
+          borderRadius: Math.round(Math.min(onBoard ? 20 : 14, (r.height + padding * 2) * 0.3)),
+        }))
+        const nextPlace = placeFor(spanOf(next), base.width, base.height, !onBoard)
+        const nextAlign = alignFor(spanOf(next), base.width)
         setMeasured((prev) =>
-          prev && sameHole(prev.hole, next) && prev.place === nextPlace && prev.align === nextAlign
+          prev &&
+          prev.holes.length === next.length &&
+          prev.holes.every((h, i) => sameHole(h, next[i])) &&
+          prev.place === nextPlace &&
+          prev.align === nextAlign
             ? prev
-            : { hole: next, place: nextPlace, align: nextAlign },
+            : { holes: next, place: nextPlace, align: nextAlign },
         )
       }
       frame = requestAnimationFrame(measure)
@@ -188,16 +213,27 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
       exit={{ opacity: 0, transition: { duration: 0.2 * speed } }}
       transition={{ duration: 0.3 * speed, ease: 'easeOut' }}
     >
-      {hole && (
-        <motion.div
-          className="pointer-events-none absolute"
-          style={{
-            boxShadow: '0 0 0 200vmax color-mix(in srgb, var(--color-ink) 55%, transparent)',
-          }}
-          initial={hole}
-          animate={hole}
-          transition={{ type: 'spring', bounce: 0, duration: 0.5 * speed }}
-        />
+      {holes.length > 0 && (
+        <svg className="pointer-events-none absolute inset-0 size-full">
+          <mask id="guide-holes">
+            <rect width="100%" height="100%" fill="white" />
+            {holeRects.map((rect, i) => (
+              <motion.rect
+                key={i}
+                fill="black"
+                initial={rect}
+                animate={rect}
+                transition={{ type: 'spring', bounce: 0, duration: 0.5 * speed }}
+              />
+            ))}
+          </mask>
+          <rect
+            width="100%"
+            height="100%"
+            mask="url(#guide-holes)"
+            style={{ fill: 'color-mix(in srgb, var(--color-ink) 55%, transparent)' }}
+          />
+        </svg>
       )}
       <motion.div
         layout="position"

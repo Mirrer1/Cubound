@@ -14,7 +14,7 @@ import { crackClip, crackProgress, standSink } from './crackFrame'
 import { SLIDE_DEG, playerFrame, squashTransform } from './cubeFrame'
 import { type Chain, easeOut, smooth } from './curveFrame'
 import { fireScene } from './fireFrame'
-import { burnRect, guideRect, lockRect } from './guideFrame'
+import { burnRect, guideRect, lockRect, pairRect } from './guideFrame'
 import { slideChain } from './iceFrame'
 import {
   iceCovers,
@@ -390,6 +390,7 @@ export const sceneFrame = ({
   const tethers = tetherFrames({ prev: moving ? prevGame : null, game, box, t, dropping })
   const moor = moorLooks(stage, tethers)
   const guide = guideCell ? (stage.rules?.burnBox ? burnRect : guideRect)(game, guideCell) : null
+  const pairGuide = guideCell ? pairRect(game, guideCell) : null
   const lockGuide = guideCell && stage.rules?.lock ? lockRect(game) : null
   const still = (list: Point[], moved: Point[]) =>
     list.filter((p) => !has(moved, p)).map((p) => ({ ...p, cell: p }))
@@ -476,6 +477,7 @@ export const sceneFrame = ({
     nextRails,
     caps,
     guide,
+    pairGuide,
     lockGuide,
     taps,
   }

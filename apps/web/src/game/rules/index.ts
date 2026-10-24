@@ -33,3 +33,4 @@ export {
 export { move } from './moveRule'
 export { barCells, freezes, isFrozen, same } from './cellRule'
 export { isFloating } from './barRule'
+export { warpExit } from './warpRule'

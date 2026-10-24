@@ -52,7 +52,7 @@
   ],
   "best": 35,
   "rules": { "vineStop": true },
-  "guides": [{ "id": "vineStop", "target": { "x": 4, "y": 5 } }],
+  "guides": [{ "id": "vineStop", "target": { "x": 7, "y": 5 } }],
   "zones": [
     { "x": 0, "y": 4, "w": 9, "h": 5 },
     { "x": 0, "y": 0, "w": 5, "h": 5 },
