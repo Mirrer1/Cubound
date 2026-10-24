@@ -466,6 +466,9 @@ export const freezeEnd = (events: GameEvent[]) => {
 // 이동이 다 끝난 뒤 얼음 돌이 녹아 사라지는 시간
 export const MELT_SECONDS = 0.42
 
+// 큐브가 덩굴에 닿은 뒤 따로 붙는 덩굴이 굳는 시간
+export const STIFFEN_SECONDS = 0.24
+
 // 무너지는 칸이 다 닳거나 무너지는 때, 이동 진행도를 늦추지 않게 moveSeconds 밖 몫
 const crackEnd = (events: GameEvent[]) =>
   Math.max(
@@ -493,7 +496,8 @@ export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
   Math.max(
     moveSeconds(events, swamp) +
       (rises(events) ? RISE_SECONDS : 0) +
-      (events.some((e) => e.type === 'melted') ? MELT_SECONDS : 0),
+      (events.some((e) => e.type === 'melted') ? MELT_SECONDS : 0) +
+      (events.some((e) => e.type === 'stiffened') ? STIFFEN_SECONDS : 0),
     crackEnd(events),
     brazierLightEnd(events),
     brazierEnd(events),

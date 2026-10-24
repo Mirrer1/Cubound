@@ -232,6 +232,14 @@ describe('move 굳는 자리', () => {
     expect(events).toContainEqual({ type: 'grew', id: 'b', at: { x: 3, y: 2 } })
   })
 
+  it('굳는 수에만 굳은 덩굴을 알린다', () => {
+    const stopping = play(VINE_STOP_STAGE, ['down', 'right'])
+    const after = play(VINE_STOP_STAGE, ['down', 'right', 'left'])
+
+    expect(stopping.events).toContainEqual({ type: 'stiffened', id: 'a' })
+    expect(after.events.some((e) => e.type === 'stiffened')).toBe(false)
+  })
+
   it('굳은 덩굴도 계속 밟고 다닌다', () => {
     const { state } = play(VINE_STOP_STAGE, ['down', 'right', 'left', 'right'])
 

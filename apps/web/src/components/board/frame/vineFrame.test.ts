@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { STAGE } from './testStages'
-import { durationOf } from './timeFrame'
+import { NO_SWAMP, durationOf, moveSeconds } from './timeFrame'
 import { hardenSeconds, vineFrames, vineLooks, vineProgress, vinesDisplay } from './vineFrame'
 import { createState, move, vinesLeft } from '@/game/rules'
 import type { GameState, Stage } from '@/game/types'
@@ -219,6 +219,20 @@ describe('vineFrames', () => {
     expect(at(0.99).get('1-1')?.knot).toBeGreaterThan(0.95)
     expect(at(0.99).get('2-1')?.sproutOpacity).toBeLessThan(0.05)
     expect(at(0.99).get('3-1')?.sproutOpacity).toBeLessThan(0.05)
+  })
+
+  it('굳기는 큐브가 덩굴에 닿은 뒤 제 시간 동안 이어서 짙어진다', () => {
+    const stage: Stage = { ...VINE_STAGE, rules: { vineStop: true } }
+    const before = move(createState(stage), 'down').state
+    const { state, events } = move(before, 'right')
+    const total = durationOf(events)
+    const hard = (seconds: number) =>
+      vineFrames(before, state, events, seconds / total).get('1-1')!.hard
+
+    expect(total - moveSeconds(events, NO_SWAMP)).toBeCloseTo(0.24)
+    expect(hard(moveSeconds(events, NO_SWAMP))).toBe(0)
+    expect(hard(moveSeconds(events, NO_SWAMP) + 0.12)).toBeGreaterThan(0.3)
+    expect(hard(moveSeconds(events, NO_SWAMP) + 0.12)).toBeLessThan(0.7)
   })
 
   it('재시작하면 자란 칸이 구덩이로 내려가고 싹이 다시 돋는다', () => {

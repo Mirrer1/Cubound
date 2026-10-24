@@ -1,9 +1,10 @@
 import { directionBetween } from './cubeFrame'
-import { clamp01, easeOut, lerp } from './curveFrame'
+import { clamp01, easeOut, lerp, smooth } from './curveFrame'
 import { swampTime } from './swampFrame'
 import {
   type CountView,
   NO_SWAMP,
+  STIFFEN_SECONDS,
   type SwampTime,
   countDisplay,
   elapsedAt,
@@ -70,8 +71,6 @@ const VINE_RISE = { from: 0, span: 1 } // 판이 구덩이에서 차오르는 �
 
 const VINE_NEXT = { from: 0, span: 1 } // 새 다음 칸의 싹이 크는 구간
 
-const VINE_HARD = { from: 0.4, span: 0.6 } // 굳는 구간
-
 export interface VineFrame {
   kind: VineKind
   enter: Direction | null
@@ -124,7 +123,11 @@ export const vineFrames = (
   const before = vineLooks(prev)
   const p = restarting ? 0 : vineProgress(events, t, swamp)
   const back = easeOut(t)
-  const hard = phase(p, VINE_HARD)
+  const hard = smooth(
+    clamp01(
+      (elapsedAt(events, swamp, t) - moveSeconds(events, swamp) + swamp.lead) / STIFFEN_SECONDS,
+    ),
+  )
 
   return new Map(
     [...after].map(([key, look]): [string, VineFrame] => {
@@ -193,7 +196,7 @@ export const vineFrames = (
 // 새로 굳은 덩굴마다 판이 짙어지기 시작하는 초
 export const hardenSeconds = (prev: GameState, game: GameState, events: GameEvent[]) => {
   const swamp = swampTime(prev, game)
-  const at = swamp.lead + VINE_HARD.from * (moveSeconds(events, swamp) - swamp.lead)
+  const at = moveSeconds(events, swamp)
   return game.vines.filter((v, i) => v.stopped && !prev.vines[i].stopped).map(() => at)
 }
 

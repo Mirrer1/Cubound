@@ -19,6 +19,7 @@ export const growVines = (state: GameState): MoveResult => {
 
     const { cells } = list[i]
     if (stopping && cells.slice(0, spot.grown).some((cell) => same(cell, state.player))) {
+      events.push({ type: 'stiffened', id: spot.id })
       return { ...spot, stopped: true }
     }
 
