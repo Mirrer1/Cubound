@@ -31,6 +31,21 @@ export const occludingCells = (
   return cells
 }
 
+// 큐브 말고 물체를 가리는 앞쪽 칸, 옆 칸은 반대쪽 옆 칸이나 정면 칸도 물체 윗면 높이 이상일 때만
+// 옆 칸 하나는 한쪽 면만 가려 물체가 그대로 보이는 경우
+const objectCells = (
+  heights: number[][],
+  target: Point,
+  standHeight: number,
+  boxes: Point[] = [],
+) => {
+  const at = (dx: number, dy: number) => heights[target.y + dy]?.[target.x + dx] ?? -1
+  const buried = [at(1, 0), at(0, 1), at(1, 1)].filter((h) => h >= standHeight).length >= 2
+  const side = (p: Point) => p.x - target.x + p.y - target.y === 1
+  const cells = occludingCells(heights, target, standHeight, boxes)
+  return buried ? cells : cells.filter((p) => !side(p))
+}
+
 export const fadedCells = (
   shown: number[][],
   cubeCell: Point,
@@ -43,7 +58,7 @@ export const fadedCells = (
     ...occludingCells(shown, cubeCell, cubeLevel, boxes),
     // 큐브에서 멀리 떨어져 저 혼자 벽에 묻히는 상자와 얼음 돌과 화약통과 메운 바닥, 물에 뜬 것은 윗면보다 한 층 넘게 높은 벽 기준
     ...boxes.flatMap((b, i) =>
-      occludingCells(
+      objectCells(
         shown,
         b,
         shown[b.y][b.x] < waterLevel(game, b) ? waterLevel(game, b) + 1 : shown[b.y][b.x] + 1,
@@ -51,23 +66,24 @@ export const fadedCells = (
       ),
     ),
     ...game.stones.flatMap((s) =>
-      occludingCells(
+      objectCells(
         shown,
         s,
         shown[s.y][s.x] < waterLevel(game, s) ? waterLevel(game, s) + 1 : shown[s.y][s.x] + 1,
         boxes,
       ),
     ),
-    ...filled.flatMap((p) => occludingCells(shown, p, shown[p.y][p.x], boxes)),
-    ...game.kegs.flatMap((k) => occludingCells(shown, k, shown[k.y][k.x] + 1, boxes)),
+    // 납작한 메운 바닥은 바로 앞 칸이 두 층 이상 높을 때 가림 기준
+    ...filled.flatMap((p) => objectCells(shown, p, shown[p.y][p.x] + 1, boxes)),
+    ...game.kegs.flatMap((k) => objectCells(shown, k, shown[k.y][k.x] + 1, boxes)),
     ...game.bars.flatMap((bar) =>
-      barCells(bar).flatMap((c) => occludingCells(shown, c, bar.level + 1, boxes)),
+      barCells(bar).flatMap((c) => objectCells(shown, c, bar.level + 1, boxes)),
     ),
     // 큐브에서 멀리 서 있는 숯 벽
     ...(game.stage.fire ?? []).flatMap((row, y) =>
       [...row].flatMap((c, x) =>
         c === '#' && !game.ashes.some((a) => same(a, { x, y }))
-          ? occludingCells(shown, { x, y }, shown[y][x] + 1, boxes)
+          ? objectCells(shown, { x, y }, shown[y][x] + 1, boxes)
           : [],
       ),
     ),

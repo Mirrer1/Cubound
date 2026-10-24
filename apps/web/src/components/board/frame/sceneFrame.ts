@@ -28,7 +28,7 @@ import {
 } from './iceStoneFrame'
 import { kegScene, movingKeg } from './kegFrame'
 import { mushroomFrames } from './mushroomFrame'
-import { cellsOf, has, playerPath, same, totalSeconds } from './pathFrame'
+import { boxPath, cellsOf, has, hopCells, playerPath, same, totalSeconds } from './pathFrame'
 import { restartDrop } from './restartFrame'
 import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFrame'
 import { fadeLanes, sluiceScene, tapFronts } from './sluiceFrame'
@@ -59,6 +59,7 @@ import { leanOf, pulledBeside, whirlFrames } from './whirlpoolFrame'
 import { ownProgress } from './windFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { fadedCells, occludingCells } from '@/game/occlusion'
+import { standHeight } from '@/game/rules'
 import type { GameEvent, GameState, Point, Tram } from '@/game/types'
 
 interface SceneView {
@@ -160,8 +161,24 @@ export const sceneFrame = ({
             .map((i) => ({ x: e.from.x + dx * i, y: e.from.y + dy * i }))
         })
     : []
+  // 버섯으로 나는 동안은 출발 칸 기준 가림, 다 내려앉은 뒤 도착 칸 기준
+  const flight = moving
+    ? playerPath(events).find(
+        (e) =>
+          hopCells(e) > 0 &&
+          (cube.x - e.from.x) * (cube.x - e.to.x) <= 0 &&
+          (cube.y - e.from.y) * (cube.y - e.to.y) <= 0 &&
+          !(cube.x === e.to.x && cube.y === e.to.y),
+      )
+    : undefined
+  // 버섯으로 나는 상자는 내려앉기 전까지 떠나기 전 자리 기준 가림
+  const boxFlying = box !== null && boxPath(events).some((e) => hopCells(e) > 0)
+  const fadeGame = boxFlying ? { ...game, boxes: before.boxes } : game
+  const fadeFilled = boxFlying ? filled.filter((p) => !same(p, box.to)) : filled
   const faded = [
-    ...fadedCells(shown, cubeCell, Math.round(cube.level), game, filled),
+    ...(flight
+      ? fadedCells(shown, flight.from, standHeight(before, flight.from), fadeGame, fadeFilled)
+      : fadedCells(shown, cubeCell, Math.round(cube.level), fadeGame, fadeFilled)),
     ...slid.flatMap((p) => occludingCells(shown, p, Math.round(cube.level), boxes)),
   ]
 

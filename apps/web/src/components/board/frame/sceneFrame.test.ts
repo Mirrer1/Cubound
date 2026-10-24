@@ -12,7 +12,7 @@ import { swampTime } from './swampFrame'
 import { LOCK_STAGE, PLUG_STAGE, SLUICE_STAGE, WHIRL_STAGE, lastMove } from './testStages'
 import { tetherFrames } from './tetherFrame'
 import { SLUICE, durationOf, sluiceStart } from './timeFrame'
-import { createState } from '@/game/rules'
+import { createState, move } from '@/game/rules'
 import type { GameEvent, GameState, Point, Stage } from '@/game/types'
 
 // (1,0) 상자를 오른쪽으로 미는 판
@@ -96,6 +96,57 @@ describe('sceneFrame', () => {
     const scene = sceneOf(game, null, [], 1, { guideCell: { x: 1, y: 0 } })
     expect(scene.guide).toEqual(guideRect(game, { x: 1, y: 0 }))
     expect(sceneOf(game, null, [], 1).guide).toBeNull()
+  })
+})
+
+describe('sceneFrame 버섯', () => {
+  it('벽 너머로 날아가는 동안은 벽을 흐리지 않고 다 내려앉은 뒤 흐린다', () => {
+    const prev = createState({
+      version: 1,
+      id: 'test-scene-hop',
+      heights: [[0, 0, 0, 0, 2, 0, 0]],
+      start: { x: 6, y: 0 },
+      goal: { x: 0, y: 0 },
+      entities: [],
+      mushroom: ['.....#.'],
+    })
+    const { state, events } = move(prev, 'left')
+    const flying = Array.from({ length: 100 }, (_, i) => i / 100).filter(
+      (t) => playerFrame(prev, state, events, t, NO_CHAIN).x < 4,
+    )
+
+    expect(state.player).toEqual({ x: 3, y: 0 })
+    expect(flying.length).toBeGreaterThan(0)
+    for (const t of flying) {
+      expect(sceneOf(state, prev, events, t).faded).not.toContainEqual({ x: 4, y: 0 })
+    }
+    expect(sceneOf(state, prev, events, 1).faded).toContainEqual({ x: 4, y: 0 })
+  })
+
+  it('벽 너머로 날아가는 상자도 다 내려앉은 뒤 벽을 흐린다', () => {
+    const prev = createState({
+      version: 1,
+      id: 'test-scene-box-hop',
+      heights: [
+        [0, 0, 0, 2, 0, 0, 0],
+        [0, 0, 2, 0, 0, 0, 0],
+      ],
+      start: { x: 6, y: 0 },
+      goal: { x: 0, y: 0 },
+      entities: [{ type: 'box', x: 5, y: 0 }],
+      mushroom: ['....#..'],
+    })
+    const { state, events } = move(prev, 'left')
+    const flying = Array.from({ length: 100 }, (_, i) => i / 100).filter(
+      (t) => movingBox(prev, state, events, t, NO_CHAIN) !== null,
+    )
+
+    expect(state.boxes).toEqual([{ x: 2, y: 0 }])
+    expect(flying.length).toBeGreaterThan(0)
+    for (const t of flying) {
+      expect(sceneOf(state, prev, events, t).faded).not.toContainEqual({ x: 3, y: 0 })
+    }
+    expect(sceneOf(state, prev, events, 1).faded).toContainEqual({ x: 3, y: 0 })
   })
 })
 

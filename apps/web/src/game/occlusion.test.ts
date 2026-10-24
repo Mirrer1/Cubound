@@ -221,9 +221,9 @@ describe('fadedCells', () => {
   it('큐브에서 먼 얼음 돌도 상자처럼 가리는 앞 칸을 모은다', () => {
     const state = { ...createState(STAGE), stones: [{ x: 2, y: 2 }] }
 
-    expect(fadedCells(raise([[3, 2, 2]]), { x: 0, y: 0 }, 0, state, [])).toContainEqual({
+    expect(fadedCells(raise([[3, 3, 3]]), { x: 0, y: 0 }, 0, state, [])).toContainEqual({
       x: 3,
-      y: 2,
+      y: 3,
     })
   })
 
@@ -233,20 +233,20 @@ describe('fadedCells', () => {
       bars: [{ x: 1, y: 2, dir: 'right' as const, length: 2, level: 0, heat: null }],
     }
 
-    expect(fadedCells(raise([[3, 2, 2]]), { x: 0, y: 0 }, 0, state, [])).toContainEqual({
+    expect(fadedCells(raise([[3, 3, 3]]), { x: 0, y: 0 }, 0, state, [])).toContainEqual({
       x: 3,
-      y: 2,
+      y: 3,
     })
   })
 
   it('큐브에서 먼 서 있는 숯 벽도 상자처럼 가리는 앞 칸을 모으고 재가 되면 뺀다', () => {
     const state = createState({ ...STAGE, fire: ['.*..', '....', '..#.', '....'] })
-    const heights = raise([[3, 2, 2]])
+    const heights = raise([[3, 3, 3]])
 
-    expect(fadedCells(heights, { x: 0, y: 0 }, 0, state, [])).toContainEqual({ x: 3, y: 2 })
+    expect(fadedCells(heights, { x: 0, y: 0 }, 0, state, [])).toContainEqual({ x: 3, y: 3 })
     expect(
       fadedCells(heights, { x: 0, y: 0 }, 0, { ...state, ashes: [{ x: 2, y: 2 }] }, []),
-    ).not.toContainEqual({ x: 3, y: 2 })
+    ).not.toContainEqual({ x: 3, y: 3 })
   })
 
   it('물에 뜬 상자는 수면 높이로 재서 같은 높이 둑은 가리지 않는다', () => {
@@ -285,14 +285,52 @@ describe('fadedCells', () => {
     }
     const shown = raise([
       [3, 0, 2],
-      [0, 2, 1],
+      [2, 1, 2],
+      [0, 2, 2],
+      [1, 1, 2],
       [1, 3, 1],
     ])
 
     expect(fadedCells(shown, { x: 3, y: 3 }, 0, state, [{ x: 0, y: 1 }])).toEqual([
       { x: 3, y: 0 },
+      { x: 2, y: 1 },
+      { x: 1, y: 1 },
       { x: 0, y: 2 },
       { x: 1, y: 3 },
+    ])
+  })
+
+  it('큐브 말고는 옆 칸 하나만 높으면 한쪽 면만 가려 흐리지 않는다', () => {
+    const state = { ...createState(STAGE), boxes: [{ x: 1, y: 1 }] }
+
+    expect(fadedCells(raise([[2, 1, 2]]), { x: 0, y: 3 }, 0, state, [])).toEqual([])
+    // 정면 칸도 상자 윗면 높이면 옆 칸과 함께 상자를 묻는 골짜기
+    expect(
+      fadedCells(
+        raise([
+          [2, 1, 2],
+          [2, 2, 1],
+        ]),
+        { x: 0, y: 3 },
+        0,
+        state,
+        [],
+      ),
+    ).toEqual([{ x: 2, y: 1 }])
+    expect(
+      fadedCells(
+        raise([
+          [2, 1, 2],
+          [1, 2, 2],
+        ]),
+        { x: 0, y: 3 },
+        0,
+        state,
+        [],
+      ),
+    ).toEqual([
+      { x: 2, y: 1 },
+      { x: 1, y: 2 },
     ])
   })
 
