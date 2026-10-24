@@ -172,6 +172,13 @@ describe('머리 위 물건', () => {
     expect(bump?.(1, 2, 3)).toEqual(tiltOnTop('left', 0.3)(1, 2, 3))
   })
 
+  it('carriedTilt는 숨어서 버틴 큐브의 다 끝난 구르기 각도로는 기울지 않는다', () => {
+    const { events } = gust()
+    const bump = tilt({ events, t: 0.7, cube: { angle: Math.PI / 2, direction: 'left' } })
+
+    expect(bump?.(1, 2, 3)).toEqual(tiltOnTop('left', 0)(1, 2, 3))
+  })
+
   it('carriedTilt는 구르는 동안 rolling을 쓴다', () => {
     expect(tilt({})).toBe(rolling)
   })

@@ -82,9 +82,10 @@ interface TiltView {
 }
 
 // 막혔거나 바람에 기울면 큐브와 같은 기울기, 구르는 동안은 rolling
+// 다 끝난 구르기의 90도는 같은 모습이라 뺀 각도, 숨어서 버틴 큐브가 구른 각도 그대로인 경우
 export const carriedTilt = ({ events, moving, t, swampSeconds, cube, rolling }: TiltView) =>
   events.some((e) => e.type === 'blocked') || (moving && windLeaning(events, t, swampSeconds))
-    ? tiltOnTop(cube.direction, cube.angle)
+    ? tiltOnTop(cube.direction, cube.angle - Math.round(cube.angle / (Math.PI / 2)) * (Math.PI / 2))
     : moving && cube.angle > 0
       ? rolling
       : undefined
