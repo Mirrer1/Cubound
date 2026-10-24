@@ -57,6 +57,19 @@ export const tetherFrames = ({ prev, game, box, t, dropping }: TetherView): Teth
 export const coversRope = (cube: Point, frame: TetherFrame) =>
   frame.ridden || cube.x + cube.y > frame.depth + 0.5
 
+// 큐브가 가리는 줄만 담는 마스크 범위, 판 전체 범위는 느린 기기에서 매 장면 다시 칠하는 비용
+export const ropeMaskArea = (cube: Point, frames: TetherFrame[]) => {
+  const corners = frames
+    .filter((frame) => coversRope(cube, frame))
+    .flatMap((frame) => frame.points.split(' ').map((p) => p.split(',').map(Number)))
+  if (corners.length === 0) return { x: 0, y: 0, width: 0, height: 0 }
+  const xs = corners.map(([x]) => x)
+  const ys = corners.map(([, y]) => y)
+  const x = Math.min(...xs) - 2
+  const y = Math.min(...ys) - 2
+  return { x, y, width: Math.max(...xs) + 2 - x, height: Math.max(...ys) + 2 - y }
+}
+
 // 범위 칸마다 그 칸을 범위로 갖는 배 중 큐브가 가장 많이 탄 정도
 export const moorLooks = (stage: Stage, frames: TetherFrame[]) =>
   new Map(

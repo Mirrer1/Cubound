@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { ropeEnds, ropePoints } from '../view'
 import { movingBox } from './boxFrame'
 import { lastMove } from './testStages'
-import { coversRope, moorLooks, tetherFrames } from './tetherFrame'
+import { coversRope, moorLooks, ropeMaskArea, tetherFrames } from './tetherFrame'
 import { createState } from '@/game/rules'
 import type { Direction, Stage } from '@/game/types'
 
@@ -121,5 +121,24 @@ describe('coversRope', () => {
 
   it('말뚝 옆이나 앞의 배에 탄 큐브는 줄을 가린다', () => {
     expect(coversRope({ x: 1, y: 1 }, { ...frame, ridden: true })).toBe(true)
+  })
+})
+
+describe('ropeMaskArea', () => {
+  const frame = { slack: 1, active: 0, opacity: 1, depth: 2, ridden: false }
+  const near = { ...frame, points: '10,20 30,5 32,8 12,24' }
+  const far = { ...frame, points: '100,100 120,90', depth: 9 }
+
+  it('큐브가 가리는 줄만 2만큼 넉넉히 담는다', () => {
+    expect(ropeMaskArea({ x: 2, y: 1 }, [near, far])).toEqual({
+      x: 8,
+      y: 3,
+      width: 26,
+      height: 23,
+    })
+  })
+
+  it('가리는 줄이 없으면 빈 범위다', () => {
+    expect(ropeMaskArea({ x: 0, y: 0 }, [near, far])).toEqual({ x: 0, y: 0, width: 0, height: 0 })
   })
 })

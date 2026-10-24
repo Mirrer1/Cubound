@@ -34,7 +34,7 @@ import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFram
 import { fadeLanes, sluiceScene, tapFronts } from './sluiceFrame'
 import { boxSink, swampFrame } from './swampFrame'
 import { ridePhase } from './switchFrame'
-import { moorLooks, tetherFrames } from './tetherFrame'
+import { moorLooks, ropeMaskArea, tetherFrames } from './tetherFrame'
 import {
   type SwampTime,
   elapsedAt,
@@ -457,6 +457,7 @@ export const sceneFrame = ({
     sunk,
     ripple,
     tethers,
+    ropeMask: ropeMaskArea(cube, tethers),
     moor,
     whirl,
     iceStone,

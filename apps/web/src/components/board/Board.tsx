@@ -450,15 +450,8 @@ const Board = ({
         )
       })}
       <defs>
-        <mask
-          id="rope-behind-scene.cube"
-          maskUnits="userSpaceOnUse"
-          x="-100000"
-          y="-100000"
-          width="200000"
-          height="200000"
-        >
-          <rect x="-100000" y="-100000" width="200000" height="200000" fill="white" />
+        <mask id="rope-behind-scene.cube" maskUnits="userSpaceOnUse" {...scene.ropeMask}>
+          <rect {...scene.ropeMask} fill="white" />
           <g transform={`translate(0 ${scene.cubeSink - scene.cube.lift}) ${scene.cubeSquash}`}>
             {scene.cubeFaces.map((f) => (
               <polygon key={f.face} points={f.points} fill="black" />
