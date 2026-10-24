@@ -1,9 +1,9 @@
 import { BOX_SINK } from '../view'
 import { shoveClock } from './barFrame'
 import { type CrackView, crackClip, standSink } from './crackFrame'
-import { type Chain, NO_CHAIN, easeIn, lerp, smooth } from './curveFrame'
+import { type Chain, NO_CHAIN, clamp01, easeIn, lerp, smooth } from './curveFrame'
 import { slideChain } from './iceFrame'
-import { hopClear, hopLevel, hopLift, hopProgress } from './mushroomFrame'
+import { hopCell, hopClear, hopLevel, hopLift, hopProgress } from './mushroomFrame'
 import {
   type PathEvent,
   boxPath,
@@ -85,41 +85,50 @@ export const movingBox = (
   const floated = !hopped && event.type === 'pushed' && event.result === 'floated'
   const gone = hopped ? hopProgress(cells, p) : floated ? floatGone(p) : p
   // 구덩이를 메우는 상자는 반쯤 가서부터 부드럽게 하강, 떨어지는 상자는 끝에서 가속
-  // 버섯을 이어 튀는 상자는 큐브처럼 딛는 갓마다 그 칸 높이
+  // 버섯으로 튀는 상자는 큐브처럼 딛는 갓마다 그 칸 높이, 구덩이를 메우면 사이 벽을 다 넘은 마지막 반 칸에서 한 층 하강
   const filling = event.type === 'pushed' && event.result === 'filled'
-  const level =
-    hopped && cells > 3
-      ? hopLevel(prev, event, cells, fromLevel, toLevel, gone * cells)
-      : floated
-        ? floatLevel(fromLevel, toLevel, p)
-        : event.type === 'slid' || p < (filling ? 0.5 : 0.6)
-          ? fromLevel
-          : lerp(fromLevel, toLevel, filling ? smooth((p - 0.5) / 0.5) : easeIn((p - 0.6) / 0.4))
+  const landing = clamp01((gone * cells - cells + 0.5) / 0.5)
+  const level = hopped
+    ? hopLevel(prev, event, cells, fromLevel, filling ? toLevel + 1 : toLevel, gone * cells) -
+      (filling ? smooth(landing) : 0)
+    : floated
+      ? floatLevel(fromLevel, toLevel, p)
+      : event.type === 'slid' || p < (filling ? 0.5 : 0.6)
+        ? fromLevel
+        : lerp(fromLevel, toLevel, filling ? smooth((p - 0.5) / 0.5) : easeIn((p - 0.6) / 0.4))
   // 상자가 앉을 높이는 도착 칸에 서는 높이에서 한 층을 뺀 값, 발판이 오르내린 몫 포함
   const endLevel = path.reduce((level, passed) => boxLevelAfter(prev, level, passed), start)
   // 상자가 자리에 앉은 뒤 칸과 같이 오르는 씨앗이 솟는 몫
   const pulledAway = events.some((e) => e.type === 'pulled' && same(e.from, to))
   const burned = events.some((e) => e.type === 'boxBurned')
+  // 늪에 잠기는 상자는 잠기는 연출 몫, 판에서 빠진 상자 자리를 미리 따라 내려가지 않음
+  const sank = sinking !== null && same(sinking.at, to)
   const riding =
-    pulledAway || burned
+    pulledAway || burned || sank
       ? 0
       : (standHeight(game, to) - 1 - seedLift(events, to, 'box') - endLevel) *
         ridePhase(game, events, to, t, swamp)
   const shift = carry ? carriedBy(carry, ride) : { x: 0, y: 0 }
+  // 뒤쪽 낮은 칸으로 떨어지는 상자는 턱보다 낮아진 뒤 턱에 가리는 그 칸 순서
+  const dropping =
+    event.type === 'pushed' &&
+    event.result === 'fell' &&
+    same(frontOf(event.from, event.to), event.from)
+  // 구덩이를 메우는 상자의 뜀 높이 기준, 메운 뒤 윗면이 닿는 땅 높이
+  const lift = hopped
+    ? hopLift(
+        cells,
+        hopSpan(cells) * p,
+        0,
+        hopClear(prev, event, cells, fromLevel, filling ? toLevel + 1 : toLevel),
+      )
+    : 0
 
   return {
     x: lerp(event.from.x, event.to.x, gone) + shift.x,
     y: lerp(event.from.y, event.to.y, gone) + shift.y,
     level: level + riding,
-    // 구덩이를 메우는 상자의 뜀 높이 기준, 메운 뒤 윗면이 닿는 땅 높이
-    lift: hopped
-      ? hopLift(
-          cells,
-          hopSpan(cells) * p,
-          0,
-          hopClear(prev, event, cells, fromLevel, filling ? toLevel + 1 : toLevel),
-        )
-      : 0,
+    lift,
     to,
     // 잠기는 상자는 진흙에 가려지는 멈춘 자리 칸
     cell:
@@ -127,9 +136,13 @@ export const movingBox = (
         ? to
         : carry && ride > 0
           ? slidingCell(carry.from, carry.to, ride)
-          : event.type === 'slid' && cells > 1
-            ? slideFront(event, gone * cells)
-            : frontOf(event.from, event.to),
+          : hopped
+            ? hopCell(prev.heights, event, gone * cells, level + lift / TILE.layer).cell
+            : event.type === 'slid' && cells > 1
+              ? slideFront(event, gone * cells)
+              : dropping && level < fromLevel
+                ? event.to
+                : frontOf(event.from, event.to),
   }
 }
 

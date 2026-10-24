@@ -35,6 +35,47 @@ describe('movingBox', () => {
     expect(movingBox(prev, state, events, 1)).toBeNull()
   })
 
+  it('뒤쪽 낮은 칸으로 떨어지는 상자는 턱보다 낮아지면 그 칸 순서로 턱에 가린다', () => {
+    const stage: Stage = {
+      ...STAGE,
+      heights: [[0, 1, 1]],
+      start: { x: 2, y: 0 },
+      goal: { x: 2, y: 0 },
+      entities: [{ type: 'box', x: 1, y: 0 }],
+    }
+    const prev = createState(stage)
+    const { state, events } = move(prev, 'left')
+    const seen = new Set<boolean>()
+
+    expect(state.boxes).toEqual([{ x: 0, y: 0 }])
+    for (let t = 0; t < 1; t += 0.02) {
+      const f = movingBox(prev, state, events, t)
+      if (!f) continue
+      const below = f.level < 1
+      seen.add(below)
+      expect(f.cell).toEqual(below ? { x: 0, y: 0 } : { x: 1, y: 0 })
+    }
+    expect(seen).toEqual(new Set([true, false]))
+  })
+
+  it('늪에 밀려 들어가는 상자는 잠기기 전까지 제 높이로 간다', () => {
+    const stage: Stage = {
+      ...STAGE,
+      heights: [[0, 0, 0, 0]],
+      swamp: ['..#.'],
+      goal: { x: 3, y: 0 },
+      entities: [{ type: 'box', x: 1, y: 0 }],
+    }
+    const prev = createState(stage)
+    const { state, events } = move(prev, 'right')
+
+    expect(events.some((e) => e.type === 'sank')).toBe(true)
+    for (let t = 0; t < 1; t += 0.05) {
+      const f = movingBox(prev, state, events, t)
+      if (f) expect(f.level).toBeCloseTo(0)
+    }
+  })
+
   it('올라간 발판으로 밀린 상자는 발판을 따라 내려앉는다', () => {
     const stage: Stage = {
       ...LIFT_STAGE,
@@ -242,6 +283,46 @@ describe('movingBox 버섯', () => {
     expect(state.boxes).toEqual([{ x: 6, y: 0 }])
     expect(onSecond.length).toBeGreaterThan(0)
     for (const level of onSecond) expect(level).toBeCloseTo(0)
+  })
+
+  it('벽 윗면보다 낮게 나는 동안은 벽 뒤 칸 순서로 벽에 가린다', () => {
+    const prev = createState({ ...BOX_HOP_STAGE, heights: [[0, 0, 0, 2, 0, 0, 0]] })
+    const { state, events } = move(prev, 'right')
+    const seen = new Set<boolean>()
+
+    for (let t = 0; t <= 1; t += 0.01) {
+      const f = movingBox(prev, state, events, t)
+      if (!f || f.x <= 2 || f.x >= 3) continue
+      const tucked = f.level + f.lift / TILE.layer < 2
+      seen.add(tucked)
+      expect(f.cell).toEqual({ x: tucked ? 2 : 3, y: 0 })
+    }
+
+    expect(seen).toEqual(new Set([true, false]))
+  })
+
+  it('높은 칸에서 낮은 칸 버섯으로 밀린 상자는 갓을 디딜 때 그 칸 높이다', () => {
+    const prev = createState({ ...BOX_HOP_STAGE, heights: [[1, 1, 0, 0, 0, 0, 0]] })
+    const { state, events } = move(prev, 'right')
+    const onCap = Array.from({ length: 201 }, (_, i) => movingBox(prev, state, events, i / 200))
+      .filter((f) => f !== null && Math.abs(f.x - 2) < 0.01)
+      .map((f) => f!.level)
+
+    expect(state.boxes).toEqual([{ x: 4, y: 0 }])
+    expect(onCap.length).toBeGreaterThan(0)
+    for (const level of onCap) expect(level).toBeCloseTo(0)
+  })
+
+  it('벽 너머 구덩이를 메우는 상자는 벽 칸 위를 지나는 동안 벽 윗면 아래로 내려가지 않는다', () => {
+    const prev = createState({ ...BOX_HOP_STAGE, heights: [[0, 0, 0, 1, -1, 0, 0]] })
+    const { state, events } = move(prev, 'right')
+    const over = Array.from({ length: 201 }, (_, i) => movingBox(prev, state, events, i / 200))
+      .filter((f) => f !== null && Math.abs(f.x - 3) < 0.5)
+      .map((f) => f!.level + f!.lift / TILE.layer)
+
+    expect(state.heights[0][4]).toBe(0)
+    expect(over.length).toBeGreaterThan(0)
+    for (const bottom of over) expect(bottom).toBeGreaterThan(1 - 0.1)
   })
 
   it('두 층 벽 너머 구덩이를 메우는 상자는 땅에 내리는 상자와 같은 높이로 넘는다', () => {

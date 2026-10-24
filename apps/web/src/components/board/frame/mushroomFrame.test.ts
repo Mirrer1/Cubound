@@ -6,6 +6,7 @@ import {
   CAP_TOP_IDLE,
   MUSHROOM_STAND,
   capsDisplay,
+  hopCell,
   hopLift,
   hopProgress,
   mushroomFrames,
@@ -186,6 +187,49 @@ describe('버섯 갓에 머무는 차례', () => {
     expect(Math.max(...lifts)).toBeCloseTo(topOf(SPRUNG), 0)
     expect(lifts[0]).toBeGreaterThan(Math.min(...lifts))
     expect(lifts[lifts.length - 1]).toBeCloseTo(topOf(SPRUNG), 0)
+  })
+})
+
+describe('hopCell', () => {
+  it('앞 칸 윗면보다 낮은 동안은 뒤 칸이고 넘어서면 앞 칸이다', () => {
+    const heights = [[0, 0, 2, 0]]
+    const right = { type: 'moved', from: { x: 0, y: 0 }, to: { x: 3, y: 0 } } as const
+
+    expect(hopCell(heights, right, 1.5, 1)).toEqual({ cell: { x: 1, y: 0 }, tucked: true })
+    expect(hopCell(heights, right, 1.5, 2.5)).toEqual({ cell: { x: 2, y: 0 }, tucked: false })
+  })
+
+  it('화면 안쪽으로 벽을 넘어 내려앉는 동안은 도착 쪽 칸이다', () => {
+    const heights = [[0, 2, 0, 0]]
+    const left = { type: 'moved', from: { x: 3, y: 0 }, to: { x: 0, y: 0 } } as const
+
+    expect(hopCell(heights, left, 2.5, 1)).toEqual({ cell: { x: 0, y: 0 }, tucked: true })
+    expect(hopCell(heights, left, 2.5, 2.5)).toEqual({ cell: { x: 1, y: 0 }, tucked: false })
+  })
+
+  it('칸 한가운데에서는 다음 칸과 견줘 고른다', () => {
+    const right = { type: 'moved', from: { x: 0, y: 0 }, to: { x: 3, y: 0 } } as const
+
+    expect(hopCell([[0, 0, 0, 0]], right, 0, 0).cell).toEqual({ x: 1, y: 0 })
+    expect(hopCell([[0, 0, 0, 0]], right, 3, 0).cell).toEqual({ x: 3, y: 0 })
+  })
+
+  it('구덩이 위를 나는 동안은 걸친 다른 칸이다', () => {
+    const right = { type: 'moved', from: { x: 0, y: 0 }, to: { x: 3, y: 0 } } as const
+    const left = { type: 'moved', from: { x: 3, y: 0 }, to: { x: 0, y: 0 } } as const
+
+    expect(hopCell([[0, 0, -1, 0]], right, 1.5, 1).cell).toEqual({ x: 1, y: 0 })
+    expect(hopCell([[0, 0, -1, 0]], left, 1.5, 1).cell).toEqual({ x: 1, y: 0 })
+  })
+
+  it('벽 뒤 구덩이로 내려앉는 동안은 그 구덩이와 같은 깊이의 그리는 칸이다', () => {
+    const left = { type: 'moved', from: { x: 3, y: 0 }, to: { x: 1, y: 0 } } as const
+    const heights = [
+      [0, -1, 1, 0],
+      [0, 0, 0, 0],
+    ]
+
+    expect(hopCell(heights, left, 1.5, 0.5)).toEqual({ cell: { x: 0, y: 1 }, tucked: true })
   })
 })
 

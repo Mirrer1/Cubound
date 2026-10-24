@@ -34,7 +34,7 @@ import { NO_SWAMP, durationOf, moveSeconds, riseProgress } from './timeFrame'
 import { tramProgress } from './tramFrame'
 import { TILE } from '@/game/iso'
 import { createState, move } from '@/game/rules'
-import type { GameEvent, GameState, Stage } from '@/game/types'
+import type { Direction, GameEvent, GameState, Stage } from '@/game/types'
 
 describe('playerFrame', () => {
   it('여러 칸을 미끄러지는 큐브는 지금 걸친 두 칸 중 앞 칸의 순서로 그린다', () => {
@@ -505,7 +505,7 @@ describe('playerFrame 버섯', () => {
     expect(Math.max(...lifts)).toBeGreaterThan(TILE.layer)
   })
 
-  it('두 층 벽은 한 층 벽보다 한 층에 여유를 더해 높이 넘고 구덩이는 한 층 벽과 같다', () => {
+  it('한 층 벽은 여유를 더해 넘고 두 층 벽은 그보다 한 층 높이, 구덩이는 평지와 같다', () => {
     const peak = (stage: Stage) => {
       const { prev, state, events } = hop(stage)
       return Math.max(
@@ -513,12 +513,48 @@ describe('playerFrame 버섯', () => {
       )
     }
     const low = peak(HOP_STAGE)
+    const flat = peak({ ...HOP_STAGE, heights: [[0, 0, 0, 0, 0, 0, 0]] })
 
+    expect(low - flat).toBeCloseTo(9, 0)
     expect(peak({ ...HOP_STAGE, heights: [[0, 0, 2, 0, 0, 0, 0]] }) - low).toBeCloseTo(
-      TILE.layer + 9,
+      TILE.layer,
       -1,
     )
-    expect(peak({ ...HOP_STAGE, heights: [[0, 0, -1, 0, 0, 0, 0]] })).toBeCloseTo(low)
+    expect(peak({ ...HOP_STAGE, heights: [[0, 0, -1, 0, 0, 0, 0]] })).toBeCloseTo(flat)
+  })
+
+  it('벽 윗면보다 낮게 나는 동안은 벽 뒤 칸의 맨 뒤 순서로 벽에 가린다', () => {
+    const cases: { stage: Stage; dir: Direction; wall: number }[] = [
+      { stage: { ...HOP_STAGE, heights: [[0, 0, 2, 0, 0, 0, 0]] }, dir: 'right', wall: 2 },
+      {
+        stage: {
+          ...HOP_STAGE,
+          heights: [[0, 0, 0, 0, 2, 0, 0]],
+          start: { x: 6, y: 0 },
+          goal: { x: 0, y: 0 },
+          mushroom: ['.....#.'],
+        },
+        dir: 'left',
+        wall: 4,
+      },
+    ]
+
+    for (const { stage, dir, wall } of cases) {
+      const prev = createState(stage)
+      const { state, events } = move(prev, dir)
+      const seen = new Set<boolean>()
+
+      for (let t = 0; t <= 1; t += 0.01) {
+        const f = playerFrame(prev, state, events, t)
+        if (f.x <= wall - 1 || f.x >= wall) continue
+        const tucked = f.level + f.lift / TILE.layer < 2
+        seen.add(tucked)
+        expect(f.cell).toEqual({ x: tucked ? wall - 1 : wall, y: 0 })
+        expect(f.last).toBe(tucked)
+      }
+
+      expect(seen).toEqual(new Set([true, false]))
+    }
   })
 
   it('갓으로 걸어 들어가는 한 칸은 구르고 날아가는 동안은 안 구른다', () => {
@@ -545,7 +581,7 @@ describe('playerFrame 버섯', () => {
   })
 
   it('한 층 위에서 떨어져 밟아도 갓에 닿을 때는 평지와 같은 자리다', () => {
-    const flat = hop(HOP_STAGE)
+    const flat = hop({ ...HOP_STAGE, heights: [[0, 0, 0, 0, 0, 0, 0]] })
     const fell = hop(FALL_HOP_STAGE)
     // 갓을 딛기 전의 내려앉기, 안 하면 큐브가 한 층 떠서 갓과 벌어지는 탓
     const above = (r: ReturnType<typeof hop>, t: number) =>

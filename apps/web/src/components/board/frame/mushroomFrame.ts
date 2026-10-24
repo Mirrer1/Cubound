@@ -18,6 +18,7 @@ import {
 } from './pathFrame'
 import { swampTime } from './swampFrame'
 import { type CountView, countDisplay, durationOf, elapsedAt, playerSegments } from './timeFrame'
+import { frontOf, straddled } from './tramFrame'
 import { TILE } from '@/game/iso'
 import { capsLeft, readMushrooms, standHeight } from '@/game/rules'
 import type { GameEvent, GameState, Point } from '@/game/types'
@@ -68,7 +69,7 @@ export const hopLevel = (
   return b === a ? floorOf(a) : lerp(floorOf(a), floorOf(b), clamp01((u - a) / (b - a)))
 }
 
-// 튕김마다 꼭대기에 더 솟는 px, 한 층 넘게 솟은 사이 벽을 넘는 몫
+// 튕김마다 꼭대기에 더 솟는 px, 한 층 이상 솟은 사이 벽을 넘는 몫
 export const hopClear = (
   state: GameState,
   event: PathEvent,
@@ -90,9 +91,9 @@ export const hopClear = (
     const wall = { x: event.from.x + dx * (a + 1), y: event.from.y + dy * (a + 1) }
     const middle = (floorOf(a) + floorOf(a + 2)) / 2
     const over =
-      (state.heights[wall.y]?.[wall.x] ?? -1) < 0 ? 0 : standHeight(state, wall) - middle - 1
-    // 9는 높은 벽 위로 여유 있게 넘어가는 몫
-    clear.push(over > 0 ? over * TILE.layer + 9 : 0)
+      (state.heights[wall.y]?.[wall.x] ?? -1) < 0 ? -1 : standHeight(state, wall) - middle - 1
+    // 9는 벽 위로 여유 있게 넘어가는 몫
+    clear.push(over >= 0 ? over * TILE.layer + 9 : 0)
   }
   return clear
 }
@@ -182,6 +183,30 @@ const hopStepAt = (cells: number, q: number): HopStep => {
   }
 
   return { u: Math.min(cells, u + Math.max(0, q - at)), index: -1, phase: 0 }
+}
+
+// 튕겨 가는 것이 k칸째에 걸친 두 칸 중 그리는 칸, bottom은 밑면 높이
+// 앞 칸 윗면보다 낮은 동안은 앞 칸에 가리는 뒤 칸
+// 그리지 않는 구덩이 칸 대신 앞 칸은 뒤 칸, 뒤 칸은 같은 깊이의 그리는 칸
+export const hopCell = (heights: number[][], event: PathEvent, k: number, bottom: number) => {
+  // 칸 한가운데에서도 지금 칸과 다음 칸 중 고르는 칸
+  const [a] = straddled(event, Math.floor(k))
+  const [b] = straddled(event, Math.min(cellsOf(event), Math.floor(k) + 1))
+  const front = frontOf(a, b)
+  const back = front === a ? b : a
+  const floorOf = (p: Point) => heights[p.y]?.[p.x] ?? -1
+  const tucked = bottom < floorOf(front)
+  if (!tucked) return { cell: floorOf(front) < 0 ? back : front, tucked }
+  if (floorOf(back) >= 0) return { cell: back, tucked }
+
+  const span = heights.length + (heights[0]?.length ?? 0)
+  const peer = Array.from({ length: span }, (_, i) => i + 1)
+    .flatMap((d) => [
+      { x: back.x - d, y: back.y + d },
+      { x: back.x + d, y: back.y - d },
+    ])
+    .find((p) => floorOf(p) >= 0)
+  return { cell: peer ?? front, tucked }
 }
 
 // 진행도 p일 때 실제로 간 칸 비율, 갓을 딛는 동안은 제자리

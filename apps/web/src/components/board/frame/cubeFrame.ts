@@ -7,6 +7,7 @@ import {
   CAP_TOP_IDLE,
   capHeight,
   hopAngle,
+  hopCell,
   hopClear,
   hopLevel,
   hopLift,
@@ -206,6 +207,17 @@ const pathFrame = (
         : frontOf(event.from, event.to)
     const high = toLevel > fromLevel ? event.to : event.from
     const below = !hopped && front === high && level < Math.max(fromLevel, toLevel)
+    const lift = hopped
+      ? hopLift(cells, hopSpan(cells) * p, land, hopClear(prev, event, cells, fromLevel, landLevel))
+      : land > 0
+        ? restLift(
+            cells * (p - 1),
+            lerp(rise, CAP_TOP_IDLE, clamp01((cells * p) / restWalk(cells))),
+          )
+        : lerp(rise, land, p)
+    const flying = hopped
+      ? hopCell(prev.heights, event, gone * cells, level + risen + lift / TILE.layer)
+      : null
 
     return {
       x: lerp(event.from.x, event.to.x, gone),
@@ -227,27 +239,17 @@ const pathFrame = (
       cell:
         (rises(events) || crackSunk(game, event.to)) && p >= 1
           ? event.to
-          : below
-            ? front === event.to
-              ? event.from
-              : event.to
-            : front,
-      last: below,
+          : flying
+            ? flying.cell
+            : below
+              ? front === event.to
+                ? event.from
+                : event.to
+              : front,
+      last: below || (flying?.tucked ?? false),
       squash: span ? squashAt((elapsed - span.from) / (span.to - span.from)) : 0,
       fade: 1,
-      lift: hopped
-        ? hopLift(
-            cells,
-            hopSpan(cells) * p,
-            land,
-            hopClear(prev, event, cells, fromLevel, landLevel),
-          )
-        : land > 0
-          ? restLift(
-              cells * (p - 1),
-              lerp(rise, CAP_TOP_IDLE, clamp01((cells * p) / restWalk(cells))),
-            )
-          : lerp(rise, land, p),
+      lift,
     }
   }
 
