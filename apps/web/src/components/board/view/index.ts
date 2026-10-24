@@ -45,7 +45,7 @@ export {
   type TopTilt,
 } from './cubeView'
 export { blend, checker, darken, dim, shade } from './shadeView'
-export { floorFaces, floorTier, lowestOf } from './tierView'
+export { baseOf, floorFaces, floorTier, tierScale } from './tierView'
 export {
   ASH_LUMPS,
   ASH_MARK,

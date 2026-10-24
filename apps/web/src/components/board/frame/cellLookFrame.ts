@@ -3,9 +3,9 @@ import {
   ICE,
   floorTier,
   idleRipples,
-  lowestOf,
   postBands,
   rippleCycle,
+  tierScale,
   waterLook,
 } from '../view'
 import { barsAt, lipsAt } from './barFrame'
@@ -43,7 +43,7 @@ export interface CellLook {
   y: number
   h: number
   parity: boolean
-  tier: number // 바닥 층 색 단 1~8, 높이가 바뀌는 중에는 소수
+  tier: number // 바닥 층 색 단 0~8, 기준 높이가 1단, 높이가 바뀌는 중에는 소수
   goal: boolean
   faded: boolean
   hidden: boolean // 상자가 메우는 중인 칸
@@ -177,7 +177,7 @@ export const cellLook = ({
   const tideAt = tideLookOf(scene, { game, t })
   const patches = scene.moving ? frostPatches(scene.before, game, events, t, swampSeconds) : null
   const cycle = rippleCycle(ripples.size)
-  const lowest = lowestOf(stage)
+  const scale = tierScale(stage)
   // 씨앗 칸 앞 칸 순서로 그리는 큐브 다음에 옮겨 그리는 그 씨앗 칸 말뚝
   const staked = stakesOver(scene.cube.cell, scene.before.player, game.player, scene.seedFrame)
   const stakedFrame = staked ? scene.seedFrame.get(`${staked.x}-${staked.y}`) : undefined
@@ -284,7 +284,7 @@ export const cellLook = ({
       y: cellY,
       h,
       parity: (cell.p.x + cell.p.y) % 2 === 1,
-      tier: floorTier(h, lowest),
+      tier: floorTier(h, scale),
       goal: same(cell.p, stage.goal),
       faded: has(scene.faded, cell.p),
       hidden: isFilled && movedBoxHere && scene.before.heights[cell.p.y][cell.p.x] < 0,
