@@ -13,6 +13,7 @@ type Leg = {
   from: Point
   to: Point
   result: 'slid' | 'fell' | 'floated' | 'rowed'
+  drop?: number
 }
 
 const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
@@ -28,7 +29,9 @@ const landStep = (state: GameState, from: Point, direction: Direction): Leg | nu
   // 녹는 판에서 이미 물에 뜬 돌이 있으면 다른 돌은 물 칸 불가
   if (isWater(state, to)) return state.melt !== null ? null : { from, to, result: 'floated' }
   if (floor < 0) return null
-  return { from, to, result: floor < level ? 'fell' : 'slid' }
+  return floor < level
+    ? { from, to, result: 'fell', drop: level - floor }
+    : { from, to, result: 'slid' }
 }
 
 // 들어선 칸이 얼음바닥이면 같은 높이로 이어 가는 미끄러짐, 낮은 칸에 닿으면 끝
@@ -57,14 +60,12 @@ const legEvents = (legs: Leg[]): GameEvent[] => {
   const [first, ...rest] = legs
   const glides = rest.filter((leg) => leg.result === 'slid')
   const end = rest.at(-1)
-  const events: GameEvent[] = [
-    { type: 'stonePushed', from: first.from, to: first.to, result: first.result },
-  ]
+  const events: GameEvent[] = [{ type: 'stonePushed', ...first }]
   if (glides.length > 0) {
     events.push({ type: 'slid', subject: 'stone', from: first.to, to: glides.at(-1)!.to })
   }
   if (end && end.result !== 'slid') {
-    events.push({ type: 'stonePushed', from: end.from, to: end.to, result: end.result })
+    events.push({ type: 'stonePushed', ...end })
   }
   return events
 }

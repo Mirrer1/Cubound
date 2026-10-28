@@ -183,7 +183,13 @@ export type GameEvent =
   | { type: 'fell'; from: Point; to: Point; drop: number } // drop은 떨어진 층 수
   | { type: 'climbed'; from: Point; to: Point; via: 'box' | 'ladder' }
   | { type: 'slid'; subject: 'player' | 'box' | 'stone' | 'keg'; from: Point; to: Point } // 얼음 위 미끄러짐, 이웃하지 않을 수도 있는 from과 to
-  | { type: 'pushed'; from: Point; to: Point; result: 'slid' | 'fell' | 'filled' | 'floated' } // floated는 땅에서 물에 떨어져 뜬 상자
+  | {
+      type: 'pushed'
+      from: Point
+      to: Point
+      result: 'slid' | 'fell' | 'filled' | 'floated' // floated는 땅에서 물에 떨어져 뜬 상자
+      drop?: number // 떨어진 층 수
+    }
   | { type: 'cracked'; at: Point; left: number; gone: boolean; worn?: true } // gone은 바닥 없는 칸이 되었는지 여부, worn은 이미 다 닳은 칸에 올라선 수
   | { type: 'struggled'; at: Point } // 늪에서 제자리에 선 수
   | { type: 'sank'; at: Point } // 늪에 밀려 들어가 가라앉는 상자
@@ -200,6 +206,7 @@ export type GameEvent =
       from: Point
       to: Point
       result: 'slid' | 'fell' | 'filled' | 'floated' | 'rowed' // rowed는 물에 뜬 채 한 칸
+      drop?: number // 떨어진 층 수
     }
   | { type: 'stonePulled'; from: Point; to: Point } // 소용돌이에 끌려 한 칸 간 물에 뜬 얼음 돌
   | { type: 'melted'; at: Point } // 녹아 사라진 얼음 돌
@@ -212,7 +219,7 @@ export type GameEvent =
   | { type: 'ignited'; at: Point; by: 'brazier' | 'fire' } // 큐브에 붙거나 4로 다시 찬 불, fire는 번진 불
   | { type: 'doused'; at: Point } // 큐브 불의 남은 수가 0이 된 수
   | { type: 'boxBurned'; at: Point } // 불 붙은 큐브가 밀어 재가 된 상자
-  | { type: 'kegPushed'; from: Point; to: Point; result: 'slid' | 'fell' }
+  | { type: 'kegPushed'; from: Point; to: Point; result: 'slid' | 'fell'; drop?: number } // drop은 떨어진 층 수
   | { type: 'torchedKeg'; from: Point; to: Point } // 불 붙은 큐브가 from에서 불을 옮긴 화약통 to
   | { type: 'fuseLit'; at: Point }
   | { type: 'fuseTicked'; at: Point; left: number }

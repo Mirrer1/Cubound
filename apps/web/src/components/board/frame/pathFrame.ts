@@ -1,4 +1,4 @@
-import { type Chain, moveEase } from './curveFrame'
+import { type Chain, clamp01, moveEase } from './curveFrame'
 import { same } from '@/game/rules'
 import type { GameEvent, Point } from '@/game/types'
 
@@ -16,6 +16,9 @@ export const SECONDS = {
   tram: 0.24,
   rowed: 0.3,
 }
+
+// 한 층 넘게 떨어지는 큐브와 짐이 층마다 더 떨어지는 초
+const FALL_PER_LAYER = 0.05
 
 // 내 이동 연출 뒤에 붙는 바람에 밀려 미끄러지는 시간과 기대서 버티는 시간
 export const WIND = { slide: 0.3, brace: 0.3 }
@@ -47,7 +50,25 @@ export const cellsOf = (event: PathEvent) =>
 export const hopCells = (event: PathEvent) =>
   event.type === 'slid' || event.type === 'climbed' || cellsOf(event) < 2 ? 0 : cellsOf(event)
 
-export const secondsOf = (event: PathEvent) =>
+const fallExtra = (event: PathEvent) =>
+  hopCells(event) === 0 &&
+  (event.type === 'fell' || (event.type === 'pushed' && event.result === 'fell'))
+    ? FALL_PER_LAYER * Math.max(0, (event.drop ?? 1) - 1)
+    : 0
+
+export const secondsOf = (event: PathEvent) => baseSeconds(event) + fallExtra(event)
+
+// 떨어지는 구간의 가로로 간 몫과 떨어진 몫, from은 늘어나기 전 구간에서 떨어지기 시작하는 때
+export const fallPhase = (event: PathEvent, p: number, from: number) => {
+  const base = baseSeconds(event)
+  const s = p * (base + fallExtra(event))
+  return {
+    gone: Math.min(1, s / base),
+    fall: clamp01((s - from * base) / (base + fallExtra(event) - from * base)),
+  }
+}
+
+const baseSeconds = (event: PathEvent) =>
   event.type === 'slid'
     ? Math.min(SLIDE.max, SLIDE.perCell * cellsOf(event))
     : hopCells(event) > 0

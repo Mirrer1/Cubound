@@ -126,7 +126,7 @@ describe('move 화약통 밀기', () => {
     const { state, events } = move(createState(stage), 'right')
 
     expect(kegsOf(state)).toEqual([{ x: 3, y: 1 }])
-    expect(events[0]).toMatchObject({ type: 'kegPushed', result: 'fell' })
+    expect(events[0]).toMatchObject({ type: 'kegPushed', result: 'fell', drop: 1 })
   })
 
   it('구덩이 쪽으로는 막히고 구덩이를 메우지 않는다', () => {

@@ -1,6 +1,15 @@
 import { CUBE, ICE, type Lane, STONE, type WaterAt, floatShownAt, waterLook } from '../view'
 import { NO_CHAIN, clamp01, easeIn, easeOut, lerp, smooth } from './curveFrame'
-import { type PathEvent, has, same, segmentsOf, stepAt, stonePath, totalSeconds } from './pathFrame'
+import {
+  type PathEvent,
+  fallPhase,
+  has,
+  same,
+  segmentsOf,
+  stepAt,
+  stonePath,
+  totalSeconds,
+} from './pathFrame'
 import { restartDrop } from './restartFrame'
 import {
   MELT_SECONDS,
@@ -296,15 +305,16 @@ const pushedFrame = (view: StoneView, prev: GameState, elapsed: number): StoneFr
   const toLevel = levelAfter(prev, fromLevel, event)
   const result = event.type === 'pushed' ? event.result : 'slid'
   const floated = result === 'floated'
-  const gone = floated ? floatGone(p) : p
+  const phase = fallPhase(event, p, 0.6)
+  const gone = floated ? floatGone(p) : phase.gone
   const level = floated
     ? floatLevel(fromLevel, toLevel, p)
     : result === 'filled'
       ? p < 0.5
         ? fromLevel
         : lerp(fromLevel, toLevel, smooth((p - 0.5) / 0.5))
-      : result === 'fell' && p >= 0.6
-        ? lerp(fromLevel, toLevel, easeIn((p - 0.6) / 0.4))
+      : result === 'fell'
+        ? lerp(fromLevel, toLevel, easeIn(phase.fall))
         : fromLevel
   // 물로 들어가는 돌의 얼음 판은 수면 아래로 잠기는 동안 차오름
   const sunk = p >= FLOAT.rise ? 1 : smooth(clamp01((toLevel - level) / FLOAT.sink))

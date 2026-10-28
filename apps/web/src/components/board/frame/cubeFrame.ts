@@ -20,6 +20,7 @@ import {
   SECONDS,
   WARP,
   cellsOf,
+  fallPhase,
   hopCells,
   hopSpan,
   playerPath,
@@ -183,12 +184,12 @@ const pathFrame = (
     const land = capHeight(game, event.to)
     // 튕겨 가는 이동은 갓을 딛는 동안 가로로 거의 제자리
     const hopped = hopCells(event) > 0
-    const gone = hopped ? hopProgress(cells, p) : p
+    const phase = fallPhase(event, p, 0.55)
+    const gone = hopped ? hopProgress(cells, p) : phase.gone
 
     // 갓을 딛는 이동은 갓에 닿기 전에 내려앉아 붙는 큐브와 갓
     // 이 낙하만 고른 속도, 가속하면 갓에 닿기 직전까지 떠 있다가 뚝 떨어지는 탓
-    const dropped =
-      land > 0 ? clamp01((cells * p) / restWalk(cells)) : easeIn(clamp01((p - 0.55) / 0.45))
+    const dropped = land > 0 ? clamp01((cells * p) / restWalk(cells)) : easeIn(phase.fall)
     // 튕겨서 상자 위에 내려서는 수는 걷기 이벤트라 levelAfter로는 오르지 않는 높이
     // riding에 맡기면 갓을 딛는 동안에도 큐브가 뜨는 탓에 따로 두는 착지 높이
     const landLevel = index === segments.length - 1 ? pathEnd : toLevel

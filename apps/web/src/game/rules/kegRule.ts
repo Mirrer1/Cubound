@@ -50,22 +50,28 @@ export const pushKeg = (state: GameState, keg: Point, direction: Direction): Mov
 
   let rest = first
   let fell: Point | null = null
+  let landing = entry
   while (isIce(state, rest)) {
     const next = step(rest, direction)
     const floor = kegLanding(state, next, entry)
     if (floor === null) break
     if (floor < entry) {
       fell = next
+      landing = floor
       break
     }
     rest = next
   }
 
   const events: GameEvent[] = [
-    { type: 'kegPushed', from: keg, to: first, result: entry < level ? 'fell' : 'slid' },
+    entry < level
+      ? { type: 'kegPushed', from: keg, to: first, result: 'fell', drop: level - entry }
+      : { type: 'kegPushed', from: keg, to: first, result: 'slid' },
   ]
   if (!same(rest, first)) events.push({ type: 'slid', subject: 'keg', from: first, to: rest })
-  if (fell) events.push({ type: 'kegPushed', from: rest, to: fell, result: 'fell' })
+  if (fell) {
+    events.push({ type: 'kegPushed', from: rest, to: fell, result: 'fell', drop: entry - landing })
+  }
 
   const stop = fell ?? rest
   const next: GameState = {

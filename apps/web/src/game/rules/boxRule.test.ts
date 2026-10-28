@@ -93,6 +93,7 @@ describe('move 상자', () => {
       from: { x: 1, y: 1 },
       to: { x: 2, y: 1 },
       result: 'fell',
+      drop: 1,
     })
   })
 

@@ -61,7 +61,10 @@ const slideBox = (
   from: Point,
   direction: Direction,
   level: number,
-): { rest: Point; landed: { to: Point; result: 'fell' | 'filled' | 'floated' } | null } => {
+): {
+  rest: Point
+  landed: { to: Point; result: 'fell' | 'filled' | 'floated'; drop: number } | null
+} => {
   let at = from
 
   for (;;) {
@@ -78,6 +81,7 @@ const slideBox = (
         landed: {
           to: next,
           result: isOpenWater(state, next) ? 'floated' : floor < 0 ? 'filled' : 'fell',
+          drop: level - floor,
         },
       }
     at = next
@@ -104,23 +108,28 @@ export const shoveBox = (state: GameState, box: Point, direction: Direction): Mo
   const rest = slide?.rest ?? target
   const landed = slide?.landed ?? null
 
+  const result =
+    isOpenWater(state, target) && !isOpenWater(state, box)
+      ? 'floated'
+      : landing < 0
+        ? 'filled'
+        : landing < boxFloor
+          ? 'fell'
+          : 'slid'
   const events: GameEvent[] = [
     {
       type: 'pushed',
       from: box,
       to: target,
-      result:
-        isOpenWater(state, target) && !isOpenWater(state, box)
-          ? 'floated'
-          : landing < 0
-            ? 'filled'
-            : landing < boxFloor
-              ? 'fell'
-              : 'slid',
+      result,
+      ...(result === 'fell' && !flight ? { drop: boxFloor - landing } : {}),
     },
   ]
   if (!same(rest, target)) events.push({ type: 'slid', subject: 'box', from: target, to: rest })
-  if (landed) events.push({ type: 'pushed', from: rest, to: landed.to, result: landed.result })
+  if (landed) {
+    const { drop, ...end } = landed
+    events.push({ type: 'pushed', from: rest, ...end, ...(end.result === 'fell' ? { drop } : {}) })
+  }
 
   const stop = landed?.to ?? rest
   const burnt = burnsBox(state)

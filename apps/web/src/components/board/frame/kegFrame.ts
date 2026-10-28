@@ -6,6 +6,7 @@ import {
   WARP,
   WIND,
   cellsOf,
+  fallPhase,
   has,
   playerPath,
   same,
@@ -52,7 +53,7 @@ const TOUCH = SECONDS.torched / 2
 export const kegPath = (events: GameEvent[]) =>
   events.flatMap((e): PathEvent[] =>
     e.type === 'kegPushed'
-      ? [{ type: 'pushed', from: e.from, to: e.to, result: e.result }]
+      ? [{ type: 'pushed', from: e.from, to: e.to, result: e.result, drop: e.drop }]
       : e.type === 'slid' && e.subject === 'keg'
         ? [e]
         : [],
@@ -327,26 +328,27 @@ export const movingKeg = (scene: KegScene, chain: Chain): KegFrame | null => {
   if (!step) return null
 
   const { event, index, p } = step
+  const { gone, fall } = fallPhase(event, p, 0.6)
   const at = (q: Point) => standHeight(before, q)
   const fromLevel = index === 0 ? at(path[0].from) : at(event.from)
   const toLevel = event.type === 'pushed' && event.result === 'fell' ? at(event.to) : fromLevel
   const to = path[path.length - 1].to
   // 떨어지는 화약통은 상자처럼 끝에서 가속
-  const level = p < 0.6 ? fromLevel : lerp(fromLevel, toLevel, easeIn((p - 0.6) / 0.4))
+  const level = lerp(fromLevel, toLevel, easeIn(fall))
   return {
-    x: lerp(event.from.x, event.to.x, p),
-    y: lerp(event.from.y, event.to.y, p),
+    x: lerp(event.from.x, event.to.x, gone),
+    y: lerp(event.from.y, event.to.y, gone),
     level,
     to,
     event,
-    gone: p,
+    gone,
     sunk: level < fromLevel,
     look: {
       ...kegLookOf(scene, to),
       on: true,
       trail: {
-        u: (event.from.x - event.to.x) * Math.sin(Math.PI * p),
-        v: (event.from.y - event.to.y) * Math.sin(Math.PI * p),
+        u: (event.from.x - event.to.x) * Math.sin(Math.PI * gone),
+        v: (event.from.y - event.to.y) * Math.sin(Math.PI * gone),
       },
     },
   }

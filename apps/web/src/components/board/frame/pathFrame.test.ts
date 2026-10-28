@@ -5,6 +5,7 @@ import {
   HOP,
   SECONDS,
   boxPath,
+  fallPhase,
   hopSpan,
   playerPath,
   segmentsOf,
@@ -38,6 +39,34 @@ describe('segmentsOf', () => {
       { type: 'pushed', from: ORIGIN, to: { x: 1, y: 0 }, result: 'floated' },
     ])
     expect(segment.seconds).toBe(SECONDS.floated)
+  })
+
+  it('한 층 넘게 떨어지는 큐브와 짐은 높을수록 오래 걸린다', () => {
+    const fell = (drop: number) =>
+      segmentsOf([
+        { type: 'fell', from: ORIGIN, to: { x: 1, y: 0 }, drop },
+        { type: 'pushed', from: ORIGIN, to: { x: 1, y: 0 }, result: 'fell', drop },
+      ]).map((s) => s.seconds)
+    expect(fell(1)).toEqual([SECONDS.fell, SECONDS.pushed])
+    expect(fell(3)[0]).toBeGreaterThan(SECONDS.fell)
+    expect(fell(3)[1]).toBeGreaterThan(SECONDS.pushed)
+  })
+})
+
+describe('fallPhase', () => {
+  const pushed = (drop: number) =>
+    ({ type: 'pushed', from: ORIGIN, to: { x: 1, y: 0 }, result: 'fell', drop }) as const
+
+  it('한 층 낙하는 진행도 그대로 가고 떨어지기 시작하는 때부터 떨어진다', () => {
+    expect(fallPhase(pushed(1), 0.5, 0.6)).toEqual({ gone: 0.5, fall: 0 })
+    expect(fallPhase(pushed(1), 0.8, 0.6).fall).toBeCloseTo(0.5)
+  })
+
+  it('높은 낙하도 가로 이동은 한 층 낙하와 같은 때 끝난다', () => {
+    const p = SECONDS.pushed / totalSeconds(segmentsOf([pushed(3)]))
+    expect(fallPhase(pushed(3), p, 0.6).gone).toBeCloseTo(1)
+    expect(fallPhase(pushed(3), p, 0.6).fall).toBeLessThan(1)
+    expect(fallPhase(pushed(3), 1, 0.6).fall).toBe(1)
   })
 })
 
