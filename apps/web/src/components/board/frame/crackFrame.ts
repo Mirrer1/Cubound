@@ -2,7 +2,8 @@ import { clamp01, easeIn, easeOut, lerp, smooth } from './curveFrame'
 import { same } from './pathFrame'
 import { type SwampTime, crackLeave, durationOf } from './timeFrame'
 import { toScreen } from '@/game/iso'
-import type { GameEvent, GameState, Point } from '@/game/types'
+import { barCells } from '@/game/rules'
+import type { Bar, GameEvent, GameState, Point } from '@/game/types'
 
 // 단계가 오르는 앞부분과 가라앉아 사라지는 뒷부분, 가라앉음은 이동 연출 거의 전부
 const CRUMBLE = { deepen: 0.9, fallFrom: 0.12, drop: 1.6, shadow: 0.9 }
@@ -66,8 +67,14 @@ export const crackSunk = (state: Pick<GameState, 'cracks'>, p: Point) => {
 const CLIP_FAR = 20
 
 // 내려앉은 칸에 걸친 큐브에서 바닥면 아래로 앞 칸에 묻히는 몫을 뺀 영역
-// 큐브 앞 가장자리와 걸친 내려앉은 칸 앞 가장자리 중 앞쪽 선 기준, 앞 칸이 낮은 가장자리는 제외
-export const crackClip = (view: CrackView, heights: number[][], x: number, y: number) => {
+// 큐브 앞 가장자리와 걸친 내려앉은 칸 앞 가장자리 중 앞쪽 선 기준, 앞 칸이 낮은 가장자리와 along 축 가장자리는 제외
+export const crackClip = (
+  view: CrackView,
+  heights: number[][],
+  x: number,
+  y: number,
+  along?: 'x' | 'y',
+) => {
   const xs = [Math.floor(x), Math.ceil(x)]
   const ys = [Math.floor(y), Math.ceil(y)]
   const sunk = xs.flatMap((cx) =>
@@ -85,8 +92,10 @@ export const crackClip = (view: CrackView, heights: number[][], x: number, y: nu
     const front = cells.filter((p) => covers(p.x, p.y))
     return front.length === 0 ? null : Math.min(...front.map((p) => sinkAt(view, p)))
   }
-  const dropX = dropOf(sunk.map((p) => ({ x: Math.round(edgeX + 0.5), y: p.y })))
-  const dropY = dropOf(sunk.map((p) => ({ x: p.x, y: Math.round(edgeY + 0.5) })))
+  const dropX =
+    along === 'x' ? null : dropOf(sunk.map((p) => ({ x: Math.round(edgeX + 0.5), y: p.y })))
+  const dropY =
+    along === 'y' ? null : dropOf(sunk.map((p) => ({ x: p.x, y: Math.round(edgeY + 0.5) })))
   if (dropX === null && dropY === null) return null
 
   const ex = dropX === null ? edgeX + CLIP_FAR : edgeX
@@ -104,6 +113,16 @@ export const crackClip = (view: CrackView, heights: number[][], x: number, y: nu
   return [left, { x: left.x, y: top }, { x: right.x, y: top }, right, corner]
     .map((p) => `${p.x},${p.y}`)
     .join(' ')
+}
+
+// 막대가 걸친 칸의 남기는 영역, 한 덩이로 앞 칸에 그리는 막대도 막대 가운데 기준, 길이 방향 앞은 제외
+export const barClip = (view: CrackView, heights: number[][], bars: Bar[], p: Point) => {
+  const bar = bars.find((b) => barCells(b).some((c) => same(c, p)))
+  if (!bar) return null
+  const cells = barCells(bar)
+  const end = cells[cells.length - 1]
+  const along = bar.dir === 'left' || bar.dir === 'right' ? 'x' : 'y'
+  return crackClip(view, heights, (cells[0].x + end.x) / 2, (cells[0].y + end.y) / 2, along)
 }
 
 export interface CrackView {

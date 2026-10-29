@@ -10,7 +10,7 @@ import {
   pickUpProgress,
   rollingTilt,
 } from './carryFrame'
-import { crackClip, crackProgress, standSink } from './crackFrame'
+import { barClip, crackClip, crackProgress, standSink } from './crackFrame'
 import { SLIDE_DEG, playerFrame, squashTransform } from './cubeFrame'
 import { type Chain, easeOut, smooth } from './curveFrame'
 import { fireScene } from './fireFrame'
@@ -440,6 +440,11 @@ export const sceneFrame = ({
     cubeSquash,
     cubeSink,
     cubeClip: crackClip(crackView, before.heights, cube.x, cube.y),
+    // 막대 남는 영역은 멈춘 자리 기준이라 도는 수에는 제외
+    barClipAt: (p: Point) =>
+      moving && events.some((e) => e.type === 'barPushed' && e.pivot !== null)
+        ? null
+        : barClip(crackView, before.heights, game.bars, p),
     cubeFaces,
     cubeHeat,
     pickedUp,

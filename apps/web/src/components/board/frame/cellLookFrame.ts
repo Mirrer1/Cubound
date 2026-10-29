@@ -240,6 +240,7 @@ export const cellLook = ({
     const dust = dustOf(scene.keg, cell.p)
     const kegs = scene.kegFrame && same(scene.kegFrame.cell, cell.p) ? [scene.kegFrame] : []
     const bars = barsAt(scene.bar, cell.p)
+    const barClip = bars.length > 0 ? scene.barClipAt(cell.p) : null
     const lips = lipsAt(scene.bar, cell.p)
     const tram = scene.tramFrames.find((frame) => same(frame.cell, cell.p)) ?? null
     const drawCube = same(scene.cube.cell, cell.p) && !scene.home
@@ -432,6 +433,7 @@ export const cellLook = ({
         boxDrop,
         kegs,
         bars,
+        barClip,
         lips,
         goalEffect,
         overlay,

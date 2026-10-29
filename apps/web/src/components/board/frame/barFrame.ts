@@ -517,16 +517,21 @@ export const barScene = (view: BarView) => {
     } else if (moving && !pushed) {
       const q = settleProgress(view, [...barCells(was), ...barCells(bar)])
       pose = blendPose(pose, final, q)
+      // 깎이는 땅이 다른 칸 조각을 덮지 않는 한 덩이
+      if (q < 1 && view.keg.blasts.some((b) => barCells(was).some((c) => has(b.lowered, c))))
+        pose = { ...pose, hold: frontCell(footprintCells(pose)) }
     }
 
     const nudge = moving && !pushed ? nudgeOf(before, events, i, elapsed) : null
     if (nudge) pose = turned(pose, nudge.pivot, nudge.angle)
     if (wobble && wobble.bar === bar) pose = { ...pose, z: pose.z - wobble.dip, dip: wobble.dip }
+    let onCracks = false
     if (view.sinkAt && pushed) {
       const fromRest = restPose(before, pushed.from)
       const toRest = restPose(game, pushed.to)
       const fromOn = onCrack(fromRest, view.sinkAt)
       const toOn = onCrack(toRest, view.sinkAt)
+      onCracks = fromOn || toOn
       // 도는 막대는 도는 내내 기울기가 바뀜, 앞뒤 자리가 다 기울면 반씩
       const edge = !pushed.pivot || (fromOn && toOn) ? TILT_EDGE : 1
       const out = 1 - smooth(clamp01(push / edge))
@@ -536,6 +541,7 @@ export const barScene = (view: BarView) => {
           ? crackTilt(pose, view.sinkAt, fromRest, out)
           : crackTilt(pose, view.sinkAt, toRest, into)
     } else if (view.sinkAt) {
+      onCracks = onCrack(pose, view.sinkAt)
       pose = crackTilt(pose, view.sinkAt)
     }
 
@@ -547,9 +553,18 @@ export const barScene = (view: BarView) => {
         : moving && stretchedIn(prevEvents, i)
           ? 1 - smooth(t)
           : 0
-    // 크게 기운 막대는 칸 조각 이음매가 벌어져 비치니 한 덩이
+    // 크게 기운 막대와 내려앉은 칸에 걸친 막대는 칸 조각 이음매가 비치니 한 덩이
     const tilted = pose.sag && !pose.turn && !pose.hold && Math.abs(pose.sag.angle) > BAR.sag + 0.01
-    if (tilted) pose = { ...pose, hold: frontCell(footprintCells(pose)) }
+    if (onCracks && !pose.hold)
+      pose = {
+        ...pose,
+        turn: undefined,
+        hold: frontCell([
+          ...footprintCells(pose),
+          ...(pose.turn ? [pose.turn.pivot, pose.turn.front] : []),
+        ]),
+      }
+    else if (tilted) pose = { ...pose, hold: frontCell(footprintCells(pose)) }
     return { pieces: barPieces(pose), opacity: 1, heat, waiting: bar.heat !== null }
   })
 

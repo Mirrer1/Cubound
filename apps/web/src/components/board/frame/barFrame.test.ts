@@ -50,6 +50,7 @@ interface More {
   cube?: Point
   dropping?: boolean
   ride?: number
+  sinkAt?: (x: number, y: number) => number
 }
 
 const sceneAt = (
@@ -84,6 +85,7 @@ const sceneAt = (
     stepT: 0.5,
     ride: () => more.ride ?? 0.5,
     cube: more.cube ?? game.player,
+    sinkAt: more.sinkAt,
   })
 
 // 막대 면 중 화면에서 가장 높은 점
@@ -352,5 +354,49 @@ describe('barScene 축 칸이 앞인 돌기', () => {
       const cells = sceneAt(before, state, events, elapsed).draws[0].pieces.map((p) => p.cell)
       expect(cells.some((c) => c.x + c.y < pivot.x + pivot.y)).toBe(true)
     }
+  })
+})
+
+describe('barScene 무너지는 칸', () => {
+  it('내려앉은 칸에 걸친 막대는 이음매가 비치지 않게 앞 칸 한 덩이로 그린다', () => {
+    const state = stateOf()
+    const sinkAt = () => 8
+    expect(barKeys(sceneAt(state, state, [], 0, { sinkAt }))).toBe('2-1')
+    expect(barKeys(sceneAt(state, state, [], 0))).toBe('1-1 2-1')
+  })
+
+  it('내려앉은 칸에서 도는 막대도 한 덩이로 그린다', () => {
+    const before = createState({ ...FLAT, start: { x: 2, y: 2 } })
+    const { state, events } = move(before, 'up')
+    const sinkAt = () => 8
+    const keys = barKeys(sceneAt(before, state, events, TURN_SECONDS / 2, { sinkAt }))
+    expect(keys.split(' ')).toHaveLength(1)
+  })
+})
+
+describe('barScene 화약통', () => {
+  it('폭발로 밑 칸이 깎이는 동안은 한 덩이로 그린다', () => {
+    const stage: Stage = {
+      ...FLAT,
+      heights: [
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0],
+      ],
+      fire: ['#....', '.....', '.....'],
+      start: { x: 4, y: 2 },
+      entities: [
+        { type: 'bar', x: 1, y: 1, axis: 'x' },
+        { type: 'keg', x: 1, y: 0 },
+        { type: 'keg', x: 2, y: 0 },
+      ],
+    }
+    const before = { ...createState(stage), burning: [{ x: 0, y: 0 }] }
+    const { state, events } = move(before, 'left')
+    expect(state.bars[0].level).toBe(0)
+    const keys = Array.from({ length: 40 }, (_, i) =>
+      barKeys(sceneAt(before, state, events, i * 0.05)),
+    )
+    expect(keys.some((k) => k.split(' ').length === 1)).toBe(true)
   })
 })

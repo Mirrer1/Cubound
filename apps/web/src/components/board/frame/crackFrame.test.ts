@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   atStage,
+  barClip,
   crackClip,
   crackFrame,
   crackLeft,
@@ -287,6 +288,26 @@ describe('crackClip', () => {
     const clip = crackClip(sunk([{ x: 1, y: 1, left: 1 }]), FLAT, 1, 1)
     expect(clip).not.toBeNull()
     expect(Math.max(...ys(clip ?? ''))).toBeCloseTo(toScreen({ x: 1.5, y: 1.5 }, 0).y)
+  })
+
+  it('along 축 앞 칸은 자르는 데 쓰지 않는다', () => {
+    const view = sunk([{ x: 1, y: 1, left: 1 }])
+    const pits = [
+      [0, 0, 0],
+      [0, 0, -1],
+      [0, 0, 0],
+    ]
+    expect(crackClip(view, pits, 1, 1)).not.toBeNull()
+    expect(crackClip(view, pits, 1, 1, 'y')).toBeNull()
+  })
+
+  it('막대는 걸친 어느 칸에서나 막대 가운데 기준으로 자른다', () => {
+    const bar = { x: 1, y: 0, dir: 'down' as const, length: 2, level: 0, heat: null }
+    const view = sunk([{ x: 1, y: 0, left: 0 }])
+    const middle = crackClip(view, FLAT, 1, 0.5, 'y')
+    expect(middle).not.toBeNull()
+    expect(barClip(view, FLAT, [bar], { x: 1, y: 1 })).toBe(middle)
+    expect(barClip(view, FLAT, [bar], { x: 2, y: 1 })).toBeNull()
   })
 
   it('앞 칸이 모두 구덩이면 자르지 않는다', () => {

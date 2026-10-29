@@ -225,9 +225,18 @@ const Board = ({
         const content =
           over.overlay || taps.length > 0 ? (
             <>
-              {over.bars.map((bar, i) => (
-                <BoardBar key={i} {...bar} />
-              ))}
+              {over.barClip && (
+                <clipPath id={`crack-bar-clip-${cell.p.x}-${cell.p.y}`}>
+                  <polygon points={over.barClip} />
+                </clipPath>
+              )}
+              <g
+                clipPath={over.barClip ? `url(#crack-bar-clip-${cell.p.x}-${cell.p.y})` : undefined}
+              >
+                {over.bars.map((bar, i) => (
+                  <BoardBar key={i} {...bar} />
+                ))}
+              </g>
               {over.tram && (
                 <g opacity={over.tram.opacity}>
                   <BoardTram
