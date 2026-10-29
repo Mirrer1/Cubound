@@ -25,6 +25,7 @@ export {
 } from './carryFrame'
 export {
   railDirsOf,
+  railsUnder,
   slidingCell,
   tramFacing,
   tramFramesOf,

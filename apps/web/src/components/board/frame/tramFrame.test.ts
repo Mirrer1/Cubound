@@ -7,6 +7,7 @@ import {
   behindCube,
   nextRailsOf,
   railDirsOf,
+  railsUnder,
   slidingCell,
   tramBeside,
   tramFacing,
@@ -144,6 +145,29 @@ describe('발판 그리기', () => {
 
     expect(start.cell).toEqual({ x: 0, y: 0 })
     expect({ dx: start.dx, dy: start.dy }).toEqual({ dx: 1, dy: 0 })
+  })
+})
+
+describe('railsUnder', () => {
+  const cells = [{ p: { x: 2, y: 1 } }, { p: { x: 1, y: 3 } }, { p: { x: 2, y: 2 } }]
+
+  it('떠나는 칸 순서로 그리는 발판의 들어가는 앞 칸을 떠나는 칸 바로 앞에 그린다', () => {
+    const frame = { from: { x: 2, y: 1 }, to: { x: 2, y: 2 }, cell: { x: 2, y: 1 } }
+    expect(railsUnder(cells, [frame]).map(({ p }) => p)).toEqual([
+      { x: 2, y: 2 },
+      { x: 2, y: 1 },
+      { x: 1, y: 3 },
+    ])
+  })
+
+  it('앞 칸 순서로 그리는 발판은 그대로 둔다', () => {
+    const frame = { from: { x: 2, y: 1 }, to: { x: 2, y: 2 }, cell: { x: 2, y: 2 } }
+    expect(railsUnder(cells, [frame])).toBe(cells)
+  })
+
+  it('뒤 칸으로 가는 발판은 그대로 둔다', () => {
+    const frame = { from: { x: 2, y: 2 }, to: { x: 2, y: 1 }, cell: { x: 2, y: 2 } }
+    expect(railsUnder(cells, [frame])).toBe(cells)
   })
 })
 

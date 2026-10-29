@@ -25,6 +25,7 @@ import {
   filledCells,
   fillingCellKey,
   railDirsOf,
+  railsUnder,
   restartDuration,
   same,
   sceneFrame,
@@ -204,17 +205,20 @@ const Board = ({
 
   return (
     <svg ref={ref} viewBox={viewBox} className="h-full w-full">
-      {cubeFirst(
-        underWall(scene.tramFrames, heights).reduce(
-          (ordered, p) => cubeFirst(ordered, p),
-          [
-            scene.box?.cell,
-            scene.kegFrame?.cell,
-            ...scene.iceStone.stones.map((stone) => stone.cell),
-          ].reduce((ordered, p) => (p ? cubeFirst(ordered, p) : ordered), cells),
+      {railsUnder(
+        cubeFirst(
+          underWall(scene.tramFrames, heights).reduce(
+            (ordered, p) => cubeFirst(ordered, p),
+            [
+              scene.box?.cell,
+              scene.kegFrame?.cell,
+              ...scene.iceStone.stones.map((stone) => stone.cell),
+            ].reduce((ordered, p) => (p ? cubeFirst(ordered, p) : ordered), cells),
+          ),
+          scene.cube.cell,
+          scene.cube.last,
         ),
-        scene.cube.cell,
-        scene.cube.last,
+        scene.tramFrames,
       ).map((cell) => {
         const { cellY, look, over } = lookOf(cell)
         const taps = tapLooks.filter((tap) => same(tap.cell, cell.p))

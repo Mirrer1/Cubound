@@ -123,6 +123,22 @@ export const nextRailsOf = (frames: { from: Point; to: Point; next: Point }[]) =
 export const behindCube = <T extends { from: Point; cell: Point }>(frames: T[], cube: Point) =>
   frames.map((frame) => (same(frame.from, cube) ? { ...frame, cell: frame.from } : frame))
 
+// 떠나는 칸 순서로 그리는 발판의 들어가는 앞 칸을 떠나는 칸 바로 앞으로, 앞 칸 레일이 발판 위에 그려지는 것 방지
+export const railsUnder = <T extends { p: Point }>(
+  cells: T[],
+  frames: { from: Point; to: Point; cell: Point }[],
+) =>
+  frames.reduce((ordered, { from, to, cell }) => {
+    if (!same(cell, from) || same(frontOf(from, to), from)) return ordered
+    const at = ordered.findIndex(({ p }) => same(p, from))
+    const ahead = ordered.findIndex(({ p }) => same(p, to))
+    if (at < 0 || ahead < at) return ordered
+    const moved = [...ordered]
+    const [entry] = moved.splice(ahead, 1)
+    moved.splice(at, 0, entry)
+    return moved
+  }, cells)
+
 // 뒤 칸 옆 높은 칸에 뒤쪽 반이 덮이는 미끄러지는 발판의 칸, 같은 깊이 칸 중 먼저 그리는 칸
 export const underWall = (
   frames: { from: Point; to: Point; cell: Point; level: number }[],
