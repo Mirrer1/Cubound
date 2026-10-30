@@ -291,12 +291,26 @@ describe('sceneFrame 집', () => {
     expect(sceneOf(game, prev, events, at(SECONDS.moved + 0.02)).moving).toBe(true)
   })
 
-  it('물이 그대로인 수는 수가 다 끝난 뒤 집에 든다', () => {
-    const { prev, game, events } = lastMove(BOX_STAGE, ['right', 'right', 'right', 'right'])
+  it('집에 닿는 수에 숯이 재가 되어도 큐브는 닿자마자 집에 든다', () => {
+    const ash: Stage = {
+      ...BOX_STAGE,
+      heights: [
+        [0, 0, 0],
+        [0, 0, 0],
+      ],
+      fire: ['.*.', '.#.'],
+      start: { x: 0, y: 0 },
+      goal: { x: 2, y: 0 },
+      entities: [],
+    }
+    const { prev, game, events } = lastMove(ash, ['right', 'right'])
+    const at = (seconds: number) => seconds / durationOf(events)
 
     expect(game.cleared).toBe(true)
-    expect(sceneOf(game, prev, events, 0.99).home).toBe(false)
-    expect(sceneOf(game, prev, events, 1).home).toBe(true)
+    expect(events.some((e) => e.type === 'ashed')).toBe(true)
+    expect(durationOf(events)).toBeGreaterThan(SECONDS.moved)
+    expect(sceneOf(game, prev, events, at(SECONDS.moved / 2)).home).toBe(false)
+    expect(sceneOf(game, prev, events, at(SECONDS.moved + 0.02)).home).toBe(true)
   })
 })
 

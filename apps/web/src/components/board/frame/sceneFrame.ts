@@ -406,9 +406,9 @@ export const sceneFrame = ({
     ),
   ])
 
-  // 집에 드는 때, 물이 바뀌어도 집 칸이 그대로인 수는 큐브가 닿자마자 물은 클리어 카드 뒤에서 이어짐
+  // 집에 드는 때, 큐브가 닿자마자 남은 연출은 클리어 카드 뒤에서 이어짐, 집 칸이 잠기거나 드러나는 수는 예외
   const flood = events.find((e) => e.type === 'sluice')
-  const early = flood?.type === 'sluice' && !flood.cells.some((p) => same(p, stage.goal))
+  const early = flood?.type !== 'sluice' || !flood.cells.some((p) => same(p, stage.goal))
   const home =
     game.cleared &&
     (!moving ||

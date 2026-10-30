@@ -1,4 +1,5 @@
 import { motion } from 'motion/react'
+import type { ReactNode } from 'react'
 
 import BoardBlock from './BoardBlock'
 import { CUBE, shade } from './view'
@@ -21,9 +22,10 @@ const PARTICLES = [
 interface BoardClearProps {
   x: number
   y: number // 구멍 윗면 중심
+  children?: ReactNode // 큐브와 함께 구멍으로 들어가는 불
 }
 
-const BoardClear = ({ x, y }: BoardClearProps) => {
+const BoardClear = ({ x, y, children }: BoardClearProps) => {
   const hw = TILE.width / 2
   const hh = TILE.width / 4
   // 구멍 아래로 들어간 부분을 가리는 자르기
@@ -51,6 +53,7 @@ const BoardClear = ({ x, y }: BoardClearProps) => {
             left={shade('player', 'left')}
             right={shade('player', 'right')}
           />
+          {children}
         </motion.g>
       </g>
       <motion.polygon

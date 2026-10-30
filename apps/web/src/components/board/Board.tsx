@@ -441,7 +441,22 @@ const Board = ({
                   turn={tap.look.sluice.turn}
                 />
               ))}
-              {over.goalEffect && <BoardClear x={cell.x} y={cell.y} />}
+              {over.goalEffect && (
+                <BoardClear x={cell.x} y={cell.y}>
+                  {scene.cubeHeat.length > 0 && (
+                    <BoardBrazier
+                      part="cubeGlow"
+                      x={scene.cubeScreen.x}
+                      y={scene.cubeScreen.y - TILE.layer}
+                      bands={scene.cubeHeat}
+                      strength={brazier.glow.strength}
+                      dip={brazier.glow.dip}
+                      spark={brazier.glow.spark}
+                      last={brazier.glow.last}
+                    />
+                  )}
+                </BoardClear>
+              )}
             </>
           ) : undefined
 

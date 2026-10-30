@@ -4,7 +4,7 @@ import { burnFire } from '@/game/rules'
 import type { GameEvent, GameState, Point, Stage } from '@/game/types'
 
 // 불씨가 켜지는 초, 숯이 재로 부서지는 초, 덮여 못 붙은 숯이 올랐다 꺼지는 초
-export const FIRE = { kindle: 0.36, ash: 0.5, smother: 1 }
+export const FIRE = { kindle: 0.36, ash: 0.57, smother: 1 }
 
 // 달아오른 숯의 heat
 const WARM = 0.5
