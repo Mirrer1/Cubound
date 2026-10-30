@@ -399,4 +399,38 @@ describe('barScene 화약통', () => {
     )
     expect(keys.some((k) => k.split(' ').length === 1)).toBe(true)
   })
+
+  it('연쇄로 두 끝 칸이 차례로 깎이는 동안 먼저 깎인 쪽으로 기운다', () => {
+    const stage: Stage = {
+      ...FLAT,
+      heights: [
+        [1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0],
+      ],
+      fire: ['#....', '.....', '.....'],
+      start: { x: 4, y: 2 },
+      entities: [
+        { type: 'bar', x: 1, y: 1, axis: 'x' },
+        { type: 'keg', x: 1, y: 0 },
+        { type: 'keg', x: 2, y: 0 },
+      ],
+    }
+    const before = { ...createState(stage), burning: [{ x: 0, y: 0 }] }
+    const { state, events } = move(before, 'left')
+    // 화면 왼쪽 끝 점과 오른쪽 끝 점의 높이 차
+    const slopeAt = (s: number) => {
+      const points = sceneAt(before, state, events, s).draws[0].pieces.flatMap((p) =>
+        p.faces.flatMap((f) => f.points.split(' ').map((q) => q.split(',').map(Number))),
+      )
+      const xs = points.map(([x]) => x)
+      const yAt = (x: number) =>
+        Math.max(...points.filter(([px]) => Math.abs(px - x) < 0.01).map(([, y]) => y))
+      return yAt(Math.max(...xs)) - yAt(Math.min(...xs))
+    }
+    const flat = slopeAt(0)
+    const slopes = Array.from({ length: 40 }, (_, i) => slopeAt(i * 0.05))
+    expect(slopes.some((s) => s < flat - 1)).toBe(true)
+    expect(slopes[slopes.length - 1]).toBeCloseTo(flat)
+  })
 })

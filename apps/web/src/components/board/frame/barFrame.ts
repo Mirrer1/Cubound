@@ -10,7 +10,7 @@ import {
 } from '../view'
 import { type Chain, clamp01, easeIn, lerp, moveEase, smooth } from './curveFrame'
 import { FIRE } from './fireFrame'
-import { type KegScene, kegDrop } from './kegFrame'
+import { DROP, type KegScene, kegDrop } from './kegFrame'
 import {
   SECONDS,
   type Segment,
@@ -423,6 +423,21 @@ const nudgeOf = (before: GameState, events: GameEvent[], index: number, elapsed:
   }
 }
 
+// 깎인 칸 위 막대 끝이 내려앉는 초, 땅보다 느린 곡선
+const BAR_FALL = DROP.span * 1.5
+
+// 끝 칸 높이 차로 잰 기울기 중 남기는 몫, 두 칸 막대 최대 약 10°
+const KEG_TILT = 1 / 3
+
+const barFall = (keg: KegScene, p: Point) =>
+  keg.blasts.reduce(
+    (sum, b) =>
+      has(b.lowered, p)
+        ? sum + smooth(clamp01((keg.elapsed - b.from - DROP.from) / BAR_FALL))
+        : sum,
+    0,
+  )
+
 // 밑 칸이 바뀌어 달라지는 모습의 진행도, 폭발로 깎이면 깎이는 칸, 숯이 타면 무너지는 숯, 그 밖은 이동 몫
 const settleProgress = (view: BarView, cells: Point[]) => {
   const dropped = Math.max(0, ...cells.map((c) => kegDrop(view.keg, c)))
@@ -516,10 +531,21 @@ export const barScene = (view: BarView) => {
       if (grow > 0 && grow < 1) pose = { ...pose, hold: frontCell(footprintCells(pose)) }
     } else if (moving && !pushed) {
       const q = settleProgress(view, [...barCells(was), ...barCells(bar)])
-      pose = blendPose(pose, final, q)
+      const blasts = view.keg.blasts.filter((b) => barCells(was).some((c) => has(b.lowered, c)))
+      const blasted = blasts.length > 0
+      const falling =
+        blasted && elapsed < Math.max(...blasts.map((b) => b.from)) + DROP.from + BAR_FALL
+      // 연쇄로 끝 칸이 차례로 깎이는 동안 먼저 깎인 끝으로 기운 모습
+      const tilts = falling && !pose.sag && !final.sag && pose.inset === final.inset
+      if (tilts) {
+        const fell = crackTilt(
+          pose,
+          (x, y) => barFall(view.keg, { x: Math.round(x), y: Math.round(y) }) * TILE.layer,
+        )
+        pose = fell.sag ? { ...fell, sag: { ...fell.sag, angle: fell.sag.angle * KEG_TILT } } : fell
+      } else pose = blendPose(pose, final, q)
       // 깎이는 땅이 다른 칸 조각을 덮지 않는 한 덩이
-      if (q < 1 && view.keg.blasts.some((b) => barCells(was).some((c) => has(b.lowered, c))))
-        pose = { ...pose, hold: frontCell(footprintCells(pose)) }
+      if (q < 1 && blasted) pose = { ...pose, hold: frontCell(footprintCells(pose)) }
     }
 
     const nudge = moving && !pushed ? nudgeOf(before, events, i, elapsed) : null

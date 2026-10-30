@@ -35,7 +35,7 @@ export const KEG = {
 const KINDLE = 0.2
 
 // 깎인 칸이 내려앉기 시작하는 때와 걸리는 초, 터짐 직전부터
-const DROP = { from: 0.12 * PACE, span: 0.16 * PACE }
+export const DROP = { from: 0.12 * PACE, span: 0.16 * PACE }
 
 // 재시작에 깎인 층이 돌아오는 초
 const RESTORE = 0.24
