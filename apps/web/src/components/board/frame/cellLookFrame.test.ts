@@ -18,10 +18,11 @@ import {
   lastMove,
 } from './testStages'
 import { SLUICE, durationOf, sluiceStart } from './timeFrame'
+import { NO_TRAIL } from './trailFrame'
 import { railDirsOf } from './tramFrame'
 import { vineLooks } from './vineFrame'
 import { TILE } from '@/game/iso'
-import { createState } from '@/game/rules'
+import { createState, move } from '@/game/rules'
 import type { GameEvent, GameState, Stage, Tram } from '@/game/types'
 
 // (1,0) 상자를 오른쪽 (2,0) 구덩이로 밀어 메우는 판
@@ -418,6 +419,29 @@ describe('cellLook 화로', () => {
     const cells = looks(game)
     expect(cells.get('1-0')!.look.brazier).toMatchObject({ on: true, lift: 8, covered: 1 })
     expect(cells.get('2-0')!.look.brazier).toMatchObject({ on: false, lift: 0, burn: -1 })
+  })
+})
+
+describe('cellLook 꼬리 불', () => {
+  // 한 줄 세 칸
+  const TRAIL_STAGE: Stage = {
+    version: 1,
+    id: 'test-cell-look-trail',
+    heights: [[0, 0, 0]],
+    fire: ['...'],
+    start: { x: 0, y: 0 },
+    goal: { x: 2, y: 0 },
+    entities: [],
+    rules: { trail: true },
+  }
+
+  it('떠난 칸은 꼬리 불 세기를 받고 꼬리 불 판이 아니면 모든 칸이 NO_TRAIL', () => {
+    const lit = move(createState(TRAIL_STAGE), 'right').state
+    const plain = createState({ ...TRAIL_STAGE, rules: undefined })
+    const walked = move(plain, 'right').state
+
+    expect(looks(lit).get('0-0')!.look.trail).toEqual({ flame: 1, pool: 1, mark: 0, lit: true })
+    expect([...looks(walked).values()].every(({ look }) => look.trail === NO_TRAIL)).toBe(true)
   })
 })
 

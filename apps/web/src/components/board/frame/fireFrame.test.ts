@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { FIRE, fireEnd, fireKindAt, fireLookOf, fireScene, warmCells } from './fireFrame'
+import {
+  FIRE,
+  fireEnd,
+  fireKindAt,
+  fireLookOf,
+  fireScene,
+  trailCatchEnd,
+  warmCells,
+} from './fireFrame'
 import { playerPath, segmentsOf } from './pathFrame'
 import { durationOf, elapsedAt, playerSegments, stepProgress } from './timeFrame'
 import { burnFire, createState, move } from '@/game/rules'
@@ -121,6 +129,29 @@ describe('fireEnd', () => {
 
     expect(fireEnd(events, playerSegments(events), 0)).toBeCloseTo(FIRE.ash)
     expect(durationOf(events)).toBeCloseTo(FIRE.ash)
+  })
+
+  it('꼬리 불에서 번진 숯은 꼬리 불이 반쯤 켜진 뒤 불붙어 그 수가 길어진다', () => {
+    const trail: Stage = {
+      ...LINE_STAGE,
+      heights: [
+        [0, 0, 0],
+        [0, 0, 0],
+      ],
+      fire: ['...', '#..'],
+      start: { x: 0, y: 0 },
+      goal: { x: 2, y: 1 },
+      rules: { trail: true },
+    }
+    const start = createState(trail)
+    const { events } = move(start, 'right')
+    const wall = { x: 0, y: 1 }
+    const end = trailCatchEnd(events)
+
+    expect(end).toBeCloseTo(0.22 + 0.24)
+    expect(durationOf(events)).toBeCloseTo(end)
+    expect(lookAt(start, ['right'], 0.1 / end, wall).heat).toBe(0)
+    expect(lookAt(start, ['right'], 1, wall).heat).toBe(1)
   })
 
   it('큐브가 떠나는 불붙은 칸은 첫 칸 반을 지난 뒤부터 재 시간이다', () => {

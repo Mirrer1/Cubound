@@ -33,3 +33,7 @@ export const restartDrop = (
 
   return { lift: RESTART.lift * (1 - smooth(p)), opacity: Math.min(1, p * RESTART.fadeIn) }
 }
+
+// 내려앉는 큐브 밑 바닥 빛 진하기, 바닥에 거의 닿은 뒤 차오름
+export const landedGlow = (drop: DropFrame | null) =>
+  drop ? smooth(Math.min(1, Math.max(0, (0.3 - drop.lift / RESTART.lift) / 0.3))) : 1

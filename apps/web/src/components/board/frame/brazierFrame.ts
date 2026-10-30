@@ -78,8 +78,9 @@ const cubeGlow = (view: BrazierView, back: number): CubeGlow => {
   // 불 붙은 채 올라서면 빛이 그릇 쪽으로 내려앉았다가 다시 차오르는 높이
   const refill =
     elapsed < SECONDS.moved ? lerp(1, REFILL_LOW, smooth(stepT)) : lerp(REFILL_LOW, 1, rise)
+  const kept = game.stage.rules?.trail === true
   const glow = dropping
-    ? { ...still, strength: from * (1 - back) }
+    ? { ...still, strength: kept ? from : from * (1 - back) }
     : !moving
       ? still
       : ignited
@@ -186,12 +187,18 @@ export const brazierLookOf = ({
   }
 }
 
-// 화면 위 FIRE 숫자, 꺼지는 수의 연출 동안 0, 불이 없으면 null
-export const flameDisplay = (game: GameState | null, events: GameEvent[], animating: boolean) =>
+// 화면 위 FIRE 숫자, 꺼지지 않는 불은 ∞, 꺼지는 수의 연출 동안 0, 불이 없으면 null
+export const flameDisplay = (
+  game: GameState | null,
+  events: GameEvent[],
+  animating: boolean,
+): { count: number | string; out: boolean } | null =>
   !game
     ? null
-    : game.flame > 0
-      ? { count: game.flame, out: false }
-      : animating && events.some((e) => e.type === 'doused')
-        ? { count: 0, out: true }
-        : null
+    : game.stage.rules?.trail
+      ? { count: '∞', out: false }
+      : game.flame > 0
+        ? { count: game.flame, out: false }
+        : animating && events.some((e) => e.type === 'doused')
+          ? { count: 0, out: true }
+          : null

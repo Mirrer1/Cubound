@@ -374,7 +374,7 @@ const Board = ({
                         part="cubePool"
                         x={scene.cubeScreen.x}
                         y={scene.cubeScreen.y}
-                        strength={brazier.glow.strength}
+                        strength={brazier.glow.strength * scene.cubePool}
                         dip={brazier.glow.dip}
                       />
                     )}

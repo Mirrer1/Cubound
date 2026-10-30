@@ -165,6 +165,14 @@ describe('brazierScene 큐브 빛', () => {
     expect(sceneAt(restart, 0, { dropping: true }).glow.strength).toBe(1)
     expect(sceneAt(restart, 1, { dropping: true }).glow.strength).toBe(0)
   })
+
+  it('꼬리 불 판은 재시작에도 큐브 빛이 그대로', () => {
+    const trail = createState({ ...STAGE, rules: { trail: true } })
+    const walked = play(trail, ['right', 'right'])
+    const restart = { before: walked.state, state: trail, events: [] as GameEvent[] }
+
+    expect(sceneAt(restart, 0.5, { dropping: true }).glow.strength).toBe(1)
+  })
 })
 
 describe('brazierScene 170', () => {
@@ -276,5 +284,15 @@ describe('flameDisplay', () => {
     const out = play(LIT.state, ['down', 'right', 'right', 'right'])
     expect(flameDisplay(out.state, out.events, true)).toEqual({ count: 0, out: true })
     expect(flameDisplay(out.state, out.events, false)).toBeNull()
+  })
+
+  it('꼬리 불 판은 늘 ∞', () => {
+    const trail = createState({ ...STAGE, rules: { trail: true } })
+
+    expect(flameDisplay(trail, [], false)).toEqual({ count: '∞', out: false })
+    expect(flameDisplay(play(trail, ['right']).state, [], true)).toEqual({
+      count: '∞',
+      out: false,
+    })
   })
 })

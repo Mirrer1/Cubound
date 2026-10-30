@@ -12,6 +12,7 @@ import BoardPit from './BoardPit'
 import BoardSeed from './BoardSeed'
 import BoardSluice from './BoardSluice'
 import BoardSwitch from './BoardSwitch'
+import BoardTrail from './BoardTrail'
 import BoardWater from './BoardWater'
 import { type CellLook, sameCellLook, swampSink } from './frame'
 import {
@@ -77,6 +78,7 @@ const BoardCell = ({
   pit: pitLook,
   ladder,
   fire,
+  trail,
   brazier,
   keg,
   vine,
@@ -133,7 +135,7 @@ const BoardCell = ({
   const boat = boatLook(water.depth)
   const markFill = blend(floorFaces(tier, parity).top, 'var(--color-ash-top)', 0.4)
   const boxTop = y - TILE.layer - brazier.lift
-  const ashMark = Math.max(brazier.mark, keg.mark)
+  const ashMark = Math.max(brazier.mark, keg.mark, trail.mark)
 
   return (
     <g>
@@ -196,6 +198,16 @@ const BoardCell = ({
               kind={fire.kind}
             />
           )}
+          {trail.flame > 0 && (
+            <BoardTrail
+              part="floor"
+              x={x}
+              y={y}
+              flame={trail.flame}
+              pool={trail.pool}
+              lit={trail.lit}
+            />
+          )}
           {ashMark > 0 && (
             <polygon
               points={blockFaces(x, y, TILE.width * ASH_MARK, 0).top}
@@ -224,6 +236,18 @@ const BoardCell = ({
         <BoardSluice part="tap" x={x} y={y} open={sluice.open} turn={sluice.turn} />
       )}
       {under}
+      {trail.flame > 0 && !pit && !hidden && (
+        <g ref={fadeRef} style={fade}>
+          <BoardTrail
+            part="flame"
+            x={x}
+            y={y}
+            flame={trail.flame}
+            pool={trail.pool}
+            lit={trail.lit}
+          />
+        </g>
+      )}
       {fire.kind === 'wall' && (
         <g ref={fadeRef} style={fade}>
           <BoardFire

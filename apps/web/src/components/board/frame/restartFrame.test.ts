@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { restartDrop, restartDuration, restartPhase } from './restartFrame'
+import { landedGlow, restartDrop, restartDuration, restartPhase } from './restartFrame'
 
 describe('restartDrop', () => {
   it('진행도 0에서는 처음 자리보다 높이 떠 있다', () => {
@@ -59,5 +59,14 @@ describe('restartPhase', () => {
     expect(restartPhase(0.3, 2)).toBeCloseTo(
       1 - restartDrop(0.3, 0, 2).lift / restartDrop(0, 0, 2).lift,
     )
+  })
+})
+
+describe('landedGlow', () => {
+  it('내려앉는 동안 높이 뜬 큐브 밑은 0이고 바닥에 닿으면 1이다', () => {
+    expect(landedGlow({ lift: 1.5, opacity: 1 })).toBe(0)
+    expect(landedGlow({ lift: 0.6, opacity: 1 })).toBe(0)
+    expect(landedGlow({ lift: 0, opacity: 1 })).toBe(1)
+    expect(landedGlow(null)).toBe(1)
   })
 })

@@ -29,7 +29,7 @@ import {
 import { kegScene, movingKeg } from './kegFrame'
 import { mushroomFrames } from './mushroomFrame'
 import { boxPath, cellsOf, has, hopCells, playerPath, same, totalSeconds } from './pathFrame'
-import { restartDrop } from './restartFrame'
+import { landedGlow, restartDrop } from './restartFrame'
 import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFrame'
 import { fadeLanes, sluiceScene, tapFronts } from './sluiceFrame'
 import { boxSink, swampFrame } from './swampFrame'
@@ -44,6 +44,7 @@ import {
   shakeProgress,
   stepProgress,
 } from './timeFrame'
+import { trailScene } from './trailFrame'
 import {
   behindCube,
   frontOf,
@@ -247,6 +248,7 @@ export const sceneFrame = ({
     tail: swampSeconds.tail,
     stepT,
   })
+  const trail = trailScene({ before, game, events, prevEvents, moving, dropping, t, stepT })
   const brazier = brazierScene({
     before,
     game,
@@ -435,6 +437,7 @@ export const sceneFrame = ({
     cubeLean,
     rowLean,
     cubeDrop,
+    cubePool: game.stage.rules?.trail ? landedGlow(cubeDrop) : 1,
     cubeLevel,
     cubeScreen,
     cubeSquash,
@@ -471,6 +474,7 @@ export const sceneFrame = ({
     sluice,
     crackView,
     fire,
+    trail,
     brazier,
     keg,
     kegFrame,

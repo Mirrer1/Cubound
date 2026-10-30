@@ -54,7 +54,17 @@ type Faces = { top: string; left: string; right: string }
 
 interface BoardFloorProps extends Omit<
   CellLook,
-  'parity' | 'tier' | 'faded' | 'hidden' | 'box' | 'pit' | 'ladder' | 'fire' | 'brazier' | 'keg'
+  | 'parity'
+  | 'tier'
+  | 'faded'
+  | 'hidden'
+  | 'box'
+  | 'pit'
+  | 'ladder'
+  | 'fire'
+  | 'trail'
+  | 'brazier'
+  | 'keg'
 > {
   behindGoal?: BehindGoal | null
   faces: Faces

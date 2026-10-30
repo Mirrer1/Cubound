@@ -27,6 +27,7 @@ import { type SluiceLook, sluiceLookOf, stoneSlab } from './sluiceFrame'
 import { type SwitchLook, switchLookOf } from './switchFrame'
 import { type TideLook, tideLookOf } from './tideFrame'
 import { type SwampTime } from './timeFrame'
+import { type TrailLook, trailLookOf } from './trailFrame'
 import { type VineCell, vineCellOf } from './vineFrame'
 import { leanOf, whirlLook } from './whirlpoolFrame'
 import { TILE, toScreen } from '@/game/iso'
@@ -121,6 +122,7 @@ export interface CellLook {
   }
   ladder: LadderLook
   fire: FireLook
+  trail: TrailLook
   brazier: BrazierLook
   keg: KegLook & {
     dust: number // 깎이는 칸 흙먼지가 인 뒤 흐른 초, -1이면 없음
@@ -375,6 +377,7 @@ export const cellLook = ({
       },
       ladder: ladderLookOf(scene, game, back, cell, pickedHere),
       fire: isFilled ? NO_FIRE : fire,
+      trail: trailLookOf(scene.trail, cell.p),
       brazier: brazierLookOf({
         scene: scene.brazier,
         game,

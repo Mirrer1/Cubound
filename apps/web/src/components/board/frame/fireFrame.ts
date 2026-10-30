@@ -1,5 +1,5 @@
 import { clamp01, lerp, smooth } from './curveFrame'
-import { type Segment, has, same, totalSeconds } from './pathFrame'
+import { SECONDS, type Segment, has, same, totalSeconds } from './pathFrame'
 import { burnFire } from '@/game/rules'
 import type { GameEvent, GameState, Point, Stage } from '@/game/types'
 
@@ -40,6 +40,19 @@ const ashStart = (p: Point, segments: Segment[]) =>
 // 덮인 숯이 오르기 시작하는 초, 옆 불이 가장 먼저 부서지기 시작하는 때
 const smotherStart = (events: GameEvent[], segments: Segment[]) =>
   Math.min(...ashedOf(events).map((p) => ashStart(p, segments)))
+
+// 꼬리 불에서 번진 숯이 불붙기 시작하는 초, 꼬리 불이 반쯤 켜진 때
+const TRAIL_CATCH = 0.22
+
+// 이 수에 켜진 꼬리 불 칸에서 번진 숯
+const trailCaughtOf = (events: GameEvent[]) => {
+  const lit = events.flatMap((e) => (e.type === 'trailLit' ? [e.at] : []))
+  return events.flatMap((e) => (e.type === 'caught' && has(lit, e.from) ? [e.to] : []))
+}
+
+// 꼬리 불에서 번진 숯이 다 불붙는 초, 없으면 0
+export const trailCatchEnd = (events: GameEvent[]) =>
+  trailCaughtOf(events).length > 0 ? TRAIL_CATCH + SECONDS.moved : 0
 
 // 불이 끝나는 초, 켜는 수는 큐브가 닿은 뒤 켜짐 시간
 export const fireEnd = (events: GameEvent[], segments: Segment[], tail: number) =>
@@ -82,6 +95,8 @@ export const fireScene = (view: FireView) => {
       : kindled
         ? clamp01((elapsed - totalSeconds(segments) - tail) / FIRE.kindle)
         : stepT,
+    trailCaught: moving && !dropping ? trailCaughtOf(events) : [],
+    trailSpread: clamp01((elapsed - TRAIL_CATCH) / SECONDS.moved),
     ashed: moving && !dropping ? ashedOf(events) : [],
     // 옆 불이 꺼지는 수에 불붙음까지 올랐다 천천히 꺼지는 덮인 숯
     blocked: moving && !dropping ? smotheredOf(events) : [],
@@ -180,6 +195,10 @@ export const fireLookOf = (fire: FireScene, p: Point): FireLook => {
     ...NO_FIRE,
     kind,
     boss,
-    heat: lerp(heatBefore, heatOf(game, fire.warmAfter, p), spread),
+    heat: lerp(
+      heatBefore,
+      heatOf(game, fire.warmAfter, p),
+      has(fire.trailCaught, p) ? fire.trailSpread : spread,
+    ),
   }
 }
