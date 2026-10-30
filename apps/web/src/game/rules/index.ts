@@ -10,8 +10,8 @@ export {
   readSwamps,
   standHeight,
 } from './stateRule'
-export { burnFire } from './fireRule'
-export { FLAME } from './brazierRule'
+export { FLAME, burnFire } from './fireRule'
+export { TRAIL } from './trailRule'
 export { FUSE } from './kegRule'
 export { isIce } from './iceRule'
 export { isMushroom } from './mushroomRule'

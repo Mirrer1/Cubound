@@ -1,9 +1,7 @@
 import type { GameEvent, GameState, MoveResult, Point } from '../types'
 import { hasBox, same } from './cellRule'
-import { fireAt } from './fireRule'
+import { FLAME, fireAt } from './fireRule'
 import { floorAt, standHeight } from './stateRule'
-
-export const FLAME = 4
 
 export const burnsBox = (state: GameState) => state.flame > 0 && state.stage.rules?.burnBox === true
 
@@ -20,7 +18,7 @@ export const torch = (state: GameState, to: Point): MoveResult | null => {
 
 // 수 끝의 큐브 불, 화로 위나 번진 불이 닿은 칸이면 4로 차고 아니면 1 감소
 export const burnFlame = (state: GameState, fireEvents: GameEvent[]): MoveResult => {
-  if (!state.stage.fire) return { state, events: [] }
+  if (!state.stage.fire || state.stage.rules?.trail) return { state, events: [] }
 
   const { player } = state
   const onBrazier = fireAt(state.stage, player) === '@' && !hasBox(state, player)

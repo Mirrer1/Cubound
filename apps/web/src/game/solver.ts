@@ -15,7 +15,7 @@ const points = (list: Point[]) =>
     .sort()
     .join(' ')
 
-// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개와 녹는 얼음과 갑문과 밀물과 쫓아오는 불과 타는 짐과 달군 쇠는 유지
+// 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개와 녹는 얼음과 갑문과 밀물과 쫓아오는 불과 타는 짐과 달군 쇠와 꼬리 불은 유지
 // 제한이 너무 작을 때도 진짜 최소 이동 수를 얻는 방법
 const forSearch = (stage: Stage): Stage => {
   const {
@@ -31,6 +31,7 @@ const forSearch = (stage: Stage): Stage => {
     chase,
     burnBox,
     forge,
+    trail,
   } = stage.rules ?? {}
   return {
     ...stage,
@@ -46,7 +47,8 @@ const forSearch = (stage: Stage): Stage => {
       tide ||
       chase ||
       burnBox ||
-      forge
+      forge ||
+      trail
         ? {
             swampDeepen,
             mushroomWither,
@@ -60,6 +62,7 @@ const forSearch = (stage: Stage): Stage => {
             chase,
             burnBox,
             forge,
+            trail,
           }
         : undefined,
   }
@@ -117,6 +120,10 @@ const stateKey = (state: GameState, deep = true) => {
     // 같은 자리라도 켠 불씨와 불붙은 숯과 재, 큐브 불의 남은 수가 다르면 다른 상태
     ...(state.stage.fire
       ? [points(state.sparks), points(state.burning), points(state.ashes), `${state.flame}`]
+      : []),
+    // 같은 자리라도 꼬리 불 칸과 남은 수가 다르면 다른 상태
+    ...(state.stage.rules?.trail
+      ? [state.trail.map(({ x, y, left }) => `${x},${y},${left}`).join(' ')]
       : []),
     // 화약통 자리와 심지 남은 수, 같은 칸이 여러 번 깎인 높이
     ...(state.stage.entities.some((e) => e.type === 'keg')

@@ -78,7 +78,7 @@ export const checkFire = (ctx: CheckContext) => {
   if (!hasSpark && rules.chase === true) add('rules.chase 판에 불씨 칸이 없다')
   if (!hasBrazier && rules.burnBox === true) add('rules.burnBox 판에 화로가 없다')
 
-  // 숯 덩이마다 불이 닿는 길, 맞닿은 불씨 칸이나 화로 판의 숯 벽
+  // 숯 덩이마다 불이 닿는 길, 맞닿은 불씨 칸이나 화로 판의 숯 벽, 꼬리 불 판은 모든 숯
   const isChar = (p: { x: number; y: number }) => '#='.includes(rows[p.y]?.[p.x] ?? '.')
   const sides = ({ x, y }: { x: number; y: number }) => [
     { x: x + 1, y },
@@ -98,7 +98,8 @@ export const checkFire = (ctx: CheckContext) => {
       }
     }
     const sparked = lump.some((p) => sides(p).some((q) => rows[q.y]?.[q.x] === '*'))
-    const torchable = hasBrazier && lump.some((p) => rows[p.y][p.x] === '#')
+    const torchable =
+      rules.trail === true || (hasBrazier && lump.some((p) => rows[p.y][p.x] === '#'))
     if (!sparked && !torchable) add(`불씨나 화로와 안 이어진 숯이 (${first.x},${first.y})에 있다`)
   }
 }

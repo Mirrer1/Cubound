@@ -3,6 +3,8 @@ import { hasBox, same, step } from './cellRule'
 
 const SIDES: Direction[] = ['up', 'right', 'down', 'left']
 
+export const FLAME = 4
+
 export const fireAt = (stage: Stage, { x, y }: Point) => stage.fire?.[y]?.[x]
 
 const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
@@ -12,9 +14,11 @@ const distance = (a: Point, b: Point) => Math.abs(a.x - b.x) + Math.abs(a.y - b.
 export const readSparks = (stage: Stage): Point[] =>
   (stage.fire ?? []).flatMap((row, y) => [...row].flatMap((c, x) => (c === '*' ? [{ x, y }] : [])))
 
-// 서 있는 숯 벽과 불붙은 숯의 통행 불가
+// 서 있는 숯 벽과 불붙은 숯과 꼬리 불의 통행 불가
 export const isFireBlocked = (state: GameState, p: Point) =>
-  (fireAt(state.stage, p) === '#' && !has(state.ashes, p)) || has(state.burning, p)
+  (fireAt(state.stage, p) === '#' && !has(state.ashes, p)) ||
+  has(state.burning, p) ||
+  has(state.trail, p)
 
 // 불이 번질 숯, 상자와 기댄 사다리가 올라선 칸은 제외
 export const isFresh = (state: GameState, p: Point) => {
@@ -53,6 +57,7 @@ export const burnFire = (state: GameState, torched: Point[] = []): MoveResult =>
 
   if (kindled) spread(kindled)
   state.burning.forEach(spread)
+  state.trail.forEach(({ x, y }) => spread({ x, y }))
 
   const ashed = state.burning.filter((b) => !same(b, player))
   if (!kindled && caught.length === 0 && ashed.length === 0 && torched.length === 0) {

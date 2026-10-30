@@ -3,6 +3,7 @@ import {
   FUSE,
   SEED_WAIT,
   STRUGGLES,
+  TRAIL,
   barCells,
   createState,
   readCracks,
@@ -21,6 +22,7 @@ import type {
   PlantedSeed,
   Point,
   Stage,
+  Trail,
   TramSpot,
   VineSpot,
 } from './types'
@@ -42,6 +44,7 @@ export interface Session {
   burning?: Point[] // 예전 저장에는 없는 값
   ashes?: Point[] // 예전 저장에는 없는 값
   flame?: number // 예전 저장에는 없는 값
+  trail?: Trail[] // 예전 저장에는 없는 값
   charred?: Point[] // 예전 저장에는 없는 값
   kegs?: Keg[] // 예전 저장에는 없는 값
   scorched?: Point[] // 예전 저장에는 없는 값
@@ -91,6 +94,7 @@ export const toSession = (game: GameState): Session => ({
   burning: game.burning,
   ashes: game.ashes,
   flame: game.flame,
+  trail: game.trail,
   charred: game.charred,
   kegs: game.kegs,
   scorched: game.scorched,
@@ -312,10 +316,16 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     saved.burning === undefined ? [] : listOf(saved.burning, inKeys(charKeys), charKeys.size)
   const ashes =
     saved.ashes === undefined ? [] : listOf(saved.ashes, inKeys(charKeys), charKeys.size)
-  const flame = saved.flame === undefined ? 0 : saved.flame
+  const flame = saved.flame === undefined ? start.flame : saved.flame
   if (!(isCount(flame) && (flame as number) <= FLAME)) return null
   const inMap = (value: unknown): value is Point =>
     isObject(value) && heights[value.y as number]?.[value.x as number] !== undefined
+  const isTrail = (value: unknown): value is Trail => {
+    if (!inMap(value)) return false
+    const { left } = value as Trail
+    return isCount(left) && left >= 1 && left <= TRAIL
+  }
+  const trail = saved.trail === undefined ? [] : listOf(saved.trail, isTrail, TRAIL)
   const charred = saved.charred === undefined ? [] : listOf(saved.charred, inMap, boxCount)
   // 보통 화약통의 심지는 늘 0
   const isKeg = (value: unknown): value is Keg => {
@@ -352,7 +362,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   if (!boxes || !ladders || !leaningLadders || !seeds || !planted || !tethered || !plugged) {
     return null
   }
-  if (!stones || !iced || !sparks || !burning || !ashes || !charred || !kegs || !scorched)
+  if (!stones || !iced || !sparks || !burning || !ashes || !charred || !kegs || !scorched || !trail)
     return null
   if (new Set(plugged.map(({ x, y }) => `${x},${y}`)).size !== plugged.length) return null
   const tiedToBox = (boat: Point) => boxes.some(({ x, y }) => x === boat.x && y === boat.y)
@@ -380,6 +390,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     burning: burning.map(({ x, y }) => ({ x, y })),
     ashes: ashes.map(({ x, y }) => ({ x, y })),
     flame: flame as number,
+    trail: trail.map(({ x, y, left }) => ({ x, y, left })),
     charred: charred.map(({ x, y }) => ({ x, y })),
     kegs: kegs.map(({ x, y, fuse, lit }) => ({ x, y, fuse, lit })),
     bars: bars.map(({ x, y, dir, length, level, heat }) => ({ x, y, dir, length, level, heat })),

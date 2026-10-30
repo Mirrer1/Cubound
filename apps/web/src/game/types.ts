@@ -46,6 +46,7 @@ export interface StageRules {
   chase?: boolean // 불이 큐브와 가까워지는 숯으로만 번지는 판
   burnBox?: boolean // 불 붙은 큐브가 민 상자가 재가 되는 판
   forge?: boolean // 불붙은 숯에 닿은 막대가 세 칸으로 늘어나는 판
+  trail?: boolean // 큐브가 처음부터 꺼지지 않는 불이고 지나간 칸이 3수 동안 타는 판
 }
 
 export interface Stage {
@@ -100,6 +101,9 @@ export type LeaningLadder = Point & { direction: Direction }
 // 무너지는 칸이 앞으로 견디는 횟수, -1은 이미 무너진 칸
 export type Crack = Point & { left: number }
 
+// 큐브가 떠난 꼬리 불 칸, left는 남은 수
+export type Trail = Point & { left: number }
+
 export interface TramSpot {
   id: string
   at: number // cells 안의 자리
@@ -153,6 +157,7 @@ export interface GameState {
   burning: Point[] // 불붙은 숯, 이번 수 동안 통행 불가
   ashes: Point[] // 재가 된 숯, 숯 다리 자리는 바닥 없는 칸
   flame: number // 큐브 불의 남은 수, 0은 꺼진 불
+  trail: Trail[]
   charred: Point[] // 재가 된 상자 자리
   kegs: Keg[]
   scorched: Point[] // 터진 화약통 자리, 그림에만 쓰는 값
@@ -218,6 +223,8 @@ export type GameEvent =
   | { type: 'torched'; from: Point; to: Point } // 불 붙은 큐브가 from에서 불을 옮긴 숯 벽 to
   | { type: 'ignited'; at: Point; by: 'brazier' | 'fire' } // 큐브에 붙거나 4로 다시 찬 불, fire는 번진 불
   | { type: 'doused'; at: Point } // 큐브 불의 남은 수가 0이 된 수
+  | { type: 'trailLit'; at: Point } // 큐브가 떠나 꼬리 불이 켜진 칸
+  | { type: 'trailOut'; at: Point } // 꼬리 불이 꺼진 칸
   | { type: 'boxBurned'; at: Point } // 불 붙은 큐브가 밀어 재가 된 상자
   | { type: 'kegPushed'; from: Point; to: Point; result: 'slid' | 'fell'; drop?: number } // drop은 떨어진 층 수
   | { type: 'torchedKeg'; from: Point; to: Point } // 불 붙은 큐브가 from에서 불을 옮긴 화약통 to

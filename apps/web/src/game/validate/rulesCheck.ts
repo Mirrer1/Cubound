@@ -19,6 +19,7 @@ export const checkRules = ({ data, add }: CheckContext) => {
         chase,
         burnBox,
         forge,
+        trail,
       } = data.rules
       if (moveLimit !== undefined) {
         if (!(isInt(moveLimit) && moveLimit > 0)) add('rules.moveLimit은 양의 정수여야 한다')
@@ -72,6 +73,9 @@ export const checkRules = ({ data, add }: CheckContext) => {
       }
       if (forge !== undefined && typeof forge !== 'boolean') {
         add('rules.forge는 참이나 거짓이어야 한다')
+      }
+      if (trail !== undefined && typeof trail !== 'boolean') {
+        add('rules.trail은 참이나 거짓이어야 한다')
       }
     }
   }

@@ -102,6 +102,7 @@ export const blastKegs = (before: GameState, state: GameState, events: GameEvent
   const fire = [
     ...before.burning,
     ...state.burning,
+    ...before.trail,
     ...events.flatMap((e) => (e.type === 'kindled' ? [e.at] : [])),
   ]
   const touched = events.flatMap((e) => (e.type === 'torchedKeg' ? [e.to] : []))

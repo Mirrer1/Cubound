@@ -1,6 +1,6 @@
 import type { Bar, Crack, Entity, GameState, Point, Stage } from '../types'
 import { barAt, barCells, hasBox, isFrozen, isIced, isOpenWater, isWater, same } from './cellRule'
-import { readSparks } from './fireRule'
+import { FLAME, readSparks } from './fireRule'
 import { waterLevel } from './sluiceRule'
 import { isLiftRaised } from './switchRule'
 import { isPost, posts } from './tetherRule'
@@ -82,7 +82,8 @@ export const createState = (stage: Stage): GameState => ({
   sparks: readSparks(stage),
   burning: [],
   ashes: [],
-  flame: 0,
+  flame: stage.rules?.trail ? FLAME : 0,
+  trail: [],
   charred: [],
   kegs: stage.entities.flatMap((e) =>
     e.type === 'keg' ? [{ x: e.x, y: e.y, fuse: e.fuse === true, lit: 0 }] : [],

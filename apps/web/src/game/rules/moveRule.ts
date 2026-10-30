@@ -16,6 +16,7 @@ import { floorAt, isBridge, standHeight } from './stateRule'
 import { struggling } from './swampRule'
 import { doors, isClosedDoor, isDoorOpen, isLiftRaised, lifts } from './switchRule'
 import { withinReach } from './tetherRule'
+import { burnTrail } from './trailRule'
 import { boardsTram, onTramPath, rideTrams, tramLevelAt } from './tramRule'
 import { growVines } from './vineRule'
 import { arrive, walk } from './walkRule'
@@ -105,14 +106,19 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
   const { state: pulled, events: pullEvents } = pullBoats(seeded)
   const { state: melted, events: meltEvents } = meltStones(before, pulled)
   const { state: settled, events: iceEvents } = settleIce(before, melted)
-  const torched = events.flatMap((e) => (e.type === 'torched' ? [e.to] : []))
-  const { state: burnt, events: fireEvents } = burnFire(settled, torched)
+  const {
+    state: trailed,
+    torched: leftBridge,
+    events: trailEvents,
+  } = burnTrail(before, acted, settled)
+  const torched = [...events.flatMap((e) => (e.type === 'torched' ? [e.to] : [])), ...leftBridge]
+  const { state: burnt, events: fireEvents } = burnFire(trailed, torched)
   const { state: flamed, events: flameEvents } = burnFlame(burnt, fireEvents)
-  const { state: blasted, events: kegEvents } = blastKegs(settled, flamed, [
+  const { state: blasted, events: kegEvents } = blastKegs(trailed, flamed, [
     ...events,
     ...fireEvents,
   ])
-  const { state: barred, events: barEvents } = settleBars(before, settled, blasted, [
+  const { state: barred, events: barEvents } = settleBars(before, trailed, blasted, [
     ...events,
     ...fireEvents,
   ])
@@ -145,6 +151,7 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
       ...pullEvents,
       ...meltEvents,
       ...iceEvents,
+      ...trailEvents,
       ...fireEvents,
       ...flameEvents,
       ...kegEvents,

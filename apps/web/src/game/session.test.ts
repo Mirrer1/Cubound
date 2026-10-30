@@ -29,6 +29,7 @@ const MID = {
   burning: [],
   ashes: [],
   flame: 0,
+  trail: [],
   charred: [],
   kegs: [],
   scorched: [],
@@ -825,6 +826,43 @@ describe('restoreSession 화로', () => {
     expect(restoreSession({ ...session, flame: 5 }, BRAZIER_STAGE)).toBeNull()
     expect(restoreSession({ ...session, flame: -1 }, BRAZIER_STAGE)).toBeNull()
     expect(restoreSession({ ...session, charred: twice }, BRAZIER_STAGE)).toBeNull()
+  })
+})
+
+describe('restoreSession 꼬리 불', () => {
+  // 꼬리 불 판, 한 줄 다섯 칸
+  const TRAIL_STAGE: Stage = {
+    version: 1,
+    id: '20-10',
+    heights: [[0, 0, 0, 0, 0]],
+    fire: ['.....'],
+    start: { x: 0, y: 0 },
+    goal: { x: 4, y: 0 },
+    entities: [],
+    rules: { trail: true },
+  }
+  const walked = played(TRAIL_STAGE, ['right', 'right'])
+
+  it('꼬리 불 칸과 남은 수를 그대로 이어간다', () => {
+    expect(walked.trail).toEqual([
+      { x: 0, y: 0, left: 2 },
+      { x: 1, y: 0, left: 3 },
+    ])
+    expect(restoreSession(toSession(walked), TRAIL_STAGE)).toEqual(walked)
+  })
+
+  it('꼬리 불이 없던 때 저장한 것은 꼬리 없이 판의 처음 불로 읽는다', () => {
+    const session = { ...toSession(walked), trail: undefined, flame: undefined }
+
+    expect(restoreSession(session, TRAIL_STAGE)).toEqual({ ...walked, trail: [] })
+  })
+
+  it('남은 수가 1에서 3 밖이거나 칸이 판 밖이면 버린다', () => {
+    const session = toSession(walked)
+
+    expect(restoreSession({ ...session, trail: [{ x: 0, y: 0, left: 4 }] }, TRAIL_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, trail: [{ x: 0, y: 0, left: 0 }] }, TRAIL_STAGE)).toBeNull()
+    expect(restoreSession({ ...session, trail: [{ x: 9, y: 0, left: 1 }] }, TRAIL_STAGE)).toBeNull()
   })
 })
 
