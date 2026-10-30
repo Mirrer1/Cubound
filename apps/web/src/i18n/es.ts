@@ -82,6 +82,8 @@ export const es: Partial<Texts> = {
   'guide.barTurn': 'Empuja un extremo de la barra desde un lado y girará',
   'guide.barBridge': 'Pon la barra sobre un hoyo y se volverá un puente',
   'guide.forge': 'Una barra de hierro tocada por el fuego crece una casilla',
+  'guide.trail': 'Las casillas por las que pasas arden un rato',
+  'guide.trailBlock': 'No se puede pasar por casillas en llamas',
 
   'chapter.1': 'El Camino de Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',

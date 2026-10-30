@@ -80,6 +80,8 @@ export const en = {
   'guide.barTurn': 'Push the end of a bar from the side and it swings around',
   'guide.barBridge': 'Put a bar over a pit and it becomes a bridge',
   'guide.forge': 'An iron bar touched by fire grows one tile longer',
+  'guide.trail': 'Tiles you pass stay on fire for a while',
+  'guide.trailBlock': "Burning tiles can't be crossed",
 
   'chapter.1': 'The Stone Path',
   'chapter.2': 'The Overgrown Path',

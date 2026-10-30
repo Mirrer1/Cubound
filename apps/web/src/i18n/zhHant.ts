@@ -82,6 +82,8 @@ export const zhHant: Partial<Texts> = {
   'guide.barTurn': '從側面推鐵棒的一端，它會轉過來',
   'guide.barBridge': '把鐵棒放在坑上就成了橋',
   'guide.forge': '碰到火的鐵棒會伸長一格',
+  'guide.trail': '走過的格子會燃燒一陣子',
+  'guide.trailBlock': '燃燒的格子無法通過',
 
   'chapter.1': '踏石之路',
   'chapter.2': '草木叢生之路',

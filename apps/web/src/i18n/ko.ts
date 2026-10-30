@@ -82,6 +82,8 @@ export const ko: Partial<Texts> = {
   'guide.barTurn': '막대 끝을 옆에서 밀면 빙글 돌아가요',
   'guide.barBridge': '막대를 구덩이 위에 놓으면 다리가 돼요',
   'guide.forge': '불이 닿은 쇠막대는 한 칸 늘어나요',
+  'guide.trail': '지나간 칸은 한동안 불타올라요',
+  'guide.trailBlock': '불타는 칸은 지나갈 수 없어요',
 
   'chapter.1': '돌 위의 첫걸음',
   'chapter.2': '풀이 우거진 길',

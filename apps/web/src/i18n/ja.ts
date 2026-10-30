@@ -82,6 +82,8 @@ export const ja: Partial<Texts> = {
   'guide.barTurn': '棒の端を横から押すと、くるりと回ります',
   'guide.barBridge': '棒を穴の上に置くと橋になります',
   'guide.forge': '火が届いた鉄の棒は一マス伸びます',
+  'guide.trail': '通ったマスはしばらく燃え続けます',
+  'guide.trailBlock': '燃えているマスは通れません',
 
   'chapter.1': '石を踏む道',
   'chapter.2': '草が茂る道',
