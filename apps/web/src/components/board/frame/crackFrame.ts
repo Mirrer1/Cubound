@@ -174,8 +174,14 @@ export const standSink = (view: CrackView, x: number, y: number) => {
 }
 
 // 무너지는 칸이 닳는 진행도, 닳기 시작하는 때부터 수 끝까지
-export const crackProgress = (events: GameEvent[], t: number, swamp?: SwampTime, at?: Point) => {
+export const crackProgress = (events: GameEvent[], t: number, swamp?: SwampTime, at?: Point) =>
+  crackPhases(events, t, swamp)(at)
+
+// 칸마다 닳는 진행도, 그 수 길이는 한 번만 계산
+export const crackPhases = (events: GameEvent[], t: number, swamp?: SwampTime) => {
   const total = durationOf(events, swamp)
-  const leave = crackLeave(events, at)
-  return total <= leave ? 1 : clamp01((t * total - leave) / (total - leave))
+  return (at?: Point) => {
+    const leave = crackLeave(events, at)
+    return total <= leave ? 1 : clamp01((t * total - leave) / (total - leave))
+  }
 }

@@ -16,11 +16,22 @@ import {
 } from './timeFrame'
 import type { GameEvent, GameState } from '@/game/types'
 
+const lengths = new WeakMap<GameEvent[], Map<string, number>>()
+
+// 같은 이벤트 목록이면 계산해 둔 수 길이, 매 장 칸마다 부르는 elapsedAt 몫
+const lengthOf = (events: GameEvent[], swamp: SwampTime) => {
+  const known = lengths.get(events) ?? new Map<string, number>()
+  lengths.set(events, known)
+  const key = `${swamp.lead},${swamp.tail}`
+  if (!known.has(key)) known.set(key, durationOf(events, swamp))
+  return known.get(key)!
+}
+
 // 흔들림 진행도, 흔들리지 않는 수는 0
 export const shakeProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
   if (!events.some((e) => e.type === 'cracked' && e.worn)) return 0
   const start = totalSeconds(playerSegments(events))
-  return clamp01((t * durationOf(events, swamp) - start) / SHAKE_SECONDS)
+  return clamp01((t * lengthOf(events, swamp) - start) / SHAKE_SECONDS)
 }
 
 // 물이 바뀌는 수의 꼭지, 수면, 새로 잠긴 칸이 어는 진행도, 드러나는 칸이 녹는 진행도와 그 뒤 돌 밑 판이 녹는 진행도, 물이 그대로인 수는 모두 1
@@ -43,20 +54,20 @@ export const sluicePhase = (events: GameEvent[], t: number, swamp: SwampTime = N
 // 이동 몫의 진행도, 씨앗이 솟는 수는 솟기 전에 1
 export const stepProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
   const moving = moveSeconds(events, swamp)
-  return moving <= 0 ? 1 : clamp01((t * durationOf(events, swamp)) / moving)
+  return moving <= 0 ? 1 : clamp01((t * lengthOf(events, swamp)) / moving)
 }
 
 // 가속해 오르다 끝에서 느려지는 씨앗이 솟는 진행도
 export const riseProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
   if (!rises(events)) return 1
 
-  const p = clamp01((t * durationOf(events, swamp) - moveSeconds(events, swamp)) / RISE_SECONDS)
+  const p = clamp01((t * lengthOf(events, swamp) - moveSeconds(events, swamp)) / RISE_SECONDS)
   return p * p * (3 - 2 * p)
 }
 
 // 이동이 시작한 뒤로 흐른 시간, 늪에서 뽑혀 나오기를 기다리는 동안은 음수
 export const elapsedAt = (events: GameEvent[], swamp: SwampTime, t: number) =>
-  t * durationOf(events, swamp) - swamp.lead
+  t * lengthOf(events, swamp) - swamp.lead
 
 export interface CountView {
   game: GameState | null

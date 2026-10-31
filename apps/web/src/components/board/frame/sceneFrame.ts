@@ -10,7 +10,7 @@ import {
   pickUpProgress,
   rollingTilt,
 } from './carryFrame'
-import { barClip, crackClip, crackProgress, standSink } from './crackFrame'
+import { barClip, crackClip, crackPhases, crackProgress, standSink } from './crackFrame'
 import { SLIDE_DEG, playerFrame, squashTransform } from './cubeFrame'
 import { type Chain, easeOut, smooth } from './curveFrame'
 import { fireScene } from './fireFrame'
@@ -222,8 +222,7 @@ export const sceneFrame = ({
   const rowLean = left && rowed ? cubeLean : null
 
   const crackPhase = !moving ? 1 : restarting ? easeOut(t) : crackProgress(events, t, swampSeconds)
-  const phaseAt =
-    moving && !restarting ? (p: Point) => crackProgress(events, t, swampSeconds, p) : undefined
+  const phaseAt = moving && !restarting ? crackPhases(events, t, swampSeconds) : undefined
   const shaking = phaseAt
     ? events.flatMap((e) => (e.type === 'cracked' && e.worn ? [e.at] : []))
     : []

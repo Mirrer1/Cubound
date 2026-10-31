@@ -1,5 +1,5 @@
 import { animate, useMotionValue, useReducedMotion } from 'motion/react'
-import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 
 import { lerp } from '@/components/board/frame'
@@ -49,15 +49,24 @@ export const useBoardCamera = (
   const nextIndex = zones.length > 0 ? zoneIndexAt(zones, focus ?? game.player, zoneIndex) : 0
   if (nextIndex !== zoneIndex) setZoneIndex(nextIndex)
 
-  const heights = cameraHeights(
-    game.stage.heights,
-    game.heights,
-    game.stage.entities.flatMap((e) => (e.type === 'vine' ? e.cells : [])),
+  // 판 높이가 바뀌는 수에만 다시 재는 판 범위, 한 수 연출 동안 같은 값
+  const heights = useMemo(
+    () =>
+      cameraHeights(
+        game.stage.heights,
+        game.heights,
+        game.stage.entities.flatMap((e) => (e.type === 'vine' ? e.cells : [])),
+      ),
+    [game.stage, game.heights],
   )
   const [view, setView] = useState<ViewSize>({ width: 0, height: 0 })
   const minTile = minTileFor(view, ZOOM_TILE)
-  const { box: home, tile } = homeBox(game.stage.heights, heights, zones, nextIndex, view, minTile)
-  const target = overview ? zoneBox(heights) : home
+  const { box: home, tile } = useMemo(
+    () => homeBox(game.stage.heights, heights, game.stage.zones ?? [], nextIndex, view, minTile),
+    [game.stage, heights, nextIndex, view, minTile],
+  )
+  const whole = useMemo(() => zoneBox(heights), [heights])
+  const target = overview ? whole : home
   const targetKey = `${target.minX} ${target.minY} ${target.maxX} ${target.maxY} ${overview}`
   const [box, setBox] = useState<Box>(target)
   const [boxOverview, setBoxOverview] = useState(overview) // box에 맞춘 보기, 전환 보간 시작 전 화면 기준
@@ -160,7 +169,10 @@ export const useBoardCamera = (
   const at = (size: ViewSize) => {
     if (zoneMove ? overview : boxOverview) return viewBoxFor(zoneMove?.to ?? box, size, look, 0)
     const floor = minTileFor(size, ZOOM_TILE)
-    const fixed = homeBox(game.stage.heights, heights, zones, nextIndex, size, floor).tile
+    const fixed =
+      size === view
+        ? tile
+        : homeBox(game.stage.heights, heights, zones, nextIndex, size, floor).tile
     return viewBoxFor(zoneMove?.to ?? box, size, look, floor, fixed)
   }
   const settled = at(view)
@@ -200,8 +212,7 @@ export const useBoardCamera = (
   })
 
   // 큐브 구역을 보는 평소 화면에 판 전체가 이미 들어오는 경우
-  const showsAll =
-    view.width > 0 && coversBox(viewBoxFor(home, view, look, minTile, tile), zoneBox(heights))
+  const showsAll = view.width > 0 && coversBox(viewBoxFor(home, view, look, minTile, tile), whole)
 
   return { ref, viewBox: viewBox.join(' '), showsAll }
 }
