@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
+import { shapeOf } from './stageShape'
 import { zoneIndexAt } from '@/game/camera'
 import { type Hidden, type HiddenKind, hiddenFills, hiddenObjects } from '@/game/occlusion'
 import { createState, move } from '@/game/rules'
@@ -14,7 +15,7 @@ import {
   statesWithin,
   tideTraps,
 } from '@/game/searchStats'
-import { minPushes, moveLimit, solve } from '@/game/solver'
+import { forSearch, minPushes, moveLimit, solve } from '@/game/solver'
 import type { Direction, Stage } from '@/game/types'
 import { heightWarnings, validateStage } from '@/game/validate'
 
@@ -77,36 +78,7 @@ const zoneMoves = (stage: Stage, path: Direction[]) => {
   if (!zones || zones.length < 2) return null
 
   const counts = zones.map(() => 0)
-  // 제한만 빼고 남기는 판을 바꾸는 규칙, 빼면 버섯과 덩굴이 그대로라 다른 길로 새는 풀이
-  const {
-    swampDeepen,
-    mushroomWither,
-    vineStop,
-    seedGrow,
-    wind,
-    plug,
-    melt,
-    lock,
-    tide,
-    chase,
-    forge,
-  } = stage.rules ?? {}
-  let state = createState({
-    ...stage,
-    rules: {
-      swampDeepen,
-      mushroomWither,
-      vineStop,
-      seedGrow,
-      wind,
-      plug,
-      melt,
-      lock,
-      tide,
-      chase,
-      forge,
-    },
-  })
+  let state = createState(forSearch(stage))
   let zone = zoneIndexAt(zones, state.player, 0)
 
   for (const direction of path) {
@@ -165,6 +137,13 @@ const check = (file: string): Summary | null => {
     row('막대 뜸', floats.status === 'ok' ? `${floats.count}` : '탐색 한도 초과')
   }
   heightWarnings(stage.heights).forEach((warning) => row('높이 알림', warning))
+  const shape = shapeOf(stage)
+  const cellsText = (cells: string[]) =>
+    `${cells.length}${cells.length > 0 ? ` ${cells.slice(0, 6).join(' ')}` : ''}`
+  row('층 쌍', cellsText(shape.tierPairs))
+  row('한 칸 기둥', cellsText(shape.pillars))
+  row('한 칸 홈', cellsText(shape.grooves))
+  if (shape.rails.length > 0) row('레일 길이', shape.rails.join(', '))
 
   const started = Date.now()
   const solved = solve(stage)

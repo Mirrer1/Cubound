@@ -17,7 +17,7 @@ const points = (list: Point[]) =>
 
 // 탐색용 판은 보스 제한만 뺀 판, 늪이 깊어지는 것과 버섯이 시드는 것과 덩굴이 굳는 것과 씨앗이 계속 솟는 것과 바람과 마개와 녹는 얼음과 갑문과 밀물과 쫓아오는 불과 타는 짐과 달군 쇠와 꼬리 불은 유지
 // 제한이 너무 작을 때도 진짜 최소 이동 수를 얻는 방법
-const forSearch = (stage: Stage): Stage => {
+export const forSearch = (stage: Stage): Stage => {
   const {
     swampDeepen,
     mushroomWither,
