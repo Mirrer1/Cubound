@@ -170,3 +170,22 @@ export const WIND_STAGE: Stage = {
   entities: [],
   rules: { wind: 'left' },
 }
+
+// 불씨 (2,1)에서 숯 다리 (2,2)와 숯 벽 줄이 이어진 판, 상자로 (2,2)를 덮고 켜야 집 (4,4)까지 가는 판
+export const DEVOUR_STAGE: Stage = {
+  version: 1,
+  id: 'test-devour',
+  name: '삼키는 불 테스트',
+  heights: [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [-1, -1, 0, -1, 0],
+    [0, 0, 0, 0, 0],
+    [-1, -1, -1, -1, 0],
+  ],
+  fire: ['.....', '..*##', '..=.=', '....#', '.....'],
+  start: { x: 0, y: 0 },
+  goal: { x: 4, y: 4 },
+  entities: [{ type: 'box', x: 1, y: 1 }],
+  rules: { devour: true },
+}

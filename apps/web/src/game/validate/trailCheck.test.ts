@@ -34,11 +34,11 @@ describe('checkTrail', () => {
   })
 
   it('꼬리 불 판에 다른 불 보스 규칙을 같이 쓰지 않는다', () => {
-    const rules = { trail: true, chase: true, burnBox: true }
+    const rules = { trail: true, devour: true, burnBox: true }
 
     expect(errorsOf({ ...TRAIL_VALID, fire: ['*.#.'], rules })).toEqual(
       expect.arrayContaining([
-        'rules.chase는 rules.trail과 함께 쓸 수 없다',
+        'rules.devour는 rules.trail과 함께 쓸 수 없다',
         'rules.burnBox는 rules.trail과 함께 쓸 수 없다',
       ]),
     )

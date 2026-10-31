@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { createState, move } from './rules'
+import { DEVOUR_STAGE } from './rules/testStages'
 import { deadEnds } from './searchStats'
-import { eachMove, minPushes, moveLimit, solve, stars } from './solver'
+import { eachMove, forSearch, minPushes, moveLimit, solve, stars } from './solver'
 import type { Stage } from './types'
 
 const STAGE: Stage = {
@@ -438,6 +439,22 @@ describe('solve 막대', () => {
   it('달군 쇠 판은 이동 제한을 빼도 늘어나는 규칙을 남긴다', () => {
     expect(solve(FORGE).status).toBe('solved')
     expect(solve({ ...FORGE, rules: undefined }).status).toBe('unsolvable')
+  })
+})
+
+describe('solve 삼키는 불', () => {
+  it('상자를 써서 불씨를 밟고 다 탄 숯 벽 줄을 지나 집에 가는 길을 찾는다', () => {
+    const solved = solve(DEVOUR_STAGE)
+
+    expect(solved.status === 'solved' && solved.moves).toBe(10)
+  })
+
+  it('상자가 없으면 불씨를 밟는 순간 다리까지 다 타서 풀리지 않는다', () => {
+    expect(solve({ ...DEVOUR_STAGE, entities: [] }).status).toBe('unsolvable')
+  })
+
+  it('탐색 판에도 한꺼번에 타는 규칙을 남긴다', () => {
+    expect(forSearch(DEVOUR_STAGE).rules).toEqual({ devour: true })
   })
 })
 

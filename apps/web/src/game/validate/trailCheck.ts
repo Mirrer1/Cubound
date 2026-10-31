@@ -1,7 +1,7 @@
 import { type CheckContext, isObject } from './stageCheck'
 
 // 꼬리 불과 같은 판에 둘 수 없는 불 보스 규칙
-const OTHER_FIRE_RULES = ['chase', 'burnBox', 'forge']
+const OTHER_FIRE_RULES = ['devour', 'burnBox', 'forge']
 
 export const checkTrail = ({ data, add }: CheckContext) => {
   const rules = isObject(data.rules) ? data.rules : {}

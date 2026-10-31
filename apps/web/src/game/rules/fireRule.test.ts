@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { Direction, GameEvent, GameState, Point, Stage } from '../types'
 import { move } from './moveRule'
 import { createState } from './stateRule'
-import { play } from './testStages'
+import { DEVOUR_STAGE, play } from './testStages'
 
 // 윗줄은 걷는 길, 아랫줄은 불씨 (1,1)에서 숯 벽 하나와 숯 다리 둘로 이어진 숯 길
 const LINE_STAGE: Stage = {
@@ -408,87 +408,61 @@ describe('move 큐브가 선 숯', () => {
   })
 })
 
-describe('move 쫓아오는 불', () => {
-  // 가운데 (3,2)를 둘러싼 숯 넷, 오른쪽 아래로 걸어가는 큐브
-  const CROSS_STAGE: Stage = {
-    version: 1,
-    id: 'test-chase',
-    name: '쫓아오는 불 테스트',
-    heights: Array.from({ length: 5 }, () => [0, 0, 0, 0, 0, 0, 0]),
-    fire: ['.......', '...=...', '..=.=..', '...=...', '.......'],
-    start: { x: 6, y: 4 },
-    goal: { x: 0, y: 0 },
-    entities: [],
-    rules: { chase: true },
-  }
-  const burningAt = (stage: Stage) => ({ ...createState(stage), burning: [{ x: 3, y: 2 }] })
+describe('move 삼키는 불', () => {
+  const caughtPairs = (events: GameEvent[]) =>
+    events.flatMap((e) => (e.type === 'caught' ? [{ from: e.from, to: e.to }] : []))
 
-  // (0,2)~(3,2) 곧은 숯 줄, (3,2) 갈림길에서 위아래 두 갈래
-  const FORK_STAGE: Stage = {
-    ...CROSS_STAGE,
-    fire: ['...#...', '...#...', '####...', '...#...', '...#...'],
-  }
-  const forkAt = (burning: Point, start: Point, boxes: Point[] = []) => ({
-    ...createState({ ...FORK_STAGE, start }),
-    burning: [burning],
-    ashes: [0, 1, 2].filter((x) => x < burning.x).map((x) => ({ x, y: 2 })),
-    boxes,
+  it('불씨를 밟으면 이어진 같은 높이 숯이 그 수에 지나간 차례대로 다 붙는다', () => {
+    const { state, events } = play(DEVOUR_STAGE, ['right', 'right', 'down'])
+
+    expect(caughtPairs(events)).toEqual([
+      { from: { x: 2, y: 1 }, to: { x: 3, y: 1 } },
+      { from: { x: 2, y: 1 }, to: { x: 2, y: 2 } },
+      { from: { x: 3, y: 1 }, to: { x: 4, y: 1 } },
+      { from: { x: 4, y: 1 }, to: { x: 4, y: 2 } },
+      { from: { x: 4, y: 2 }, to: { x: 4, y: 3 } },
+    ])
+    expect(state.burning).toHaveLength(5)
   })
 
-  it('곧은 줄은 큐브가 멀어져도 끝까지 탄다', () => {
-    const directions: Direction[] = ['right', 'left', 'right']
-    const state = directions.reduce(
-      (s, d) => move(s, d).state,
-      forkAt({ x: 0, y: 2 }, { x: 0, y: 4 }),
-    )
+  it('붙은 숯은 다음 수에 함께 재가 되어 숯 다리가 무너진다', () => {
+    const { state } = play(DEVOUR_STAGE, ['right', 'right', 'down', 'up'])
 
-    expect(state.burning).toEqual([{ x: 3, y: 2 }])
+    expect(state.burning).toEqual([])
+    expect(state.ashes).toHaveLength(5)
+    expect(state.heights[2][2]).toBe(-1)
+    expect(state.heights[2][4]).toBe(-1)
   })
 
-  it('갈림길에서는 큐브와 가까운 갈래로만 번진다', () => {
-    const { events } = move(forkAt({ x: 3, y: 2 }, { x: 5, y: 0 }), 'down')
+  it('상자가 덮은 숯 다리는 남고 불은 그 칸을 지나가지 못한다', () => {
+    const { state, events } = play(DEVOUR_STAGE, ['down', 'right', 'up', 'right', 'down'])
 
-    expect(caughtOf(events)).toEqual([{ x: 3, y: 1 }])
-  })
-
-  it('갈림길에 닿기 전 큐브 자리가 바뀌면 다른 갈래로 번진다', () => {
-    const { events } = move(forkAt({ x: 3, y: 2 }, { x: 5, y: 4 }), 'up')
-
-    expect(caughtOf(events)).toEqual([{ x: 3, y: 3 }])
-  })
-
-  it('상자가 올라선 숯은 갈래에서 빠져 남은 갈래로 번진다', () => {
-    const { events } = move(forkAt({ x: 3, y: 2 }, { x: 5, y: 0 }, [{ x: 3, y: 1 }]), 'down')
-
-    expect(caughtOf(events)).toEqual([{ x: 3, y: 3 }])
-  })
-
-  it('갈림길에서 큐브와 거리가 같은 갈래는 다 번진다', () => {
-    const { events } = move(burningAt(CROSS_STAGE), 'left')
-
+    expect(state.boxes).toEqual([{ x: 2, y: 2 }])
     expect(caughtOf(events)).toEqual([
+      { x: 3, y: 1 },
+      { x: 4, y: 1 },
       { x: 4, y: 2 },
-      { x: 3, y: 3 },
+      { x: 4, y: 3 },
     ])
   })
 
-  it('쫓아오는 판이 아니면 맞닿은 숯 전부로 번진다', () => {
-    const { events } = move(burningAt({ ...CROSS_STAGE, rules: undefined }), 'left')
+  it('켠 불씨 옆 상자가 덮은 숯은 꺼지는 숯으로 알린다', () => {
+    const { events } = play(DEVOUR_STAGE, ['down', 'right', 'up', 'right', 'down'])
 
-    expect(caughtOf(events)).toHaveLength(4)
+    expect(events).toContainEqual({ type: 'ashed', cells: [], smothered: [{ x: 2, y: 2 }] })
   })
 
-  it('불씨에서 켤 때 맞닿은 숯은 큐브와 거리가 같아 다 번진다', () => {
-    const stage: Stage = {
-      ...CROSS_STAGE,
-      fire: ['.......', '.......', '..=*=..', '.......', '.......'],
-      start: { x: 3, y: 1 },
+  it('불붙은 숯에서 번질 때도 이어진 줄 전체가 한 수에 붙는다', () => {
+    const state = {
+      ...createState({ ...LINE_STAGE, fire: ['......', '..#==='], rules: { devour: true } }),
+      burning: [{ x: 2, y: 1 }],
     }
-    const { events } = move(createState(stage), 'down')
+    const { events } = move(state, 'left')
 
     expect(caughtOf(events)).toEqual([
-      { x: 4, y: 2 },
-      { x: 2, y: 2 },
+      { x: 3, y: 1 },
+      { x: 4, y: 1 },
+      { x: 5, y: 1 },
     ])
   })
 })

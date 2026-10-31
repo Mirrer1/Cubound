@@ -134,13 +134,13 @@ describe('checkFire', () => {
     )
   })
 
-  it('쫓아오는 불은 참이나 거짓이고 불씨 칸이 있는 판에만 쓴다', () => {
-    expect(errorsOf({ ...FIRE_VALID, rules: { chase: true } })).toEqual([])
-    expect(errorsOf({ ...FIRE_VALID, rules: { chase: 1 } })).toContain(
-      'rules.chase는 참이나 거짓이어야 한다',
+  it('삼키는 불은 참이나 거짓이고 불씨 칸이 있는 판에만 쓴다', () => {
+    expect(errorsOf({ ...FIRE_VALID, rules: { devour: true } })).toEqual([])
+    expect(errorsOf({ ...FIRE_VALID, rules: { devour: 1 } })).toContain(
+      'rules.devour는 참이나 거짓이어야 한다',
     )
-    expect(errorsOf({ ...VALID, rules: { chase: true } })).toContain(
-      'rules.chase 판에 불씨 칸이 없다',
+    expect(errorsOf({ ...VALID, rules: { devour: true } })).toContain(
+      'rules.devour 판에 불씨 칸이 없다',
     )
   })
 })

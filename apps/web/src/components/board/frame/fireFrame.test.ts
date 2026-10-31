@@ -13,6 +13,7 @@ import { playerPath, segmentsOf } from './pathFrame'
 import { elapsedAt, stepProgress } from './progressFrame'
 import { durationOf, playerSegments } from './timeFrame'
 import { burnFire, createState, move } from '@/game/rules'
+import { DEVOUR_STAGE as DEVOUR_MAP } from '@/game/rules/testStages'
 import type { Direction, GameEvent, GameState, Point, Stage } from '@/game/types'
 
 // 윗줄은 걷는 길, 아랫줄은 불씨 (1,1)에서 숯 벽 하나와 숯 다리 둘로 이어진 숯 길
@@ -30,11 +31,11 @@ const LINE_STAGE: Stage = {
   entities: [],
 }
 
-// 아랫줄 숯 다리 다섯, 쫓아오는 불
-const FORK_STAGE: Stage = {
+// 아랫줄 숯 다리 다섯, 삼키는 불
+const DEVOUR_STAGE: Stage = {
   version: 1,
-  id: 'test-fire-fork',
-  name: '쫓아오는 불',
+  id: 'test-fire-devour',
+  name: '삼키는 불',
   heights: [
     [0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0],
@@ -43,12 +44,12 @@ const FORK_STAGE: Stage = {
   start: { x: 1, y: 0 },
   goal: { x: 0, y: 0 },
   entities: [],
-  rules: { chase: true },
+  rules: { devour: true },
 }
 
-// 가운데 (2,1)이 불붙은 쫓아오는 불 판, 큐브는 윗줄 x
-const chaseAt = (x: number): GameState => ({
-  ...createState({ ...FORK_STAGE, start: { x, y: 0 } }),
+// 가운데 (2,1)이 불붙은 삼키는 불 판, 큐브는 윗줄 x
+const devourAt = (x: number): GameState => ({
+  ...createState({ ...DEVOUR_STAGE, start: { x, y: 0 } }),
   sparks: [],
   burning: [{ x: 2, y: 1 }],
 })
@@ -104,8 +105,8 @@ describe('warmCells', () => {
     expect(warmCells(createState(LINE_STAGE))).toEqual([])
   })
 
-  it('쫓아오는 불은 큐브와 가까워지는 쪽 숯만 낸다', () => {
-    expect(warmCells(chaseAt(4))).toEqual([{ x: 3, y: 1 }])
+  it('삼키는 불은 이어진 숯 줄 전체를 불이 지나는 차례로 낸다', () => {
+    expect(warmCells(devourAt(4))).toEqual([NEAR, SPARK, FAR, { x: 0, y: 1 }])
   })
 })
 
@@ -122,6 +123,27 @@ describe('fireEnd', () => {
 
     expect(fireEnd(events, playerSegments(events), 0)).toBeCloseTo(cube + FIRE.kindle)
     expect(durationOf(events)).toBeCloseTo(cube + FIRE.kindle)
+  })
+
+  it('삼키는 판의 켜는 수는 가장 깊은 칸의 늦춤만큼 길어진다', () => {
+    const { events } = play(createState(DEVOUR_MAP), ['right', 'right', 'down'])
+    const cube = playerSegments(events).reduce((sum, s) => sum + s.seconds, 0)
+
+    expect(fireEnd(events, playerSegments(events), 0)).toBeCloseTo(cube + 0.15 + FIRE.kindle)
+    expect(durationOf(events)).toBeCloseTo(cube + 0.15 + FIRE.kindle)
+  })
+
+  it('삼키는 판의 늦춤은 0.5초에서 멈춘다', () => {
+    const long: Stage = {
+      ...LINE_STAGE,
+      heights: [Array(20).fill(0), Array(20).fill(0)],
+      fire: ['....................', '.*##################'],
+      rules: { devour: true },
+    }
+    const { events } = move(createState(long), 'down')
+    const cube = playerSegments(events).reduce((sum, s) => sum + s.seconds, 0)
+
+    expect(fireEnd(events, playerSegments(events), 0)).toBeCloseTo(cube + 0.5 + FIRE.kindle)
   })
 
   it('재가 되는 수는 재 시간보다 짧지 않다', () => {
@@ -267,36 +289,14 @@ describe('fireLookOf', () => {
     expect(lookAt(onBridge, ['up'], half + 0.1, FAR).crumble).toBeGreaterThan(0)
   })
 
-  it('갈림길에서는 큐브와 가까운 갈래만, 거리가 같으면 모두 달아오르고 규칙이 불붙이는 칸과 같다', () => {
+  it('삼키는 불이 달아오르게 하는 칸은 큐브 자리와 상관없이 규칙이 불붙이는 칸과 같다', () => {
     const caught = (state: GameState) =>
       burnFire(state).events.flatMap((e) => (e.type === 'caught' ? [e.to] : []))
 
-    expect(warmCells(chaseAt(3))).toEqual([NEAR])
-    expect(warmCells(chaseAt(0))).toEqual([SPARK])
-    expect(warmCells(chaseAt(2))).toEqual(expect.arrayContaining([SPARK, NEAR]))
-    expect(warmCells(chaseAt(2))).toHaveLength(2)
-    for (const x of [0, 1, 2, 3, 4]) expect(warmCells(chaseAt(x))).toEqual(caught(chaseAt(x)))
-  })
-
-  it('갈림길에서 함께 달아오른 갈래는 큐브가 반대쪽으로 가면 그 수 동안 0.5에서 0으로 이어서 식는다', () => {
-    const tie = chaseAt(2)
-    expect(move(tie, 'left').state.burning).toEqual([SPARK])
-
-    const steps = [0, 0.25, 0.5, 0.75, 1].map((t) => lookAt(tie, ['left'], t, NEAR).heat)
-    expect(steps[0]).toBe(0.5)
-    expect(steps.at(-1)).toBe(0)
-    steps.slice(1).forEach((heat, i) => expect(heat).toBeLessThanOrEqual(steps[i]))
-  })
-
-  it('큐브가 다가가 거리가 같아진 갈래는 달아오르지 않았어도 그 수 동안 0에서 1로 이어서 오른다', () => {
-    const ahead = chaseAt(3)
-    expect(warmCells(ahead)).not.toContainEqual(SPARK)
-    expect(move(ahead, 'left').state.burning).toContainEqual(SPARK)
-
-    const steps = [0, 0.25, 0.5, 0.75, 1].map((t) => lookAt(ahead, ['left'], t, SPARK).heat)
-    expect(steps[0]).toBe(0)
-    expect(steps.at(-1)).toBe(1)
-    steps.slice(1).forEach((heat, i) => expect(heat).toBeGreaterThanOrEqual(steps[i]))
+    for (const x of [0, 1, 2, 3, 4]) {
+      expect(warmCells(devourAt(x))).toHaveLength(4)
+      expect(warmCells(devourAt(x))).toEqual(caught(devourAt(x)))
+    }
   })
 
   it('재시작은 재 자국에서 숯이 다시 서고 불과 불씨 칸이 꺼진다', () => {
@@ -327,10 +327,49 @@ describe('fireLookOf', () => {
     expect(fireLookOf(restartAt(1), NEAR).heat).toBe(0)
   })
 
-  it('쫓아오는 불 판의 숯은 보스 불이다', () => {
-    const state = createState(FORK_STAGE)
+  it('삼키는 불 판의 숯은 보스 불이다', () => {
+    const state = createState(DEVOUR_STAGE)
 
     expect(fireLookOf(sceneAt(state, state, [], 1), { x: 1, y: 1 }).boss).toBe(true)
     expect(fireLookOf(sceneAt(state, state, [], 1), { x: 0, y: 0 }).boss).toBe(false)
+  })
+})
+
+describe('fireLookOf 삼키는 불', () => {
+  const lit = (t: number) => {
+    const start = createState(DEVOUR_MAP)
+    const before = play(start, ['right', 'right']).state
+    const { state, events } = move(before, 'down')
+    const cube = playerSegments(events).reduce((sum, s) => sum + s.seconds, 0)
+    const scene = sceneAt(before, state, events, (cube + t) / durationOf(events))
+    return (p: Point) => fireLookOf(scene, p).heat
+  }
+
+  it('불씨에서 깊을수록 0.05초씩 늦게 달아오른다', () => {
+    const heat = lit(0.1)
+
+    expect(heat({ x: 3, y: 1 })).toBeCloseTo(0.1 / FIRE.kindle)
+    expect(heat({ x: 4, y: 1 })).toBeCloseTo(0.05 / FIRE.kindle)
+    expect(heat({ x: 4, y: 2 })).toBe(0)
+    expect(heat({ x: 4, y: 3 })).toBe(0)
+  })
+
+  it('가장 깊은 칸도 수가 끝날 때 다 불붙는다', () => {
+    expect(lit(0.15 + FIRE.kindle)({ x: 4, y: 3 })).toBeCloseTo(1)
+  })
+
+  it('삼키는 판이 아니면 같은 수에 붙은 칸이 함께 달아오른다', () => {
+    const plain = {
+      ...DEVOUR_MAP,
+      rules: undefined,
+      fire: ['.....', '..*##', '.....', '.....', '.....'],
+    }
+    const before = play(createState(plain), ['right', 'right']).state
+    const { state, events } = move(before, 'down')
+    const cube = playerSegments(events).reduce((sum, s) => sum + s.seconds, 0)
+    const scene = sceneAt(before, state, events, (cube + 0.1) / durationOf(events))
+
+    expect(fireLookOf(scene, { x: 3, y: 1 }).heat).toBeCloseTo(0.1 / FIRE.kindle)
+    expect(fireEnd(events, playerSegments(events), 0)).toBeCloseTo(cube + FIRE.kindle)
   })
 })

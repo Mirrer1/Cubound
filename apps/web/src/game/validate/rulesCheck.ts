@@ -16,7 +16,7 @@ export const checkRules = ({ data, add }: CheckContext) => {
         plug,
         melt,
         tide,
-        chase,
+        devour,
         burnBox,
         forge,
         trail,
@@ -65,8 +65,8 @@ export const checkRules = ({ data, add }: CheckContext) => {
       if (tide !== undefined && typeof tide !== 'boolean') {
         add('rules.tide는 참이나 거짓이어야 한다')
       }
-      if (chase !== undefined && typeof chase !== 'boolean') {
-        add('rules.chase는 참이나 거짓이어야 한다')
+      if (devour !== undefined && typeof devour !== 'boolean') {
+        add('rules.devour는 참이나 거짓이어야 한다')
       }
       if (burnBox !== undefined && typeof burnBox !== 'boolean') {
         add('rules.burnBox는 참이나 거짓이어야 한다')

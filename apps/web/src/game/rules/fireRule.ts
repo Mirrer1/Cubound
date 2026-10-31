@@ -9,8 +9,6 @@ export const fireAt = (stage: Stage, { x, y }: Point) => stage.fire?.[y]?.[x]
 
 const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
 
-const distance = (a: Point, b: Point) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
-
 export const readSparks = (stage: Stage): Point[] =>
   (stage.fire ?? []).flatMap((row, y) => [...row].flatMap((c, x) => (c === '*' ? [{ x, y }] : [])))
 
@@ -40,18 +38,20 @@ export const burnFire = (state: GameState, torched: Point[] = []): MoveResult =>
   const kindled = hasBox(state, player) ? undefined : state.sparks.find((s) => same(s, player))
   const caught: { from: Point; to: Point }[] = []
 
-  const chasing = state.stage.rules?.chase === true
+  const devouring = state.stage.rules?.devour === true
 
-  // 같은 높이 숯으로만, 쫓아오는 판의 갈림길은 큐브와 가장 가까운 갈래만, 거리가 같으면 모두
-  const spread = (from: Point) => {
-    const fresh = SIDES.map((side) => step(from, side)).filter(
-      (to) => isFresh(state, to) && state.heights[to.y][to.x] === state.heights[from.y][from.x],
-    )
-    const nearest = Math.min(...fresh.map((to) => distance(to, player)))
-    for (const to of fresh) {
-      if (caught.some((c) => same(c.to, to)) || has(torched, to)) continue
-      if (chasing && distance(to, player) > nearest) continue
-      caught.push({ from, to })
+  // 같은 높이 숯으로만, 삼키는 판은 이어진 숯 끝까지 한 수에
+  const spread = (start: Point) => {
+    const queue = [start]
+    for (const from of queue) {
+      for (const to of SIDES.map((side) => step(from, side))) {
+        if (!isFresh(state, to) || state.heights[to.y][to.x] !== state.heights[from.y][from.x]) {
+          continue
+        }
+        if (caught.some((c) => same(c.to, to)) || has(torched, to)) continue
+        caught.push({ from, to })
+        if (devouring) queue.push(to)
+      }
     }
   }
 
@@ -71,7 +71,7 @@ export const burnFire = (state: GameState, torched: Point[] = []): MoveResult =>
       : state.heights.map((row, y) => row.map((h, x) => (has(bridges, { x, y }) ? -1 : h)))
 
   // 재가 되는 불 옆 같은 높이 숯 중 상자나 기댄 사다리가 덮어 못 붙은 칸, 꺼지는 연출 몫
-  const smothered = ashed.flatMap((from) =>
+  const smothered = [...ashed, ...(kindled ? [kindled] : [])].flatMap((from) =>
     SIDES.map((side) => step(from, side)).filter((to) => {
       const c = fireAt(state.stage, to)
       return (
@@ -88,7 +88,7 @@ export const burnFire = (state: GameState, torched: Point[] = []): MoveResult =>
   const events: GameEvent[] = [
     ...(kindled ? [{ type: 'kindled' as const, at: kindled }] : []),
     ...caught.map(({ from, to }) => ({ type: 'caught' as const, from, to })),
-    ...(ashed.length > 0 ? [{ type: 'ashed' as const, ...ash }] : []),
+    ...(ashed.length > 0 || smothered.length > 0 ? [{ type: 'ashed' as const, ...ash }] : []),
   ]
 
   return {

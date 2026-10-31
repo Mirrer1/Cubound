@@ -43,7 +43,7 @@ export interface StageRules {
   melt?: number // 물에 뜬 얼음 돌이 녹기까지의 수
   lock?: Point // 갑문 판의 가 웅덩이 칸, 수위 장치가 비면 물이 높은 쪽
   tide?: boolean // 4수마다 판 전체 물이 차고 빠지는 판
-  chase?: boolean // 불이 큐브와 가까워지는 숯으로만 번지는 판
+  devour?: boolean // 불이 이어진 같은 높이 숯 끝까지 한 수에 번지는 판
   burnBox?: boolean // 불 붙은 큐브가 민 상자가 재가 되는 판
   forge?: boolean // 불붙은 숯에 닿은 막대가 세 칸으로 늘어나는 판
   trail?: boolean // 큐브가 처음부터 꺼지지 않는 불이고 지나간 칸이 3수 동안 타는 판
@@ -219,7 +219,7 @@ export type GameEvent =
   | { type: 'thawed'; cells: Point[] } // 이번 수에 녹아 물로 돌아간 칸
   | { type: 'kindled'; at: Point } // 큐브가 밟아 켜진 불씨 칸
   | { type: 'caught'; from: Point; to: Point } // from에서 번져 불붙은 숯 to
-  | { type: 'ashed'; cells: Point[]; smothered?: Point[] } // 재가 된 숯, smothered는 그 옆에서 덮여 못 붙은 숯
+  | { type: 'ashed'; cells: Point[]; smothered?: Point[] } // 재가 된 숯, smothered는 그 옆이나 켠 불씨 옆에서 덮여 못 붙은 숯
   | { type: 'torched'; from: Point; to: Point } // 불 붙은 큐브가 from에서 불을 옮긴 숯 벽 to
   | { type: 'ignited'; at: Point; by: 'brazier' | 'fire' } // 큐브에 붙거나 4로 다시 찬 불, fire는 번진 불
   | { type: 'doused'; at: Point } // 큐브 불의 남은 수가 0이 된 수

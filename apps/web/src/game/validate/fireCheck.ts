@@ -7,7 +7,7 @@ export const checkFire = (ctx: CheckContext) => {
   const fire = data.fire
   const rules = isObject(data.rules) ? data.rules : {}
   if (fire === undefined) {
-    if (rules.chase === true) add('rules.chase 판에 불씨 칸이 없다')
+    if (rules.devour === true) add('rules.devour 판에 불씨 칸이 없다')
     if (rules.burnBox === true) add('rules.burnBox 판에 화로가 없다')
     return
   }
@@ -75,7 +75,7 @@ export const checkFire = (ctx: CheckContext) => {
 
   const hasSpark = cells.some(({ c }) => c === '*')
   const hasBrazier = cells.some(({ c }) => c === '@')
-  if (!hasSpark && rules.chase === true) add('rules.chase 판에 불씨 칸이 없다')
+  if (!hasSpark && rules.devour === true) add('rules.devour 판에 불씨 칸이 없다')
   if (!hasBrazier && rules.burnBox === true) add('rules.burnBox 판에 화로가 없다')
 
   // 숯 덩이마다 불이 닿는 길, 맞닿은 불씨 칸이나 화로 판의 숯 벽, 꼬리 불 판은 모든 숯
