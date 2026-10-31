@@ -467,11 +467,6 @@ const Board = ({
             key={cell.key}
             {...look}
             behindGoal={sunkGoal && isFrontOfGoal(cell.p) ? sunkGoal : null}
-            under={
-              over.lips.length > 0
-                ? over.lips.map((lip, i) => <BoardBar key={i} {...lip} />)
-                : undefined
-            }
           >
             {content}
           </BoardCell>

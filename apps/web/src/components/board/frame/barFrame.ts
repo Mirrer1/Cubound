@@ -121,7 +121,6 @@ export const restPose = (state: GameState, bar: Bar): BarPose => {
     sag: bridge
       ? null
       : touchSag(sagOf(below.map((g) => g >= bar.level)), hanging, bar.level, length),
-    lips: 0,
   }
 }
 
@@ -147,7 +146,6 @@ const blendPose = (a: BarPose, b: BarPose, p: number, z = p): BarPose => ({
   inset: lerp(a.inset, b.inset, p),
   z: lerp(a.z, b.z, z),
   sag: blendSag(a.sag, b.sag, p),
-  lips: lerp(a.lips, b.lips, p),
 })
 
 // 축 칸을 중심으로 각 da만큼 돈 모습
@@ -612,42 +610,27 @@ export type BarScene = ReturnType<typeof barScene>
 // 칸 하나에 그릴 막대 조각
 type BarDrawPiece = { piece: BarPiece; opacity: number; heat: number; waiting: boolean }
 
-const pieceMemo = new WeakMap<
-  BarScene,
-  { bars: Map<string, BarDrawPiece[]>; lips: Map<string, BarDrawPiece[]> }
->()
+const pieceMemo = new WeakMap<BarScene, Map<string, BarDrawPiece[]>>()
 
 const NO_PIECES: BarDrawPiece[] = []
 
-const isLip = ({ kind }: { kind: string }) => kind === 'lip' || kind === 'lipSheen'
-
-// 칸마다 나눈 막대 조각, 땅에 얹힌 다리 끝은 그 칸 물건 밑에 그리는 따로 묶음
+// 칸마다 나눈 막대 조각
 const piecesOf = (scene: BarScene) => {
   const known = pieceMemo.get(scene)
   if (known) return known
   const bars = new Map<string, BarDrawPiece[]>()
-  const lips = new Map<string, BarDrawPiece[]>()
-  const add = (map: Map<string, BarDrawPiece[]>, key: string, item: BarDrawPiece) =>
-    map.set(key, [...(map.get(key) ?? []), item])
   for (const draw of scene.draws)
     for (const piece of draw.pieces) {
       const key = `${piece.cell.x},${piece.cell.y}`
       const look = { opacity: draw.opacity, heat: draw.heat, waiting: draw.waiting }
-      const lipFlats = piece.flats.filter(isLip)
-      add(bars, key, { ...look, piece: { ...piece, flats: piece.flats.filter((f) => !isLip(f)) } })
-      if (lipFlats.length > 0)
-        add(lips, key, { ...look, piece: { ...piece, flats: lipFlats, faces: [], pool: null } })
+      bars.set(key, [...(bars.get(key) ?? []), { ...look, piece }])
     }
-  const made = { bars, lips }
-  pieceMemo.set(scene, made)
-  return made
+  pieceMemo.set(scene, bars)
+  return bars
 }
 
 export const barsAt = (scene: BarScene, p: Point): BarDrawPiece[] =>
-  piecesOf(scene).bars.get(`${p.x},${p.y}`) ?? NO_PIECES
-
-export const lipsAt = (scene: BarScene, p: Point): BarDrawPiece[] =>
-  piecesOf(scene).lips.get(`${p.x},${p.y}`) ?? NO_PIECES
+  piecesOf(scene).get(`${p.x},${p.y}`) ?? NO_PIECES
 
 // 막대 조각이 걸친 칸, 구덩이 칸도 그리는 자리가 필요한 탓
 export const barKeys = (scene: BarScene) =>

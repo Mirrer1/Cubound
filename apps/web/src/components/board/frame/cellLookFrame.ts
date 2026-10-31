@@ -8,7 +8,7 @@ import {
   tierScale,
   waterLook,
 } from '../view'
-import { barsAt, lipsAt } from './barFrame'
+import { barsAt } from './barFrame'
 import { type BrazierLook, brazierLookOf } from './brazierFrame'
 import { type LadderLook, ladderLookOf } from './carryFrame'
 import type { boardCells } from './cellFrame'
@@ -243,7 +243,6 @@ export const cellLook = ({
     const kegs = scene.kegFrame && same(scene.kegFrame.cell, cell.p) ? [scene.kegFrame] : []
     const bars = barsAt(scene.bar, cell.p)
     const barClip = bars.length > 0 ? scene.barClipAt(cell.p) : null
-    const lips = lipsAt(scene.bar, cell.p)
     const tram = scene.tramFrames.find((frame) => same(frame.cell, cell.p)) ?? null
     const drawCube = same(scene.cube.cell, cell.p) && !scene.home
     const drawBoxes = scene.boxFrames.filter((frame) => same(frame.cell, cell.p))
@@ -437,7 +436,6 @@ export const cellLook = ({
         kegs,
         bars,
         barClip,
-        lips,
         goalEffect,
         overlay,
         waterDepth: water.depth,

@@ -49,7 +49,6 @@ const mudClipPoints = (x: number, y: number) => {
 interface BoardCellProps extends CellLook {
   behindGoal?: BehindGoal | null
   children?: ReactNode
-  under?: ReactNode // 이 칸 물건 밑에 깔리는 그림, 땅에 얹힌 다리 끝
 }
 
 const BoardCell = ({
@@ -85,7 +84,6 @@ const BoardCell = ({
   seed,
   ambient,
   children,
-  under,
 }: BoardCellProps) => {
   const icy = ice.on && !goal && !ground.filled
   const grownVine = vine.kind === 'grown'
@@ -235,7 +233,6 @@ const BoardCell = ({
       {sluice.device && (
         <BoardSluice part="tap" x={x} y={y} open={sluice.open} turn={sluice.turn} />
       )}
-      {under}
       {trail.flame > 0 && !pit && !hidden && (
         <g ref={fadeRef} style={fade}>
           <BoardTrail

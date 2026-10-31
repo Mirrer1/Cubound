@@ -10,7 +10,6 @@ export const BAR = {
   sheen: 2,
   reach: 0.32, // 끝 칸 가운데에서 받침 끝까지
   sag: (6 * Math.PI) / 180,
-  lip: { length: 0.26, over: 0.06 }, // 다리 끝이 가장자리 땅에 얹힌 길이, 그중 구덩이 위 몫
   shadow: 0.82, // 처짐에 들린 쪽 밑 그늘 길이
   contact: 0.08, // 받침 모서리에 닿는 띠 길이
 }
@@ -33,7 +32,6 @@ export interface BarPose {
     angle: number
     shade?: { at: number; angle: number } // 다른 기울기와 합친 처짐에서 그늘을 까는 처짐 몫
   } | null // at은 가운데에서 받침 모서리까지 거리, angle은 양수면 머리 쪽이 처지는 각
-  lips: number // 다리 끝이 가장자리에 얹힌 진하기
   hold?: Point // 막대 전체를 한 덩이로 그리는 칸
   turn?: { cut: number; side: number; pivot: Point; front: Point } // 돌 때 cut에서 나눈 두 조각, side 쪽은 축 칸 pivot
   dip?: number // 큐브 무게로 가라앉은 px, 가장자리에 얹힌 끝은 제자리
@@ -49,7 +47,7 @@ export interface BarFace {
 }
 
 export interface BarFlat {
-  kind: 'shadow' | 'contact' | 'lip' | 'lipSheen'
+  kind: 'shadow' | 'contact'
   opacity: number
   points: string
 }
@@ -265,29 +263,6 @@ export const barPieces = (pose: BarPose): BarPiece[] => {
     }
   }
 
-  if (pose.lips > 0) {
-    for (const end of [-1, 1]) {
-      const inner = end * (half - BAR.lip.over)
-      const span = [inner, inner + end * BAR.lip.length].sort((a, b) => a - b) as [number, number]
-      const host = pieceAt(cellAt(pose, (span[0] + span[1]) / 2))
-      // 가라앉은 몸에 붙은 안쪽 끝과 땅에 얹힌 바깥쪽 끝을 잇는 비스듬한 판
-      const ground = BAR_HEIGHT + (pose.dip ?? 0)
-      const [ha, hb] = end < 0 ? [ground, BAR_HEIGHT] : [BAR_HEIGHT, ground]
-      host.flats.push(
-        {
-          kind: 'lip',
-          opacity: pose.lips,
-          points: flat(pose, span, BAR.base.width, ha, hb),
-        },
-        {
-          kind: 'lipSheen',
-          opacity: pose.lips,
-          points: flat(pose, span, BAR.body.width, ha, hb),
-        },
-      )
-    }
-  }
-
   const floor = placer({ ...pose, sag: null })
   for (let i = 0; i <= pose.span + 1e-6; i++) {
     const u = -pose.span / 2 + i
@@ -375,8 +350,4 @@ export const barTone = (face: Pick<BarFace, 'layer' | 'top' | 'k'>, heat: number
 export const flatLook = ({ kind, opacity }: BarFlat) =>
   kind === 'shadow'
     ? { fill: 'var(--color-ink)', opacity: 0.14 * opacity }
-    : kind === 'contact'
-      ? { fill: 'var(--color-iron)', opacity: 0.55 * opacity }
-      : kind === 'lip'
-        ? { fill: shade('iron-base', 'top'), opacity }
-        : { fill: 'var(--color-iron-sheen)', opacity }
+    : { fill: 'var(--color-iron)', opacity: 0.55 * opacity }

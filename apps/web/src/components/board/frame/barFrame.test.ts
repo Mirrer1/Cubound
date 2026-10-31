@@ -116,7 +116,6 @@ describe('restPose', () => {
       angle: 0,
       z: 0,
       sag: null,
-      lips: 0,
     })
     expect(restPose(game, game.bars[0]).length).toBeCloseTo(1.64)
   })
@@ -166,7 +165,6 @@ describe('restPose', () => {
       inset: 0,
       z: -BAR_HEIGHT,
       sag: null,
-      lips: 0,
     })
   })
 })

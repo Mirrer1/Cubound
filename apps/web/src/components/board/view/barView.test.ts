@@ -20,7 +20,6 @@ const REST: BarPose = {
   inset: BAR.body.inset,
   z: 0,
   sag: null,
-  lips: 0,
 }
 
 const keys = (pose: BarPose) => barPieces(pose).map((p) => `${p.cell.x}-${p.cell.y}`)
@@ -68,13 +67,6 @@ describe('barPieces', () => {
   it('처진 막대는 받치는 칸에 그늘과 닿는 띠를 깐다', () => {
     const pieces = barPieces({ ...REST, sag: { at: 0, angle: BAR.sag } })
     expect(pieces[0].flats.map((f) => f.kind)).toEqual(['shadow', 'contact'])
-  })
-
-  it('다리 막대는 양 끝이 가장자리 땅 칸에 얹힌다', () => {
-    const bridge = { ...REST, length: 2, inset: 0, z: -13, lips: 1 }
-    const pieces = barPieces(bridge)
-    const lips = pieces.filter((p) => p.flats.some((f) => f.kind === 'lip'))
-    expect(lips.map((p) => p.cell.x)).toEqual([-1, 2])
   })
 
   it('처진 끝은 바닥 쪽으로 내려간 화면 자리', () => {
