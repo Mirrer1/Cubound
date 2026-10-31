@@ -1,12 +1,11 @@
 import { lerp, smooth } from './curveFrame'
 import { boxPath, cellsOf, has, same, segmentsOf } from './pathFrame'
+import { elapsedAt, sluicePhase } from './progressFrame'
 import {
   NO_SWAMP,
   SWITCH_SECONDS,
   type SwampTime,
-  elapsedAt,
   playerSegments,
-  sluicePhase,
   sluiceStart,
   touchAt,
 } from './timeFrame'

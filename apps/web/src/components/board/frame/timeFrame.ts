@@ -1,6 +1,5 @@
 import { barEnd, barTouchAt, turnSegments } from './barFrame'
 import { brazierEnd, brazierLightEnd } from './brazierFrame'
-import { clamp01, smooth } from './curveFrame'
 import { fireEnd, trailCatchEnd } from './fireFrame'
 import { kegEnd, kegPath } from './kegFrame'
 import {
@@ -18,7 +17,7 @@ import {
   totalSeconds,
 } from './pathFrame'
 import { same } from '@/game/rules'
-import type { GameEvent, GameState, Point } from '@/game/types'
+import type { GameEvent, Point } from '@/game/types'
 
 // over는 버둥마다 그 수의 자리보다 더 솟는 몫, peak는 솟는 데 쓰는 몫, fill은 잠긴 상자 위로 땅이 드러나는 지점
 // lead는 상자가 칸에 닿기 전에 미리 가라앉는 시간, 닿는 순간 이미 진흙에 밀려 들어간 모습
@@ -334,7 +333,7 @@ export const sluiceStart = (events: GameEvent[]) =>
     : null
 
 // 꼭지가 열리는 시간, 꼭지 없는 밀물은 0
-const tapSeconds = (events: GameEvent[]) =>
+export const tapSeconds = (events: GameEvent[]) =>
   events.some((e) => e.type === 'sluice' && e.tide) ? 0 : SLUICE.tap
 
 const sluiceEnd = (events: GameEvent[]) => {
@@ -407,7 +406,7 @@ const plugEnd = (events: GameEvent[]) => {
 }
 
 // 큐브와 상자가 다 움직인 뒤에 따로 붙는 씨앗이 솟는 시간
-const RISE_SECONDS = 0.36
+export const RISE_SECONDS = 0.36
 
 // 솟기를 뺀 이동 몫의 연출 시간
 export const moveSeconds = (events: GameEvent[], swamp: SwampTime) =>
@@ -485,13 +484,6 @@ const crackEnd = (events: GameEvent[]) =>
 // 다 닳은 칸에 올라선 수에 칸이 흔들리는 시간, 큐브가 닿은 뒤부터
 export const SHAKE_SECONDS = 0.5
 
-// 흔들림 진행도, 흔들리지 않는 수는 0
-export const shakeProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
-  if (!events.some((e) => e.type === 'cracked' && e.worn)) return 0
-  const start = totalSeconds(playerSegments(events))
-  return clamp01((t * durationOf(events, swamp) - start) / SHAKE_SECONDS)
-}
-
 export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
   Math.max(
     moveSeconds(events, swamp) +
@@ -505,64 +497,3 @@ export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
     barEnd(events),
     trailCatchEnd(events),
   )
-
-// 물이 바뀌는 수의 꼭지, 수면, 새로 잠긴 칸이 어는 진행도, 드러나는 칸이 녹는 진행도와 그 뒤 돌 밑 판이 녹는 진행도, 물이 그대로인 수는 모두 1
-export const sluicePhase = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
-  const at = sluiceStart(events)
-  if (at === null) return { tap: 1, level: 1, freeze: 1, thaw: 1, slab: 1 }
-
-  const now = elapsedAt(events, swamp, t)
-  const tap = tapSeconds(events)
-  const afloat = at + tap + SLUICE.level * SLUICE.afloat
-  return {
-    tap: tap === 0 ? 1 : smooth(clamp01((now - at) / tap)),
-    level: smooth(clamp01((now - at - tap) / SLUICE.level)),
-    freeze: smooth(clamp01((now - afloat) / FREEZE_SECONDS)),
-    thaw: smooth(clamp01((now - at) / FREEZE_SECONDS)),
-    slab: smooth(clamp01((now - at - FREEZE_SECONDS) / (tap + SLUICE.level - FREEZE_SECONDS))),
-  }
-}
-
-// 이동 몫의 진행도, 씨앗이 솟는 수는 솟기 전에 1
-export const stepProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
-  const moving = moveSeconds(events, swamp)
-  return moving <= 0 ? 1 : clamp01((t * durationOf(events, swamp)) / moving)
-}
-
-// 가속해 오르다 끝에서 느려지는 씨앗이 솟는 진행도
-export const riseProgress = (events: GameEvent[], t: number, swamp: SwampTime = NO_SWAMP) => {
-  if (!rises(events)) return 1
-
-  const p = clamp01((t * durationOf(events, swamp) - moveSeconds(events, swamp)) / RISE_SECONDS)
-  return p * p * (3 - 2 * p)
-}
-
-// 이동이 시작한 뒤로 흐른 시간, 늪에서 뽑혀 나오기를 기다리는 동안은 음수
-export const elapsedAt = (events: GameEvent[], swamp: SwampTime, t: number) =>
-  t * durationOf(events, swamp) - swamp.lead
-
-export interface CountView {
-  game: GameState | null
-  prevGame: GameState | null
-  events: GameEvent[]
-  animating: boolean
-  passed: number // 이 수의 연출에서 이미 지난 숫자가 바뀌는 순간 수
-}
-
-type Moments = (prev: GameState, game: GameState, events: GameEvent[]) => number[]
-
-// 지난 순간 수만큼만 다음 숫자로 다가간 보스 숫자, at은 연출이 시작한 뒤 숫자가 바뀌는 초
-export const countDisplay = (
-  { game, prevGame, events, animating, passed }: CountView,
-  count: (state: GameState) => number | null,
-  moments: Moments,
-) => {
-  const after = game ? count(game) : null
-  const before = prevGame ? count(prevGame) : null
-  if (!game || !prevGame || !animating || after === null || before === null)
-    return { at: [], count: after }
-
-  const at = moments(prevGame, game, events)
-  const step = Math.min(passed, Math.abs(after - before))
-  return { at, count: passed >= at.length ? after : before + Math.sign(after - before) * step }
-}

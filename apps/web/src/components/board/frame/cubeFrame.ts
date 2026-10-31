@@ -27,10 +27,11 @@ import {
   stepAt,
   totalSeconds,
 } from './pathFrame'
+import { elapsedAt, riseProgress } from './progressFrame'
 import { PLANT_SEED, seedLift } from './seedFrame'
 import { inSwamp, swampTime } from './swampFrame'
 import { ridePhase } from './switchFrame'
-import { elapsedAt, moveSeconds, playerSegments, riseProgress, rises, warpAt } from './timeFrame'
+import { moveSeconds, playerSegments, rises, warpAt } from './timeFrame'
 import { carriedBy, carryOf, frontOf, slideFront, slidingCell, tramProgress } from './tramFrame'
 import { windLean, windSpan } from './windFrame'
 import { TILE } from '@/game/iso'

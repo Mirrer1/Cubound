@@ -1,15 +1,8 @@
 import { CUBE, type Lane, WATER, type WaterAt, whirlpoolsOf } from '../view'
 import { clamp01, easeOut, lerp, smooth } from './curveFrame'
 import { has, same } from './pathFrame'
-import {
-  NO_SWAMP,
-  PLUG,
-  PULL_SECONDS,
-  type SwampTime,
-  elapsedAt,
-  plugStart,
-  pullStart,
-} from './timeFrame'
+import { elapsedAt } from './progressFrame'
+import { NO_SWAMP, PLUG, PULL_SECONDS, type SwampTime, plugStart, pullStart } from './timeFrame'
 import { frontOf } from './tramFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { isFrozen, standHeight, waterLevel } from '@/game/rules'

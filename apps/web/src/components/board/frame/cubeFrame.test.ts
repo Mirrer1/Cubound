@@ -4,6 +4,7 @@ import { SLIDE_DEG, directionBetween, playerFrame, squashTransform } from './cub
 import { KEG, kegStart } from './kegFrame'
 import { CAP_TOP_IDLE, MUSHROOM_STAND } from './mushroomFrame'
 import { WIND } from './pathFrame'
+import { riseProgress } from './progressFrame'
 import { swampFrame } from './swampFrame'
 import { switchCells, switchProgress } from './switchFrame'
 import {
@@ -30,7 +31,7 @@ import {
   leaveSwamp,
   ride,
 } from './testStages'
-import { NO_SWAMP, durationOf, moveSeconds, riseProgress } from './timeFrame'
+import { NO_SWAMP, durationOf, moveSeconds } from './timeFrame'
 import { tramProgress } from './tramFrame'
 import { TILE } from '@/game/iso'
 import { createState, move } from '@/game/rules'

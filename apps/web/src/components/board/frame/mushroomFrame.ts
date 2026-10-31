@@ -16,8 +16,9 @@ import {
   segmentsOf,
   stepAt,
 } from './pathFrame'
+import { type CountView, countDisplay, elapsedAt } from './progressFrame'
 import { swampTime } from './swampFrame'
-import { type CountView, countDisplay, durationOf, elapsedAt, playerSegments } from './timeFrame'
+import { durationOf, playerSegments } from './timeFrame'
 import { frontOf, straddled } from './tramFrame'
 import { TILE } from '@/game/iso'
 import { capsLeft, readMushrooms, standHeight } from '@/game/rules'

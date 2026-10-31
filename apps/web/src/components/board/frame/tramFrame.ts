@@ -1,14 +1,8 @@
 import { PIT_FLOOR } from '../view'
 import { lerp, smooth } from './curveFrame'
 import { type PathEvent, SECONDS, same } from './pathFrame'
-import {
-  NO_SWAMP,
-  type SwampTime,
-  type TramEvent,
-  elapsedAt,
-  tramMoves,
-  tramStart,
-} from './timeFrame'
+import { elapsedAt } from './progressFrame'
+import { NO_SWAMP, type SwampTime, type TramEvent, tramMoves, tramStart } from './timeFrame'
 import { TILE, toScreen } from '@/game/iso'
 import { nextTramSpot } from '@/game/rules'
 import type { GameEvent, GameState, Point, Tram, TramSpot } from '@/game/types'

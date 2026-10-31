@@ -1,9 +1,10 @@
 import { type Lane, TAP, type WaterAt, channelCells, pullLanes } from '../view'
 import { clamp01, lerp } from './curveFrame'
 import { has, same } from './pathFrame'
+import { sluicePhase } from './progressFrame'
 import { restartPhase } from './restartFrame'
 import { pressProgress } from './switchFrame'
-import { SLUICE, type SwampTime, sluicePhase, sluiceStart } from './timeFrame'
+import { SLUICE, type SwampTime, sluiceStart } from './timeFrame'
 import { waterLevel } from '@/game/rules'
 import type { GameEvent, GameState, Point, Stage } from '@/game/types'
 

@@ -10,7 +10,8 @@ import {
   warmCells,
 } from './fireFrame'
 import { playerPath, segmentsOf } from './pathFrame'
-import { durationOf, elapsedAt, playerSegments, stepProgress } from './timeFrame'
+import { elapsedAt, stepProgress } from './progressFrame'
+import { durationOf, playerSegments } from './timeFrame'
 import { burnFire, createState, move } from '@/game/rules'
 import type { Direction, GameEvent, GameState, Point, Stage } from '@/game/types'
 

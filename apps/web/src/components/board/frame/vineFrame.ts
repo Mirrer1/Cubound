@@ -1,15 +1,8 @@
 import { directionBetween } from './cubeFrame'
 import { clamp01, easeOut, lerp, smooth } from './curveFrame'
+import { type CountView, countDisplay, elapsedAt } from './progressFrame'
 import { swampTime } from './swampFrame'
-import {
-  type CountView,
-  NO_SWAMP,
-  STIFFEN_SECONDS,
-  type SwampTime,
-  countDisplay,
-  elapsedAt,
-  moveSeconds,
-} from './timeFrame'
+import { NO_SWAMP, STIFFEN_SECONDS, type SwampTime, moveSeconds } from './timeFrame'
 import { vinesLeft } from '@/game/rules'
 import type { Direction, GameEvent, GameState } from '@/game/types'
 

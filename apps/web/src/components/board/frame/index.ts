@@ -1,5 +1,6 @@
 export { type Chain, clamp01, lerp, moveEase, smooth } from './curveFrame'
-export { durationOf, riseProgress, stepProgress, type SwampTime } from './timeFrame'
+export { riseProgress, stepProgress } from './progressFrame'
+export { durationOf, type SwampTime } from './timeFrame'
 export { has, same } from './pathFrame'
 export { frostAt } from './iceFrame'
 export {

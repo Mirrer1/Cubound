@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
+import { stepProgress } from './progressFrame'
 import { swampTime } from './swampFrame'
 import { STAGE, WIND_STAGE, gust } from './testStages'
-import { stepProgress } from './timeFrame'
 import { ownProgress, windDisplay, windLeaning, windSeconds } from './windFrame'
 import { createState, move, windLeft } from '@/game/rules'
 

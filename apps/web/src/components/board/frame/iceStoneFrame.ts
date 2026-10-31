@@ -10,16 +10,15 @@ import {
   stonePath,
   totalSeconds,
 } from './pathFrame'
+import { elapsedAt, sluicePhase } from './progressFrame'
 import { restartDrop } from './restartFrame'
 import {
   MELT_SECONDS,
   PULL_SECONDS,
   type SwampTime,
-  elapsedAt,
   freezeEnd,
   moveSeconds,
   pullStart,
-  sluicePhase,
   sluiceStart,
   thaws,
 } from './timeFrame'

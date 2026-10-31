@@ -1,15 +1,7 @@
 import { NO_CHAIN, clamp01, easeIn, easeOut, lerp, moveEase } from './curveFrame'
 import { same, totalSeconds } from './pathFrame'
-import {
-  type CountView,
-  NO_SWAMP,
-  SWAMP,
-  type SwampTime,
-  countDisplay,
-  elapsedAt,
-  playerSegments,
-  sinkEnd,
-} from './timeFrame'
+import { type CountView, countDisplay, elapsedAt } from './progressFrame'
+import { NO_SWAMP, SWAMP, type SwampTime, playerSegments, sinkEnd } from './timeFrame'
 import { STRUGGLES, sinkCount } from '@/game/rules'
 import type { GameEvent, GameState, Point } from '@/game/types'
 

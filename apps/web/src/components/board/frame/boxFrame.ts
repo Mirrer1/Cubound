@@ -17,10 +17,10 @@ import {
   stepAt,
   totalSeconds,
 } from './pathFrame'
+import { elapsedAt } from './progressFrame'
 import { seedLift } from './seedFrame'
 import { type BoxSinkFrame, boxSink, swampTime } from './swampFrame'
 import { ridePhase } from './switchFrame'
-import { elapsedAt } from './timeFrame'
 import { carriedBy, carryOf, frontOf, slideFront, slidingCell, tramProgress } from './tramFrame'
 import { floatGone, floatLevel } from './waterFrame'
 import { TILE, toScreen } from '@/game/iso'

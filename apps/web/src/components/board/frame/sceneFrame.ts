@@ -29,21 +29,14 @@ import {
 import { kegScene, movingKeg } from './kegFrame'
 import { mushroomFrames } from './mushroomFrame'
 import { boxPath, cellsOf, has, hopCells, playerPath, same, totalSeconds } from './pathFrame'
+import { elapsedAt, shakeProgress, stepProgress } from './progressFrame'
 import { landedGlow, restartDrop } from './restartFrame'
 import { plantTiltOf, plantedSeedAt, plantingSeed, seedFrames } from './seedFrame'
 import { fadeLanes, sluiceScene, tapFronts } from './sluiceFrame'
 import { boxSink, swampFrame } from './swampFrame'
 import { ridePhase } from './switchFrame'
 import { moorLooks, ropeMaskArea, tetherFrames } from './tetherFrame'
-import {
-  type SwampTime,
-  elapsedAt,
-  moveSeconds,
-  playerSegments,
-  pullStart,
-  shakeProgress,
-  stepProgress,
-} from './timeFrame'
+import { type SwampTime, moveSeconds, playerSegments, pullStart } from './timeFrame'
 import { trailScene } from './trailFrame'
 import {
   behindCube,

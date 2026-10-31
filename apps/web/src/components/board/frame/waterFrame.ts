@@ -1,6 +1,7 @@
 import { clamp01, easeOut, lerp, smooth } from './curveFrame'
 import { boxPath, segmentsOf } from './pathFrame'
-import { FLOAT_REACH, FLOAT_RISE, NO_SWAMP, type SwampTime, elapsedAt } from './timeFrame'
+import { elapsedAt } from './progressFrame'
+import { FLOAT_REACH, FLOAT_RISE, NO_SWAMP, type SwampTime } from './timeFrame'
 import type { GameEvent } from '@/game/types'
 
 // 땅에서 물로 밀린 상자의 구간, reach까지 가로 이동, drop부터 잠김, rise부터 떠오름

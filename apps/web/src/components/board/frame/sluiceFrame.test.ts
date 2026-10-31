@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { TAP, pullLanes } from '../view'
+import { sluicePhase } from './progressFrame'
 import {
   fadeLanes,
   sluiceLookOf,
@@ -19,7 +20,7 @@ import {
   TIDE_STAGE,
   lastMove,
 } from './testStages'
-import { NO_SWAMP, SLUICE, durationOf, sluicePhase, sluiceStart } from './timeFrame'
+import { NO_SWAMP, SLUICE, durationOf, sluiceStart } from './timeFrame'
 import { createState } from '@/game/rules'
 import type { GameEvent } from '@/game/types'
 
