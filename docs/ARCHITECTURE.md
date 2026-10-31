@@ -104,7 +104,8 @@ src/
 
 tools/                     # 명령줄 도구와 개발 서버 플러그인(devSolutions, 앱 번들에 들어가지 않는다)
 ├── run.mjs                # TypeScript 도구를 Vite로 불러 실행
-└── stageCheck.ts          # pnpm stage:check
+├── stageCheck.ts          # pnpm stage:check
+└── stageShape.ts          # 판 검사의 모양 세기(층 쌍, 한 칸 기둥, 한 칸 홈, 레일 길이)
 ```
 
 ## 게임 모델
