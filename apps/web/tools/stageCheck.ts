@@ -10,13 +10,11 @@ import {
   filledFloods,
   floodBlocks,
   kegBlocks,
-  minPushes,
-  moveLimit,
   solutionCount,
-  solve,
   statesWithin,
   tideTraps,
-} from '@/game/solver'
+} from '@/game/searchStats'
+import { minPushes, moveLimit, solve } from '@/game/solver'
 import type { Direction, Stage } from '@/game/types'
 import { heightWarnings, validateStage } from '@/game/validate'
 
