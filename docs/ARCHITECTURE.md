@@ -61,6 +61,7 @@ src/
 │   ├── types.ts           # Stage, Entity, GameState, GameEvent
 │   ├── rules/             # move(state, dir) → 새 상태와 이벤트. 요소마다 xxxRule.ts
 │   ├── solver.ts          # 풀이 검사기, 별점, 보스 이동 제한
+│   ├── searchStats.ts     # 판 검사용 수 세기(막힘, 풀이 가짓수, 요소별 막힘)
 │   ├── validate/          # 스테이지 형식 검사. index.ts의 validateStage가 요소마다 xxxCheck.ts를 차례로 부름
 │   ├── progress.ts        # 진행 기록 갱신, 해금, 버전 옮기기
 │   ├── session.ts         # 진행 중인 스테이지의 중간 상태 담기와 되살리기
