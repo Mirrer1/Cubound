@@ -5,11 +5,10 @@ import BoardBox from './BoardBox'
 import BoardBrazier from './BoardBrazier'
 import BoardCell from './BoardCell'
 import BoardClear from './BoardClear'
+import BoardCube from './BoardCube'
 import { type BehindGoal } from './BoardFloor'
 import BoardIceStone from './BoardIceStone'
 import BoardKeg from './BoardKeg'
-import BoardLadder from './BoardLadder'
-import BoardSeed from './BoardSeed'
 import BoardSluice from './BoardSluice'
 import BoardTether from './BoardTether'
 import BoardTram from './BoardTram'
@@ -43,7 +42,6 @@ import {
   ambientPlan,
   leanShift,
   pullLanes,
-  shade,
 } from './view'
 import { TILE } from '@/game/iso'
 import type { GameEvent, GameState, Point } from '@/game/types'
@@ -353,84 +351,12 @@ const Board = ({
                   )}
                 </g>
               )}
-              {over.drawCube && scene.cubeClip && (
-                <clipPath id="crack-cube-clip">
-                  <polygon points={scene.cubeClip} />
-                </clipPath>
-              )}
-              <g
-                clipPath={over.drawCube && scene.cubeClip ? 'url(#crack-cube-clip)' : undefined}
-                ref={cubeLean && over.drawCube ? leanLoop : undefined}
-                className={cubeLean && over.drawCube ? 'whirl-lean' : undefined}
-                style={over.drawCube ? cubeLean : undefined}
-              >
-                {over.drawCube && (
-                  <g
-                    opacity={(scene.cubeDrop ? scene.cubeDrop.opacity : 1) * scene.cube.fade}
-                    transform={`translate(0 ${scene.cubeSink - scene.cube.lift}) ${scene.cubeSquash}`}
-                  >
-                    {scene.cubeHeat.length > 0 && (
-                      <BoardBrazier
-                        part="cubePool"
-                        x={scene.cubeScreen.x}
-                        y={scene.cubeScreen.y}
-                        strength={brazier.glow.strength * scene.cubePool}
-                        dip={brazier.glow.dip}
-                      />
-                    )}
-                    {scene.cubeFaces.map((f) => (
-                      <polygon
-                        key={f.face}
-                        points={f.points}
-                        style={{ fill: shade('player', f.face) }}
-                      />
-                    ))}
-                    {(scene.cubeHeat.length > 0 || brazier.glow.last > 0) && (
-                      <BoardBrazier
-                        part="cubeGlow"
-                        x={scene.cubeScreen.x}
-                        y={scene.cubeScreen.y - TILE.layer}
-                        bands={scene.cubeHeat}
-                        strength={brazier.glow.strength}
-                        dip={brazier.glow.dip}
-                        spark={brazier.glow.spark}
-                        last={brazier.glow.last}
-                      />
-                    )}
-                  </g>
-                )}
-                {over.drawCube && scene.carriedOpacity > 0 && (
-                  <g opacity={scene.carriedOpacity * scene.cube.fade}>
-                    {scene.carried === 'seed' ? (
-                      <BoardSeed
-                        x={scene.carriedBase.x}
-                        y={scene.carriedBase.y}
-                        part="seed"
-                        tilt={scene.bump}
-                      />
-                    ) : (
-                      <BoardLadder
-                        x={scene.carriedBase.x}
-                        y={scene.carriedBase.y - 2}
-                        tilt={scene.ladderBump}
-                      />
-                    )}
-                  </g>
-                )}
-                {over.drawCube && scene.plantedSeed && scene.plantedSeed.opacity > 0 && (
-                  <g
-                    opacity={scene.plantedSeed.opacity}
-                    transform={`translate(${scene.plantedSeed.x} ${scene.plantedSeed.y}) scale(${scene.plantedSeed.scale}) translate(${-scene.plantedSeed.x} ${-scene.plantedSeed.y})`}
-                  >
-                    <BoardSeed
-                      x={scene.plantedSeed.x}
-                      y={scene.plantedSeed.y}
-                      part="seed"
-                      tilt={scene.plantTilt}
-                    />
-                  </g>
-                )}
-              </g>
+              <BoardCube
+                scene={scene}
+                drawCube={over.drawCube}
+                lean={cubeLean}
+                leanRef={leanLoop}
+              />
               {taps.map((tap) => (
                 <BoardSluice
                   key={`${tap.device.x}-${tap.device.y}`}
