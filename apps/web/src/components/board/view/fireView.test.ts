@@ -117,13 +117,12 @@ describe('emberKeyframes', () => {
 })
 
 describe('fireStyle', () => {
-  it('보스 불은 빛 고임이 넓고 진하며 불티가 많고 높이 오른다', () => {
+  it('보스 불은 빛 고임이 넓고 진하며 불티가 높이 오른다', () => {
     const normal = fireStyle(false)
     const boss = fireStyle(true)
 
     expect(normal).toMatchObject({ pool: 1.35, poolOpacity: 0.13, count: 2, rise: 12 })
-    expect(boss).toMatchObject({ pool: 1.75, poolOpacity: 0.2, count: 7, rise: 20 })
-    expect(boss.every).toBeLessThan(normal.every)
+    expect(boss).toMatchObject({ pool: 1.75, poolOpacity: 0.2, count: 1, rise: 20 })
   })
 })
 

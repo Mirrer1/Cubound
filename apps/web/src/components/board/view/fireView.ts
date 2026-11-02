@@ -13,7 +13,7 @@ export const EMBER_LIFE = 1600
 // 보통 불과 보스 불, 빛 고임 칸 폭 배수와 진하기, 숯 안쪽 빛 배수, 불티 수와 오르는 높이 px와 새로 나는 간격 ms
 export const fireStyle = (boss: boolean) =>
   boss
-    ? { pool: 1.75, poolOpacity: 0.2, inner: 1.25, count: 7, rise: 20, every: 450 }
+    ? { pool: 1.75, poolOpacity: 0.2, inner: 1.25, count: 1, rise: 20, every: 900 }
     : { pool: 1.35, poolOpacity: 0.13, inner: 1, count: 2, rise: 12, every: 900 }
 
 // 2.4초 주기 빛 일렁임
