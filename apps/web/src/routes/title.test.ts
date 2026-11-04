@@ -8,9 +8,9 @@ describe('documentTitle', () => {
   })
 
   it('스테이지 선택은 보고 있는 월드 이름을 쓴다', () => {
-    expect(documentTitle({ screen: 'select', world: 1 }, 'ko')).toBe('Cubound — 낮은 계단의 땅')
+    expect(documentTitle({ screen: 'select', world: 1 }, 'ko')).toBe('Cubound — 낮은 계단의 언덕')
     expect(documentTitle({ screen: 'select', world: 6 }, 'ko')).toBe('Cubound — 발이 묶이는 땅')
-    expect(documentTitle({ screen: 'select', world: 1 }, 'en')).toBe('Cubound — Land of Low Steps')
+    expect(documentTitle({ screen: 'select', world: 1 }, 'en')).toBe('Cubound — Hill of Low Steps')
   })
 
   it('장 고르기는 그 장의 이름을 쓴다', () => {
