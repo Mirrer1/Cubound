@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="../cubound-iso.js?v=20261010e"></script>
+<script src="../cubound-c5.js?v=70"></script>
+<script src="./c5-pages.js?v=71"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #eae4f3; }
+  a { color: #3A3936; }
+  a:hover { color: #6E5FA8; }
+</style>
+</helmet>
+<div style="background:#eae4f3;color:#3A3936;font-family:Jost, Helvetica, sans-serif;padding:36px 32px 90px;min-height:100vh">
+  <div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">
+      <span style="white-space:nowrap">CUBOUND · CHAPTER 5 · {{ kicker }}</span>
+      <span style="white-space:nowrap">201–250</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:880px">
+      <span style="font-size:34px;font-weight:400;letter-spacing:-0.01em">{{ title }}</span>
+      <span style="font-size:14.5px;color:#5F5D59;line-height:1.7;word-break:keep-all;text-wrap:pretty">{{ intro }}</span>
+      <span style="font-size:13px;color:#7A7771;line-height:1.6;word-break:keep-all">모든 판은 5장 base-bg 위에 그렸습니다. 폰 장면은 맨 아래 "폰" 칸에 실제 크기로 넣었습니다.</span>
+    </div>
+    <sc-if value="{{ hasPicks }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#f7f5fe;border-radius:16px;padding:16px 20px;display:flex;flex-direction:column;gap:8px;max-width:880px">
+        <span style="font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.2em;color:#7A7771">추천</span>
+        <sc-for list="{{ picks }}" as="p" hint-placeholder-count="2">
+          <span style="font-size:13.5px;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ p }}</span>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-for list="{{ secs }}" as="sec" hint-placeholder-count="3">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'IBM Plex Mono', monospace;font-size:12px;letter-spacing:0.2em;color:#7A7771">{{ sec.id }}</span><span style="font-size:22px;font-weight:400">{{ sec.title }}</span></div>
+          <sc-if value="{{ sec.hasNote }}" hint-placeholder-val="{{ false }}"><span style="font-size:13.5px;color:#5F5D59;line-height:1.6;word-break:keep-all;text-wrap:pretty;max-width:880px">{{ sec.note }}</span></sc-if>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(100%, 420px), 1fr));gap:16px">
+          <sc-for list="{{ sec.groups }}" as="g" hint-placeholder-count="2">
+            <div style="background:#f2effa;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:16px;font-weight:400">{{ g.title }}</span><sc-if value="{{ g.hasRec }}" hint-placeholder-val="{{ false }}"><span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.16em;background:#3A3936;color:#f2effa;border-radius:999px;padding:3px 9px">{{ g.rec }}</span></sc-if></div>
+                <span style="font-size:13px;color:#5F5D59;line-height:1.6;word-break:keep-all;text-wrap:pretty">{{ g.note }}</span>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+                <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="2">
+                  <div style="display:flex;flex-direction:column;gap:6px;min-width:0;max-width:100%">
+                    <div style="width:{{ f.w }};max-width:100%;aspect-ratio:{{ f.ar }};background-image:{{ f.bgi }};background-size:contain;background-repeat:no-repeat;background-position:center"></div>
+                    <span style="font-family:'IBM Plex Mono', monospace;font-size:10px;letter-spacing:0.1em;color:#7A7771">{{ f.cap }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ g.hasRows }}" hint-placeholder-val="{{ false }}">
+                <div style="display:grid;grid-template-columns:minmax(130px, auto) 1fr;gap:6px 14px;background:#f7f5fe;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.5">
+                  <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+                    <span style="color:#7A7771;font-family:'IBM Plex Mono', monospace;font-size:11px;letter-spacing:0.04em;padding-top:1px">{{ r.k }}</span>
+                    <span style="display:flex;align-items:center;gap:8px;min-width:0;word-break:break-word"><sc-if value="{{ r.hasSw }}" hint-placeholder-val="{{ false }}"><span style="flex:none;width:14px;height:14px;border-radius:4px;background:{{ r.sw }};box-shadow:0 0 0 1px rgba(58,57,54,0.15)"></span></sc-if><span>{{ r.v }}</span></span>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;page&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;world-color&quot;,&quot;darkness&quot;,&quot;skull&quot;,&quot;hook&quot;,&quot;eye&quot;,&quot;boss&quot;,&quot;ambient&quot;],&quot;default&quot;:&quot;darkness&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() { this.t = setInterval(() => { if (this.ready()) { clearInterval(this.t); this.forceUpdate(); } }, 80); }
+  componentWillUnmount() { clearInterval(this.t); }
+  ready() { return !!(window.CuboundIso && window.CuboundC5 && window.C5Pages); }
+  renderVals() {
+    const page = this.props.page || 'darkness';
+    if (!this.ready()) return { kicker: page.toUpperCase(), title: '', intro: '', picks: [], hasPicks: false, secs: [] };
+    if (!this.cache || this.cacheKey !== page) {
+      try { const d = window.C5Pages[page](); this.cache = Object.assign({ hasPicks: !!(d.picks && d.picks.length) }, d); }
+      catch (e) { console.error(e); this.cache = { kicker: page.toUpperCase(), title: '오류', intro: String(e && e.stack || e), picks: [], hasPicks: false, secs: [] }; }
+      this.cacheKey = page;
+    }
+    return this.cache;
+  }
+}
+</script>
+</body>
+</html>
