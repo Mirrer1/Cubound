@@ -84,6 +84,12 @@ export const es: Partial<Texts> = {
   'guide.forge': 'Una barra de hierro tocada por el fuego crece una casilla',
   'guide.trail': 'Las casillas por las que pasas arden un rato',
   'guide.trailBlock': 'No se puede pasar por casillas en llamas',
+  'guide.selectStage': 'Pulsa una tarjeta para empezar el nivel',
+  'guide.selectLocked': 'Supera un nivel para abrir el siguiente',
+  'guide.selectStars': 'Al superar un nivel, sus estrellas se llenan',
+  'guide.selectWorld': 'Pulsa las flechas para ir a otro mundo',
+  'guide.selectChapter': 'Pulsa el nombre del mundo para elegir un capítulo',
+  'guide.selectChapterCard': 'Pulsa el capítulo que quieras para empezar',
 
   'chapter.1': 'Primeros Pasos sobre la Piedra',
   'chapter.2': 'El Camino Cubierto de Hierba',

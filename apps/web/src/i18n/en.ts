@@ -82,6 +82,12 @@ export const en = {
   'guide.forge': 'An iron bar touched by fire grows one tile longer',
   'guide.trail': 'Tiles you pass stay on fire for a while',
   'guide.trailBlock': "Burning tiles can't be crossed",
+  'guide.selectStage': 'Press a card to start the stage',
+  'guide.selectLocked': 'Clear a stage to open the next one',
+  'guide.selectStars': 'Clear a stage and its stars fill in',
+  'guide.selectWorld': 'Press the arrows to move to another world',
+  'guide.selectChapter': 'Press the world name to choose a chapter',
+  'guide.selectChapterCard': 'Press the chapter you want to start',
 
   'chapter.1': 'First Steps on Stone',
   'chapter.2': 'The Overgrown Path',

@@ -11,7 +11,7 @@ export const ko: Partial<Texts> = {
   'select.back': '타이틀로',
   'select.previousWorld': '이전 월드',
   'select.nextWorld': '다음 월드',
-  'select.chapters': '장 고르기',
+  'select.chapters': '챕터 고르기',
 
   'play.guide': '가이드 다시 보기',
   'play.restart': '다시 하기 (R)',
@@ -84,6 +84,12 @@ export const ko: Partial<Texts> = {
   'guide.forge': '불이 닿은 쇠막대는 한 칸 늘어나요',
   'guide.trail': '지나간 칸은 한동안 불타올라요',
   'guide.trailBlock': '불타는 칸은 지나갈 수 없어요',
+  'guide.selectStage': '카드를 누르면 스테이지를 시작해요',
+  'guide.selectLocked': '스테이지를 클리어하면 다음 스테이지가 열려요',
+  'guide.selectStars': '스테이지를 클리어하면 별이 채워져요',
+  'guide.selectWorld': '화살표를 누르면 다른 월드로 넘어가요',
+  'guide.selectChapter': '월드 이름을 누르면 챕터를 고를 수 있어요',
+  'guide.selectChapterCard': '원하는 챕터를 눌러 시작해요',
 
   'chapter.1': '돌 위의 첫걸음',
   'chapter.2': '풀이 우거진 길',

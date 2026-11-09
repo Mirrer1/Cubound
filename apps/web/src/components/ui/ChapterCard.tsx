@@ -11,6 +11,7 @@ interface ChapterCardProps {
   total: number
   state: ChapterCardState
   many: boolean // 장이 넷 이상인 장 고르기, 남은 높이에 맞춰 줄이는 카드
+  guide?: string // 스텝 가이드가 비추는 data-guide 이름
   onSelect: () => void
 }
 
@@ -88,6 +89,7 @@ const ChapterCard = ({
   total,
   state,
   many,
+  guide,
   onSelect,
 }: ChapterCardProps) => {
   const locked = state === 'locked'
@@ -97,6 +99,7 @@ const ChapterCard = ({
     <button
       type="button"
       data-chapter={chapter}
+      data-guide={guide}
       disabled={locked}
       onClick={onSelect}
       className={`flex cursor-pointer items-center gap-4 rounded-[1.25rem] border ${many ? 'px-2 py-3 max-[390px]:gap-3 short:p-2.5' : 'p-4'} text-left transition-soft-colors disabled:cursor-default roomy:flex-col roomy:items-stretch roomy:gap-3 roomy:p-5 roomy:@max-[65.5rem]:p-3! ${

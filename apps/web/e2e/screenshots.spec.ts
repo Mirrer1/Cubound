@@ -3,6 +3,11 @@ import { type Page, test } from '@playwright/test'
 // 서로 기대지 않는 캡처의 병렬 실행
 test.describe.configure({ mode: 'parallel' })
 
+// 처음 들어올 때 뜨는 스테이지 선택 가이드는 본 상태, 카드를 누르는 흐름이 대상
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('cubound:selectGuide', 'seen'))
+})
+
 const KEYS = {
   up: 'ArrowUp',
   right: 'ArrowRight',

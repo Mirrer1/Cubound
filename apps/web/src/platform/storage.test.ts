@@ -4,6 +4,7 @@ import {
   localLanguageStorage,
   localOverviewStorage,
   localProgressStorage,
+  localSelectGuideStorage,
   localSessionStorage,
   localWorldStorage,
 } from './storage'
@@ -171,5 +172,21 @@ describe('localOverviewStorage', () => {
 
     expect(() => localOverviewStorage.save(true)).not.toThrow()
     expect(localOverviewStorage.load()).toBe(false)
+  })
+})
+
+describe('localSelectGuideStorage', () => {
+  it('스테이지 선택 가이드를 본 뒤에는 본 것으로 읽는다', () => {
+    expect(localSelectGuideStorage.load()).toBe(false)
+
+    localSelectGuideStorage.save()
+    expect(localSelectGuideStorage.load()).toBe(true)
+  })
+
+  it('저장소가 막혀도 오류 없이 본 것으로 둔다', () => {
+    vi.stubGlobal('localStorage', brokenStorage)
+
+    expect(() => localSelectGuideStorage.save()).not.toThrow()
+    expect(localSelectGuideStorage.load()).toBe(true)
   })
 })

@@ -84,6 +84,12 @@ export const zhHans: Partial<Texts> = {
   'guide.forge': '碰到火的铁棒会伸长一格',
   'guide.trail': '走过的格子会燃烧一阵子',
   'guide.trailBlock': '燃烧的格子无法通过',
+  'guide.selectStage': '点击卡片就会开始关卡',
+  'guide.selectLocked': '通关关卡，下一关就会打开',
+  'guide.selectStars': '通关后，星星会被点亮',
+  'guide.selectWorld': '点击箭头就能去别的世界',
+  'guide.selectChapter': '点击世界名称就能选择章节',
+  'guide.selectChapterCard': '点击想要的章节开始',
 
   'chapter.1': '石上第一步',
   'chapter.2': '草木丛生之路',

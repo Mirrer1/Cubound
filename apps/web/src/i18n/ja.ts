@@ -84,6 +84,12 @@ export const ja: Partial<Texts> = {
   'guide.forge': '火が届いた鉄の棒は一マス伸びます',
   'guide.trail': '通ったマスはしばらく燃え続けます',
   'guide.trailBlock': '燃えているマスは通れません',
+  'guide.selectStage': 'カードを押すとステージが始まります',
+  'guide.selectLocked': 'ステージをクリアすると次のステージが開きます',
+  'guide.selectStars': 'ステージをクリアすると星が埋まります',
+  'guide.selectWorld': '矢印を押すと別のワールドへ移ります',
+  'guide.selectChapter': 'ワールド名を押すと章を選べます',
+  'guide.selectChapterCard': '好きな章を押して始めます',
 
   'chapter.1': '石の上の第一歩',
   'chapter.2': '草が茂る道',

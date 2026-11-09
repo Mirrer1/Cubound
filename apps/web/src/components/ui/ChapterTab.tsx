@@ -9,6 +9,7 @@ interface ChapterTabProps {
   open: boolean // 장 고르기가 펼쳐져 있는 상태
   label: string
   className?: string
+  guide?: string // 스텝 가이드가 비추는 data-guide 이름
   onClick: () => void
 }
 
@@ -20,6 +21,7 @@ const ChapterTab = ({
   open,
   label,
   className = '',
+  guide,
   onClick,
 }: ChapterTabProps) => {
   return (
@@ -28,6 +30,7 @@ const ChapterTab = ({
       onClick={onClick}
       aria-label={label}
       aria-expanded={open}
+      data-guide={guide}
       className={`flex cursor-pointer flex-col rounded-[1.125rem] p-1 pt-0 text-left transition-soft active:translate-y-[2px] short:flex-row short:items-stretch short:pt-1 ${
         open ? 'bg-ink' : 'bg-line hover:bg-line-strong'
       } ${className}`}
@@ -52,7 +55,7 @@ const ChapterTab = ({
         <span className="font-mono text-[0.6875rem] tracking-[0.2em] text-mute min-[1700px]:text-[0.75rem] min-[1700px]:tracking-[0.22em]">
           WORLD {world}
         </span>
-        <span className="truncate text-xl tracking-tight min-[1700px]:text-[2rem]/[1.15]! min-[1700px]:whitespace-normal short:text-lg wide:text-2xl narrow:text-lg">
+        <span className="truncate text-xl tracking-tight min-[1700px]:text-[2rem]/[1.15]! min-[1700px]:whitespace-normal short:text-lg wide:text-2xl narrow:text-lg tablet:max-[60rem]:text-xl!">
           {name}
         </span>
       </span>

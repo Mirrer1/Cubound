@@ -13,6 +13,11 @@ const swipe = async (page: Page, x: number, y: number, dx: number, dy: number) =
   await cdp.detach()
 }
 
+// 처음 들어올 때 뜨는 스테이지 선택 가이드는 본 상태, 카드를 누르는 흐름이 대상
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('cubound:selectGuide', 'seen'))
+})
+
 test('타이틀에서 스테이지를 골라 가이드를 넘기고 방향키로 이동하고 확인을 거쳐 재시작한다', async ({
   page,
 }) => {

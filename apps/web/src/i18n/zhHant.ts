@@ -84,6 +84,12 @@ export const zhHant: Partial<Texts> = {
   'guide.forge': '碰到火的鐵棒會伸長一格',
   'guide.trail': '走過的格子會燃燒一陣子',
   'guide.trailBlock': '燃燒的格子無法通過',
+  'guide.selectStage': '點擊卡片就會開始關卡',
+  'guide.selectLocked': '通關關卡，下一關就會打開',
+  'guide.selectStars': '通關後，星星會被點亮',
+  'guide.selectWorld': '點擊箭頭就能去別的世界',
+  'guide.selectChapter': '點擊世界名稱就能選擇章節',
+  'guide.selectChapterCard': '點擊想要的章節開始',
 
   'chapter.1': '石上第一步',
   'chapter.2': '草木叢生之路',

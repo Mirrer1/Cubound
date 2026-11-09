@@ -7,6 +7,7 @@ const LANGUAGE_KEY = 'cubound:language'
 const SESSION_KEY = 'cubound:session'
 const WORLD_KEY = 'cubound:world'
 const OVERVIEW_KEY = 'cubound:overview'
+const SELECT_GUIDE_KEY = 'cubound:selectGuide'
 
 export interface ProgressStorage {
   load: () => Progress
@@ -27,6 +28,11 @@ export interface WorldStorage {
 export interface OverviewStorage {
   load: () => boolean
   save: (overview: boolean) => void
+}
+
+export interface SelectGuideStorage {
+  load: () => boolean
+  save: () => void
 }
 
 export interface SessionStorage {
@@ -140,6 +146,24 @@ export const localOverviewStorage: OverviewStorage = {
   save: (overview) => {
     try {
       localStorage.setItem(OVERVIEW_KEY, String(overview))
+    } catch {
+      // 이번 세션 진행과 무관한 저장 실패
+    }
+  },
+}
+
+// 스테이지 선택 가이드를 처음 한 번 띄운 기록, 저장소가 막히면 띄우지 않음
+export const localSelectGuideStorage: SelectGuideStorage = {
+  load: () => {
+    try {
+      return localStorage.getItem(SELECT_GUIDE_KEY) === 'seen'
+    } catch {
+      return true
+    }
+  },
+  save: () => {
+    try {
+      localStorage.setItem(SELECT_GUIDE_KEY, 'seen')
     } catch {
       // 이번 세션 진행과 무관한 저장 실패
     }

@@ -6,9 +6,10 @@ interface StarsProps {
   size?: number // 넘기지 않으면 className의 글자 크기
   tone?: 'light' | 'dark'
   className?: string
+  guide?: string // 스텝 가이드가 비추는 data-guide 이름
 }
 
-const Stars = ({ count, size, tone = 'light', className = '' }: StarsProps) => {
+const Stars = ({ count, size, tone = 'light', className = '', guide }: StarsProps) => {
   const t = useText()
   const filled = tone === 'light' ? 'text-ink' : 'text-base-bg'
   const empty = tone === 'light' ? 'text-line-strong' : 'text-mute'
@@ -18,6 +19,7 @@ const Stars = ({ count, size, tone = 'light', className = '' }: StarsProps) => {
       className={`flex items-center gap-[0.4em] text-[0.75rem] ${className}`}
       style={size === undefined ? undefined : { fontSize: size }}
       aria-label={t('stars.label', count)}
+      data-guide={guide}
     >
       {[0, 1, 2].map((i) => (
         <StarIcon
