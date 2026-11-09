@@ -599,12 +599,22 @@ body {
     width: 2.625rem;
     height: 2.625rem;
   }
+  /* 큰 태블릿은 넓은 화면과 큰 카드에 맞춰 한 단계 크게 */
+  @media (pointer: coarse) and (width >= 60rem) and (height >= 500px) {
+    width: 2.8125rem;
+    height: 2.8125rem;
+  }
 
   & > svg {
     display: block;
     width: 1.125rem;
     height: 1.125rem;
     overflow: visible;
+
+    @media (pointer: coarse) and (width >= 60rem) and (height >= 500px) {
+      width: 1.21875rem;
+      height: 1.21875rem;
+    }
   }
   & > svg path {
     vector-effect: non-scaling-stroke;
