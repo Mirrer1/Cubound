@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { BAR_HEIGHT, BRAZIER, KEG_SHAPE, PIT_FLOOR, PLATE, POST, pileReach } from '../view'
+import { BAR_HEIGHT, BRAZIER, CUBE, KEG_SHAPE, PIT_FLOOR, PLATE, POST, pileReach } from '../view'
 import { TAP } from '../view'
-import { burnRect, guideRect, lockFocus, lockRect, pairRect } from './guideFrame'
+import {
+  burnRect,
+  cameraGuideStep,
+  guideNearCube,
+  guideRect,
+  lockFocus,
+  lockRect,
+  pairRect,
+} from './guideFrame'
 import { LOCK_STAGE, SLUICE_STAGE, WHIRL_STAGE } from './testStages'
 import { TILE, toScreen } from '@/game/iso'
 import { createState } from '@/game/rules'
@@ -228,13 +236,23 @@ describe('guideRect', () => {
     expect(boat.above).toBe(water.above)
   })
 
-  it('큐브와 땅 위 상자는 제 높이만큼 위쪽을 늘린다', () => {
-    const stage = { ...FLAT, start: MID, entities: [{ type: 'box' as const, x: 2, y: 1 }] }
-    const game = createState(stage)
-    const flat = spanOf(createState(FLAT), { x: 2, y: 1 })
+  it('큐브는 제 높이만큼 위쪽을 늘린다', () => {
+    const game = createState({ ...FLAT, start: MID })
+    const flat = spanOf(createState(FLAT), MID)
     const reach = TILE.layer + (TILE.width * TILE.layer) / TILE.height / 4 - TILE.height / 2
     expect(spanOf(game, MID).above).toBe(flat.above + reach)
-    expect(spanOf(game, { x: 2, y: 1 }).above).toBe(flat.above + reach)
+  })
+
+  it('땅 위 상자는 칸 대신 상자 둘레만 감싼다', () => {
+    const at = { x: 2, y: 1 }
+    const game = createState({ ...FLAT, entities: [{ type: 'box' as const, ...at }] })
+    const rect = guideRect(game, at)
+    const center = toScreen(at, 0)
+    const cube = TILE.width * CUBE
+    expect(rect.x).toBe(center.x - cube / 2 - 12)
+    expect(rect.width).toBe(cube + 24)
+    expect(rect.y).toBe(center.y - TILE.layer - cube / 4 - 12)
+    expect(rect.y + rect.height).toBe(center.y + cube / 4 + 12)
   })
 
   it('화로는 그릇 윗면까지, 그 위 큐브와 상자는 그릇 높이만큼 더 위를 감싼다', () => {
@@ -503,5 +521,38 @@ describe('burnRect', () => {
     expect(rect.x + rect.width).toBe(Math.max(box.x + box.width, brazier.x + brazier.width))
     expect(rect.y).toBe(box.y)
     expect(rect.y + rect.height).toBeLessThanOrEqual(brazier.y + brazier.height)
+  })
+})
+
+describe('cameraGuideStep', () => {
+  const guides = [
+    { id: 'box', target: { x: 1, y: 0 } },
+    { id: 'restart', target: 'restart' as const },
+    { id: 'goal', target: { x: 2, y: 0 } },
+  ]
+
+  it('칸 단계는 그 단계를 비춘다', () => {
+    expect(cameraGuideStep(guides, 0)).toBe(0)
+    expect(cameraGuideStep(guides, 2)).toBe(2)
+  })
+
+  it('화면 요소 단계는 앞의 칸 단계 자리를 유지한다', () => {
+    expect(cameraGuideStep(guides, 1)).toBe(0)
+  })
+
+  it('앞에 칸 단계가 없으면 그 단계를 돌려준다', () => {
+    expect(cameraGuideStep([{ id: 'moves', target: 'moves' as const }], 0)).toBe(0)
+  })
+})
+
+describe('guideNearCube', () => {
+  const game = createState(FLAT)
+
+  it('큐브 옆 칸은 가까운 칸이다', () => {
+    expect(guideNearCube(game, { x: 2, y: 1 }, { ...MID, level: 0 })).toBe(true)
+  })
+
+  it('큐브에서 화면 가로로 두 칸 넘게 떨어진 칸은 먼 칸이다', () => {
+    expect(guideNearCube(game, { x: 2, y: 0 }, { x: 0, y: 2, level: 0 })).toBe(false)
   })
 })

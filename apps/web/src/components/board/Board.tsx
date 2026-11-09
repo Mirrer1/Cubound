@@ -23,6 +23,7 @@ import {
   cubeFirst,
   filledCells,
   fillingCellKey,
+  guideNearCube,
   railDirsOf,
   railsUnder,
   restartDuration,
@@ -121,12 +122,13 @@ const Board = ({
     lanes,
     guideCell,
   })
+  const lookCell = guideCell && !guideNearCube(game, guideCell, scene.cube) ? guideCell : undefined
   // 카메라가 따라가는 지금 그려지는 자리, 순간이동은 나온 뒤
   const { ref, viewBox, showsAll } = useBoardCamera(
     game,
-    guideCell ?? scene.cubeCell,
+    lookCell ?? scene.cubeCell,
     overview,
-    guideCell ? undefined : scene.cube,
+    lookCell ? undefined : scene.cube,
   )
   const leanLoop = useLoop(LEAN_LOOP, 1600)
   const cubeLean = scene.cubeLean

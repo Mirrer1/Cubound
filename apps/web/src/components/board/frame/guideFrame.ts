@@ -31,7 +31,7 @@ import {
   warpExit,
   waterLevel,
 } from '@/game/rules'
-import type { GameState, Point, Stage } from '@/game/types'
+import type { GameState, Guide, Point, Stage } from '@/game/types'
 
 const GUIDE_MARGIN = 12
 
@@ -113,7 +113,13 @@ const dropOf = (game: GameState, p: Point, surface: number, depth: number, pit =
 // 칸 대신 그 둘레만 감쌀 작은 물건, 밑면과 윗면 폭은 칸 단위, 높이 px, 여백 배수
 // 씨앗은 밑동 폭 0.24, 머리 폭 0.13, 높이 11px, 바닥 사다리는 가로 폭 0.68, 뜬 높이 2px, 불씨는 화덕 폭 0.6
 const smallShape = (game: GameState, p: Point) => {
-  if (same(game.player, p) || has(game.boxes, p)) return null
+  if (same(game.player, p)) return null
+  // 땅 위 상자만 상자 둘레, 뜬 상자와 화로 위 상자는 칸 기준
+  if (has(game.boxes, p)) {
+    const floating = waterLook(game.stage, p, (q) => waterLevel(game, q)).depth > 0
+    if (floating || isBrazier(game.stage, p)) return null
+    return { foot: CUBE, head: CUBE, height: TILE.layer, margin: 1 }
+  }
   if (game.stage.entities.some((e) => e.type === 'post' && same(e, p)))
     return { foot: POST.width, head: POST.width, height: POST.height, margin: 2 }
   if (has(game.seeds, p)) return { foot: 0.24, head: 0.13, height: 11, margin: 2 }
@@ -292,4 +298,19 @@ export const lockRect = (game: GameState) => {
 export const lockFocus = (stage: Stage): Point | null => {
   const sluice = stage.rules?.lock ? stage.entities.find((e) => e.type === 'sluice') : undefined
   return sluice ? { x: sluice.x, y: sluice.y } : null
+}
+
+// 가이드 카메라가 비추는 단계, 화면 요소 단계는 앞의 칸 단계 자리 유지
+export const cameraGuideStep = (guides: Guide[], step: number) => {
+  for (let i = step; i >= 0; i--) {
+    if (typeof guides[i].target === 'object' || guides[i].target === 'lock') return i
+  }
+  return step
+}
+
+// 큐브 곁이라 카메라를 옮기지 않는 가이드 칸, 이 거리는 스프링 없이 건너뛰어 화면이 흔들리는 탓
+export const guideNearCube = (game: GameState, cell: Point, cube: Point & { level: number }) => {
+  const at = toScreen(cell, game.heights[cell.y]?.[cell.x] ?? 0)
+  const from = toScreen(cube, cube.level)
+  return Math.hypot(at.x - from.x, at.y - from.y) <= TILE.width * 1.5
 }

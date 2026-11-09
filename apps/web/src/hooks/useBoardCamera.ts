@@ -76,10 +76,22 @@ export const useBoardCamera = (
   const shownOverview = useRef(overview)
   const boxKey = useRef<string | null>(targetKey) // box에 담긴 목표, 같은 목표로 다시 불린 effect의 보간 생략
   const leaping = useRef(false)
+  // 큐브 대신 가이드 칸을 비추는 때, 열고 닫을 때는 가까워도 옮겨 가기
+  const guiding = cube === undefined
+  const wasGuiding = useRef(guiding)
   const reduced = useReducedMotion()
 
   const cell = focus ?? game.player
-  const lookAt = cube ? toScreen(cube, cube.level) : toScreen(cell, heights[cell.y][cell.x])
+  const rawLook = cube ? toScreen(cube, cube.level) : toScreen(cell, heights[cell.y][cell.x])
+  // 판 가장자리에 묶인 뒤의 비출 자리, 묶기 전 자리로 옮겨 가면 경계에서 툭 멈추는 탓
+  const [vx, vy, vw, vh] = viewBoxFor(
+    target,
+    view,
+    rawLook,
+    overview ? 0 : minTile,
+    overview ? undefined : tile,
+  )
+  const lookAt = view.width > 0 ? { x: vx + vw / 2, y: vy + vh / 2 } : rawLook
   const lookKey = `${lookAt.x} ${lookAt.y}`
   const [look, setLook] = useState<Point>(lookAt)
   const lookX = useMotionValue(lookAt.x)
@@ -120,7 +132,9 @@ export const useBoardCamera = (
   useEffect(() => {
     const [x, y] = lookKey.split(' ').map(Number)
     const far = Math.hypot(x - lookX.get(), y - lookY.get())
-    if (far > LEAP) leaping.current = true
+    const toggled = wasGuiding.current !== guiding
+    wasGuiding.current = guiding
+    if (far > LEAP || (toggled && far >= CAUGHT)) leaping.current = true
     else if (far < CAUGHT) leaping.current = false
     if (!leaping.current) {
       lookX.jump(x)
@@ -132,7 +146,7 @@ export const useBoardCamera = (
       animate(lookY, y, LOOK_SPRING),
     ]
     return () => controls.forEach((c) => c.stop())
-  }, [lookKey, lookX, lookY])
+  }, [lookKey, lookX, lookY, guiding])
 
   useEffect(() => {
     const update = () => setLook({ x: lookX.get(), y: lookY.get() })
