@@ -84,13 +84,7 @@ export const useBoardCamera = (
   const cell = focus ?? game.player
   const rawLook = cube ? toScreen(cube, cube.level) : toScreen(cell, heights[cell.y][cell.x])
   // 판 가장자리에 묶인 뒤의 비출 자리, 묶기 전 자리로 옮겨 가면 경계에서 툭 멈추는 탓
-  const [vx, vy, vw, vh] = viewBoxFor(
-    target,
-    view,
-    rawLook,
-    overview ? 0 : minTile,
-    overview ? undefined : tile,
-  )
+  const [vx, vy, vw, vh] = viewBoxFor(home, view, rawLook, minTile, tile)
   const lookAt = view.width > 0 ? { x: vx + vw / 2, y: vy + vh / 2 } : rawLook
   const lookKey = `${lookAt.x} ${lookAt.y}`
   const [look, setLook] = useState<Point>(lookAt)
