@@ -8,10 +8,11 @@ Claude Design으로 받은 프로토타입이다. **모양과 색과 치수를 �
 
 Claude Design은 zip 대신 작업한 파일만 준다. 사용자가 `docs/design/` 아무 곳에 넣고 알리면 검수자가 정리한다.
 
-1. 이미 있는 시안의 새 버전이면 그 파일을 덮어쓴다. 같은 내용의 파일을 둘 두지 않는다
+1. 이미 있는 시안의 새 버전이면 그 파일을 덮어쓴다. 같은 내용의 파일을 둘 두지 않고, 이름에 v2나 final 같은 판 표시를 붙이지 않는다. 옛 판은 git 이력에 있다
 2. 새 시안이면 공통 화면은 `common/`, 챕터 요소는 `chapter-N/`에 넣는다. 필요하면 폴더를 만든다
 3. `support.js` 같은 공용 스크립트 경로(`../support.js`)가 그 자리에서 맞는지 브라우저로 연다
 4. 아래 표에 한 줄 더하거나 고친다
+5. 구현이 끝나 코드가 기준이 된 시안은 지운다. 스테이지 선택 시안 넷(장 고르기 두 안, 반응형, 태블릿 세로)을 2026-11-11에 지웠고 git 이력에 있다
 
 브리프 첫 줄에는 고칠 기존 파일 이름을 적어 같은 이름으로 받는다.
 
@@ -19,7 +20,7 @@ Claude Design은 zip 대신 작업한 파일만 준다. 사용자가 `docs/desig
 
 챕터마다 폴더 하나, 챕터와 상관없는 화면과 칸 규칙은 `common/`이다(2026-10-07 정리). 디자인방에서 받은 파일은 `Cubound ...` 이름으로 오니, 넣을 때 그 폴더에서 무엇인지 드러나는 소문자 이름(`world-color`, 요소 이름)으로 바꾸고 스크립트 경로를 `../`로 고친다. 공용 스크립트 `support.js`, `cubound-iso.js`는 맨 위에 두고 시안이 `../`로 불러온다.
 
-옛 이름(history.md와 지난 커밋에 남아 있음)과 새 경로: Gameplay → `common/ui`, Layout Studies → `common/layout`, Terrain System → `common/terrain`, Chapter Entry → `common/chapter-select`, Chapter Entry v2 → `common/chapter-select-v2`, Tram → `chapter-1/tram`, Cycle 2 Forest → `chapter-2/world-color`, Swamp, Mushroom, Vine, Seed → `chapter-2/`의 소문자 이름, Cycle 3 Water → `chapter-3/water`
+옛 이름(history.md와 지난 커밋에 남아 있음)과 새 경로: Gameplay → `common/ui`, Layout Studies → `common/layout`, Terrain System → `common/terrain`, Tram → `chapter-1/tram`, Cycle 2 Forest → `chapter-2/world-color`, Swamp, Mushroom, Vine, Seed → `chapter-2/`의 소문자 이름, Cycle 3 Water → `chapter-3/water`
 
 | 파일                               | 내용                                                                                                                                                                                  | 쓴 곳                                                 |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
@@ -28,10 +29,6 @@ Claude Design은 zip 대신 작업한 파일만 준다. 사용자가 `docs/desig
 | `common/floor-steps.dc.html` | 바닥 층 색: 층마다 밝기만 한 단씩 짙게, 1~4챕터 11단까지와 묻힐 수 있는 요소 띠. 게임은 단 폭을 80%로 씀(ARCHITECTURE "디자인 기준값") | 전체 |
 | `chapter-1/tram.dc.html`           | 움직이는 발판. 구덩이와 레일과 멈춤 블록                                                                                                                                              | 4월드                                                 |
 | `common/layout.dc.html`            | 반응형 최종본: 기기 묶음 여섯의 크기 표(rem), 화면별 배치, 태블릿 세로 TB                                                                                                                                                    | 목록·헤더                                             |
-| `common/select-responsive.dc.html` | 스테이지 선택 반응형 최종본(2026-11-11): 기기 묶음 여섯의 판정과 값 표, 장 카드 8장 고정, 준비 중 카드(블러와 COMING SOON)와 토스트, 6~8장 임시 세계 색 | 목록·헤더 |
-| `common/select-tablet-tall.dc.html` | 스테이지 선택 태블릿 세로 다시 보기(2026-11-11): 스테이지 카드 3:4 세로, 장 고르기 4×2 세로 카드로 두 격자 높이 같게, 덩어리 위 여백 40% | 태블릿 세로 |
-| `common/chapter-select.dc.html`    | 장 고르기로 들어가는 자리 세 안                                                                                                                                                       | **썼다.** A안으로 정했다                              |
-| `common/chapter-select-v2.dc.html` | A안 덩이 생김새 세 안                                                                                                                                                                 | **썼다.** 3안(겹친 판)으로 정했다                     |
 | `chapter-2/world-color.dc.html`    | 2챕터 세계 색 (숲)                                                                                                                                                                    | **썼다.** 셋 중 C안("조금 더")으로 갔다               |
 | `chapter-2/swamp.dc.html`          | 늪                                                                                                                                                                                    | **썼다.** 6월드                                       |
 | `chapter-2/mushroom.dc.html`       | 버섯. 시드는 것과 올라선 큐브까지                                                                                                                                                     | **썼다.** 7월드                                       |
