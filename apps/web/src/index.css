@@ -378,6 +378,50 @@ html[data-cycle='4'] {
   --color-floor-8-right: #a09384;
 }
 
+html[data-cycle='5'] {
+  --color-page-bg: #eae4f3;
+  --color-base-bg: #f2effa;
+  --color-surface: #f7f5fe;
+  --color-locked: #ece8f5;
+  --color-hover: #ebe7f4;
+  --color-floor-top: #eee8f7;
+  --color-floor-top-alt: #e8e2f1;
+  --color-floor-left: #c6c0d0;
+  --color-floor-right: #d9d3e3;
+  --color-floor-1-top: #eee8f7;
+  --color-floor-1-top-alt: #e8e2f1;
+  --color-floor-1-left: #c6c0d0;
+  --color-floor-1-right: #d9d3e3;
+  --color-floor-2-top: #e1dbea;
+  --color-floor-2-top-alt: #e7e1f0;
+  --color-floor-2-left: #bfb9c9;
+  --color-floor-2-right: #d2ccdc;
+  --color-floor-3-top: #dfd9e8;
+  --color-floor-3-top-alt: #d9d3e2;
+  --color-floor-3-left: #b8b2c2;
+  --color-floor-3-right: #cbc5d4;
+  --color-floor-4-top: #d2ccdb;
+  --color-floor-4-top-alt: #d8d2e1;
+  --color-floor-4-left: #b1abbb;
+  --color-floor-4-right: #c3becd;
+  --color-floor-5-top: #d1cbda;
+  --color-floor-5-top-alt: #cbc5d4;
+  --color-floor-5-left: #aaa4b4;
+  --color-floor-5-right: #bcb7c6;
+  --color-floor-6-top: #c4becd;
+  --color-floor-6-top-alt: #cac4d2;
+  --color-floor-6-left: #a39dad;
+  --color-floor-6-right: #b5b0bf;
+  --color-floor-7-top: #c3bdcb;
+  --color-floor-7-top-alt: #bdb7c5;
+  --color-floor-7-left: #9c96a6;
+  --color-floor-7-right: #aea9b8;
+  --color-floor-8-top: #b6b0be;
+  --color-floor-8-top-alt: #bcb6c4;
+  --color-floor-8-left: #95909f;
+  --color-floor-8-right: #a7a2b1;
+}
+
 html,
 body {
   height: 100%;
