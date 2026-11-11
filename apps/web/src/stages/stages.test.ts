@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  CHAPTER_SLOTS,
   STAGES_PER_WORLD,
   WORLDS,
   chapterStageIds,
+  chapterStateOf,
   chapterUnlockStageId,
   currentWorldOf,
   cycleOf,
   isBossStage,
+  isChapterReady,
   nextStageId,
   parseStageId,
   previousWorld,
@@ -183,6 +186,21 @@ describe('chapterUnlockStageId', () => {
 
   it('첫 장은 처음부터 열려 있다', () => {
     expect(chapterUnlockStageId(1)).toBeUndefined()
+  })
+})
+
+describe('chapterStateOf', () => {
+  it('판이 없는 장은 진행 기록과 상관없이 준비 중이다', () => {
+    expect(isChapterReady(CHAPTER_SLOTS)).toBe(false)
+    expect(chapterStateOf(EMPTY_PROGRESS, CHAPTER_SLOTS, 1, false)).toBe('soon')
+    expect(chapterStateOf(EMPTY_PROGRESS, CHAPTER_SLOTS, 1, true)).toBe('soon')
+  })
+
+  it('판이 있는 장은 열림 조건과 지금 장으로 가른다', () => {
+    expect(chapterStateOf(EMPTY_PROGRESS, 1, 1, false)).toBe('now')
+    expect(chapterStateOf(EMPTY_PROGRESS, 2, 1, false)).toBe('locked')
+    expect(chapterStateOf(cleared('5-10'), 2, 1, false)).toBe('open')
+    expect(chapterStateOf(EMPTY_PROGRESS, 2, 1, true)).toBe('open')
   })
 })
 

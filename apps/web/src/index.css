@@ -6,14 +6,17 @@
 @custom-variant wide (@media (width >= 40rem) and (height >= 500px));
 /* 폰 세로처럼 높이는 넉넉하고 폭이 좁은 화면. wide, short와 셋이 화면을 나눠 가진다 */
 @custom-variant narrow (@media (width < 40rem) and (height >= 500px));
-/* 장 고르기 카드 셋이 한 줄에 서는 화면. 이보다 좁으면 장 카드는 가로로 한 줄씩, 목록 헤더는 두 줄 */
-@custom-variant roomy (@media (width >= 60rem) and (height >= 500px));
-/* 손으로 쓰는 넓은 화면. 폭이 같은 노트북 창과 갈리는 기준 */
-@custom-variant tablet (@media (pointer: coarse) and (width >= 40rem) and (height >= 500px));
 /* 폭 360 미만 폰 세로 */
 @custom-variant slim (@media (width < 22.5rem) and (height >= 500px));
 /* 높이 400 미만 폰 가로 */
 @custom-variant flat (@media (height < 400px));
+/* 폭과 높이와 방향으로 화면을 빈틈없이 나눈 스테이지 선택 기기 묶음 여섯 */
+@custom-variant phone-tall (@media ((width < 40rem) or (height < 500px)) and (orientation: portrait));
+@custom-variant phone-wide (@media ((width < 40rem) or (height < 500px)) and (orientation: landscape));
+@custom-variant pad-tall (@media (width >= 40rem) and (height >= 500px) and (orientation: portrait));
+@custom-variant pad-wide (@media (orientation: landscape) and (40rem <= width < 77.5rem) and (height >= 500px));
+@custom-variant laptop (@media (orientation: landscape) and (77.5rem <= width < 106.25rem) and (height >= 500px));
+@custom-variant monitor (@media (orientation: landscape) and (width >= 106.25rem) and (height >= 500px));
 
 @theme static {
   --ease-soft: cubic-bezier(0.37, 0, 0.63, 1);
@@ -492,52 +495,6 @@ body {
   padding: var(--panel-pad) calc(var(--panel-pad) - var(--panel-trim, 0px));
 }
 
-/* 장 고르기 카드. 만든 장만 놓이므로 칸이 적고 넓다 */
-@utility chapter-grid {
-  display: grid;
-  height: 100%;
-  /* 툴바 바로 밑에서부터 놓는다. 넘칠 때도 위가 잘리지 않는다 */
-  align-content: safe start;
-  gap: 0.75rem;
-  grid-template-columns: minmax(0, 1fr);
-
-  /* 들어가는 만큼 한 줄에 놓고 헤더 폭을 나눠 채운다. 빈 칸은 접혀 남은 카드가 넓어진다 */
-  @media (width >= 60rem) and (height >= 500px) {
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
-  }
-  /* 큰 화면은 왼쪽 장 덩이부터 화살표까지와 같은 높이로 카드를 늘이는 기준 */
-  @media (width >= 106.25rem) {
-    gap: 1.25rem;
-    align-content: stretch;
-  }
-
-  /* 장이 넷 이상이면 좁은 화면은 한 줄씩, 태블릿과 폰 가로는 두 칸, 넓은 화면은 네 장이 들어가면 한 줄 */
-  &[data-many] {
-    @media (width < 50rem) and (height >= 500px) {
-      gap: 0.5rem;
-      grid-template-columns: minmax(0, 1fr);
-    }
-    @media (50rem <= width < 106.25rem), (height < 500px) {
-      gap: 0.625rem;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    /* 두 줄이 남은 높이에 들도록 줄이는 줄 높이, 카드 네 장 폭 200 × 4 + 16 × 3이 한 줄 기준 */
-    @media (width >= 60rem) and (width < 106.25rem) and (height >= 500px) {
-      --cols: 2;
-      --rows: 2;
-      gap: 1rem;
-      grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-      grid-auto-rows: min(19rem, (100cqh - (var(--rows) - 1) * 1rem) / var(--rows));
-
-      @container (width >= 848px) {
-        --cols: 4;
-        --rows: 1;
-      }
-    }
-  }
-}
-
 /* 장 고르기 카드의 작은 조각은 그 장의 세계 색으로 칠한다. 지금 보는 사이클과 무관하다 */
 [data-chapter='1'] {
   --chapter-win: #e9e7e2;
@@ -563,62 +520,257 @@ body {
   --chapter-b: #eee1d3;
 }
 
-/* 목록 패널. 헤더와 카드 묶음이 같은 폭의 한 덩어리로 세로 가운데에 서는 크기 */
-@utility stage-frame {
-  --gap: 0.75rem;
-  --head-gap: 1.5rem;
-  --cols: 2;
-  --rows: 5;
-  /* 폰 세로는 폭으로만 정하고 넘치는 만큼 스크롤한다 */
+[data-chapter='5'] {
+  --chapter-win: #eae4f3;
+  --chapter-a: #eee8f7;
+  --chapter-b: #e8e2f1;
+}
+
+/* 6~8장 준비 중 카드의 임시 색 */
+[data-chapter='6'] {
+  --chapter-win: #f2ebcc;
+  --chapter-a: #f6efd3;
+  --chapter-b: #f0e9ca;
+}
+
+[data-chapter='7'] {
+  --chapter-win: #d9ddef;
+  --chapter-a: #dfe3f5;
+  --chapter-b: #d7dbed;
+}
+
+[data-chapter='8'] {
+  --chapter-win: #e9e7e2;
+  --chapter-a: #edebe6;
+  --chapter-b: #e7e5e0;
+}
+
+/* 스테이지 선택 기기 묶음 값, 기본은 노트북 */
+@utility select-screen {
   --cap: 15rem;
-  --block: calc(var(--cols) * var(--cap) + (var(--cols) - 1) * var(--gap));
+  --cg: 1rem;
+  --gap: 2rem;
+  --lab: 0.75rem;
+  --desc: 0.9375rem;
+  --star-n: 1.75rem;
+  --star-l: 0.75rem;
+  --hgap: 1.5rem;
+  --hrow: 0px;
+  --toast-h: 3rem;
+  --toast-f: 1rem;
+  --toast-y: 2rem;
 
-  gap: var(--head-gap);
-
-  @media (width >= 40rem) {
+  @variant phone-tall {
+    --cap: 13rem;
+    --cg: 0.75rem;
     --gap: 1rem;
+    --lab: 0.6875rem;
+    --desc: 0px;
+    --star-n: 1.375rem;
+    --star-l: 0.6875rem;
+    --hgap: 0.5rem;
+    --hrow: 0.625rem;
+    --toast-h: 2.75rem;
+    --toast-f: 0.9375rem;
+    --toast-y: 1.25rem;
   }
-  @media (width >= 40rem) and (height >= 500px) {
-    --head-gap: 2rem;
+  @variant phone-wide {
+    --cap: 10rem;
+    --cg: 0.625rem;
+    --gap: 0.625rem;
+    --lab: 0.6875rem;
+    --desc: 0.8125rem;
+    --star-n: 1.375rem;
+    --star-l: 0.6875rem;
+    --hgap: 0.75rem;
+    --toast-h: 2.75rem;
+    --toast-f: 0.9375rem;
+    --toast-y: 1.25rem;
   }
-  /* 높이로 카드 크기가 정해지는 폰 가로, 줄인 간격만큼 큰 카드 */
-  @media (height < 500px) {
-    --gap: 0.375rem;
-    --head-gap: 0.75rem;
-  }
-  /* 칸이 정사각이라 폭과 남은 높이로 나눈 값 중 작은 쪽, --head는 화면이 잰 헤더 높이 */
-  @media (width >= 40rem), (height < 500px) {
-    --cols: 5;
-    --rows: 2;
-    --cap: min(
-      15rem,
-      (min(100cqw, 79rem) - 4 * var(--gap)) / 5,
-      (100cqh - var(--head, 0px) - var(--head-gap) - var(--gap)) / 2
-    );
-
-    container-type: size;
-    justify-content: safe center;
-  }
-  /* 왼쪽 기둥과 나란히 서는 넓은 화면. 남는 폭을 카드가 먹는다 */
-  @media (width >= 106.25rem) {
+  @variant laptop {
+    --cg: 0.75rem;
     --gap: 1.25rem;
+  }
+  @variant pad-tall {
+    --cap: 14rem;
+    --cg: 0.75rem;
+    --gap: 1.5rem;
+    --hgap: 1rem;
+    --hrow: 1.25rem;
+  }
+  @variant pad-wide {
+    --cap: 14rem;
+    --cg: 0.75rem;
+    --gap: 1.25rem;
+    --star-n: 1.625rem;
+    --hgap: 1.25rem;
+  }
+  @variant monitor {
     --cap: 17.5rem;
-
-    container-type: normal;
+    --cg: 1rem;
+    --gap: 2.25rem;
+    --desc: 1rem;
+    --star-n: 1.875rem;
+    --hrow: 1.5rem;
+    --toast-h: 3.25rem;
+    --toast-f: 1.0625rem;
   }
 }
-/* 헤더와 카드 묶음의 같은 폭 */
-@utility stage-block {
-  @media (width >= 40rem) and (width < 106.25rem) and (height >= 500px) {
-    max-width: var(--block);
+
+/* 스테이지 선택 패널. 카드 크기 --s, 덩어리 폭 --W, 격자 높이 --slot, 장 카드 높이 --ch, --head는 화면이 잰 헤더 높이 */
+@utility select-frame {
+  --s: min(
+    var(--cap),
+    (100cqw - 4 * var(--cg)) / 5,
+    (100cqh - var(--head, 0px) - var(--gap) - var(--cg)) / 2
+  );
+  --W: calc(5 * var(--s) + 4 * var(--cg));
+  --slot: calc(2 * var(--s) + var(--cg));
+  --ch: var(--s);
+
+  container-type: size;
+
+  /* 폭으로만 정하고 넘치는 만큼 스크롤하는 두 칸 */
+  @variant phone-tall {
+    --s: min(var(--cap), (100cqw - var(--cg)) / 2);
+    --W: calc(2 * var(--s) + var(--cg));
+    --ch: 7.125rem;
+  }
+  /* 폭에 막힌 카드를 남는 높이만큼 세로로, 폭의 1.25배까지 */
+  @variant phone-wide {
+    --ch: min(var(--s) * 1.25, (100cqh - var(--head, 0px) - var(--gap) - var(--cg)) / 2);
+    --slot: calc(2 * var(--ch) + var(--cg));
+  }
+  /* 5:6 세로 카드 2줄, 장 카드도 같은 높이 */
+  @variant pad-tall {
+    --s: min(var(--cap), (100cqw - 4 * var(--cg)) / 5);
+    --ch: calc(var(--s) * 6 / 5);
+    --slot: calc(2 * var(--ch) + var(--cg));
+
+    /* 작은 태블릿은 좁은 카드에 높이를 더 준 3:4 */
+    @media (width < 60rem) {
+      --ch: calc(var(--s) * 4 / 3);
+    }
+  }
+  /* 양옆 2.5rem, 왼쪽 기둥 22.5rem, 기둥 사이 2.25rem을 뺀 폭 */
+  /* 8:9 세로 카드 */
+  @variant monitor {
+    --s: min(var(--cap), (100cqw - 29.75rem - 4 * var(--cg)) / 5, (100cqh - var(--cg)) / 2.25);
+    --ch: calc(var(--s) * 9 / 8);
+    --slot: calc(2 * var(--ch) + var(--cg));
   }
 }
 
-@utility stage-grid {
-  display: grid;
-  justify-content: center;
+/* 헤더와 카드 격자 한 덩어리 */
+@utility select-block {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
   gap: var(--gap);
-  grid-template-columns: repeat(var(--cols), minmax(0, var(--cap)));
+  width: var(--W);
+  max-width: 100%;
+  min-height: 0;
+  margin-inline: auto;
+
+  @variant phone-tall {
+    flex: 1 1 0%;
+  }
+  @variant monitor {
+    flex-direction: row;
+    align-items: center;
+    width: calc(29.75rem + var(--W));
+    padding-inline: 2.5rem;
+  }
+}
+
+/* DOM은 늘 ← 덩이 설명 별수 화살표 차례, 묶음마다 자리만 바뀌는 헤더 */
+@utility select-head {
+  display: grid;
+  position: relative;
+  flex: none;
+  align-items: center;
+  column-gap: var(--hgap);
+  row-gap: var(--hrow);
+  grid-template-columns: auto minmax(0, 31.25rem) minmax(0, 1fr) auto auto;
+  grid-template-areas: 'back box . stars nav';
+
+  @variant phone-tall {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'back . stars nav'
+      'box box box box';
+  }
+  /* 폰 가로는 장 덩이가 남은 폭 */
+  @variant phone-wide {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: 'back box stars nav';
+  }
+  /* 작은 태블릿 세로는 폰 세로처럼 장 덩이가 아랫줄 */
+  @variant pad-tall {
+    @media (width < 60rem) {
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      grid-template-areas:
+        'back . stars nav'
+        'box box box box';
+    }
+  }
+  @variant monitor {
+    width: 22.5rem;
+    align-items: start;
+    justify-items: start;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'back' 'box' 'desc' 'stars' 'nav';
+  }
+}
+
+/* 카드 격자 자리. 폰 세로와 태블릿 세로만 넘치면 스크롤, 포커스 테두리 4px 여유 */
+@utility select-slot {
+  flex: 0 1 auto;
+  height: var(--slot);
+  min-height: 0;
+
+  @variant phone-tall {
+    flex: 1 1 0%;
+    height: auto;
+  }
+  @variant pad-tall {
+    height: calc(var(--slot) + 8px);
+  }
+  @variant monitor {
+    flex: none;
+    width: var(--W);
+  }
+  @media (orientation: portrait) {
+    --edge: calc(4px + var(--panel-trim, 0px));
+
+    width: calc(var(--W) + 2 * var(--edge));
+    max-width: none;
+    margin: -4px calc(-1 * var(--edge));
+    padding: 4px;
+  }
+}
+
+@utility select-grid {
+  display: grid;
+  gap: var(--cg);
+  grid-template-columns: repeat(5, var(--s));
+
+  @variant phone-tall {
+    grid-template-columns: repeat(2, var(--s));
+  }
+}
+
+/* 장 고르기 8장, 폰 세로 1×8은 가로 카드 */
+@utility select-chapters {
+  display: grid;
+  gap: var(--cg);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: var(--ch);
+
+  @variant phone-tall {
+    gap: 0.5rem;
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* 작은 모노 라벨, 기기 묶음마다 크기 하나 */
@@ -665,30 +817,6 @@ body {
     stroke-width: 0.084375rem;
   }
 }
-/* 카드 격자가 놓이는 자리. 남은 높이를 재서 카드 크기 상한으로 쓴다.
-   1700px 이상은 가로 배치라 높이가 내용으로 정해져서 재지 않는다 */
-@utility grid-box {
-  flex: 1 1 0%;
-  container-type: size;
-
-  /* 판 카드 묶음과 같은 크기, 장 고르기를 여닫을 때 헤더 자리 고정 */
-  @media ((width >= 40rem) and (width < 106.25rem) and (height >= 500px)) or (height < 500px) {
-    flex: none;
-    height: calc(var(--rows) * var(--cap) + (var(--rows) - 1) * var(--gap));
-    max-width: var(--block);
-  }
-
-  /* 폰 세로는 카드에 높이 상한을 걸지 않아 넘칠 수 있다. 자리가 같이 늘어나야
-     맨 아래까지 내렸을 때 패널 여백이 남는다 */
-  @media (width < 40rem) and (height >= 500px) {
-    container-type: normal;
-  }
-
-  @media (width >= 106.25rem) {
-    container-type: normal;
-  }
-}
-
 /* 호버와 누름 전환. 색은 천천히, 누름 크기는 빠르게 */
 @utility transition-soft {
   transition:

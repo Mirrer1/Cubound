@@ -12,6 +12,8 @@ export const es: Partial<Texts> = {
   'select.previousWorld': 'Mundo anterior',
   'select.nextWorld': 'Mundo siguiente',
   'select.chapters': 'Elegir capítulo',
+  'select.soon': 'Próximamente',
+  'select.soonToast': 'llegará pronto',
 
   'play.guide': 'Ver la guía otra vez',
   'play.restart': 'Reiniciar (R)',

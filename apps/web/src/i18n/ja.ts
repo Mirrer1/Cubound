@@ -12,6 +12,8 @@ export const ja: Partial<Texts> = {
   'select.previousWorld': '前のワールド',
   'select.nextWorld': '次のワールド',
   'select.chapters': '章を選ぶ',
+  'select.soon': '準備中',
+  'select.soonToast': '準備中です',
 
   'play.guide': 'ガイドをもう一度見る',
   'play.restart': 'やり直す (R)',

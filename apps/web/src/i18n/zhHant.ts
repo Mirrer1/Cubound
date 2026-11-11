@@ -12,6 +12,8 @@ export const zhHant: Partial<Texts> = {
   'select.previousWorld': '上一個世界',
   'select.nextWorld': '下一個世界',
   'select.chapters': '選擇章節',
+  'select.soon': '準備中',
+  'select.soonToast': '正在準備中',
 
   'play.guide': '再看一次指引',
   'play.restart': '重新開始 (R)',

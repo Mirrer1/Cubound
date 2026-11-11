@@ -3,9 +3,10 @@ import { type MouseEvent, useEffect, useLayoutEffect, useRef, useState } from 'r
 
 import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
-import ChapterCard, { type ChapterCardState } from '@/components/ui/ChapterCard'
+import ChapterCard from '@/components/ui/ChapterCard'
 import ChapterTab from '@/components/ui/ChapterTab'
 import StageCard, { type StageCardState } from '@/components/ui/StageCard'
+import Toast from '@/components/ui/Toast'
 import BackIcon from '@/components/ui/icons/BackIcon'
 import ChevronIcon from '@/components/ui/icons/ChevronIcon'
 import GuideIcon from '@/components/ui/icons/GuideIcon'
@@ -17,11 +18,12 @@ import { chapterTextKey, sentencesOf, worldNoteKey, worldTextKey } from '@/i18n'
 import { localSelectGuideStorage, localWorldStorage } from '@/platform/storage'
 import { goTo, hashOf, replaceHash, showingAll } from '@/routes/route'
 import {
-  CHAPTERS,
+  CHAPTER_SLOTS,
+  type ChapterState,
   STAGES_PER_WORLD,
   WORLDS_PER_CYCLE,
   chapterStageIds,
-  chapterUnlockStageId,
+  chapterStateOf,
   currentWorldOf,
   cycleOf,
   isBossStage,
@@ -64,6 +66,8 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
   const [guide, setGuide] = useState<{ step: number; back: boolean } | null>(() =>
     localSelectGuideStorage.load() ? null : { step: 0, back: chapters },
   )
+  // 준비 중 안내의 장 번호, 사라지는 동안에도 남는 값
+  const [soon, setSoon] = useState<{ chapter: number; shown: boolean } | null>(null)
   const t = useText()
 
   const chapter = cycleOf(world)
@@ -101,22 +105,18 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
     cards.findIndex((card) => card.state === 'open'),
   )
 
-  const chapterCards = CHAPTERS.map((n) => {
-    const ids = chapterStageIds(n)
-    const open = all || isWorldUnlocked(progress, chapterUnlockStageId(n))
-    const state: ChapterCardState = !open ? 'locked' : n === chapter ? 'now' : 'open'
-    const first = (n - 1) * WORLDS_PER_CYCLE * STAGES_PER_WORLD + 1
+  const chapterCards = Array.from({ length: CHAPTER_SLOTS }, (_, i) => {
+    const n = i + 1
+    const state = chapterStateOf(progress, n, chapter, all)
 
     return {
       chapter: n,
-      name: t(chapterTextKey(n)),
-      range: `${first}–${first + WORLDS_PER_CYCLE * STAGES_PER_WORLD - 1}`,
-      stars: totalStars(progress, ids),
+      name: state === 'soon' ? '' : t(chapterTextKey(n)),
+      stars: state === 'soon' ? 0 : totalStars(progress, chapterStageIds(n)),
       total: WORLDS_PER_CYCLE * STAGES_PER_WORLD * 3,
       state,
     }
   })
-  const many = chapterCards.length >= 4
   const nowChapter = Math.max(
     0,
     chapterCards.findIndex((card) => card.state === 'now'),
@@ -134,9 +134,14 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
   const handlePrevious = () => goTo({ screen: 'select', world: siblings[index - 1] })
   const handleNext = () => goTo({ screen: 'select', world: siblings[index + 1] })
   const handleChapters = () => goTo({ screen: 'select', world, chapters: !chapters })
-  // 같은 장을 다시 고르면 첫 월드가 아닌 보던 월드
-  const handleChapter = (n: number) =>
-    goTo({ screen: 'select', world: n === chapter ? world : currentWorldOf(progress, n) })
+  // 같은 장을 다시 고르면 첫 월드가 아닌 보던 월드, 준비 중인 장은 이동 대신 안내, 안내가 떠 있으면 무시
+  const handleChapter = (n: number, state: ChapterState) => {
+    if (state !== 'soon') {
+      goTo({ screen: 'select', world: n === chapter ? world : currentWorldOf(progress, n) })
+    } else if (!soon?.shown) {
+      setSoon({ chapter: n, shown: true })
+    }
+  }
   // 남으면 Enter나 Space로 가이드가 다시 열리는 버튼 포커스 해제
   const handleOpenGuide = (e: MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.blur()
@@ -158,6 +163,13 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
   useEffect(() => {
     localWorldStorage.save(all, world)
   }, [all, world])
+
+  // 준비 중 안내가 떠 있는 시간
+  useEffect(() => {
+    if (!soon?.shown) return
+    const timer = setTimeout(() => setSoon({ ...soon, shown: false }), 1800)
+    return () => clearTimeout(timer)
+  }, [soon])
 
   // 처음 한 번 띄운 기록
   useEffect(() => {
@@ -226,120 +238,120 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
   }, [])
 
   return (
-    <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad">
+    <main className="mx-auto flex h-dvh max-w-[1920px] screen-pad select-screen phone-wide:pt-[max(0.5rem,env(safe-area-inset-top))]! phone-wide:pb-[max(0.5rem,env(safe-area-inset-bottom))]!">
       {/* 가이드가 덮는 스크롤 없는 판, 스크롤 영역의 양쪽 스크롤바 자리만큼 어긋남 방지 */}
       <div ref={panelRef} className="relative flex min-h-0 min-w-0 flex-1">
         <section
           ref={sectionRef}
-          className="stage-frame scroll-area flex min-h-0 flex-1 flex-col rounded-[1.375rem] border border-line bg-base-bg panel-pad min-[1700px]:grid min-[1700px]:grid-cols-[auto_minmax(0,1fr)] min-[1700px]:content-center min-[1700px]:items-center min-[1700px]:gap-12! short:py-2.5"
+          className="select-frame flex min-h-0 flex-1 flex-col rounded-[1.375rem] border border-line bg-base-bg panel-pad phone-wide:py-3! pad-tall:px-6! pad-wide:py-6! laptop:py-6!"
         >
-          {/* 장 카드 셋이 한 줄에 못 서는 화면은 윗줄에 ←와 별과 화살표, 아랫줄 전체가 장 덩이, 차례는 order */}
-          <header
-            ref={headerRef}
-            className={`relative mx-auto flex w-full stage-block flex-wrap items-center gap-x-4 gap-y-2.5 min-[1700px]:mx-0 min-[1700px]:ml-10 min-[1700px]:w-90 min-[1700px]:max-w-none min-[1700px]:shrink-0 min-[1700px]:flex-col min-[1700px]:items-start min-[1700px]:gap-6 narrow:gap-x-3`}
-          >
-            <Button variant="tool" onClick={handleBack} aria-label={t('select.back')}>
-              <BackIcon />
-            </Button>
-            <ChapterTab
-              chapter={chapter}
-              world={world}
-              name={t(worldTextKey(world))}
-              open={chapters}
-              label={t('select.chapters')}
-              guide="chapter"
-              onClick={handleChapters}
-              className="order-last w-full max-w-full min-w-0 min-[1700px]:order-1! min-[1700px]:w-full! min-[1700px]:grow-0! min-[1700px]:basis-auto! short:order-none short:w-auto short:max-w-125 short:grow short:basis-0 roomy:order-none roomy:w-auto roomy:max-w-125 roomy:grow roomy:basis-0"
-            />
-            {/* 투명 윗선은 가이드가 글자 획 대신 끝의 별 아이콘까지 감싸는 상자 기준 */}
-            <span
-              data-guide="stars"
-              className="-mt-px ml-auto border-t border-transparent font-mono text-xs tracking-[0.15em] whitespace-nowrap text-mute min-[1700px]:order-3 min-[1700px]:ml-0 min-[1700px]:pl-1 narrow:text-[0.6875rem] tablet:roomy:text-[0.8125rem]"
-            >
-              <span className="min-[1700px]:text-[1.875rem] min-[1700px]:text-ink">
-                {totalStars(progress, ids)}
-              </span>{' '}
-              / {ids.length * 3} <StarIcon className="inline-block size-[1em] align-[-0.1em]" />
-            </span>
-            {/* 월드가 하나뿐인 장에서도 남기는 자리, 장을 넘길 때 왼쪽 흔들림 방지 */}
-            <span
-              data-guide="worlds"
-              data-guide-pad="2"
-              className="flex items-center gap-1 min-[1700px]:order-4 min-[1700px]:-ml-2.5"
-            >
+          {/* 남는 높이를 위 4 : 아래 6으로 나누는 여백, 폰 세로는 제외 */}
+          <div className="min-h-0 shrink grow-4 basis-0 phone-tall:hidden monitor:grow-5" />
+          <div className="select-block">
+            <header ref={headerRef} className="select-head">
               <Button
-                ref={previousRef}
-                variant="ghost"
-                disabled={index === 0}
-                onClick={handlePrevious}
-                aria-label={t('select.previousWorld')}
-                className="short:after:w-[calc(100%+0.25rem)] narrow:after:w-[calc(100%+0.25rem)]"
+                variant="tool"
+                onClick={handleBack}
+                aria-label={t('select.back')}
+                className="[grid-area:back]"
               >
-                <ChevronIcon />
+                <BackIcon />
               </Button>
-              <Button
-                variant="ghost"
-                disabled={!nextOpen}
-                onClick={handleNext}
-                aria-label={t('select.nextWorld')}
-                className="short:after:w-[calc(100%+0.25rem)] narrow:after:w-[calc(100%+0.25rem)]"
+              <ChapterTab
+                chapter={chapter}
+                world={world}
+                name={t(worldTextKey(world))}
+                open={chapters}
+                label={t('select.chapters')}
+                guide="chapter"
+                onClick={handleChapters}
+                className="justify-self-stretch [grid-area:box]"
+              />
+              <span className="hidden text-(length:--desc)/[1.55] break-keep text-mute [grid-area:desc] monitor:block monitor:pl-1">
+                {sentencesOf(t(worldNoteKey(world))).map((sentence) => (
+                  <span key={sentence} className="monitor:block">
+                    {sentence}{' '}
+                  </span>
+                ))}
+              </span>
+              {/* 투명 윗선은 가이드가 글자 획 대신 끝의 별 아이콘까지 감싸는 상자 기준 */}
+              <span
+                data-guide="stars"
+                className="-mt-px flex items-baseline gap-1.5 border-t border-transparent whitespace-nowrap [grid-area:stars] phone-tall:mr-1 phone-tall:justify-self-end monitor:gap-[0.5625rem] monitor:pl-1"
               >
-                <ChevronIcon className="size-[1em] rotate-180" />
-              </Button>
-            </span>
-            {/* 모니터는 ←와 같은 높이, 장 덩이 오른쪽 끝 */}
-            <Button
-              variant="tool"
-              onClick={handleOpenGuide}
-              title={t('play.guide')}
-              className="min-[1700px]:absolute min-[1700px]:top-0 min-[1700px]:right-0"
-            >
-              <GuideIcon />
-            </Button>
-            <span className="hidden text-sm break-keep text-mute min-[1700px]:order-2 min-[1700px]:block min-[1700px]:pl-1 min-[1700px]:text-base">
-              {sentencesOf(t(worldNoteKey(world))).map((sentence) => (
-                <span key={sentence} className="block">
-                  {sentence}
+                <span className="min-w-[1.15em] text-right text-(length:--star-n)/none font-normal text-ink tabular-nums monitor:min-w-0 monitor:font-mono monitor:tracking-[0.06em]">
+                  {totalStars(progress, ids)}
                 </span>
-              ))}
-            </span>
-          </header>
-          {/* 장 고르기 카드는 ← 아래 장 덩이부터 화살표까지와 같은 높이 */}
-          <div
-            ref={gridRef}
-            className={`mx-auto w-full min-[1700px]:mx-0 min-[1700px]:mr-10 ${chapters ? 'grid-box min-h-0 stage-block min-[1700px]:mt-17 min-[1700px]:max-w-none min-[1700px]:self-stretch narrow:flex-none' : 'stage-block'}`}
-          >
-            {/* 자리에서 바뀌는 카드, 새 카드가 바로 붙어 포커스가 따라가는 key 교체 */}
-            <motion.div
-              key={chapters ? 'chapters' : 'stages'}
-              className={chapters ? 'chapter-grid' : 'stage-grid'}
-              data-many={chapters && many ? '' : undefined}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              // 다른 나타남과 같은 시간과 곡선
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-            >
-              {chapters
-                ? chapterCards.map((card, i) => (
-                    <ChapterCard
-                      key={card.chapter}
-                      {...card}
-                      many={many}
-                      guide={i === nowChapter ? 'chapterCard' : undefined}
-                      onSelect={() => handleChapter(card.chapter)}
-                    />
-                  ))
-                : cards.map((card, i) => (
-                    <StageCard
-                      key={card.id}
-                      {...card}
-                      guide={stageGuideOf(i)}
-                      starsGuide={i === 0 && card.state !== 'locked' ? 'stars' : undefined}
-                      onSelect={() => handleSelect(card.id)}
-                    />
-                  ))}
-            </motion.div>
+                <span className="font-mono text-(length:--star-l) tracking-[0.15em] text-mute">
+                  / {ids.length * 3} <StarIcon className="inline-block size-[1em] align-[-0.1em]" />
+                </span>
+              </span>
+              <span className="flex items-center gap-2.5 [grid-area:nav] monitor:-ml-2.5">
+                {/* 월드가 하나뿐인 장에서도 남기는 자리, 장을 넘길 때 왼쪽 흔들림 방지 */}
+                <span data-guide="worlds" data-guide-pad="2" className="flex gap-1">
+                  <Button
+                    ref={previousRef}
+                    variant="ghost"
+                    disabled={index === 0}
+                    onClick={handlePrevious}
+                    aria-label={t('select.previousWorld')}
+                  >
+                    <ChevronIcon />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    disabled={!nextOpen}
+                    onClick={handleNext}
+                    aria-label={t('select.nextWorld')}
+                  >
+                    <ChevronIcon className="size-[1em] rotate-180" />
+                  </Button>
+                </span>
+                {/* 모니터는 ←와 같은 높이, 장 덩이 오른쪽 끝 */}
+                <Button
+                  variant="tool"
+                  onClick={handleOpenGuide}
+                  title={t('play.guide')}
+                  className="monitor:absolute monitor:top-0 monitor:right-0"
+                >
+                  <GuideIcon />
+                </Button>
+              </span>
+            </header>
+            {/* 스테이지와 장 고르기가 같은 자리, 여닫을 때 헤더 위치 고정 */}
+            <div ref={gridRef} className="select-slot phone-tall:scroll-area pad-tall:scroll-area">
+              {/* 자리에서 바뀌는 카드, 새 카드가 바로 붙어 포커스가 따라가는 key 교체 */}
+              <motion.div
+                key={chapters ? 'chapters' : 'stages'}
+                className={chapters ? 'select-chapters' : 'select-grid'}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                // 다른 나타남과 같은 시간과 곡선
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              >
+                {chapters
+                  ? chapterCards.map((card, i) => (
+                      <ChapterCard
+                        key={card.chapter}
+                        {...card}
+                        soonText={t('select.soon')}
+                        guide={i === nowChapter ? 'chapterCard' : undefined}
+                        onSelect={() => handleChapter(card.chapter, card.state)}
+                      />
+                    ))
+                  : cards.map((card, i) => (
+                      <StageCard
+                        key={card.id}
+                        {...card}
+                        guide={stageGuideOf(i)}
+                        starsGuide={i === 0 && card.state !== 'locked' ? 'stars' : undefined}
+                        onSelect={() => handleSelect(card.id)}
+                      />
+                    ))}
+              </motion.div>
+            </div>
           </div>
+          <div className="min-h-0 shrink grow-6 basis-0 phone-tall:hidden monitor:grow-5" />
         </section>
         <AnimatePresence>
           {guide !== null && (
@@ -353,6 +365,12 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
           )}
         </AnimatePresence>
       </div>
+      <Toast show={soon?.shown ? String(soon.chapter) : null}>
+        <span className="font-mono text-(length:--lab) tracking-[0.2em] text-base-bg/60">
+          CHAPTER {soon?.chapter}
+        </span>
+        {t('select.soonToast')}
+      </Toast>
     </main>
   )
 }

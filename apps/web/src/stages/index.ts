@@ -58,6 +58,25 @@ export const chapterStageIds = (chapter: number) => worldsOf(chapter).flatMap(st
 // 장이 열리는 조건, 그 장의 첫 월드가 열릴 때
 export const chapterUnlockStageId = (chapter: number) => worldUnlockStageId(worldsOf(chapter)[0])
 
+// 장 고르기에 늘 놓는 장 수, 판이 없는 장은 준비 중 카드
+export const CHAPTER_SLOTS = 8
+
+export const isChapterReady = (chapter: number) => CHAPTERS.includes(chapter)
+
+export type ChapterState = 'soon' | 'locked' | 'open' | 'now'
+
+// 장 카드 상태, 판이 없는 장은 진행 기록을 거치지 않는 준비 중
+export const chapterStateOf = (
+  progress: Progress,
+  chapter: number,
+  current: number,
+  all: boolean,
+): ChapterState => {
+  if (!isChapterReady(chapter)) return 'soon'
+  if (!all && !isWorldUnlocked(progress, chapterUnlockStageId(chapter))) return 'locked'
+  return chapter === current ? 'now' : 'open'
+}
+
 // 월드에서 마지막으로 만든 스테이지 다음은 다음 월드의 첫 스테이지
 export const nextStageId = (id: string) => {
   const { world } = parseStageId(id)

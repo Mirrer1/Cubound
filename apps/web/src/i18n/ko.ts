@@ -12,6 +12,8 @@ export const ko: Partial<Texts> = {
   'select.previousWorld': '이전 월드',
   'select.nextWorld': '다음 월드',
   'select.chapters': '챕터 고르기',
+  'select.soon': '준비 중',
+  'select.soonToast': '준비 중이에요',
 
   'play.guide': '가이드 다시 보기',
   'play.restart': '다시 하기 (R)',

@@ -10,6 +10,8 @@ export const en = {
   'select.previousWorld': 'Previous world',
   'select.nextWorld': 'Next world',
   'select.chapters': 'Choose a chapter',
+  'select.soon': 'Coming soon',
+  'select.soonToast': 'is coming soon',
 
   'play.guide': 'Show guide again',
   'play.restart': 'Restart (R)',
