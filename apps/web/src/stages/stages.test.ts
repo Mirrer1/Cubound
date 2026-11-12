@@ -31,6 +31,18 @@ const STAGES = Object.entries(
 
 const MADE_IDS = new Set(STAGES.map(([, stage]) => stage.id))
 
+// 5장부터 묶음3 판, 풀이 검사는 CUBOUND_HEAVY=1 때만
+const isHeavy = (stage: Stage) => cycleOf(parseStageId(stage.id).world) >= 5
+const LIGHT_STAGES = STAGES.filter(([, stage]) => !isHeavy(stage))
+const HEAVY_STAGES = process.env.CUBOUND_HEAVY ? STAGES.filter(([, stage]) => isHeavy(stage)) : []
+
+const expectSolved = (stage: Stage) => {
+  const result = solve(stage)
+
+  expect(result.status).toBe('solved')
+  expect(stage.best).toBe(result.status === 'solved' ? result.moves : undefined)
+}
+
 describe('스테이지 데이터', () => {
   it.each(STAGES)('%s는 형식 검사를 통과한다', (_, stage) => {
     const result = validateStage(stage)
@@ -39,15 +51,16 @@ describe('스테이지 데이터', () => {
   })
 
   // 혼자 35초, 전체 테스트 안에서 45초 안팎인 190에 맞춘 넉넉한 시간 제한
-  it.each(STAGES)(
+  it.each(LIGHT_STAGES)(
     '%s는 풀 수 있고 best가 최소 이동 수와 같다',
-    (_, stage) => {
-      const result = solve(stage)
-
-      expect(result.status).toBe('solved')
-      expect(stage.best).toBe(result.status === 'solved' ? result.moves : undefined)
-    },
+    (_, stage) => expectSolved(stage),
     60000,
+  )
+
+  it.each(HEAVY_STAGES)(
+    '%s는 풀 수 있고 best가 최소 이동 수와 같다 (묶음3)',
+    (_, stage) => expectSolved(stage),
+    600000,
   )
 
   it.each(STAGES)('%s의 id가 파일 경로와 맞다', (path, stage) => {
