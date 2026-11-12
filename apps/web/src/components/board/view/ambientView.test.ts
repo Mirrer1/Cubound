@@ -121,6 +121,27 @@ describe('ambientPlan', () => {
     expect(ambientPlan(PAIRS, 3)).toEqual({ cycle: 6000, slots: [{ at: 2000, kind: 'warp' }] })
   })
 
+  it('5장은 까마귀 다음 비운 요소 연출 자리 2초', () => {
+    expect(ambientPlan(STAGE, 5)).toEqual({
+      cycle: 5000 + 1400 + 2000,
+      slots: [{ at: 0, kind: 'crow' }],
+    })
+    expect(ambientPlan(PAIRS, 5)).toEqual({
+      cycle: 5000 + 1400 + 2600 + 1400,
+      slots: [
+        { at: 0, kind: 'crow' },
+        { at: 6400, kind: 'warp' },
+      ],
+    })
+  })
+
+  it('1~4장 빈 판 바퀴는 그대로', () => {
+    expect(ambientPlan(STAGE, 1)?.cycle).toBe(4350)
+    expect(ambientPlan(STAGE, 2)?.cycle).toBe(5800)
+    expect(ambientPlan(STAGE, 3)).toBeNull()
+    expect(ambientPlan(STAGE, 4)?.cycle).toBe(4350)
+  })
+
   it('바닥 연출도 요소 연출도 없는 판은 null', () => {
     expect(ambientPlan(STAGE, 3)).toBeNull()
   })
@@ -244,6 +265,23 @@ describe('ambientCells', () => {
     for (let round = 0; round < 20; round++) {
       const [cell] = ambientCells(game, 'butterfly', round, 0)
       expect(['0-0', '1-0', '0-1', '3-0', '4-0', '0-1', '3-3', '4-3']).not.toContain(key(cell))
+    }
+  })
+
+  it('까마귀는 짝수 바퀴에 빈 땅 한 칸과 거기 붙은 같은 높이 빈 땅 한 칸, 홀수 바퀴에 한 칸', () => {
+    const game = createState(MEADOW)
+    for (let round = 0; round < 20; round++) {
+      const cells = ambientCells(game, 'crow', round, 0)
+      const solo = ambientCells(game, 'butterfly', round, 0)
+      expect(cells[0]).toEqual(solo[0])
+      if (round % 2) {
+        expect(cells).toHaveLength(1)
+        continue
+      }
+      expect(cells).toHaveLength(2)
+      const [a, b] = cells
+      expect(Math.abs(a.x - b.x) + Math.abs(a.y - b.y)).toBe(1)
+      expect(['0-0', '1-0', '0-1', '3-0', '4-0', '3-3', '4-3']).not.toContain(key(b))
     }
   })
 
@@ -371,6 +409,10 @@ describe('ambientLoops', () => {
     }
     expect(Math.max(...loops[0].keyframes.map((k) => Number(k.opacity)))).toBe(0.5)
     expect(Math.max(...loops[1].keyframes.map((k) => Number(k.opacity)))).toBe(0.45)
+  })
+
+  it('까마귀는 BoardCrow가 그려 키프레임 없음', () => {
+    expect(ambientLoops('crow', 8400)).toEqual([])
   })
 
   it('짝 칸 숨은 우묵면과 틀 빛 테가 1.1초에 가장 밝고 2.6초에 꺼짐', () => {

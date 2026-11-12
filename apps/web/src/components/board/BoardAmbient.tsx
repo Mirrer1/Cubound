@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 
+import BoardCrow from './BoardCrow'
 import { AMBIENT, type AmbientKind, type AmbientShape, MUD, ambientLoops } from './view'
 import { TILE, blockFaces } from '@/game/iso'
 import { useLoop } from '@/hooks/useLoop'
@@ -158,9 +159,11 @@ interface BoardAmbientProps {
   at: number // 바퀴 안에서 시작하는 ms
   cycle: number
   leave: boolean // 거두는 때
+  crows: number
+  side: number
 }
 
-const BoardAmbient = ({ kind, x, y, at, cycle, leave }: BoardAmbientProps) => {
+const BoardAmbient = ({ kind, x, y, at, cycle, leave, crows, side }: BoardAmbientProps) => {
   const loops = useMemo(() => ambientLoops(kind, cycle), [kind, cycle])
   const group = useRef<SVGGElement>(null)
   const fled = useRef(false)
@@ -190,7 +193,9 @@ const BoardAmbient = ({ kind, x, y, at, cycle, leave }: BoardAmbientProps) => {
     )
   }, [kind, leave])
 
-  return (
+  return kind === 'crow' ? (
+    <BoardCrow x={x} y={y} at={at} cycle={cycle} leave={leave} crows={crows} side={side} />
+  ) : (
     <g ref={group}>
       {loops.map((loop, i) => (
         <AmbientPiece

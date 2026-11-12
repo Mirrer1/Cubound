@@ -153,6 +153,18 @@ export {
   ambientPlan,
 } from './ambientView'
 export {
+  CROW,
+  type CrowPose,
+  type CrowSeat,
+  crowBodyPath,
+  crowLegs,
+  crowPose,
+  crowSeats,
+  crowSide,
+  crowTransform,
+  crowWing,
+} from './crowView'
+export {
   BURST_RINGS,
   burstLook,
   burstSparks,

@@ -214,8 +214,17 @@ describe('cellLook', () => {
       at: 24000,
       cycle: 36000,
       leave: false,
+      crows: 0,
+      side: 0,
     })
-    expect(cells.get('4-0')!.look.ambient).toEqual({ kind: null, at: 0, cycle: 0, leave: false })
+    expect(cells.get('4-0')!.look.ambient).toEqual({
+      kind: null,
+      at: 0,
+      cycle: 0,
+      leave: false,
+      crows: 0,
+      side: 0,
+    })
   })
 
   it('나비는 옆 칸에 큐브가 오면 leave', () => {
@@ -224,6 +233,30 @@ describe('cellLook', () => {
     expect(far.get('4-0')!.look.ambient.leave).toBe(false)
     const game = { ...createState(FILL_STAGE), player: { x: 3, y: 0 } }
     expect(looks(game, null, [], 1, false, ambient).get('4-0')!.look.ambient.leave).toBe(true)
+  })
+
+  it('까마귀는 두 칸에 한 마리씩, 큐브가 어느 칸 옆에 오든 둘 다 큐브 반대쪽으로 leave', () => {
+    const ambient = {
+      kind: 'crow' as const,
+      cells: [
+        { x: 3, y: 0 },
+        { x: 4, y: 0 },
+      ],
+      at: 0,
+      cycle: 7650,
+    }
+    const far = looks(createState(FILL_STAGE), null, [], 1, false, ambient)
+    expect(far.get('3-0')!.look.ambient).toMatchObject({ crows: 1, leave: false })
+    expect(far.get('4-0')!.look.ambient).toMatchObject({ crows: 2, leave: false })
+    const game = { ...createState(FILL_STAGE), player: { x: 2, y: 0 } }
+    const near = looks(game, null, [], 1, false, ambient)
+    expect(near.get('3-0')!.look.ambient).toMatchObject({ leave: true, side: 1 })
+    expect(near.get('4-0')!.look.ambient).toMatchObject({ leave: true, side: 1 })
+    const one = looks(createState(FILL_STAGE), null, [], 1, false, {
+      ...ambient,
+      cells: [{ x: 4, y: 0 }],
+    })
+    expect(one.get('4-0')!.look.ambient.crows).toBe(3)
   })
 
   it('찬 김은 돌이 그 칸을 떠나면 leave', () => {

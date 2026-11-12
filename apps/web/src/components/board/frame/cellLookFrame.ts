@@ -1,6 +1,7 @@
 import {
   type AmbientKind,
   ICE,
+  crowSide,
   floorTier,
   idleRipples,
   postBands,
@@ -37,7 +38,7 @@ import type { Direction, GameEvent, GameState, Point, Stage } from '@/game/types
 // 재시작에 메운 바닥이 사라지는 진행도
 const RESTORE_FADE = 0.25
 
-const NO_AMBIENT = { kind: null, at: 0, cycle: 0, leave: false }
+const NO_AMBIENT = { kind: null, at: 0, cycle: 0, leave: false, crows: 0, side: 0 }
 
 export interface CellLook {
   x: number
@@ -135,7 +136,9 @@ export interface CellLook {
     kind: AmbientKind | null // 이 칸에서 이번 차례에 일어나는 분위기 연출
     at: number // 바퀴 안에서 시작하는 ms
     cycle: number
-    leave: boolean // 거둘 때, 나비는 큐브가 이 칸이나 옆 칸에 온 때, 찬 김은 돌이 칸을 떠난 때, 불씨 칸 연기는 켜진 때, 화로 연기와 불티는 큐브나 상자가 올라선 때
+    leave: boolean // 거둘 때, 나비는 큐브가 이 칸이나 옆 칸에 온 때, 찬 김은 돌이 칸을 떠난 때, 불씨 칸 연기는 켜진 때, 화로 연기와 불티는 큐브나 상자가 올라선 때, 까마귀는 큐브가 두 칸 중 하나의 옆 칸에 온 때
+    crows: number // 이 칸의 까마귀, 1 첫째, 2 둘째, 3 둘 다
+    side: number // 까마귀가 날아가는 화면 옆 방향
   }
 }
 
@@ -190,6 +193,11 @@ export const cellLook = ({
   return (cell: ReturnType<typeof boardCells>[number]) => {
     const capHere = scene.caps.find((capFrame) => same(capFrame.cell, cell.p))
     const ambientHere = ambient && has(ambient.cells, cell.p) ? ambient : null
+    const crowNear =
+      ambientHere?.kind === 'crow' &&
+      ambientHere.cells.some(
+        (p) => Math.abs(p.x - game.player.x) + Math.abs(p.y - game.player.y) <= 1,
+      )
     const water = waterLook(stage, cell.p, scene.sluice.waterAt)
     const rippleHere = scene.ripple && same(scene.ripple.at, cell.p) ? scene.ripple : null
     const swampHere = (stage.swamp?.[cell.p.y]?.[cell.p.x] ?? '.') !== '.'
@@ -417,7 +425,20 @@ export const cellLook = ({
                   ? !has(game.sparks, cell.p)
                   : ambientHere.kind === 'brazierSmoke' || ambientHere.kind === 'brazierSpark'
                     ? same(game.player, cell.p) || has(boxes, cell.p)
-                    : Math.abs(cell.p.x - game.player.x) + Math.abs(cell.p.y - game.player.y) <= 1,
+                    : ambientHere.kind === 'crow'
+                      ? crowNear
+                      : Math.abs(cell.p.x - game.player.x) + Math.abs(cell.p.y - game.player.y) <=
+                        1,
+            crows:
+              ambientHere.kind !== 'crow'
+                ? 0
+                : ambientHere.cells.length === 1
+                  ? 3
+                  : same(ambientHere.cells[0], cell.p)
+                    ? 1
+                    : 2,
+            side:
+              ambientHere.kind === 'crow' ? crowSide(ambientHere.cells, game.player, crowNear) : 0,
           }
         : NO_AMBIENT,
     }

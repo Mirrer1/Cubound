@@ -350,7 +350,8 @@ const BoardCell = ({
         ambient.kind === 'ash' ||
         ambient.kind === 'emberSmoke' ||
         ambient.kind === 'brazierSmoke' ||
-        ambient.kind === 'brazierSpark') && (
+        ambient.kind === 'brazierSpark' ||
+        ambient.kind === 'crow') && (
         <BoardAmbient
           x={x}
           y={ambient.kind === 'mist' ? Math.min(y, iceTop) : y}

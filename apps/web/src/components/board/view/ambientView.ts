@@ -1,4 +1,5 @@
 import type { ViewBox } from './cameraView'
+import { CROW, flockCells } from './crowView'
 import { TILE, toScreen } from '@/game/iso'
 import { isIce, same } from '@/game/rules'
 import type { GameState, Point, Stage } from '@/game/types'
@@ -14,6 +15,7 @@ export type AmbientKind =
   | 'emberSmoke'
   | 'brazierSmoke'
   | 'brazierSpark'
+  | 'crow'
 
 export type AmbientShape =
   | 'mote'
@@ -46,6 +48,7 @@ export const AMBIENT = {
   emberSmoke: { life: 3800, rx: 16, ry: 7 },
   brazierSmoke: { life: 4300, rx: 20, ry: 8 },
   brazierSpark: { life: 1650, size: 2.2 },
+  crow: { life: CROW.life },
 }
 
 // 한 번 끝난 뒤 쉬는 ms, 바닥 연출이 없는 장에서 그 자리를 비우는 ms
@@ -53,7 +56,12 @@ const REST = 1400
 const GAP = 2000
 
 // 장마다 빈 바닥에 일어나는 연출
-const FLOOR: Partial<Record<number, AmbientKind>> = { 1: 'mote', 2: 'butterfly', 4: 'ash' }
+const FLOOR: Partial<Record<number, AmbientKind>> = {
+  1: 'mote',
+  2: 'butterfly',
+  4: 'ash',
+  5: 'crow',
+}
 
 // 빛 알갱이 셋의 늦는 ms, 칸 가운데에서 떠나는 자리와 벌어지는 거리 px
 const MOTES = [
@@ -185,7 +193,9 @@ export const ambientPlan = (stage: Stage, chapter: number): AmbientPlan | null =
   if (!floor && elements.length === 0) return null
   const slots: AmbientSlot[] = []
   let at = 0
-  for (const kind of [floor, ...elements]) {
+  // 5장 요소 연출 자리, 해골 전까지 빈 자리
+  const hold = chapter === 5 && elements.length === 0 ? [null] : []
+  for (const kind of [floor, ...elements, ...hold]) {
     if (kind) slots.push({ at, kind })
     at += kind ? AMBIENT[kind].life + REST : GAP
   }
@@ -300,7 +310,9 @@ export const ambientCells = (
     .filter((p) => inView(game, p, view))
     .sort((a, b) => spread(a, seed) - spread(b, seed))
   const away = cells.filter((p) => last.every((q) => apart(p, q)))
-  return (away.length > 0 ? away : cells).slice(0, 1)
+  const picked = (away.length > 0 ? away : cells).slice(0, 1)
+  // 까마귀는 바퀴마다 두 칸과 한 칸 번갈이
+  return kind === 'crow' ? flockCells(picked, cells, game.heights, round % 2 === 1) : picked
 }
 
 // 한 바퀴 안의 키프레임, ms를 바퀴 길이 비로
@@ -316,6 +328,7 @@ export interface AmbientLoop {
 
 // 연출 한 번을 이루는 조각마다 그림, 늦는 ms, 한 바퀴 키프레임
 export const ambientLoops = (kind: AmbientKind, cycle: number): AmbientLoop[] => {
+  if (kind === 'crow') return []
   if (kind === 'mote') {
     return MOTES.map(({ delay, from, spread }) => {
       const end = { opacity: 0, transform: move(from + spread * 1.1, -17) }
