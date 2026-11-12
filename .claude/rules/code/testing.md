@@ -15,6 +15,7 @@ paths:
 - 순수 함수만 테스트한다. `game/`의 규칙, 풀이 검사기, 형식 검사, 진행 기록과 `components/board/frame/`의 연출 프레임 계산, `components/board/view/`의 큐브 회전과 그림 계산, `platform/`의 입력과 저장, `routes/`의 주소와 탭 제목이다. 브라우저 저장소는 `vi.stubGlobal`로 흉내 낸다
 - 테스트는 폴더 단위로 맞춘다. 계산 폴더(`game/`, `game/rules/`, `components/board/frame/`, `components/board/view/`, `platform/`, `routes/`, `store/`, `dev/`)는 모든 파일에 테스트를 두고(`dev/solveWorker.ts`처럼 함수 하나를 부르기만 하는 Worker 진입점은 예외), 화면 폴더(`components/board/`, `components/ui/`, `components/guide/`, `components/dev/`, `screens/`)와 `hooks/`에는 테스트 파일을 두지 않는다
 - 예외는 `index.ts`, 타입 파일(`types.ts`), 테스트 샘플 파일(`testStages.ts`)이다. `i18n/`과 `stages/`는 테스트 하나(`i18n.test.ts`, `stages.test.ts`)가 사전과 판 데이터를 통째로 검사한다
+- **5장부터(21월드~) 판의 풀이 테스트는 평소 `pnpm test`에서 빠진다.** 판 JSON이나 `game/` 규칙이 바뀐 커밋 전에는 `CUBOUND_HEAVY=1 pnpm --filter @cubound/web exec vitest run src/stages/stages.test.ts -t 묶음3`(Git Bash, 판 하나 10분 한도)을 꼭 돌린다
 - `describe`는 함수 이름, `it`은 한국어로 기대 동작을 한 문장으로 쓴다
 - 공용 샘플 스테이지는 파일 상단 대문자 상수로 두고 케이스별 차이는 스프레드로 덮어쓴다
 - 동작을 바꾸면 기존 기대값을 새 결정에 맞게 고친다. 옛 동작 테스트를 남겨두지 않는다
