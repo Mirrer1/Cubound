@@ -253,7 +253,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
                 variant="tool"
                 onClick={handleBack}
                 aria-label={t('select.back')}
-                className="[grid-area:back]"
+                className="[grid-area:back] phone-wide:rounded-[0.6rem]"
               >
                 <BackIcon />
               </Button>
@@ -312,7 +312,7 @@ const StageSelectScreen = ({ world, chapters }: StageSelectScreenProps) => {
                   variant="tool"
                   onClick={handleOpenGuide}
                   title={t('play.guide')}
-                  className="monitor:absolute monitor:top-0 monitor:right-0"
+                  className="phone-wide:rounded-[0.6rem] monitor:absolute monitor:top-0 monitor:right-0"
                 >
                   <GuideIcon />
                 </Button>

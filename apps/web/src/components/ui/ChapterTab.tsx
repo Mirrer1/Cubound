@@ -54,10 +54,10 @@ const ChapterTab = ({
         </motion.span>
       </span>
       <span className="flex min-w-0 flex-col gap-0.5 rounded-[0.9375rem] border border-line-strong bg-surface px-3 py-2 short:min-w-0 short:flex-1 short:flex-row short:items-center short:gap-2 short:py-1.5 narrow:gap-0 narrow:px-2.5 narrow:pt-2 narrow:pb-1.5 phone-tall:flex-row phone-tall:items-baseline phone-tall:gap-2.5! phone-tall:py-2.5! phone-wide:py-0.5! pad-tall:flex-1 pad-tall:flex-row pad-tall:items-center pad-tall:gap-3.5! pad-tall:py-2! pad-tall:max-[60rem]:py-1! pad-wide:flex-1 pad-wide:flex-row pad-wide:items-center pad-wide:gap-3.5! pad-wide:py-1! laptop:flex-1 laptop:flex-row laptop:items-center laptop:gap-3.5! laptop:py-1! monitor:gap-1.5 monitor:px-5 monitor:py-4">
-        <span className="font-mono text-[0.6875rem] tracking-[0.2em] text-mute monitor:text-[0.75rem] monitor:tracking-[0.22em]">
+        <span className="font-mono text-[0.6875rem] tracking-[0.2em] whitespace-nowrap text-mute phone-wide:hidden monitor:text-[0.75rem] monitor:tracking-[0.22em]">
           WORLD {world}
         </span>
-        <span className="truncate text-xl tracking-tight short:text-lg wide:text-2xl narrow:text-lg phone-wide:text-base! pad-tall:text-xl! pad-tall:max-[60rem]:text-lg! pad-wide:text-lg! laptop:text-lg! monitor:text-[1.75rem]/[1.15]! monitor:whitespace-normal">
+        <span className="truncate text-xl tracking-tight short:text-lg wide:text-2xl narrow:text-lg phone-wide:text-base! pad-tall:text-base! pad-tall:max-[60rem]:text-[0.8125rem]! pad-wide:text-[0.96875rem]! laptop:text-base! monitor:text-[1.75rem]/[1.15]! monitor:whitespace-normal">
           {name}
         </span>
       </span>

@@ -702,8 +702,9 @@ body {
       'back . stars nav'
       'box box box box';
   }
-  /* 폰 가로는 장 덩이가 남은 폭 */
+  /* 폰 가로는 장 덩이가 남은 폭, 낮은 높이에 맞춘 0.85배 */
   @variant phone-wide {
+    zoom: 0.85;
     grid-template-columns: auto minmax(0, 1fr) auto auto;
     grid-template-areas: 'back box stars nav';
   }
