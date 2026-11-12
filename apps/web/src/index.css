@@ -760,6 +760,9 @@ body {
   @variant phone-tall {
     grid-template-columns: repeat(2, var(--s));
   }
+  @variant phone-wide {
+    grid-auto-rows: var(--ch);
+  }
 }
 
 /* 장 고르기 8장, 폰 세로 1×8은 가로 카드 */

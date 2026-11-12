@@ -41,13 +41,13 @@ const StageCard = ({
   const labelTone = boss ? 'text-tool' : locked ? '' : 'text-mute'
 
   return (
-    <div className="@container">
+    <div className="@container phone-wide:h-full">
       <button
         type="button"
         data-guide={guide}
         disabled={locked}
         onClick={onSelect}
-        className={`flex aspect-square w-full cursor-pointer flex-col justify-between rounded-[1.125rem] border p-4 text-left transition-soft-colors disabled:cursor-default short:p-2 wide:p-5 phone-wide:aspect-auto phone-wide:h-(--ch) pad-tall:aspect-[5/6] pad-tall:p-3 pad-tall:max-[60rem]:aspect-[3/4] monitor:aspect-[8/9] ${tone} ${locked ? '' : boss ? 'hover:bg-ink/90' : 'hover:bg-hover'}`}
+        className={`flex aspect-square w-full cursor-pointer flex-col justify-between rounded-[1.125rem] border p-4 text-left transition-soft-colors disabled:cursor-default short:p-2 wide:p-5 phone-wide:aspect-auto phone-wide:h-full pad-tall:aspect-[5/6] pad-tall:p-3 pad-tall:max-[60rem]:aspect-[3/4] monitor:aspect-[8/9] ${tone} ${locked ? '' : boss ? 'hover:bg-ink/90' : 'hover:bg-hover'}`}
       >
         <span className="flex justify-between gap-2 font-mono text-[0.6875rem] tracking-[0.2em] short:text-[0.5625rem] pad-tall:text-[clamp(0.5625rem,6.6cqi,0.6875rem)] monitor:text-[0.75rem]">
           <span className={`${labelTone} ${state === 'cleared' ? 'font-bold' : ''}`}>
