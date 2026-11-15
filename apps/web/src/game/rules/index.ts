@@ -18,6 +18,7 @@ export { isMushroom } from './mushroomRule'
 export { SEED_WAIT } from './seedRule'
 export { WIND_EVERY } from './windRule'
 export { TIDE_EVERY } from './tideRule'
+export { NIGHT_CYCLE, isDark, isNightStage, nightBeat } from './darkRule'
 export {
   capsLeft,
   climbsLeft,

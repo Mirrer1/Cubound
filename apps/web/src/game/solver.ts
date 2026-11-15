@@ -1,4 +1,4 @@
-import { TIDE_EVERY, WIND_EVERY, createState, move } from './rules'
+import { NIGHT_CYCLE, TIDE_EVERY, WIND_EVERY, createState, move } from './rules'
 import type { Direction, GameEvent, GameState, Point, Stage } from './types'
 
 export const DIRECTIONS: Direction[] = ['up', 'right', 'down', 'left']
@@ -106,6 +106,10 @@ const stateKey = (state: GameState, deep = true) => {
     ...(state.stage.rules?.wind ? [`${state.moves % WIND_EVERY}`] : []),
     // 같은 자리라도 물 높이와 다음 물때까지 남은 수가 다르면 다른 상태
     ...(state.stage.rules?.tide ? [`${state.moves % (TIDE_EVERY * 2)}`] : []),
+    // 같은 자리라도 다리가 뜨기까지 남은 수와 돌아갈 칸이 다르면 다른 상태
+    ...(state.stage.shadow
+      ? [`${state.moves % NIGHT_CYCLE}`, state.entry ? `${state.entry.x},${state.entry.y}` : '']
+      : []),
     // 깊어지는 늪은 빠진 횟수에 따라 달라지는 앞으로 드는 수
     ...(deep && state.stage.rules?.swampDeepen ? [`${state.sinks}`] : []),
     // 자리 집합만으로는 갈리지 않는 묶인 배와 자유 배의 맞바꿈

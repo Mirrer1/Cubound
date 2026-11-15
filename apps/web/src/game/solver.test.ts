@@ -853,3 +853,12 @@ describe('solve 밀물', () => {
     expect(solve({ ...TIDE, rules: undefined }).status).toBe('unsolvable')
   })
 })
+
+describe('solve 어둠', () => {
+  it('그림자 다리가 없는 어둠 판은 박자를 상태에 넣지 않는다', () => {
+    const night = deadEnds({ ...STAGE, id: '21-1' })
+    const plain = deadEnds(STAGE)
+
+    expect(night.status === 'ok' && night.states).toBe(plain.status === 'ok' && plain.states)
+  })
+})

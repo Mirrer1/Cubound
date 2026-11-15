@@ -1,6 +1,7 @@
 import type { Bar, Crack, Entity, GameState, Point, Stage } from '../types'
 import { barAt, barCells, hasBox, isFrozen, isIced, isOpenWater, isWater, same } from './cellRule'
 import { FLAME, readSparks } from './fireRule'
+import { shadowFloor } from './shadowRule'
 import { waterLevel } from './sluiceRule'
 import { isLiftRaised } from './switchRule'
 import { isPost, posts } from './tetherRule'
@@ -13,6 +14,8 @@ type Lift = Extract<Entity, { type: 'lift' }>
 export const groundHeight = (state: GameState, p: Point): number | undefined => {
   const h = state.heights[p.y]?.[p.x]
   if (h === undefined || isPost(state.stage, p)) return undefined
+  const bridge = h < 0 ? shadowFloor(state, p) : null
+  if (bridge !== null) return bridge
   if (isWater(state, p)) {
     const water = waterLevel(state, p)
     // 얼어붙은 배는 얼음에 박혀 윗면이 물가 땅 높이
@@ -120,6 +123,7 @@ export const createState = (stage: Stage): GameState => ({
   leaningLadders: [],
   carrying: null,
   player: stage.start,
+  entry: null,
   moves: 0,
   pushes: 0,
   climbs: 0,

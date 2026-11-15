@@ -62,6 +62,7 @@ export interface Session {
   planted?: PlantedSeed[] // 예전 저장에는 없는 값
   carrying: Carried | null // 예전 저장은 사다리를 들었는지만 담은 참과 거짓
   player: Point
+  entry?: Point | null // 예전 저장에는 없는 값
   moves: number
   pushes: number
   climbs: number
@@ -112,6 +113,7 @@ export const toSession = (game: GameState): Session => ({
   planted: game.planted,
   carrying: game.carrying,
   player: game.player,
+  entry: game.entry,
   moves: game.moves,
   pushes: game.pushes,
   climbs: game.climbs,
@@ -254,6 +256,8 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   const onFloor = (value: unknown): value is Point => {
     if (!isObject(value) || !Number.isInteger(value.x) || !Number.isInteger(value.y)) return false
     if (tramKeys.has(`${value.x},${value.y}`)) return true
+    const shadow = stage.shadow?.[value.y as number]?.[value.x as number]
+    if (shadow !== undefined && shadow !== '.') return true
     return (heights[value.y as number]?.[value.x as number] ?? -1) >= 0
   }
   const isLeaning = (value: unknown): value is LeaningLadder =>
@@ -375,6 +379,8 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
   if (saved.rides !== undefined && !isCount(saved.rides)) return null
   if (saved.dirUses !== undefined && !isCount(saved.dirUses)) return null
   if (!onFloor(saved.player) && !onBridge(saved.player)) return null
+  const entry = saved.entry ?? null
+  if (entry !== null && !onFloor(entry)) return null
 
   return {
     stage,
@@ -415,6 +421,7 @@ export const restoreSession = (saved: unknown, stage: Stage): GameState | null =
     planted: planted.map(({ x, y, left, rises }) => ({ x, y, left, rises })),
     carrying: carrying as Carried | null,
     player: { x: saved.player.x, y: saved.player.y },
+    entry: entry && { x: entry.x, y: entry.y },
     moves: saved.moves as number,
     pushes: saved.pushes as number,
     climbs: saved.climbs as number,

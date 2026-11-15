@@ -46,6 +46,7 @@ const MID = {
   planted: [],
   carrying: null,
   player: { x: 1, y: 0 },
+  entry: null,
   moves: 1,
   pushes: 1,
   climbs: 0,
@@ -947,5 +948,30 @@ describe('restoreSession 화약통', () => {
 
     expect(restoreSession({ ...session, kegs: [keg] }, FUSE_STAGE)).toBeNull()
     expect(restoreSession({ ...session, kegs: [{ ...keg, lit: 1 }, keg] }, FUSE_STAGE)).toBeNull()
+  })
+})
+
+describe('restoreSession 그림자 다리', () => {
+  // (3,0) (4,0)이 그림자 다리 두 칸
+  const SHADOW: Stage = {
+    version: 1,
+    id: '21-10',
+    heights: [
+      [0, 0, 0, -1, -1, 0, 0],
+      [0, 0, 0, -1, -1, 0, 0],
+    ],
+    shadow: ['...00..', '.......'],
+    start: { x: 6, y: 0 },
+    goal: { x: 0, y: 1 },
+    entities: [],
+  }
+
+  it('다리 위에서 나가도 그 자리와 돌아갈 칸을 이어간다', () => {
+    const path: Direction[] = ['down', 'left', 'up', 'left']
+    const state = path.reduce((s, d) => move(s, d).state, createState(SHADOW))
+
+    expect(state.player).toEqual({ x: 4, y: 0 })
+    expect(state.entry).toEqual({ x: 5, y: 0 })
+    expect(restoreSession(toSession(state), SHADOW)).toEqual(state)
   })
 })

@@ -11,6 +11,7 @@ import { climbOrPlaceLadder } from './ladderRule'
 import { climbsLeft, dirLeft, limitBlocked, movesLeft, pushesLeft, ridesLeft } from './limitRule'
 import { hop, isMushroom, spring } from './mushroomRule'
 import { riseSeeds } from './seedRule'
+import { settleShadow } from './shadowRule'
 import { floodsPlayer, sluiceEvents } from './sluiceRule'
 import { floorAt, isBridge, standHeight } from './stateRule'
 import { struggling } from './swampRule'
@@ -122,9 +123,10 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
     ...events,
     ...fireEvents,
   ])
+  const { state: shaded, events: shadowEvents } = settleShadow(before, barred)
   // 물에 잠긴 골은 언 칸이나 배로 올라서도 못 들어가는 집
   const moved =
-    barred.cleared && isWater(barred, barred.stage.goal) ? { ...barred, cleared: false } : barred
+    shaded.cleared && isWater(shaded, shaded.stage.goal) ? { ...shaded, cleared: false } : shaded
 
   const doorEvents: GameEvent[] = doors(before.stage)
     .map((door) => ({
@@ -156,6 +158,7 @@ const tick = (before: GameState, acted: GameState, events: GameEvent[]): MoveRes
       ...flameEvents,
       ...kegEvents,
       ...barEvents,
+      ...shadowEvents,
       ...doorEvents,
       ...liftEvents,
       ...sluiceEvents(before, moved),
