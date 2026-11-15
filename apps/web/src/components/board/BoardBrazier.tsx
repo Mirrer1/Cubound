@@ -86,15 +86,18 @@ const Dip = ({ amp, children }: DipProps) => {
   )
 }
 
+// 칸 밖으로 번지는 바닥 빛은 어둠에 숨김, 그때 빛은 어둠 막 몫
 const Bowl = ({ x, y, flash, covered }: Omit<BowlProps, 'part'>) => {
   const top = y - BRAZIER.height
   const coal = top - 1
 
   return (
     <g>
-      <Flicker opacity={1}>
-        <Pool x={x} y={y} scale={1.6} opacity={0.16} />
-      </Flicker>
+      <g style={{ opacity: 'calc(1 - var(--night-field, 0))' }}>
+        <Flicker opacity={1}>
+          <Pool x={x} y={y} scale={1.6} opacity={0.16} />
+        </Flicker>
+      </g>
       <BoardBlock
         x={x}
         y={top}

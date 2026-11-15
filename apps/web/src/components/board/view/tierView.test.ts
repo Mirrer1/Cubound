@@ -170,8 +170,8 @@ describe('단 토큰', () => {
     (block) => block.startsWith('@theme static') || block.startsWith('html[data-cycle='),
   )
 
-  it('@theme과 챕터 블록 넷', () => {
-    expect(blocks).toHaveLength(4)
+  it('@theme과 챕터 블록 다섯', () => {
+    expect(blocks).toHaveLength(5)
   })
 
   it.each(blocks.map((block) => [block.slice(0, block.indexOf('{')).trim(), block]))(

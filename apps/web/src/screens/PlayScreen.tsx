@@ -1,5 +1,6 @@
 import { AnimatePresence } from 'motion/react'
 import {
+  type CSSProperties,
   type MouseEvent,
   type PointerEvent,
   Suspense,
@@ -11,7 +12,7 @@ import {
 } from 'react'
 
 import Board from '@/components/board/Board'
-import { cameraGuideStep, lockFocus } from '@/components/board/frame'
+import { cameraGuideStep, guideNightOf, lockFocus, nightVeils } from '@/components/board/frame'
 import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
@@ -89,6 +90,11 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
         : undefined
   const left = game ? movesLeft(game) : null
   const outOfMoves = left === 0 && !game?.cleared
+  const guideId = guideStep !== null ? guides[guideStep]?.id : undefined
+  const guideNight = game ? guideNightOf(game, guideId) : null
+  const night = game
+    ? nightVeils(guideNight ?? prevGame, guideNight ?? game, guideNight ? [] : events)
+    : null
 
   const handleNext = () => {
     if (nextId) goTo({ screen: 'play', stageId: nextId })
@@ -194,7 +200,9 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
       {game && (
         <section
           ref={sectionRef}
-          className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.375rem] border border-line bg-base-bg"
+          data-night={night?.phase}
+          style={night?.back as CSSProperties | undefined}
+          className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.375rem] border border-line bg-base-bg transition-soft-colors"
         >
           <header className="relative flex items-start justify-between gap-6 px-(--panel-pad) pt-(--panel-pad) short:items-center short:pt-3 narrow:flex-wrap narrow:items-center narrow:gap-x-3 narrow:gap-y-3">
             <div className="flex min-w-0 flex-col gap-1.5 short:flex-row short:items-center short:gap-3 narrow:flex-1 narrow:flex-row narrow:items-center narrow:gap-2 slim:basis-full">
@@ -254,7 +262,7 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
               </div>
             </div>
           </header>
-          <div className="min-h-0 flex-1 p-2 wide:p-6">
+          <div className="relative min-h-0 flex-1 p-2 wide:p-6">
             <Board
               key={game.stage.id}
               game={game}
@@ -267,10 +275,14 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
               chained={chained}
               restarting={restarting}
               guideCell={guideCell}
+              guideId={guideId}
               overview={overview && !showsAll}
               onShowsAll={setShowsAll}
             />
           </div>
+          {night && (
+            <div className="pointer-events-none absolute inset-0 bg-night" style={night.front} />
+          )}
           <AnimatePresence>
             {game.cleared && (
               <ClearCard

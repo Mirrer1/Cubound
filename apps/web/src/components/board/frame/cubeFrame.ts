@@ -1,6 +1,6 @@
 import { shoveSegments } from './barFrame'
 import { crackSunk } from './crackFrame'
-import { type Chain, NO_CHAIN, clamp01, easeIn, easeOut, lerp } from './curveFrame'
+import { type Chain, NO_CHAIN, clamp01, easeIn, easeOut, lerp, smooth } from './curveFrame'
 import { slideChain, slideSpan, squashAt } from './iceFrame'
 import { blastLean, blastSegments, blastWarps } from './kegFrame'
 import {
@@ -29,9 +29,10 @@ import {
 } from './pathFrame'
 import { elapsedAt, riseProgress } from './progressFrame'
 import { PLANT_SEED, seedLift } from './seedFrame'
+import { shadowProgress } from './shadowFrame'
 import { inSwamp, swampTime } from './swampFrame'
 import { ridePhase } from './switchFrame'
-import { moveSeconds, playerSegments, rises, warpAt } from './timeFrame'
+import { durationOf, moveSeconds, playerSegments, rises, warpAt } from './timeFrame'
 import { carriedBy, carryOf, frontOf, slideFront, slidingCell, tramProgress } from './tramFrame'
 import { windLean, windSpan } from './windFrame'
 import { TILE } from '@/game/iso'
@@ -297,6 +298,17 @@ export const playerFrame = (
   chain: Chain = NO_CHAIN,
 ): CubeFrame => {
   const frame = pathFrame(prev, game, events, t, chain)
+  // 밝아질 때 다리 위에서 오르기 전 칸으로 미끄러지는 자리
+  const back = events.find((e) => e.type === 'returned')
+  if (back?.type === 'returned' && prev) {
+    const swamp = swampTime(prev, game)
+    const p = smooth(shadowProgress(t * durationOf(events, swamp), moveSeconds(events, swamp)))
+    if (p > 0) {
+      const x = lerp(back.from.x, back.to.x, p)
+      const y = lerp(back.from.y, back.to.y, p)
+      return { ...frame, x, y, cell: p < 0.5 ? back.from : back.to }
+    }
+  }
   const warped = events.find((e) => e.type === 'warped')
   // 큐브가 제 길을 다 가고 선 칸, 발판이면 이어서 실려 가는 자리
   const rest =

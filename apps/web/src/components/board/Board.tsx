@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useMemo } from 'react'
+import { type CSSProperties, Fragment, useEffect, useMemo } from 'react'
 
 import BoardBar from './BoardBar'
 import BoardBox from './BoardBox'
@@ -9,6 +9,8 @@ import BoardCube from './BoardCube'
 import { type BehindGoal } from './BoardFloor'
 import BoardIceStone from './BoardIceStone'
 import BoardKeg from './BoardKeg'
+import BoardNight from './BoardNight'
+import BoardShadow from './BoardShadow'
 import BoardSluice from './BoardSluice'
 import BoardTether from './BoardTether'
 import BoardTram from './BoardTram'
@@ -18,17 +20,28 @@ import {
   type Tram,
   barKeys,
   boardCells,
+  bridgeLight,
+  bridgeLooks,
   cellLook,
   coversRope,
+  cubeCover,
   cubeFirst,
   filledCells,
   fillingCellKey,
   guideNearCube,
+  guideNightOf,
+  movingBoxCover,
+  nightCellOf,
+  nightScene,
+  quietAmbient,
   railDirsOf,
   railsUnder,
   restartDuration,
   same,
   sceneFrame,
+  sinkingBoxCovers,
+  sinkingNow,
+  stillBoxCover,
   swampTime,
   underWall,
   vineLooks,
@@ -63,6 +76,7 @@ interface BoardProps {
   chained: boolean // 앞 이동에서 바로 이어지는 이동
   restarting: boolean // 처음 자리로 내려앉는 연출 중
   guideCell?: Point // 가이드가 비추는 칸
+  guideId?: string // 지금 가이드 단계
   overview: boolean // 판 전체를 한 화면에 담는 보기
   onShowsAll: (showsAll: boolean) => void // 평소 화면에 판 전체가 들어오는지 알림
 }
@@ -78,6 +92,7 @@ const Board = ({
   chained,
   restarting,
   guideCell,
+  guideId,
   overview,
   onShowsAll,
 }: BoardProps) => {
@@ -149,8 +164,17 @@ const Board = ({
     [scene.box, events, vines],
   )
 
-  // 다리 막대가 걸친 구덩이 칸, 그 위의 막대와 큐브를 그리는 자리
-  const bareKeys = barKeys(scene.bar)
+  const bridges = useMemo(() => bridgeLooks(stage), [stage])
+  const guideNight = guideNightOf(game, guideId)
+  const night = nightScene({
+    prev: guideNight ?? prevGame,
+    game: guideNight ?? game,
+    events: guideNight ? [] : events,
+    t,
+    cube: scene.cube,
+  })
+  // 다리 막대가 걸친 구덩이 칸과 그림자 다리 칸, 그 위의 물건과 큐브를 그리는 자리
+  const bareKeys = [barKeys(scene.bar), ...bridges.keys()].join(' ')
   const cells = useMemo(
     () => boardCells(heights, scene.before.heights, railDirs, vines, fillingKey, bareKeys),
     [heights, scene.before.heights, railDirs, vines, fillingKey, bareKeys],
@@ -158,7 +182,9 @@ const Board = ({
 
   const plan = useMemo(() => ambientPlan(stage, cycleOf(parseStageId(stage.id).world)), [stage])
   const pickAmbient = (kind: AmbientKind, round: number, slot: number, last: Point[]) =>
-    ambientCells(game, kind, round, slot, last, viewBox.split(' ').map(Number) as ViewBox)
+    quietAmbient(guideNight ?? game, kind)
+      ? []
+      : ambientCells(game, kind, round, slot, last, viewBox.split(' ').map(Number) as ViewBox)
   const ambient = useAmbient(stage.id, plan, pickAmbient)
 
   const lookOf = cellLook({
@@ -201,10 +227,19 @@ const Board = ({
   const burnOf = (to: Point) =>
     brazier.burning && same(brazier.burning.at, to) ? brazier.burning.q : -1
 
+  const shownBridge = night?.bridge ?? 0
+  const movingFrame = scene.box && scene.boxFrames.find((frame) => same(frame.to, scene.box!.to))
+  const boxCover =
+    night && movingFrame ? movingBoxCover(night, movingFrame, scene.box!, events) : null
+  const sinkCovers = night && night.sink < 1 ? sinkingBoxCovers(night, game) : []
+  const playerCover = night ? cubeCover(night, prevGame, game, scene) : null
+  const covers = [boxCover, playerCover, ...sinkCovers].flatMap((c) => (c ? [c] : []))
+  const veilVars = night ? ({ '--night-field': night.field } as CSSProperties) : undefined
+
   useEffect(() => onShowsAll(showsAll), [showsAll, onShowsAll])
 
   return (
-    <svg ref={ref} viewBox={viewBox} className="h-full w-full">
+    <svg ref={ref} viewBox={viewBox} className="h-full w-full" style={veilVars}>
       {railsUnder(
         cubeFirst(
           underWall(scene.tramFrames, heights).reduce(
@@ -222,9 +257,37 @@ const Board = ({
       ).map((cell) => {
         const { cellY, look, over } = lookOf(cell)
         const taps = tapLooks.filter((tap) => same(tap.cell, cell.p))
+        const sinking = night?.sinking.some((p) => same(p, cell.p)) ?? false
+        const bridge = bridges.get(cell.key)
+        const sinkingBox = sinkingNow(sinking, night?.sink ?? 1)
+        // 다리 위에 멈춘 상자, 구덩이 칸이라 칸 그림이 그리지 않는 자리
+        const bridgeBox =
+          night && bridge && !sinking && !over.overlay && game.boxes.some((p) => same(p, cell.p))
+            ? stillBoxCover(night, cell, bridge.level)
+            : null
+        const veil =
+          night && !cell.bare && !sinkingBox
+            ? nightCellOf(night, game, cell.p, look.h, covers)
+            : null
         const content =
-          over.overlay || taps.length > 0 ? (
+          over.overlay || taps.length > 0 || sinkingBox ? (
             <>
+              {sinkingBox && (
+                <BoardBox x={cell.x} y={cellY - TILE.layer + (night?.sink ?? 0) * TILE.layer} />
+              )}
+              {sinkCovers
+                .filter((cover) => sinkingBox && same(cover.to, cell.p))
+                .map((cover) => (
+                  <path
+                    key="sink-cover"
+                    d={cover.d}
+                    shapeRendering="crispEdges"
+                    style={{
+                      fill: 'var(--color-night)',
+                      fillOpacity: `calc(var(--night-field, 0) * ${cover.opacity})`,
+                    }}
+                  />
+                ))}
               {over.barClip && (
                 <clipPath id={`crack-bar-clip-${cell.p.x}-${cell.p.y}`}>
                   <polygon points={over.barClip} />
@@ -278,6 +341,16 @@ const Board = ({
                     />
                   ) : (
                     <BoardBox x={frame.x} y={frame.y} />
+                  )}
+                  {boxCover && same(frame.to, boxCover.to) && (
+                    <path
+                      d={boxCover.d}
+                      shapeRendering="crispEdges"
+                      style={{
+                        fill: 'var(--color-night)',
+                        fillOpacity: `calc(var(--night-field, 0) * ${boxCover.opacity})`,
+                      }}
+                    />
                   )}
                 </g>
               ))}
@@ -359,6 +432,18 @@ const Board = ({
                 lean={cubeLean}
                 leanRef={leanLoop}
               />
+              {over.drawCube && playerCover && (
+                <g transform={scene.cubeSquash || undefined}>
+                  <path
+                    d={playerCover.d}
+                    shapeRendering="crispEdges"
+                    style={{
+                      fill: 'var(--color-night)',
+                      fillOpacity: `calc(var(--night-field, 0) * ${playerCover.opacity})`,
+                    }}
+                  />
+                </g>
+              )}
               {taps.map((tap) => (
                 <BoardSluice
                   key={`${tap.device.x}-${tap.device.y}`}
@@ -389,15 +474,52 @@ const Board = ({
           ) : undefined
 
         return cell.bare ? (
-          <g key={cell.key}>{content}</g>
-        ) : (
-          <BoardCell
-            key={cell.key}
-            {...look}
-            behindGoal={sunkGoal && isFrontOfGoal(cell.p) ? sunkGoal : null}
-          >
+          <g key={cell.key}>
+            {bridge && shownBridge > 0 && (
+              <BoardShadow
+                x={cell.x}
+                y={cell.y - bridge.level * TILE.layer}
+                axis={bridge.axis}
+                parity={bridge.parity}
+                shown={shownBridge}
+                lit={bridgeLight(night, cell.p, bridge.level)}
+              />
+            )}
+            {bridgeBox && (
+              <>
+                <BoardBox x={cell.x} y={bridgeBox.top} />
+                <path
+                  d={bridgeBox.d}
+                  style={{
+                    fill: 'var(--color-night)',
+                    fillOpacity: `calc(var(--night-field, 0) * ${bridgeBox.opacity})`,
+                  }}
+                />
+              </>
+            )}
             {content}
-          </BoardCell>
+          </g>
+        ) : (
+          <Fragment key={cell.key}>
+            {sinkingBox && bridge && shownBridge > 0 && (
+              <BoardShadow
+                x={cell.x}
+                y={cell.y - bridge.level * TILE.layer}
+                axis={bridge.axis}
+                parity={bridge.parity}
+                shown={shownBridge}
+                lit={bridgeLight(night, cell.p, bridge.level)}
+              />
+            )}
+            <BoardCell
+              {...look}
+              hidden={look.hidden || sinkingBox}
+              behindGoal={sunkGoal && isFrontOfGoal(cell.p) ? sunkGoal : null}
+            >
+              {content}
+            </BoardCell>
+            {veil && <BoardNight x={look.x} y={look.y} {...veil} />}
+          </Fragment>
         )
       })}
       <defs>

@@ -109,4 +109,17 @@ export {
 } from './whirlpoolFrame'
 export { meltDisplay, type StoneFrame } from './iceStoneFrame'
 export { tideDisplay } from './tideFrame'
+export {
+  bridgeLight,
+  cubeCover,
+  guideNightOf,
+  movingBoxCover,
+  nightCellOf,
+  nightDisplay,
+  nightScene,
+  nightVeils,
+  sinkingBoxCovers,
+  stillBoxCover,
+} from './nightFrame'
+export { bridgeLooks, quietAmbient, sinkingNow } from './shadowFrame'
 export { type BarDraw, type BarScene, barKeys, barsAt } from './barFrame'

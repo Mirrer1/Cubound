@@ -192,3 +192,18 @@ export {
   footprintCells,
   frontCell,
 } from './barView'
+export {
+  NIGHT_PRE,
+  type NightLight,
+  VEIL_STEPS,
+  type VeilBlock,
+  type VeilOpen,
+  type VeilShape,
+  coverOutline,
+  coverPath,
+  edgeFade,
+  cellVeil,
+  veilMiddle,
+  veilShapes,
+} from './nightView'
+export { BRIDGE, SHIMMER_LOOP, bridgeAxis, bridgeFaces } from './shadowView'

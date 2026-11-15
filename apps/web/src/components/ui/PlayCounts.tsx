@@ -6,6 +6,7 @@ import {
   flameDisplay,
   meltDisplay,
   mudDisplay,
+  nightDisplay,
   tideDisplay,
   vinesDisplay,
   windDisplay,
@@ -78,6 +79,7 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
   const gusting = gustAt !== null && gustTurn === turn && animating
   const melt = meltDisplay(game, events, animating)
   const tide = tideDisplay(game, events, animating)
+  const night = nightDisplay(game)
   const flame = flameDisplay(game, events, animating)
   const meltHold = useLoop(MELT_HOLD, 600)
   const limitedDir = game?.stage.rules?.dirLimit?.dir
@@ -245,6 +247,17 @@ const PlayCounts = ({ game, prevGame, events, turn, animating }: PlayCountsProps
               {tide.left}
             </LimitCount>
           </span>
+        </div>
+      )}
+      {night && (
+        <div
+          data-guide="night"
+          className="flex flex-col items-end gap-0.5 short:translate-y-[1.5px] short:flex-row short:items-center short:gap-2 narrow:flex-row narrow:items-center narrow:gap-2 slim:flex-col slim:items-start slim:gap-0.5"
+        >
+          <span className="font-mono text-label tracking-[0.22em] text-mute short:-translate-y-px narrow:-translate-y-px slim:translate-y-0">
+            NIGHT
+          </span>
+          <LimitCount hit={null}>{night.left}</LimitCount>
         </div>
       )}
       <AnimatePresence initial={false}>

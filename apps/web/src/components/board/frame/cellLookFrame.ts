@@ -32,7 +32,7 @@ import { type TrailLook, trailLookOf } from './trailFrame'
 import { type VineCell, vineCellOf } from './vineFrame'
 import { leanOf, whirlLook } from './whirlpoolFrame'
 import { TILE, toScreen } from '@/game/iso'
-import { isIce } from '@/game/rules'
+import { isDark, isIce } from '@/game/rules'
 import type { Direction, GameEvent, GameState, Point, Stage } from '@/game/types'
 
 // 재시작에 메운 바닥이 사라지는 진행도
@@ -426,7 +426,7 @@ export const cellLook = ({
                   : ambientHere.kind === 'brazierSmoke' || ambientHere.kind === 'brazierSpark'
                     ? same(game.player, cell.p) || has(boxes, cell.p)
                     : ambientHere.kind === 'crow'
-                      ? crowNear
+                      ? crowNear || isDark(game)
                       : Math.abs(cell.p.x - game.player.x) + Math.abs(cell.p.y - game.player.y) <=
                         1,
             crows:

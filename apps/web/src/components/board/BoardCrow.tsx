@@ -3,6 +3,8 @@ import { useEffect, useRef } from 'react'
 import { CROW, crowBodyPath, crowLegs, crowPose, crowSeats, crowTransform, crowWing } from './view'
 
 const INK = { fill: 'var(--color-amb-crow)' }
+// 어둠이 내리는 만큼 사라지는 까마귀, 어둠에는 빛 옆에서도 안 보임
+const HIDDEN_IN_DARK = { opacity: 'calc(1 - var(--night-field, 0))' }
 
 interface CrowParts {
   shadow: SVGEllipseElement | null
@@ -67,7 +69,7 @@ const BoardCrow = ({ x, y, at, cycle, leave, crows, side }: BoardCrowProps) => {
   }
 
   return (
-    <g transform={`translate(${x} ${y})`}>
+    <g transform={`translate(${x} ${y})`} style={HIDDEN_IN_DARK}>
       {seats.map((seat) => (
         <g key={seat.index}>
           <ellipse
@@ -80,7 +82,7 @@ const BoardCrow = ({ x, y, at, cycle, leave, crows, side }: BoardCrowProps) => {
             style={{ fill: 'var(--color-amb-crow-shadow)' }}
           />
           <g ref={keep(seat.index, 'bird')} opacity={0} style={INK}>
-            <path ref={keep(seat.index, 'far')} />
+            <path ref={keep(seat.index, 'far')} style={{ fill: 'var(--color-amb-crow-far)' }} />
             <path ref={keep(seat.index, 'body')} />
             <path ref={keep(seat.index, 'legs')} />
             <path ref={keep(seat.index, 'near')} />

@@ -346,11 +346,26 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
             width="100%"
             height="100%"
             mask="url(#guide-holes)"
-            style={{ fill: 'color-mix(in srgb, var(--color-ink) 55%, transparent)' }}
+            style={{
+              fill: 'var(--guide-scrim, color-mix(in srgb, var(--color-ink) 55%, transparent))',
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 * speed, ease: 'easeOut' }}
           />
+          <AnimatePresence>
+            {ready &&
+              holeRects.map((rect, i) => (
+                <motion.rect
+                  key={`wash-${step}-${i}`}
+                  style={{ fill: 'var(--guide-wash, transparent)' }}
+                  initial={{ ...rect, opacity: 0 }}
+                  animate={{ ...rect, opacity: 1 }}
+                  exit={{ opacity: 0, transition: { duration: EXIT * speed } }}
+                  transition={{ duration: 0, opacity: { duration: APPEAR * speed } }}
+                />
+              ))}
+          </AnimatePresence>
         </svg>
       )}
       {/* 카드도 영역과 함께 단계마다 꺼졌다가 새 자리에서 켜짐 */}

@@ -16,6 +16,7 @@ import {
   stonePath,
   totalSeconds,
 } from './pathFrame'
+import { shadowSeconds } from './shadowFrame'
 import { same } from '@/game/rules'
 import type { GameEvent, Point } from '@/game/types'
 
@@ -489,7 +490,8 @@ export const durationOf = (events: GameEvent[], swamp: SwampTime = NO_SWAMP) =>
     moveSeconds(events, swamp) +
       (rises(events) ? RISE_SECONDS : 0) +
       (events.some((e) => e.type === 'melted') ? MELT_SECONDS : 0) +
-      (events.some((e) => e.type === 'stiffened') ? STIFFEN_SECONDS : 0),
+      (events.some((e) => e.type === 'stiffened') ? STIFFEN_SECONDS : 0) +
+      shadowSeconds(events),
     crackEnd(events),
     brazierLightEnd(events),
     brazierEnd(events),

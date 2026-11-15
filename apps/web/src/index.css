@@ -90,8 +90,12 @@
   --color-amb-ash-dust: #9e9a93;
   --color-amb-ember-smoke: #a99d90;
   --color-amb-brazier-smoke: #c8bdb0;
-  --color-amb-crow: #1c1723;
+  --color-amb-crow: #4a4354;
+  --color-amb-crow-far: #3c3646;
   --color-amb-crow-shadow: #000000;
+  --color-night: #000000;
+  --color-shadow-bridge: #7a6ea8;
+  --color-shadow-bridge-side: #5f5683;
   --color-char-top: #7a6d61;
   --color-char-left: #5e544a;
   --color-char-right: #6c6156;
@@ -425,6 +429,33 @@ html[data-cycle='5'] {
   --color-floor-8-top-alt: #bcb6c4;
   --color-floor-8-left: #95909f;
   --color-floor-8-right: #a7a2b1;
+}
+
+/* 비틀기 어둠 동안의 게임 헤더 */
+section[data-night] header,
+section[data-night] header * {
+  transition:
+    color var(--night-seconds) ease-in var(--night-delay, 0s),
+    background-color var(--night-seconds) ease-in var(--night-delay, 0s),
+    border-color var(--night-seconds) ease-in var(--night-delay, 0s);
+}
+
+section[data-night='dark'] {
+  border-color: var(--color-night);
+  --guide-scrim: color-mix(in srgb, var(--color-night) 60%, transparent);
+  --guide-wash: rgb(255 255 255 / 0.1);
+}
+
+section[data-night='dark'] header {
+  --color-ink: #ebe7f2;
+  --color-mute: #8e889b;
+  --color-faint: #6b6678;
+  --color-line: #2f2b36;
+  --color-line-strong: #3f3a48;
+  --color-hover: #26222d;
+  --color-surface: #1c1922;
+  --color-base-bg: #000000;
+  color: var(--color-ink);
 }
 
 html,
