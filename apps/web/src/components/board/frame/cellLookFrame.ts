@@ -467,23 +467,33 @@ export const cellLook = ({
 
 const isBundle = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
 
+// 매 프레임 칸마다 도는 비교라 키 배열을 만들지 않는 반복
+const keyCount = (o: Record<string, unknown>) => {
+  let n = 0
+  for (const _ in o) n++
+  return n
+}
+
 const sameBundle = (a: Record<string, unknown>, b: Record<string, unknown>) => {
-  const keys = Object.keys(a)
-  return keys.length === Object.keys(b).length && keys.every((key) => Object.is(a[key], b[key]))
+  let n = 0
+  for (const key in a) {
+    if (!Object.is(a[key], b[key])) return false
+    n++
+  }
+  return n === keyCount(b)
 }
 
 // BoardCell 다시 그리기 판단, 묶음은 안의 값끼리 비교, children은 참조 비교
 export const sameCellLook = <T extends object>(prev: T, next: T) => {
   const a = prev as Record<string, unknown>
   const b = next as Record<string, unknown>
-  const keys = Object.keys(a)
-  return (
-    keys.length === Object.keys(b).length &&
-    keys.every((key) => {
-      if (Object.is(a[key], b[key])) return true
-      return (
-        key !== 'children' && isBundle(a[key]) && isBundle(b[key]) && sameBundle(a[key], b[key])
-      )
-    })
-  )
+  let n = 0
+  for (const key in a) {
+    const x = a[key]
+    const y = b[key]
+    n++
+    if (Object.is(x, y)) continue
+    if (key === 'children' || !isBundle(x) || !isBundle(y) || !sameBundle(x, y)) return false
+  }
+  return n === keyCount(b)
 }

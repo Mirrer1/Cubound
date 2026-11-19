@@ -1,47 +1,27 @@
-import { type CSSProperties, Fragment, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
-import BoardBar from './BoardBar'
-import BoardBox from './BoardBox'
-import BoardBrazier from './BoardBrazier'
-import BoardCell from './BoardCell'
-import BoardClear from './BoardClear'
-import BoardCube from './BoardCube'
-import { type BehindGoal } from './BoardFloor'
-import BoardIceStone from './BoardIceStone'
-import BoardKeg from './BoardKeg'
-import BoardNight from './BoardNight'
-import BoardShadow from './BoardShadow'
-import BoardSluice from './BoardSluice'
+import BoardSlot, { type SlotScene } from './BoardSlot'
 import BoardTether from './BoardTether'
-import BoardTram from './BoardTram'
-import BoardWater from './BoardWater'
-import BoardWhirlpool from './BoardWhirlpool'
 import {
   type Tram,
   barKeys,
   boardCells,
-  bridgeLight,
   bridgeLooks,
   cellLook,
   coversRope,
-  cubeCover,
   cubeFirst,
   filledCells,
   fillingCellKey,
   guideNearCube,
   guideNightOf,
-  movingBoxCover,
-  nightCellOf,
-  nightScene,
+  nightVeils,
   quietAmbient,
   railDirsOf,
   railsUnder,
   restartDuration,
-  same,
   sceneFrame,
-  sinkingBoxCovers,
-  sinkingNow,
-  stillBoxCover,
+  slotFrame,
+  slotOf,
   swampTime,
   underWall,
   vineLooks,
@@ -51,13 +31,11 @@ import {
   type AmbientKind,
   LEAN_LOOP,
   type ViewBox,
-  WATER,
   ambientCells,
   ambientPlan,
-  leanShift,
   pullLanes,
 } from './view'
-import { TILE } from '@/game/iso'
+import { TILE, blockFaces } from '@/game/iso'
 import type { GameEvent, GameState, Point } from '@/game/types'
 import { useAmbient } from '@/hooks/useAmbient'
 import { useBoardAnimation } from '@/hooks/useBoardAnimation'
@@ -146,12 +124,6 @@ const Board = ({
     lookCell ? undefined : scene.cube,
   )
   const leanLoop = useLoop(LEAN_LOOP, 1600)
-  const cubeLean = scene.cubeLean
-    ? (leanShift(scene.cubeLean.toward, scene.cubeLean.amp) as CSSProperties)
-    : undefined
-  const rowLean = scene.rowLean
-    ? (leanShift(scene.rowLean.toward, scene.rowLean.amp) as CSSProperties)
-    : undefined
 
   const railDirs = useMemo(() => railDirsOf(trams), [trams])
 
@@ -165,14 +137,28 @@ const Board = ({
   )
 
   const bridges = useMemo(() => bridgeLooks(stage), [stage])
-  const guideNight = guideNightOf(game, guideId)
-  const night = nightScene({
-    prev: guideNight ?? prevGame,
-    game: guideNight ?? game,
-    events: guideNight ? [] : events,
-    t,
-    cube: scene.cube,
+  const guideNight = useMemo(() => guideNightOf(game, guideId), [game, guideId])
+  // 가이드가 어둠 장면을 열거나 닫을 때 바뀌기 전 장면, 수를 두면 비움. 없으면 어둠이 바뀌는 과정 없이 툭 바뀜
+  const [guideShift, setGuideShift] = useState({
+    game,
+    shown: guideNight,
+    from: null as GameState | null,
   })
+  let guideFrom = guideShift.from
+  if (guideShift.game !== game || guideShift.shown !== guideNight) {
+    guideFrom = guideShift.game === game ? (guideShift.shown ?? game) : null
+    setGuideShift({ game, shown: guideNight, from: guideFrom })
+  }
+  // 판 칸 어둠 세기의 수 처음과 끝, 바탕 전환과 같은 시간
+  const beat = useMemo(
+    () =>
+      nightVeils(
+        guideFrom ?? guideNight ?? prevGame,
+        guideNight ?? game,
+        guideNight || guideFrom ? [] : events,
+      )?.field ?? null,
+    [guideFrom, guideNight, prevGame, game, events],
+  )
   // 다리 막대가 걸친 구덩이 칸과 그림자 다리 칸, 그 위의 물건과 큐브를 그리는 자리
   const bareKeys = [barKeys(scene.bar), ...bridges.keys()].join(' ')
   const cells = useMemo(
@@ -198,330 +184,95 @@ const Board = ({
     scene,
     ambient,
   })
-  // 물에 잠긴 골, 앞줄 칸이 자기 수면 위에 다시 비추는 자리
-  const goalCell = cells.find((cell) => same(cell.p, stage.goal))
-  const goalLook = goalCell ? lookOf(goalCell).look : null
-  const sunkGoal: BehindGoal | null =
-    goalLook && goalLook.sluice.sunk > 0
-      ? {
-          x: goalLook.x,
-          y: goalLook.y,
-          parity: goalLook.parity,
-          sunk: goalLook.sluice.sunk,
-          depth: goalLook.water.depth,
-        }
-      : null
-  const isFrontOfGoal = (p: Point) =>
-    p.x - stage.goal.x >= 0 &&
-    p.y - stage.goal.y >= 0 &&
-    p.x - stage.goal.x + p.y - stage.goal.y > 0 &&
-    p.x - stage.goal.x <= 1 &&
-    p.y - stage.goal.y <= 1
-  // 장치 위로 올라온 물건 앞에 다시 그리는 꼭지
-  const tapLooks = scene.taps.flatMap((tap) => {
-    const device = cells.find((cell) => same(cell.p, tap.device))
-    return device ? [{ ...tap, look: lookOf(device).look }] : []
+  const frame = slotFrame({
+    game,
+    prevGame,
+    events,
+    guideNight,
+    guideFrom,
+    beat,
+    bridges,
+    lookOf,
+    t,
+    scene,
+    cells,
   })
-
-  const { brazier } = scene
-  const burnOf = (to: Point) =>
-    brazier.burning && same(brazier.burning.at, to) ? brazier.burning.q : -1
-
-  const shownBridge = night?.bridge ?? 0
-  const movingFrame = scene.box && scene.boxFrames.find((frame) => same(frame.to, scene.box!.to))
-  const boxCover =
-    night && movingFrame ? movingBoxCover(night, movingFrame, scene.box!, events) : null
-  const sinkCovers = night && night.sink < 1 ? sinkingBoxCovers(night, game) : []
-  const playerCover = night ? cubeCover(night, prevGame, game, scene) : null
-  const covers = [boxCover, playerCover, ...sinkCovers].flatMap((c) => (c ? [c] : []))
-  const veilVars = night ? ({ '--night-field': night.field } as CSSProperties) : undefined
+  const view: SlotScene = { ...frame, leanLoop }
+  const ordered = railsUnder(
+    cubeFirst(
+      underWall(scene.tramFrames, heights).reduce(
+        (ordered, p) => cubeFirst(ordered, p),
+        [
+          scene.box?.cell,
+          scene.kegFrame?.cell,
+          ...scene.iceStone.stones.map((stone) => stone.cell),
+        ].reduce((ordered, p) => (p ? cubeFirst(ordered, p) : ordered), cells),
+      ),
+      scene.cube.cell,
+      scene.cube.last,
+    ),
+    scene.tramFrames,
+  )
+  const slots = ordered.map((cell) => slotOf(frame, cell))
+  // 예고와 어둠 동안 그림자 다리를 땅과 상자 위에 그림
+  const bridgesOnTop = frame.night !== null && (frame.night.bridge > 0 || frame.guideShift)
+  // 다리 위로 다시 그릴 칸: 다리 칸(다리 위 상자, 큐브)과 큐브가 다리 곁 같은 깊이 이상에 있는 칸
+  // 큐브 뒤나 옆의 다리는 큐브 모양만큼 비워 큐브를 덮지 않음, 큐브를 다리 위로 올리면 앞의 상자보다도 앞에 나와 보임
+  const cubeCut = scene.cubeFaces.map((face) => `M${face.points}Z`).join(' ')
+  const behindCube = (p: { x: number; y: number }) =>
+    p.x + p.y <= scene.cube.cell.x + scene.cube.cell.y
+  // 다리 밑면이 덮지 않을 옆 땅 칸 윗면들
+  const slotAt = new Map(slots.map((slot) => [slot.cell.key, slot]))
+  const underOf = (slot: (typeof slots)[number]) =>
+    slot.bridge
+      ? [-1, 0, 1]
+          .flatMap((dy) =>
+            [-1, 0, 1].map((dx) => slotAt.get(`${slot.cell.p.x + dx}-${slot.cell.p.y + dy}`)),
+          )
+          .flatMap((n) =>
+            n && n !== slot && !n.cell.bare
+              ? [`M${blockFaces(n.look.x, n.look.y, TILE.width, 0).top}Z`]
+              : [],
+          )
+          .join(' ')
+      : ''
+  // 구덩이로 떨어지는 상자는 늘 맨 위에, 뒤 칸에 잘려 찌그러져 보이지 않고 모양 그대로 떨어짐
+  const layered = bridgesOnTop || slots.some((slot) => slot.sinkingBox)
+  const lifted = slots.map(
+    (slot) => slot.sinkingBox || (bridgesOnTop && slot.cell.bare && slot.bridge !== undefined),
+  )
 
   useEffect(() => onShowsAll(showsAll), [showsAll, onShowsAll])
 
   return (
-    <svg ref={ref} viewBox={viewBox} className="h-full w-full" style={veilVars}>
-      {railsUnder(
-        cubeFirst(
-          underWall(scene.tramFrames, heights).reduce(
-            (ordered, p) => cubeFirst(ordered, p),
-            [
-              scene.box?.cell,
-              scene.kegFrame?.cell,
-              ...scene.iceStone.stones.map((stone) => stone.cell),
-            ].reduce((ordered, p) => (p ? cubeFirst(ordered, p) : ordered), cells),
-          ),
-          scene.cube.cell,
-          scene.cube.last,
-        ),
-        scene.tramFrames,
-      ).map((cell) => {
-        const { cellY, look, over } = lookOf(cell)
-        const taps = tapLooks.filter((tap) => same(tap.cell, cell.p))
-        const sinking = night?.sinking.some((p) => same(p, cell.p)) ?? false
-        const bridge = bridges.get(cell.key)
-        const sinkingBox = sinkingNow(sinking, night?.sink ?? 1)
-        // 다리 위에 멈춘 상자, 구덩이 칸이라 칸 그림이 그리지 않는 자리
-        const bridgeBox =
-          night && bridge && !sinking && !over.overlay && game.boxes.some((p) => same(p, cell.p))
-            ? stillBoxCover(night, cell, bridge.level)
-            : null
-        const veil =
-          night && !cell.bare && !sinkingBox
-            ? nightCellOf(night, game, cell.p, look.h, covers)
-            : null
-        const content =
-          over.overlay || taps.length > 0 || sinkingBox ? (
-            <>
-              {sinkingBox && (
-                <BoardBox x={cell.x} y={cellY - TILE.layer + (night?.sink ?? 0) * TILE.layer} />
-              )}
-              {sinkCovers
-                .filter((cover) => sinkingBox && same(cover.to, cell.p))
-                .map((cover) => (
-                  <path
-                    key="sink-cover"
-                    d={cover.d}
-                    shapeRendering="crispEdges"
-                    style={{
-                      fill: 'var(--color-night)',
-                      fillOpacity: `calc(var(--night-field, 0) * ${cover.opacity})`,
-                    }}
-                  />
-                ))}
-              {over.barClip && (
-                <clipPath id={`crack-bar-clip-${cell.p.x}-${cell.p.y}`}>
-                  <polygon points={over.barClip} />
-                </clipPath>
-              )}
-              <g
-                clipPath={over.barClip ? `url(#crack-bar-clip-${cell.p.x}-${cell.p.y})` : undefined}
-              >
-                {over.bars.map((bar, i) => (
-                  <BoardBar key={i} {...bar} />
-                ))}
-              </g>
-              {over.tram && (
-                <g opacity={over.tram.opacity}>
-                  <BoardTram
-                    x={over.tram.x}
-                    y={over.tram.y}
-                    depth={over.tram.depth}
-                    dx={over.tram.dx}
-                    dy={over.tram.dy}
-                  />
-                </g>
-              )}
-              {over.drawBoxes.map((frame) => (
-                <g
-                  key={`${frame.to.x}-${frame.to.y}`}
-                  clipPath={
-                    frame.clip ? `url(#crack-box-clip-${frame.to.x}-${frame.to.y})` : undefined
-                  }
-                >
-                  {frame.clip && (
-                    <clipPath id={`crack-box-clip-${frame.to.x}-${frame.to.y}`}>
-                      <polygon points={frame.clip} />
-                    </clipPath>
-                  )}
-                  {scene.box && same(frame.to, scene.box.to) && scene.boxShown !== null ? (
-                    <g
-                      ref={scene.rowLean ? leanLoop : undefined}
-                      className={scene.rowLean ? 'whirl-lean' : undefined}
-                      style={rowLean}
-                    >
-                      <BoardWater part="box" x={frame.x} y={frame.y} shown={scene.boxShown} />
-                    </g>
-                  ) : brazier.boss ? (
-                    <BoardBrazier
-                      part="box"
-                      x={frame.x}
-                      y={frame.y}
-                      hint={burnOf(frame.to) >= 0 ? 1 : 0}
-                      burn={burnOf(frame.to)}
-                    />
-                  ) : (
-                    <BoardBox x={frame.x} y={frame.y} />
-                  )}
-                  {boxCover && same(frame.to, boxCover.to) && (
-                    <path
-                      d={boxCover.d}
-                      shapeRendering="crispEdges"
-                      style={{
-                        fill: 'var(--color-night)',
-                        fillOpacity: `calc(var(--night-field, 0) * ${boxCover.opacity})`,
-                      }}
-                    />
-                  )}
-                </g>
-              ))}
-              {over.kegs.map((frame) => (
-                <g
-                  key={`${frame.to.x}-${frame.to.y}`}
-                  clipPath={frame.clip ? 'url(#crack-keg-clip)' : undefined}
-                >
-                  {frame.clip && (
-                    <clipPath id="crack-keg-clip">
-                      <polygon points={frame.clip} />
-                    </clipPath>
-                  )}
-                  <BoardKeg
-                    part="keg"
-                    x={frame.x}
-                    y={frame.y}
-                    swell={frame.look.swell}
-                    heat={frame.look.heat}
-                    cords={frame.look.cords}
-                    ember={frame.look.ember}
-                    ashTo={frame.look.ashTo}
-                    ash={frame.look.ash}
-                    trailU={frame.look.trail.u}
-                    trailV={frame.look.trail.v}
-                  />
-                </g>
-              ))}
-              {over.whirlBoxes.map((frame) => (
-                <BoardWhirlpool key={`${frame.to.x}-${frame.to.y}`} part="boat" {...frame} />
-              ))}
-              {over.thawBoxes.map((thaw) => (
-                <BoardWater
-                  key={`${thaw.to.x}-${thaw.to.y}`}
-                  part="box"
-                  x={cell.x}
-                  y={thaw.y}
-                  shown={thaw.shown}
-                />
-              ))}
-              {over.stones.map((frame) => (
-                <g
-                  key={`${frame.to.x}-${frame.to.y}`}
-                  clipPath={
-                    frame.clip ? `url(#crack-stone-clip-${frame.to.x}-${frame.to.y})` : undefined
-                  }
-                >
-                  {frame.clip && (
-                    <clipPath id={`crack-stone-clip-${frame.to.x}-${frame.to.y}`}>
-                      <polygon points={frame.clip} />
-                    </clipPath>
-                  )}
-                  <BoardIceStone part="stone" {...frame} tier={look.tier} />
-                </g>
-              ))}
-              {over.boxDrop && (
-                <g opacity={over.boxDrop.opacity}>
-                  {over.waterDepth > 0 ? (
-                    <BoardWater
-                      part="box"
-                      x={cell.x}
-                      y={cellY - (over.waterDepth + over.boxDrop.lift) * TILE.layer}
-                      shown={Math.min(TILE.layer, WATER.lip + over.boxDrop.lift * TILE.layer)}
-                    />
-                  ) : (
-                    <BoardBrazier
-                      part="box"
-                      x={cell.x}
-                      y={cellY - TILE.layer - over.boxDrop.lift * TILE.layer - look.brazier.lift}
-                      hint={0}
-                      burn={-1}
-                    />
-                  )}
-                </g>
-              )}
-              <BoardCube
-                scene={scene}
-                drawCube={over.drawCube}
-                lean={cubeLean}
-                leanRef={leanLoop}
-              />
-              {over.drawCube && playerCover && (
-                <g transform={scene.cubeSquash || undefined}>
-                  <path
-                    d={playerCover.d}
-                    shapeRendering="crispEdges"
-                    style={{
-                      fill: 'var(--color-night)',
-                      fillOpacity: `calc(var(--night-field, 0) * ${playerCover.opacity})`,
-                    }}
-                  />
-                </g>
-              )}
-              {taps.map((tap) => (
-                <BoardSluice
-                  key={`${tap.device.x}-${tap.device.y}`}
-                  part="tap"
-                  x={tap.look.x}
-                  y={tap.look.y}
-                  open={tap.look.sluice.open}
-                  turn={tap.look.sluice.turn}
-                />
-              ))}
-              {over.goalEffect && (
-                <BoardClear x={cell.x} y={cell.y}>
-                  {scene.cubeHeat.length > 0 && (
-                    <BoardBrazier
-                      part="cubeGlow"
-                      x={scene.cubeScreen.x}
-                      y={scene.cubeScreen.y - TILE.layer}
-                      bands={scene.cubeHeat}
-                      strength={brazier.glow.strength}
-                      dip={brazier.glow.dip}
-                      spark={brazier.glow.spark}
-                      last={brazier.glow.last}
-                    />
-                  )}
-                </BoardClear>
-              )}
-            </>
-          ) : undefined
-
-        return cell.bare ? (
-          <g key={cell.key}>
-            {bridge && shownBridge > 0 && (
-              <BoardShadow
-                x={cell.x}
-                y={cell.y - bridge.level * TILE.layer}
-                axis={bridge.axis}
-                parity={bridge.parity}
-                shown={shownBridge}
-                lit={bridgeLight(night, cell.p, bridge.level)}
-              />
-            )}
-            {bridgeBox && (
-              <>
-                <BoardBox x={cell.x} y={bridgeBox.top} />
-                <path
-                  d={bridgeBox.d}
-                  style={{
-                    fill: 'var(--color-night)',
-                    fillOpacity: `calc(var(--night-field, 0) * ${bridgeBox.opacity})`,
-                  }}
-                />
-              </>
-            )}
-            {content}
-          </g>
-        ) : (
-          <Fragment key={cell.key}>
-            {sinkingBox && bridge && shownBridge > 0 && (
-              <BoardShadow
-                x={cell.x}
-                y={cell.y - bridge.level * TILE.layer}
-                axis={bridge.axis}
-                parity={bridge.parity}
-                shown={shownBridge}
-                lit={bridgeLight(night, cell.p, bridge.level)}
-              />
-            )}
-            <BoardCell
-              {...look}
-              hidden={look.hidden || sinkingBox}
-              behindGoal={sunkGoal && isFrontOfGoal(cell.p) ? sunkGoal : null}
-            >
-              {content}
-            </BoardCell>
-            {veil && <BoardNight x={look.x} y={look.y} {...veil} />}
-          </Fragment>
-        )
-      })}
+    <svg ref={ref} viewBox={viewBox} className="h-full w-full">
+      {ordered.map((cell, i) => (
+        <BoardSlot
+          key={cell.key}
+          slot={slots[i]}
+          frame={view}
+          layer={layered ? 'base' : 'all'}
+          lifted={lifted[i]}
+          bridgesAbove={bridgesOnTop}
+        />
+      ))}
+      {bridgesOnTop &&
+        ordered.map((cell, i) => (
+          <BoardSlot
+            key={`bridge-${cell.key}`}
+            slot={slots[i]}
+            frame={view}
+            layer="bridge"
+            under={bridgesOnTop ? underOf(slots[i]) : ''}
+            cut={bridgesOnTop && behindCube(cell.p) ? cubeCut : ''}
+          />
+        ))}
+      {layered &&
+        ordered.map((cell, i) =>
+          lifted[i] ? (
+            <BoardSlot key={`top-${cell.key}`} slot={slots[i]} frame={view} layer="top" />
+          ) : null,
+        )}
       <defs>
         <mask id="rope-behind-scene.cube" maskUnits="userSpaceOnUse" {...scene.ropeMask}>
           <rect {...scene.ropeMask} fill="white" />

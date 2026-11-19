@@ -117,9 +117,18 @@ export {
   nightCellOf,
   nightDisplay,
   nightScene,
+  type NightBeat,
   nightVeils,
   sinkingBoxCovers,
   stillBoxCover,
 } from './nightFrame'
 export { bridgeLooks, quietAmbient, sinkingNow } from './shadowFrame'
+export {
+  type BehindGoal,
+  type ShadeLook,
+  type Slot,
+  type SlotFrame,
+  slotFrame,
+  slotOf,
+} from './slotFrame'
 export { type BarDraw, type BarScene, barKeys, barsAt } from './barFrame'

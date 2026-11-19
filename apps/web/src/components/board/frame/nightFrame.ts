@@ -34,6 +34,17 @@ export const nightDisplay = (game: GameState | null) => {
 }
 
 const GUIDE_FADE = 0.3
+// 빛보다 높은 벽 옆면이 받는 빛의 몫
+const WALL_LIGHT = 0.5
+
+// 판 칸 어둠 세기가 한 수 동안 옮겨 가는 값과 시간
+export interface NightBeat {
+  from: number // 수 처음 어둠 세기 0~1
+  to: number
+  seconds: number
+  delay: number
+  ease: string
+}
 
 // 다리가 사라지는 가이드 단계에 보여 줄 어둠 장면, 박자만 첫 어둠 수로 옮긴 판
 export const guideNightOf = (game: GameState, guideId: string | undefined): GameState | null =>
@@ -55,18 +66,31 @@ export const nightVeils = (prev: GameState | null, game: GameState, events: Game
       ? durationOf(events, swamp)
       : GUIDE_FADE
   const delay = settle ? moveSeconds(events, swamp) : 0
-  const curve = (darker: boolean) => `${seconds}s ${darker ? 'ease-in' : 'ease-out'} ${delay}s`
+  // 어두워질 때도 처음에 확 바뀌고 끝에 잦아듦, 처음에 천천히 가다 끝에 확 바뀌면 끊겨 보임
+  const ease = 'ease-out'
+  const curve = `${seconds}s ${ease} ${delay}s`
   const front = phase === 'pre' ? NIGHT_PRE : 0
+  const dark = phase === 'dark'
   return {
     phase,
     seconds,
-    front: { opacity: front, transition: `opacity ${curve(front > 0)}` },
+    // 1수 전 막은 어둠이 내리는 수에 칸 어둠과 같은 곡선으로 걷혀 밝아졌다 어두워지는 출렁임 없음
+    front: { opacity: front, transition: `opacity ${curve}` },
     back: {
       '--night-seconds': `${seconds}s`,
       '--night-delay': `${delay}s`,
-      backgroundColor: phase === 'dark' ? 'var(--color-night)' : 'var(--color-base-bg)',
-      transition: `background-color ${curve(phase === 'dark')}`,
+      '--night-ease': ease,
+      backgroundColor: dark ? 'var(--color-night)' : 'var(--color-base-bg)',
+      transition: `background-color ${curve}, border-color ${curve}`,
     },
+    // 판 칸 어둠 세기, 바탕과 같은 시간과 곡선
+    field: {
+      from: nightPhase(prev ?? game) === 'dark' ? 1 : 0,
+      to: dark ? 1 : 0,
+      seconds,
+      delay,
+      ease: ease,
+    } satisfies NightBeat,
   }
 }
 
@@ -85,6 +109,8 @@ const nightLights = (
   t: number,
   cube: { x: number; y: number },
   settled?: number, // 큐브 빛을 출발 칸 0이나 도착 칸 1에 둔 값
+  dropping = false, // 다시 시작해 내려앉는 중, 큐브가 아직 안 온 자리에 큐브 빛을 안 켬
+  lifting = false, // 이 수 끝에 어둠이 걷힘, 떠나는 칸 빛을 끄지 않음(꺼졌다 밝아지면 그 칸 물건이 까맣게 깜빡임)
 ): NightLight[] => {
   const before = prev?.burning ?? game.burning
   const has = (list: Point[], p: Point) => list.some((q) => same(q, p))
@@ -103,12 +129,24 @@ const nightLights = (
     h: standHeight(game, p),
     wide: flame > 0,
     weight,
+    cube: true,
   })
+  const cubeLights = dropping
+    ? []
+    : [
+        cubeLight(to, game.flame, arrived),
+        ...(arrived < 1 || lifting
+          ? [
+              cubeLight(
+                from,
+                prev?.flame ?? game.flame,
+                lifting ? 1 : Math.min(1, (1 - arrived) * 2),
+              ),
+            ]
+          : []),
+      ]
   return [
-    cubeLight(to, game.flame, arrived),
-    ...(arrived < 1
-      ? [cubeLight(from, prev?.flame ?? game.flame, Math.min(1, (1 - arrived) * 2))]
-      : []),
+    ...cubeLights,
     ...game.burning.map((p) => spot(p, has(before, p) ? 1 : snap(t))),
     ...before.filter((p) => !has(game.burning, p)).map((p) => spot(p, 1 - snap(t))),
     ...braziers(game).map((p) => spot(p, 1)),
@@ -121,6 +159,7 @@ interface NightInput {
   events: GameEvent[]
   t: number
   cube: { x: number; y: number } // 지금 그려지는 큐브 자리
+  dropping?: boolean // 다시 시작해 내려앉는 중
 }
 
 export interface NightScene {
@@ -148,7 +187,12 @@ export interface NightCell {
 const BLOCK: VeilBlock = { x: 0, y: 0, width: TILE.width * CUBE, height: TILE.layer }
 
 // 남은 숯 벽 더미는 덩이마다, 상자와 화약통은 블록 하나, 밀려 가는 상자와 큐브는 그림이 덮개를 데려감
-const coverOf = (game: GameState, p: Point, moving: Point | null): VeilBlock[] => {
+const coverOf = (
+  game: GameState,
+  p: Point,
+  moving: Point | null,
+  dropping = false,
+): VeilBlock[] => {
   const pile = (game.stage.fire?.[p.y]?.[p.x] ?? '.') === '#'
   if (pile && !game.ashes.some((q) => same(q, p)))
     return pileLumps((p.x + p.y) % 2 === 1).map((l) => ({
@@ -157,7 +201,8 @@ const coverOf = (game: GameState, p: Point, moving: Point | null): VeilBlock[] =
       width: TILE.width * l.scale,
       height: l.height,
     }))
-  const box = game.boxes.some((q) => same(q, p)) && !(moving && same(moving, p))
+  // 다시 시작해 내려앉는 상자는 덮개 없이 제 색으로 나타남, 판이 같이 밝아지는 중
+  const box = !dropping && game.boxes.some((q) => same(q, p)) && !(moving && same(moving, p))
   const block = box || game.kegs.some((q) => same(q, p))
   return block ? [BLOCK] : []
 }
@@ -168,12 +213,13 @@ export const nightCellOf = (
   p: Point,
   h: number,
   moving: MovingCover[],
+  dropping = false,
 ): NightCell => {
   const { top, sides } = night.veilOf(p, h)
   return {
     veil: top.join(','),
     sides: sides === top ? '' : sides.join(','),
-    cover: coverOf(game, p, moving.find((m) => same(m.to, p))?.to ?? null)
+    cover: coverOf(game, p, moving.find((m) => same(m.to, p))?.to ?? null, dropping)
       .map((b) => [b.x, b.y, b.width, b.height].join(' '))
       .join(','),
     depth: h * TILE.layer + TILE.lip,
@@ -302,7 +348,14 @@ const cubeArrived = (prev: GameState | null, game: GameState, cube: { x: number;
 // 빛이 1/8칸씩 옮겨 가는 자리, 그 사이에는 칸 막을 다시 안 그림
 const snap = (v: number) => Math.round(v * VEIL_STEPS) / VEIL_STEPS
 
-export const nightScene = ({ prev, game, events, t, cube }: NightInput): NightScene | null => {
+export const nightScene = ({
+  prev,
+  game,
+  events,
+  t,
+  cube,
+  dropping = false,
+}: NightInput): NightScene | null => {
   if (!isNightStage(game.stage)) return null
   const from = nightPhase(prev ?? game)
   const to = nightPhase(game)
@@ -313,7 +366,7 @@ export const nightScene = ({ prev, game, events, t, cube }: NightInput): NightSc
   const move = moveSeconds(events, swamp)
   const elapsed = t * durationOf(events, swamp)
   const p = shadowSeconds(events) > 0 ? shadowProgress(elapsed, move) : t
-  const e = to === 'dark' ? easeIn(p) : to === 'light' ? easeOut(p) : p
+  const e = to === 'pre' ? p : easeOut(p)
   const mix = (a: number, b: number) => a + (b - a) * e
   const fieldOf = (phase: NightPhase) => (phase === 'dark' ? 1 : 0)
 
@@ -330,17 +383,24 @@ export const nightScene = ({ prev, game, events, t, cube }: NightInput): NightSc
       front: ground(q.x, q.y + 1),
     }
     // 칸보다 낮은 빛은 윗면에 닿지 않고 옆면만 비춤
-    const sides = edgeFade(cellVeil(lights, q.x, q.y), edges)
+    // 윗면은 판 끝까지 꽉 차게 밝고, 판 끝 옆면 띠만 판 끝 쪽으로 사그라져 까맘
+    const litSides = edgeFade(cellVeil(lights, q.x, q.y), edges)
     const above = lights.filter((l) => l.h >= h)
-    const top = above.length === lights.length ? sides : edgeFade(cellVeil(above, q.x, q.y), edges)
+    const high = above.length < lights.length
+    // 빛보다 높은 벽의 옆면은 바닥보다 덜 밝게, 바닥만큼 밝으면 빛 기둥처럼 보임
+    const sides = high ? litSides.map((v) => 1 - (1 - v) * WALL_LIGHT) : litSides
+    const top = cellVeil(high ? above : lights, q.x, q.y)
     return { top, sides }
   }
 
   return {
     field,
     bridge: mix(BRIDGE[from], BRIDGE[to]),
-    veilOf: veilFor(lit ? nightLights(prev, game, t, cube) : []),
-    settledVeilOf: (settled) => veilFor(lit ? nightLights(prev, game, t, cube, settled) : []),
+    veilOf: veilFor(
+      lit ? nightLights(prev, game, t, cube, undefined, dropping, to === 'light') : [],
+    ),
+    settledVeilOf: (settled) =>
+      veilFor(lit ? nightLights(prev, game, t, cube, settled, dropping, to === 'light') : []),
     arrived: cubeArrived(prev, game, cube),
     sinking: events.flatMap((ev) => (ev.type === 'shadowFilled' ? [ev.at] : [])),
     sink: easeIn(fallProgress(elapsed, move)),

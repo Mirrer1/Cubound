@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 
 import BoardCrow from './BoardCrow'
+import { type NightBeat } from './frame'
 import { AMBIENT, type AmbientKind, type AmbientShape, MUD, ambientLoops } from './view'
 import { TILE, blockFaces } from '@/game/iso'
 import { useLoop } from '@/hooks/useLoop'
@@ -161,9 +162,20 @@ interface BoardAmbientProps {
   leave: boolean // 거두는 때
   crows: number
   side: number
+  beat?: NightBeat | null // 어둠 세기
 }
 
-const BoardAmbient = ({ kind, x, y, at, cycle, leave, crows, side }: BoardAmbientProps) => {
+const BoardAmbient = ({
+  kind,
+  x,
+  y,
+  at,
+  cycle,
+  leave,
+  crows,
+  side,
+  beat = null,
+}: BoardAmbientProps) => {
   const loops = useMemo(() => ambientLoops(kind, cycle), [kind, cycle])
   const group = useRef<SVGGElement>(null)
   const fled = useRef(false)
@@ -194,7 +206,16 @@ const BoardAmbient = ({ kind, x, y, at, cycle, leave, crows, side }: BoardAmbien
   }, [kind, leave])
 
   return kind === 'crow' ? (
-    <BoardCrow x={x} y={y} at={at} cycle={cycle} leave={leave} crows={crows} side={side} />
+    <BoardCrow
+      x={x}
+      y={y}
+      at={at}
+      cycle={cycle}
+      leave={leave}
+      crows={crows}
+      side={side}
+      beat={beat}
+    />
   ) : (
     <g ref={group}>
       {loops.map((loop, i) => (

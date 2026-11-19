@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo } from 'react'
+import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import BoardBlock from './BoardBlock'
 import type { FireLook } from './frame'
@@ -140,6 +140,43 @@ interface BoardFireProps extends Omit<FireLook, 'kind'> {
   y: number // 칸 윗면 중심
   parity: boolean
   tier: number
+  markShaded?: boolean // 어둠 칸은 재 자국을 칸 쪽에서 빛 조각대로 칠함
+}
+
+// 큐브가 오갈 때 불씨가 켜지고 꺼지는 빠르기
+const SPARK_GLIDE_MS = 750
+
+// 불씨 켜짐을 천천히 바꿈, CSS 전환은 큐브가 좌우로 갈 때 그리는 순서가 바뀌어 칸이 다시 붙으면 취소돼 Web Animation으로
+const useGlide = (lit: number, glide: boolean) => {
+  const ref = useRef<SVGGElement>(null)
+  const shown = useRef(lit)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const running = el.getAnimations()
+    const from = running.length > 0 ? Number(getComputedStyle(el).opacity) : shown.current
+    running.forEach((a) => a.cancel())
+    shown.current = lit
+    // 켜질 땐 바로(큐브 밑이라 안 보임), 꺼질 때만 천천히. 번갈아 밟아도 떠날 때마다 다 켜진 채로 식어 감
+    if (!glide || lit >= from) return
+    el.animate([{ opacity: from }, { opacity: lit }], {
+      duration: SPARK_GLIDE_MS,
+      easing: 'ease-in-out',
+    })
+  }, [lit, glide])
+  return ref
+}
+
+// 꺼지는 동안에도 일렁임과 불티를 남겨 둠
+const useLitTail = (lit: number) => {
+  const [tail, setTail] = useState(lit > 0)
+  if (lit > 0 && !tail) setTail(true)
+  useEffect(() => {
+    if (lit > 0) return
+    const id = setTimeout(() => setTail(false), SPARK_GLIDE_MS)
+    return () => clearTimeout(id)
+  }, [lit])
+  return lit > 0 || tail
 }
 
 const BoardFire = ({
@@ -151,11 +188,15 @@ const BoardFire = ({
   tier,
   heat,
   lit,
+  glide,
   stand,
   crumble,
   mark,
   boss,
+  markShaded = false,
 }: BoardFireProps) => {
+  const sparkShown = useLitTail(kind === 'spark' ? lit : 0)
+  const glideRef = useGlide(kind === 'spark' ? lit : 0, glide)
   const tone = charTone(heat)
   const glow = glowOf(heat)
   const style = fireStyle(boss)
@@ -247,40 +288,50 @@ const BoardFire = ({
   ) : kind === 'spark' ? (
     <g>
       <polygon points={plate(x, y, SPARK.rim)} style={{ fill: 'var(--color-stove-top)' }} />
-      <polygon
-        points={plate(x, y, SPARK.bed)}
-        style={{ fill: blend('var(--color-stove-bed)', 'var(--color-heat-crack)', lit) }}
-      />
-      {lit > 0 && <polygon points={plate(x, y, SPARK.glow)} opacity={lit} style={HOT} />}
+      <polygon points={plate(x, y, SPARK.bed)} style={{ fill: 'var(--color-stove-bed)' }} />
       <BoardBlock
         x={x}
         y={y - SPARK.coalHeight}
         width={TILE.width * SPARK.coal}
         depth={SPARK.coalHeight}
-        top={blend('var(--color-char-top)', 'var(--color-heat-core)', lit)}
-        left={blend('var(--color-char-left)', 'var(--color-heat-crack)', lit)}
-        right={blend('var(--color-char-right)', 'var(--color-heat-hot)', lit)}
+        top="var(--color-char-top)"
+        left="var(--color-char-left)"
+        right="var(--color-char-right)"
       />
-      {lit > 0 && (
-        <Flicker opacity={lit}>
-          <Pool x={x} y={y} scale={SPARK.pool} opacity={0.1} />
-          <polygon points={plate(x, y - SPARK.coalHeight, 0.12)} opacity={0.9} style={CORE} />
-        </Flicker>
-      )}
-      {lit > 0 && (
-        <Embers
+      {/* 켜진 모습을 위에 겹쳐 투명도로 켜고 끔, 큐브가 오가며 바뀔 땐 천천히. 어둠에 덮이지 않아 어둠 속에서도 혼자 식어 감 */}
+      <g ref={glideRef} className="deco-glow" opacity={lit}>
+        <polygon points={plate(x, y, SPARK.bed)} style={{ fill: 'var(--color-heat-crack)' }} />
+        <polygon points={plate(x, y, SPARK.glow)} style={HOT} />
+        <BoardBlock
           x={x}
           y={y - SPARK.coalHeight}
-          count={1}
-          top={SPARK.rise}
-          every={fireStyle(false).every}
-          opacity={lit}
+          width={TILE.width * SPARK.coal}
+          depth={SPARK.coalHeight}
+          top="var(--color-heat-core)"
+          left="var(--color-heat-crack)"
+          right="var(--color-heat-hot)"
         />
-      )}
+        {sparkShown && (
+          <Flicker opacity={1}>
+            <Pool x={x} y={y} scale={SPARK.pool} opacity={0.1} />
+            <polygon points={plate(x, y - SPARK.coalHeight, 0.12)} opacity={0.9} style={CORE} />
+          </Flicker>
+        )}
+        {sparkShown && (
+          <Embers
+            x={x}
+            y={y - SPARK.coalHeight}
+            count={1}
+            top={SPARK.rise}
+            every={fireStyle(false).every}
+            opacity={1}
+          />
+        )}
+      </g>
     </g>
   ) : kind === 'wall' ? (
     <g>
-      {mark > 0 && (
+      {mark > 0 && !markShaded && (
         <polygon
           points={plate(x, y, crumble > 0 ? wall.smudge : ASH_MARK)}
           opacity={mark}

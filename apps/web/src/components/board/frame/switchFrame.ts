@@ -203,10 +203,24 @@ export const switchLookOf = (
         : scene.progress
     const raised = lerp(liftLevel(scene.before), liftLevel(game), liftPhase)
 
+    const kind = entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null
+    // 스위치와 문이 없는 칸은 그리지 않는 깊이라 고정값, 큐브가 지나는 칸이 매 프레임 바뀐 칸으로 잡히는 탓
+    if (kind === null)
+      return {
+        raised,
+        device: {
+          entity: null,
+          switchDepth: 0,
+          doorDepth: 0,
+          lift: lift !== undefined,
+          warp: warp !== undefined,
+        },
+      }
+
     return {
       raised,
       device: {
-        entity: entity?.type === 'switch' || entity?.type === 'door' ? entity.type : null,
+        entity: kind,
         // 미끄러져 지나칠 때는 눌림 깊이의 절반
         switchDepth:
           lerp(pressed(scene.before) ? 2 : 9, pressed(game) ? 2 : 9, switchPhase) - 3.5 * passing,

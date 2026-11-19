@@ -1,10 +1,10 @@
-import { type CSSProperties, type ReactNode, memo } from 'react'
+import { type CSSProperties, type ReactElement, type ReactNode, memo, useMemo } from 'react'
 
 import BoardAmbient from './BoardAmbient'
 import BoardBox from './BoardBox'
 import BoardBrazier from './BoardBrazier'
 import BoardFire from './BoardFire'
-import BoardFloor, { type BehindGoal } from './BoardFloor'
+import BoardFloor from './BoardFloor'
 import BoardIceStone from './BoardIceStone'
 import BoardKeg from './BoardKeg'
 import BoardLadder from './BoardLadder'
@@ -14,7 +14,14 @@ import BoardSluice from './BoardSluice'
 import BoardSwitch from './BoardSwitch'
 import BoardTrail from './BoardTrail'
 import BoardWater from './BoardWater'
-import { type CellLook, sameCellLook, swampSink } from './frame'
+import {
+  type BehindGoal,
+  type CellLook,
+  type NightBeat,
+  type ShadeLook,
+  sameCellLook,
+  swampSink,
+} from './frame'
 import {
   ASH_MARK,
   CUBE,
@@ -24,6 +31,7 @@ import {
   MUD_DIP,
   PIT_FLOOR,
   STONE,
+  type ShadePiece,
   blend,
   boatLook,
   cellFaces,
@@ -32,12 +40,16 @@ import {
   isPit,
   leanShift,
   leaningOf,
+  shadeShapes,
   stoneFloat,
+  veilMiddle,
+  wallCrumble,
   waterTone,
 } from './view'
 import { TILE, blockFaces } from '@/game/iso'
 import { useFade } from '@/hooks/useFade'
 import { useLoop } from '@/hooks/useLoop'
+import { useNightFade } from '@/hooks/useNightFade'
 
 // 같은 크기 판 두 장을 어긋나게 겹쳐 낸 구멍 두께
 // 잠긴 것의 진흙 면 아래를 가리는 자르기, 밑면 앞 모서리를 따라 아이소메트릭 면과 나란한 선
@@ -46,13 +58,85 @@ const mudClipPoints = (x: number, y: number) => {
   return `${x - 4000},${y} ${x - hw},${y} ${x},${y + MUD_DIP} ${x + hw},${y} ${x + 4000},${y} ${x + 4000},${y - 4000} ${x - 4000},${y - 4000}`
 }
 
+// 어둠 칸의 바닥 장식, 장식 색 변수를 칸 어둠 값만큼 어둠 색으로 섞어 칠함(가리개는 느려서 안 씀)
+const Deco = ({
+  veil,
+  fade,
+  children,
+}: {
+  veil: number | null
+  fade: (element: Element | null) => void
+  children: ReactNode
+}) => (
+  // 밝을 때도 같은 묶음 모양을 유지, 어둠이 오갈 때 장식이 새로 그려지면 불씨 꺼짐 연출이 끊김
+  <g className={veil !== null ? 'deco-day' : undefined}>
+    <g
+      ref={veil !== null ? fade : undefined}
+      className={veil !== null ? 'deco-night' : undefined}
+      style={veil !== null ? ({ '--deco-veil': veil } as CSSProperties) : undefined}
+    >
+      {children}
+    </g>
+  </g>
+)
+
+// 어둠 칸의 납작한 한 색 장식, 그 모양 안을 바닥 칠 조각과 같은 무늬로 어둡게 칠함
+const Shade = ({
+  id,
+  pieces,
+  fade,
+  color,
+  dim,
+  children,
+}: {
+  id: string
+  dim: number // 조각이 없는 고르게 어두운 칸의 어둠 값
+  pieces: ShadePiece[]
+  fade: (element: Element | null) => void
+  color: string
+  children: ReactElement<{ points: string; opacity: number }>
+}) => {
+  // 고르게 어두운 칸은 조각 없이 한 색으로
+  if (pieces.length === 0)
+    return (
+      <polygon
+        ref={fade}
+        points={children.props.points}
+        opacity={children.props.opacity}
+        style={{
+          fill: `color-mix(in srgb, var(--color-night) calc(var(--veil) * ${dim * 100}%), ${color})`,
+        }}
+      />
+    )
+  return (
+    <g ref={fade} opacity={children.props.opacity} clipPath={`url(#${id})`}>
+      <clipPath id={id}>
+        <polygon points={children.props.points} />
+      </clipPath>
+      {pieces.map((piece, i) => (
+        <polygon
+          key={i}
+          points={piece.points}
+          style={{
+            fill: `color-mix(in srgb, var(--color-night) calc(var(--veil) * ${piece.value * 100}%), ${color})`,
+          }}
+        />
+      ))}
+    </g>
+  )
+}
+
 interface BoardCellProps extends CellLook {
   behindGoal?: BehindGoal | null
+  beat: NightBeat | null // 어둠 세기, 화로와 까마귀 칸만
+  shade?: ShadeLook | null
   children?: ReactNode
 }
 
 const BoardCell = ({
   behindGoal,
+  beat,
+  shade = null,
   x,
   y,
   h,
@@ -132,8 +216,32 @@ const BoardCell = ({
   const iceTop = y - water.depth * TILE.layer + ICE.below
   const boat = boatLook(water.depth)
   const markFill = blend(floorFaces(tier, parity).top, 'var(--color-ash-top)', 0.4)
+  // 다 탄 숯 벽 자국, 부서지는 동안은 더 진하게
+  const wallAsh = blend(
+    floorFaces(tier, parity).top,
+    'var(--color-ash-top)',
+    fire.crumble > 0 ? 0.55 : 0.4,
+  )
   const boxTop = y - TILE.layer - brazier.lift
   const ashMark = Math.max(brazier.mark, keg.mark, trail.mark)
+  // 타일 색을 직접 칠하는 칸의 바닥 장식, 칸 가운데 어둠 값으로 색을 어둡게
+  const cellVeil = shade ? veilMiddle(shade.veil.split(',').map(Number)) : null
+  const decoVeil = shade?.deco ? cellVeil : null
+  const shadeFade = useNightFade(shade?.beat ?? null)
+  const pieces = useMemo(
+    () =>
+      shade
+        ? shadeShapes(
+            x,
+            y,
+            shade.depth,
+            shade.veil.split(',').map(Number),
+            (shade.sides || shade.veil).split(',').map(Number),
+          )
+        : [],
+    [shade, x, y],
+  )
+  const topPieces = pieces.filter((piece) => piece.face === 'top')
 
   return (
     <g>
@@ -157,6 +265,7 @@ const BoardCell = ({
       {!pit && !hidden && (
         <g ref={fadeRef} style={fade}>
           <BoardFloor
+            pieces={pieces}
             behindGoal={behindGoal}
             x={x}
             y={y}
@@ -184,38 +293,98 @@ const BoardCell = ({
             icy={icy}
             iceTop={iceTop}
             mudY={mudY}
+            shade={shade}
           />
-          {fire.kind && (
-            <BoardFire
-              part="floor"
+          {shade && ashMark > 0 && (
+            <Shade
+              id={`ash-${x}-${y}`}
+              pieces={topPieces}
+              fade={shadeFade}
+              color={markFill}
+              dim={cellVeil ?? 0}
+            >
+              <polygon
+                points={blockFaces(x, y, TILE.width * ASH_MARK, 0).top}
+                opacity={ashMark}
+                style={{ fill: markFill }}
+              />
+            </Shade>
+          )}
+          {shade && fire.kind === 'wall' && fire.mark > 0 && (
+            <Shade
+              id={`wall-ash-${x}-${y}`}
+              pieces={topPieces}
+              fade={shadeFade}
+              color={wallAsh}
+              dim={cellVeil ?? 0}
+            >
+              <polygon
+                points={
+                  blockFaces(
+                    x,
+                    y,
+                    TILE.width * (fire.crumble > 0 ? wallCrumble(fire.crumble).smudge : ASH_MARK),
+                    0,
+                  ).top
+                }
+                opacity={fire.mark}
+                style={{ fill: wallAsh }}
+              />
+            </Shade>
+          )}
+          {decoVeil !== null && brazier.on && (
+            <BoardBrazier
+              part="bowl"
+              layer="glow"
               x={x}
               y={y}
-              parity={parity}
-              tier={tier}
-              {...fire}
-              kind={fire.kind}
+              flash={brazier.flash}
+              covered={brazier.covered}
+              beat={beat}
             />
           )}
-          {trail.flame > 0 && (
-            <BoardTrail
-              part="floor"
-              x={x}
-              y={y}
-              flame={trail.flame}
-              pool={trail.pool}
-              lit={trail.lit}
-            />
-          )}
-          {ashMark > 0 && (
-            <polygon
-              points={blockFaces(x, y, TILE.width * ASH_MARK, 0).top}
-              opacity={ashMark}
-              style={{ fill: markFill }}
-            />
-          )}
-          {brazier.on && (
-            <BoardBrazier part="bowl" x={x} y={y} flash={brazier.flash} covered={brazier.covered} />
-          )}
+          <Deco veil={decoVeil} fade={shadeFade}>
+            {fire.kind && (
+              <BoardFire
+                part="floor"
+                x={x}
+                y={y}
+                parity={parity}
+                tier={tier}
+                {...fire}
+                kind={fire.kind}
+                markShaded={shade !== null && shade !== undefined}
+              />
+            )}
+            {trail.flame > 0 && (
+              <BoardTrail
+                part="floor"
+                x={x}
+                y={y}
+                flame={trail.flame}
+                pool={trail.pool}
+                lit={trail.lit}
+              />
+            )}
+            {!shade && ashMark > 0 && (
+              <polygon
+                points={blockFaces(x, y, TILE.width * ASH_MARK, 0).top}
+                opacity={ashMark}
+                style={{ fill: markFill }}
+              />
+            )}
+            {brazier.on && (
+              <BoardBrazier
+                part="bowl"
+                layer={decoVeil !== null ? 'bowl' : 'all'}
+                x={x}
+                y={y}
+                flash={brazier.flash}
+                covered={brazier.covered}
+                beat={beat}
+              />
+            )}
+          </Deco>
         </g>
       )}
       {device.entity && (
@@ -273,7 +442,9 @@ const BoardCell = ({
               <BoardWater part="box" x={x} y={y - boat.top} shown={boat.shown} />
             </g>
           ) : (
-            <BoardBox x={x} y={boxTop} />
+            <g ref={cellVeil !== null ? shadeFade : undefined}>
+              <BoardBox x={x} y={boxTop} dim={cellVeil} />
+            </g>
           )}
         </g>
       )}
@@ -357,6 +528,7 @@ const BoardCell = ({
           y={ambient.kind === 'mist' ? Math.min(y, iceTop) : y}
           {...ambient}
           kind={ambient.kind}
+          beat={beat}
         />
       )}
       {sunk ? (

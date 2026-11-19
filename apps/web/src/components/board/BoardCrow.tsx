@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
 
+import { type NightBeat } from './frame'
 import { CROW, crowBodyPath, crowLegs, crowPose, crowSeats, crowTransform, crowWing } from './view'
+import { useNightFade } from '@/hooks/useNightFade'
 
 const INK = { fill: 'var(--color-amb-crow)' }
-// 어둠이 내리는 만큼 사라지는 까마귀, 어둠에는 빛 옆에서도 안 보임
-const HIDDEN_IN_DARK = { opacity: 'calc(1 - var(--night-field, 0))' }
 
 interface CrowParts {
   shadow: SVGEllipseElement | null
@@ -23,9 +23,11 @@ interface BoardCrowProps {
   leave: boolean
   crows: number
   side: number
+  beat: NightBeat | null // 어둠이 내리는 만큼 사라지고 어둠에는 빛 옆에서도 안 보이는 세기
 }
 
-const BoardCrow = ({ x, y, at, cycle, leave, crows, side }: BoardCrowProps) => {
+const BoardCrow = ({ x, y, at, cycle, leave, crows, side, beat }: BoardCrowProps) => {
+  const fade = useNightFade(beat)
   const seats = crowSeats(crows)
   const parts = useRef<Partial<CrowParts>[]>([])
   const now = useRef({ leave, side })
@@ -69,7 +71,7 @@ const BoardCrow = ({ x, y, at, cycle, leave, crows, side }: BoardCrowProps) => {
   }
 
   return (
-    <g transform={`translate(${x} ${y})`} style={HIDDEN_IN_DARK}>
+    <g transform={`translate(${x} ${y})`} ref={fade} style={{ opacity: 'calc(1 - var(--veil))' }}>
       {seats.map((seat) => (
         <g key={seat.index}>
           <ellipse

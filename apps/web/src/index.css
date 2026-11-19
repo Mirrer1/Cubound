@@ -431,13 +431,285 @@ html[data-cycle='5'] {
   --color-floor-8-right: #a7a2b1;
 }
 
-/* 비틀기 어둠 동안의 게임 헤더 */
-section[data-night] header,
+/* 판 칸 어둠 세기, 막 조각과 덮개 진하기에 곱하는 값 */
+@property --veil {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+/* 어둠 칸의 바닥 장식(불씨, 꼬리 불, 화로 그릇), 장식 색을 칸 어둠 값만큼 어둠 색으로 섞음 */
+.deco-day {
+  --o-ash-left: var(--color-ash-left);
+  --o-ash-right: var(--color-ash-right);
+  --o-ash-top: var(--color-ash-top);
+  --o-char-hi: var(--color-char-hi);
+  --o-char-left: var(--color-char-left);
+  --o-char-lo: var(--color-char-lo);
+  --o-char-right: var(--color-char-right);
+  --o-char-top: var(--color-char-top);
+  --o-heat-core: var(--color-heat-core);
+  --o-heat-crack: var(--color-heat-crack);
+  --o-heat-hot: var(--color-heat-hot);
+  --o-heat-left: var(--color-heat-left);
+  --o-heat-right: var(--color-heat-right);
+  --o-heat-ring: var(--color-heat-ring);
+  --o-heat-top: var(--color-heat-top);
+  --o-stove-bed: var(--color-stove-bed);
+  --o-stove-coal: var(--color-stove-coal);
+  --o-stove-left: var(--color-stove-left);
+  --o-stove-right: var(--color-stove-right);
+  --o-stove-top: var(--color-stove-top);
+  --o-floor-top: var(--color-floor-top);
+  --o-floor-top-alt: var(--color-floor-top-alt);
+  --o-floor-left: var(--color-floor-left);
+  --o-floor-right: var(--color-floor-right);
+  --o-floor-1-top: var(--color-floor-1-top);
+  --o-floor-1-top-alt: var(--color-floor-1-top-alt);
+  --o-floor-1-left: var(--color-floor-1-left);
+  --o-floor-1-right: var(--color-floor-1-right);
+  --o-floor-2-top: var(--color-floor-2-top);
+  --o-floor-2-top-alt: var(--color-floor-2-top-alt);
+  --o-floor-2-left: var(--color-floor-2-left);
+  --o-floor-2-right: var(--color-floor-2-right);
+  --o-floor-3-top: var(--color-floor-3-top);
+  --o-floor-3-top-alt: var(--color-floor-3-top-alt);
+  --o-floor-3-left: var(--color-floor-3-left);
+  --o-floor-3-right: var(--color-floor-3-right);
+  --o-floor-4-top: var(--color-floor-4-top);
+  --o-floor-4-top-alt: var(--color-floor-4-top-alt);
+  --o-floor-4-left: var(--color-floor-4-left);
+  --o-floor-4-right: var(--color-floor-4-right);
+  --o-floor-5-top: var(--color-floor-5-top);
+  --o-floor-5-top-alt: var(--color-floor-5-top-alt);
+  --o-floor-5-left: var(--color-floor-5-left);
+  --o-floor-5-right: var(--color-floor-5-right);
+  --o-floor-6-top: var(--color-floor-6-top);
+  --o-floor-6-top-alt: var(--color-floor-6-top-alt);
+  --o-floor-6-left: var(--color-floor-6-left);
+  --o-floor-6-right: var(--color-floor-6-right);
+  --o-floor-7-top: var(--color-floor-7-top);
+  --o-floor-7-top-alt: var(--color-floor-7-top-alt);
+  --o-floor-7-left: var(--color-floor-7-left);
+  --o-floor-7-right: var(--color-floor-7-right);
+  --o-floor-8-top: var(--color-floor-8-top);
+  --o-floor-8-top-alt: var(--color-floor-8-top-alt);
+  --o-floor-8-left: var(--color-floor-8-left);
+  --o-floor-8-right: var(--color-floor-8-right);
+  --o-goal: var(--color-goal);
+}
+
+.deco-night {
+  --deco-mix: calc(var(--veil) * var(--deco-veil, 0) * 100%);
+  --color-ash-left: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-ash-left));
+  --color-ash-right: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-ash-right));
+  --color-ash-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-ash-top));
+  --color-char-hi: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-char-hi));
+  --color-char-left: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-char-left));
+  --color-char-lo: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-char-lo));
+  --color-char-right: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-char-right));
+  --color-char-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-char-top));
+  --color-heat-core: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-heat-core));
+  --color-heat-crack: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-heat-crack));
+  --color-heat-hot: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-heat-hot));
+  --color-heat-left: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-heat-left));
+  --color-heat-right: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-heat-right));
+  --color-heat-ring: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-heat-ring));
+  --color-heat-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-heat-top));
+  --color-stove-bed: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-stove-bed));
+  --color-stove-coal: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-stove-coal));
+  --color-stove-left: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-stove-left));
+  --color-stove-right: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-stove-right));
+  --color-stove-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-stove-top));
+  --color-floor-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-floor-top));
+  --color-floor-top-alt: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-top-alt)
+  );
+  --color-floor-left: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-floor-left));
+  --color-floor-right: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-floor-right));
+  --color-floor-1-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-floor-1-top));
+  --color-floor-1-top-alt: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-1-top-alt)
+  );
+  --color-floor-1-left: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-1-left)
+  );
+  --color-floor-1-right: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-1-right)
+  );
+  --color-floor-2-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-floor-2-top));
+  --color-floor-2-top-alt: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-2-top-alt)
+  );
+  --color-floor-2-left: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-2-left)
+  );
+  --color-floor-2-right: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-2-right)
+  );
+  --color-floor-3-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-floor-3-top));
+  --color-floor-3-top-alt: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-3-top-alt)
+  );
+  --color-floor-3-left: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-3-left)
+  );
+  --color-floor-3-right: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-3-right)
+  );
+  --color-floor-4-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-floor-4-top));
+  --color-floor-4-top-alt: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-4-top-alt)
+  );
+  --color-floor-4-left: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-4-left)
+  );
+  --color-floor-4-right: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-4-right)
+  );
+  --color-floor-5-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-floor-5-top));
+  --color-floor-5-top-alt: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-5-top-alt)
+  );
+  --color-floor-5-left: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-5-left)
+  );
+  --color-floor-5-right: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-5-right)
+  );
+  --color-floor-6-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-floor-6-top));
+  --color-floor-6-top-alt: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-6-top-alt)
+  );
+  --color-floor-6-left: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-6-left)
+  );
+  --color-floor-6-right: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-6-right)
+  );
+  --color-floor-7-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-floor-7-top));
+  --color-floor-7-top-alt: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-7-top-alt)
+  );
+  --color-floor-7-left: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-7-left)
+  );
+  --color-floor-7-right: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-7-right)
+  );
+  --color-floor-8-top: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-floor-8-top));
+  --color-floor-8-top-alt: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-8-top-alt)
+  );
+  --color-floor-8-left: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-8-left)
+  );
+  --color-floor-8-right: color-mix(
+    in srgb,
+    var(--color-night) var(--deco-mix),
+    var(--o-floor-8-right)
+  );
+  --color-goal: color-mix(in srgb, var(--color-night) var(--deco-mix), var(--o-goal));
+}
+
+/* 어둠 칸 장식 중 스스로 빛나는 것(꺼지는 중인 불씨), 어둠에 덮이지 않고 제 색 */
+.deco-night .deco-glow {
+  --color-heat-core: var(--o-heat-core);
+  --color-heat-crack: var(--o-heat-crack);
+  --color-heat-hot: var(--o-heat-hot);
+  --color-heat-left: var(--o-heat-left);
+  --color-heat-right: var(--o-heat-right);
+  --color-heat-ring: var(--o-heat-ring);
+  --color-heat-top: var(--o-heat-top);
+}
+
+/* 비틀기 어둠 동안의 게임 헤더, 낮 색과 밤 색을 값 하나로 섞어 모든 글자와 버튼이 판 바탕과 같은 박자 */
+@property --night-mix {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+section[data-night] {
+  --day-ink: var(--color-ink);
+  --day-mute: var(--color-mute);
+  --day-faint: var(--color-faint);
+  --day-line: var(--color-line);
+  --day-line-strong: var(--color-line-strong);
+  --day-hover: var(--color-hover);
+  --day-surface: var(--color-surface);
+  --day-base-bg: var(--color-base-bg);
+}
+
+section[data-night] header {
+  --night-mix: 0;
+  --color-ink: color-mix(in srgb, #ebe7f2 calc(var(--night-mix) * 100%), var(--day-ink));
+  --color-mute: color-mix(in srgb, #8e889b calc(var(--night-mix) * 100%), var(--day-mute));
+  --color-faint: color-mix(in srgb, #6b6678 calc(var(--night-mix) * 100%), var(--day-faint));
+  --color-line: color-mix(in srgb, #2f2b36 calc(var(--night-mix) * 100%), var(--day-line));
+  --color-line-strong: color-mix(
+    in srgb,
+    #3f3a48 calc(var(--night-mix) * 100%),
+    var(--day-line-strong)
+  );
+  --color-hover: color-mix(in srgb, #26222d calc(var(--night-mix) * 100%), var(--day-hover));
+  --color-surface: color-mix(in srgb, #1c1922 calc(var(--night-mix) * 100%), var(--day-surface));
+  --color-base-bg: color-mix(in srgb, #000000 calc(var(--night-mix) * 100%), var(--day-base-bg));
+  color: var(--color-ink);
+  transition: --night-mix var(--night-seconds) var(--night-ease, ease-out) var(--night-delay, 0s);
+}
+
+/* 섞는 값이 매 프레임 바뀌어 요소마다 따로 거는 색 전환은 뒤처짐 */
 section[data-night] header * {
-  transition:
-    color var(--night-seconds) ease-in var(--night-delay, 0s),
-    background-color var(--night-seconds) ease-in var(--night-delay, 0s),
-    border-color var(--night-seconds) ease-in var(--night-delay, 0s);
+  transition: none;
 }
 
 section[data-night='dark'] {
@@ -447,15 +719,7 @@ section[data-night='dark'] {
 }
 
 section[data-night='dark'] header {
-  --color-ink: #ebe7f2;
-  --color-mute: #8e889b;
-  --color-faint: #6b6678;
-  --color-line: #2f2b36;
-  --color-line-strong: #3f3a48;
-  --color-hover: #26222d;
-  --color-surface: #1c1922;
-  --color-base-bg: #000000;
-  color: var(--color-ink);
+  --night-mix: 1;
 }
 
 html,

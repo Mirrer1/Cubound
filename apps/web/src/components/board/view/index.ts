@@ -198,12 +198,15 @@ export {
   VEIL_STEPS,
   type VeilBlock,
   type VeilOpen,
+  type ShadePiece,
   type VeilShape,
   coverOutline,
   coverPath,
   edgeFade,
   cellVeil,
+  veilFootprint,
   veilMiddle,
   veilShapes,
+  shadeShapes,
 } from './nightView'
 export { BRIDGE, SHIMMER_LOOP, bridgeAxis, bridgeFaces } from './shadowView'

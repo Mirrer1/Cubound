@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import BoardBlock from './BoardBlock'
 import BoardBox from './BoardBox'
 import { Embers, Flicker, Pool } from './BoardFire'
+import { type NightBeat } from './frame'
 import {
   BOX_ASH,
   BRAZIER,
@@ -24,6 +25,7 @@ import {
 } from './view'
 import { TILE, blockFaces } from '@/game/iso'
 import { useLoop } from '@/hooks/useLoop'
+import { useNightFade } from '@/hooks/useNightFade'
 
 const HOT = { fill: 'var(--color-heat-hot)' }
 const CORE = { fill: 'var(--color-heat-core)' }
@@ -39,6 +41,8 @@ interface BowlProps {
   y: number // 칸 윗면 중심
   flash: number
   covered: number
+  beat?: NightBeat | null // 어둠 세기
+  layer?: 'all' | 'glow' | 'bowl' // 바닥 불빛과 그릇, 어둠 칸은 나눠 그림
 }
 
 interface CubePoolProps {
@@ -86,18 +90,26 @@ const Dip = ({ amp, children }: DipProps) => {
   )
 }
 
+// 어둠 세기만큼 사라지는 것
+const DARK_HIDES = { opacity: 'calc(1 - var(--veil))' }
+
 // 칸 밖으로 번지는 바닥 빛은 어둠에 숨김, 그때 빛은 어둠 막 몫
-const Bowl = ({ x, y, flash, covered }: Omit<BowlProps, 'part'>) => {
+const Bowl = ({ x, y, flash, covered, beat = null, layer = 'all' }: Omit<BowlProps, 'part'>) => {
+  const fade = useNightFade(beat)
   const top = y - BRAZIER.height
   const coal = top - 1
+  const glow = (
+    <g ref={fade} style={DARK_HIDES}>
+      <Flicker opacity={1}>
+        <Pool x={x} y={y} scale={1.6} opacity={0.16} />
+      </Flicker>
+    </g>
+  )
+  if (layer === 'glow') return glow
 
   return (
     <g>
-      <g style={{ opacity: 'calc(1 - var(--night-field, 0))' }}>
-        <Flicker opacity={1}>
-          <Pool x={x} y={y} scale={1.6} opacity={0.16} />
-        </Flicker>
-      </g>
+      {layer === 'all' && glow}
       <BoardBlock
         x={x}
         y={top}
@@ -222,7 +234,14 @@ const Box = ({ x, y, hint, burn }: Omit<BoxProps, 'part'>) => {
 
 const BoardBrazier = (props: BoardBrazierProps) =>
   props.part === 'bowl' ? (
-    <Bowl x={props.x} y={props.y} flash={props.flash} covered={props.covered} />
+    <Bowl
+      x={props.x}
+      y={props.y}
+      flash={props.flash}
+      covered={props.covered}
+      beat={props.beat}
+      layer={props.layer}
+    />
   ) : props.part === 'box' ? (
     <Box x={props.x} y={props.y} hint={props.hint} burn={props.burn} />
   ) : props.part === 'cubePool' ? (

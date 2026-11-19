@@ -6,6 +6,7 @@ export interface NightLight {
   h: number // 빛이 선 높이
   wide: boolean // 화로 불 붙은 큐브의 한 칸 더 넓은 빛
   weight: number // 켜지고 꺼지는 빛의 세기 0~1
+  cube?: boolean // 큐브 빛, 움직이는 동안 출발 칸과 도착 칸에 나뉜 한 빛
 }
 
 export const NIGHT_PRE = 0.22
@@ -39,11 +40,25 @@ export const lightVeil = (d: number, wide: boolean) => {
   return v0 + (v1 - v0) * smooth((d - d0) / (d1 - d0))
 }
 
-const veilAt = (lights: NightLight[], px: number, py: number) =>
-  lights.reduce((veil, { x, y, wide, weight }) => {
+// 서로 다른 빛은 더해 밝게(밝은 쪽만 고르면 두 빛의 층 테두리가 엇갈려 들쭉날쭉)
+const veilAt = (lights: NightLight[], px: number, py: number) => {
+  // 큐브 빛 한 벌(출발 칸과 도착 칸)은 밝은 쪽을 쓰되, 두 빛이 함께 닿는 칸은 넘어가는 동안 약한 쪽 밝기 밑으로 안 떨어짐
+  // (밝은 쪽만 고르면 빛이 넘어가는 동안 두 칸 사이 칸이 잠깐 어두워져 깜빡임)
+  const cube: { light: number; weight: number }[] = []
+  let rest = 1
+  for (const { x, y, wide, weight, cube: own } of lights) {
     const d = Math.max(Math.abs(px - x), Math.abs(py - y))
-    return Math.min(veil, 1 - weight * (1 - lightVeil(d, wide)))
-  }, 1)
+    const light = 1 - lightVeil(d, wide)
+    if (own) cube.push({ light, weight })
+    else rest *= 1 - weight * light
+  }
+  const each = Math.max(0, ...cube.map((c) => c.weight * c.light))
+  const both =
+    cube.length === 2
+      ? Math.min(cube[0].light, cube[1].light) * Math.min(1, cube[0].weight + cube[1].weight)
+      : 0
+  return (1 - Math.max(each, both)) * rest
+}
 
 const REACH = 3
 const quantize = (v: number) => Math.round(v * 50) / 50
@@ -97,6 +112,7 @@ const HH = TILE.height / 2
 // 옆 칸과 겹쳐 바닥 테두리를 덮는 칸 둘레 비율, 고른 칸은 px
 const EDGE = 0.006
 const SEAM_PX = 1.5
+const SPARE_PX = 4
 // 판 끝 변을 넘겨 덮는 칸 비율, 약 1.5px
 const OPEN_EDGE = 0.06
 
@@ -172,9 +188,15 @@ export const veilMiddle = (values: number[]) =>
 
 // 판 테두리 받침 띠, 빛과 상관없이 까맣게
 // 앞이 트인 변은 윗면으로 살짝 올려 테두리 틈을 덮음
-const lipShape = (cx: number, cy: number, depth: number, open: VeilOpen): VeilShape => {
+const lipShape = (
+  cx: number,
+  cy: number,
+  depth: number,
+  open: VeilOpen,
+  tight = false,
+): VeilShape => {
   const [s, d0] = [SEAM_PX, Math.max(0, depth - TILE.lip)]
-  const up = (on: boolean) => (on && d0 === 0 ? s : 0)
+  const up = (on: boolean) => (on && d0 === 0 && !tight ? s : 0)
   const points = [
     `${cx - HW - s},${cy + d0 - up(open.left)}`,
     `${cx},${cy + HH + d0 - up(open.left || open.right)}`,
@@ -187,6 +209,7 @@ const lipShape = (cx: number, cy: number, depth: number, open: VeilOpen): VeilSh
 }
 
 // 칸 윗면과 앞 두 옆면 어둠 조각, 옆면 맨 아래 받침 띠는 까맣게
+// tight는 어둠이 바뀌는 동안, 조각끼리 겹친 줄이 두 번 칠해지지 않게 판 끝 넓힘 없음
 export const veilShapes = (
   cx: number,
   cy: number,
@@ -194,9 +217,10 @@ export const veilShapes = (
   values: number[],
   sideValues = values,
   open: VeilOpen = { left: false, right: false, backLeft: false, backRight: false },
+  tight = false,
 ): VeilShape[] => {
   const side = depth - TILE.lip
-  const lip = lipShape(cx, cy, depth, open)
+  const lip = lipShape(cx, cy, depth, open, tight)
   if (values.length === 1 && sideValues === values) {
     const s = SEAM_PX
     const d = Math.max(0, side)
@@ -241,6 +265,7 @@ export const veilShapes = (
         const out = (k: number, alongU: boolean) => {
           const [back, front] = alongU ? [open.backLeft, open.right] : [open.backRight, open.left]
           if (k !== 0 && k !== n) return 0
+          if (tight) return 0
           return (k === 0 ? back : front) ? OPEN_EDGE : EDGE
         }
         const [a0, a1, b0, b1] = [
@@ -263,7 +288,7 @@ export const veilShapes = (
   const strips = (left: boolean) => {
     const value = (k: number) => (left ? sideGrid[(n - 1) * n + k] : sideGrid[k * n + n - 1])
     const edge = (k: number) => (left ? onTop(cx, cy, at(k), 0.5) : onTop(cx, cy, 0.5, at(k)))
-    const lift = (left ? open.left : open.right) ? SEAM_PX : 0
+    const lift = (left ? open.left : open.right) && !tight ? SEAM_PX : 0
     const down = (pt: string, by: number) => {
       const [x, y] = pt.split(',').map(Number)
       return `${x},${y + by}`
@@ -281,4 +306,134 @@ export const veilShapes = (
   }
   const sides = side > 0 ? [...strips(true), ...strips(false)] : []
   return [...top, ...sides, lip]
+}
+
+// 칸 윗면과 앞 옆면 둘레, inner는 옆 칸과 맞닿은 변을 칸 끝에 맞추고 판 끝 변은 넉넉히
+// outer는 판 끝 변을 칸 끝에 맞추고 옆 칸 쪽은 넉넉히, 두 둘레가 겹친 안쪽만 막을 그림
+// 어둠이 바뀌는 동안 옆 칸 막과 겹친 곳이 두 번 칠해지는 검은 줄과 판 밖 테두리 막기
+export const veilFootprint = (
+  cx: number,
+  cy: number,
+  depth: number,
+  open: VeilOpen,
+  side: 'inner' | 'outer',
+) => {
+  const d = Math.max(0, depth)
+  // 시계 방향 꼭짓점과 그 꼭짓점에서 시작하는 변의 넓힘
+  const corners: [number, number][] = [
+    [cx - HW, cy],
+    [cx, cy - HH],
+    [cx + HW, cy],
+    [cx + HW, cy + d],
+    [cx, cy + HH + d],
+    [cx - HW, cy + d],
+  ]
+  const rim = (shut: boolean) => ((side === 'inner') === shut ? 0 : SPARE_PX)
+  const grow = [
+    rim(!open.backLeft),
+    rim(!open.backRight),
+    rim(!open.backRight),
+    rim(!open.right),
+    rim(!open.left),
+    rim(!open.backLeft),
+  ]
+  const n = corners.length
+  // 변을 바깥 법선으로 밀어낸 선끼리 만나는 점
+  const lines = corners.map(([x0, y0], i) => {
+    const [x1, y1] = corners[(i + 1) % n]
+    const len = Math.hypot(x1 - x0, y1 - y0)
+    const nx = (y1 - y0) / len
+    const ny = -(x1 - x0) / len
+    return { x: x0 + nx * grow[i], y: y0 + ny * grow[i], dx: x1 - x0, dy: y1 - y0 }
+  })
+  return lines
+    .map((b, i) => {
+      const a = lines[(i + n - 1) % n]
+      const det = a.dx * b.dy - a.dy * b.dx
+      const t = ((b.x - a.x) * b.dy - (b.y - a.y) * b.dx) / det
+      return `${(a.x + a.dx * t).toFixed(2)},${(a.y + a.dy * t).toFixed(2)}`
+    })
+    .join(' ')
+}
+
+export interface ShadePiece {
+  points: string
+  value: number // 이 조각의 어둠 0~1
+  face: 'top' | 'left' | 'right'
+}
+
+// 칸 윗면과 앞 두 옆면을 빛 지도 조각으로 나눈 칠, 막 대신 타일 색 자체를 어둡게 칠하는 조각
+// 칸 둘레는 타일 끝에 딱 맞추고 칸 안 조각끼리만 살짝 겹쳐 틈 없음, 옆면 맨 아래 받침 띠는 까맣게
+export const shadeShapes = (
+  cx: number,
+  cy: number,
+  depth: number,
+  values: number[],
+  sideValues = values,
+): ShadePiece[] => {
+  const n = VEIL_STEPS
+  const e = 0.02
+  const at = (i: number) => -0.5 + i / n
+  const xy = (u: number, v: number): [number, number] => [cx + (u - v) * HW, cy + (u + v) * HH]
+  const text = (points: [number, number][]) => points.map(([x, y]) => `${x},${y}`).join(' ')
+  const grid = (list: number[]) => (list.length === 1 ? Array<number>(n * n).fill(list[0]) : list)
+  const top = grid(values)
+  const sides = grid(sideValues)
+  // 빛이 안 닿아 다 어두운 칸은 조각 없이 타일 면만 어둡게 칠함
+  if (top.every((v) => v === 1) && sides.every((v) => v === 1)) return []
+  const pieces: ShadePiece[] = []
+  const even = top.every((v) => v === top[0])
+  if (even)
+    pieces.push({
+      points: text([xy(-0.5, -0.5), xy(0.5, -0.5), xy(0.5, 0.5), xy(-0.5, 0.5)]),
+      value: top[0],
+      face: 'top',
+    })
+  for (let j = 0; j < n && !even; j++) {
+    let start = 0
+    for (let i = 1; i <= n; i++) {
+      if (i < n && top[j * n + i] === top[j * n + start]) continue
+      const [u0, u1] = [at(start) - (start > 0 ? e : 0), at(i) + (i < n ? e : 0)]
+      const [v0, v1] = [at(j) - (j > 0 ? e : 0), at(j + 1) + (j + 1 < n ? e : 0)]
+      pieces.push({
+        points: text([xy(u0, v0), xy(u1, v0), xy(u1, v1), xy(u0, v1)]),
+        value: top[j * n + start],
+        face: 'top',
+      })
+      start = i
+    }
+  }
+  const side = Math.max(0, depth - TILE.lip)
+  const strip = (left: boolean) => {
+    const value = (k: number) => (left ? sides[(n - 1) * n + k] : sides[k * n + n - 1])
+    const edge = (k: number) => (left ? xy(at(k), 0.5) : xy(0.5, at(k)))
+    const face = left ? 'left' : 'right'
+    let start = 0
+    for (let k = 1; k <= n; k++) {
+      if (k < n && value(k) === value(start)) continue
+      const [p, q] = [edge(start > 0 ? start - e * n : start), edge(k < n ? k + e * n : k)]
+      if (side > 0)
+        pieces.push({
+          points: text([p, q, [q[0], q[1] + side], [p[0], p[1] + side]]),
+          value: value(start),
+          face,
+        })
+      start = k
+    }
+    // 받침 띠
+    const [a, b] = [edge(0), edge(n)]
+    pieces.push({
+      points: text([
+        [a[0], a[1] + side],
+        [b[0], b[1] + side],
+        [b[0], b[1] + depth],
+        [a[0], a[1] + depth],
+      ]),
+      value: 1,
+      face,
+    })
+  }
+  strip(true)
+  strip(false)
+  return pieces
 }

@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react'
+import { type CSSProperties, type ComponentProps, type ReactNode } from 'react'
 
 import BoardAmbient from './BoardAmbient'
 import BoardBlock from './BoardBlock'
@@ -14,9 +14,16 @@ import BoardTide from './BoardTide'
 import BoardVine from './BoardVine'
 import BoardWater from './BoardWater'
 import BoardWhirlpool from './BoardWhirlpool'
-import { type CellLook, crackThickness, swampCollar } from './frame'
+import {
+  type BehindGoal,
+  type CellLook,
+  type ShadeLook,
+  crackThickness,
+  swampCollar,
+} from './frame'
 import {
   SHARD,
+  type ShadePiece,
   blend,
   cellFaces,
   crackQuarters,
@@ -27,8 +34,10 @@ import {
   sunkLift,
   surfaceRise,
   surfaceShown,
+  veilMiddle,
 } from './view'
 import { TILE, blockFaces } from '@/game/iso'
+import { useNightFade } from '@/hooks/useNightFade'
 
 // 왼쪽 위 모서리와 나란하게 누운 얼음 윗면의 광택 면
 const GLOSS_SPOTS: [number, number][] = [
@@ -41,16 +50,38 @@ const GLOSS_SPOTS: [number, number][] = [
 // 칸 크기의 미끄러져 지나간 자국, 작게 그리면 칸 안에 뜬 액자처럼 보이는 탓
 const FROST_OPACITY = 0.7
 
-// 이 칸 수면 뒤에 비치는 물에 잠긴 골, x와 y는 골 칸 윗면 중심
-export interface BehindGoal {
-  x: number
-  y: number
-  parity: boolean
-  sunk: number
-  depth: number
-}
-
 type Faces = { top: string; left: string; right: string }
+
+// 어둠 칸의 바닥 타일과 빛 조각 칠, 어둠 세기 --veil은 이 묶음에만
+const Shaded = ({
+  on,
+  fade,
+  pieces,
+  faces,
+  children,
+}: {
+  on: boolean
+  fade: (element: Element | null) => void
+  pieces: ShadePiece[]
+  faces: Faces
+  children: ReactNode
+}) =>
+  on ? (
+    <g ref={fade}>
+      {children}
+      {pieces.map((piece, i) => (
+        <polygon
+          key={i}
+          points={piece.points}
+          style={{
+            fill: `color-mix(in srgb, var(--color-night) calc(var(--veil) * ${piece.value * 100}%), ${faces[piece.face]})`,
+          }}
+        />
+      ))}
+    </g>
+  ) : (
+    <>{children}</>
+  )
 
 interface BoardFloorProps extends Omit<
   CellLook,
@@ -68,6 +99,8 @@ interface BoardFloorProps extends Omit<
 > {
   behindGoal?: BehindGoal | null
   faces: Faces
+  shade?: ShadeLook | null // 타일 색을 직접 어둡게 칠하는 칸
+  pieces?: ShadePiece[] // 그 칸의 빛 지도 칠 조각
   baseFaces: Faces
   vineProps: Omit<ComponentProps<typeof BoardVine>, 'layer' | 'kind'>
   grownVine: boolean
@@ -104,6 +137,8 @@ const BoardFloor = ({
   icy,
   iceTop,
   mudY,
+  shade = null,
+  pieces = [],
 }: BoardFloorProps) => {
   const depth = crack.on ? crackThickness(crack.stage) + h * TILE.layer : h * TILE.layer + TILE.lip
   // 원래 땅 위에 볏짚빛으로 얹히는 씨앗으로 솟은 층, 옆면 색이 바뀌는 자리가 경계
@@ -112,6 +147,11 @@ const BoardFloor = ({
   const quarters = crack.on && crack.broken === 0 ? crackQuarters(x, y, split, crack.seed) : []
   const shards = crackShards(x, y, crack.broken, depth)
   const collar = swamp.risen >= 0 ? swampCollar(swamp.risen) * swamp.deep : 0
+  const shadeFade = useNightFade(shade?.beat ?? null)
+  const goalVeil = shade ? veilMiddle(shade.veil.split(',').map(Number)) : 0
+  // 빛 조각 밑 타일은 다 어두운 색, 조각 가장자리로 밝은 타일이 비치는 선 막기
+  const shadeOf = (color: string) =>
+    shade ? `color-mix(in srgb, var(--color-night) calc(var(--veil) * 100%), ${color})` : color
 
   return (
     <>
@@ -172,15 +212,17 @@ const BoardFloor = ({
             right={faces.right}
           />
         ) : (
-          <BoardBlock
-            x={x}
-            y={y}
-            width={TILE.width}
-            depth={depth}
-            top={crack.on && crack.broken === 0 ? dim(faces.top, 9) : faces.top}
-            left={faces.left}
-            right={faces.right}
-          />
+          <Shaded fade={shadeFade} on={shade !== null} pieces={pieces} faces={faces}>
+            <BoardBlock
+              x={x}
+              y={y}
+              width={TILE.width}
+              depth={depth}
+              top={crack.on && crack.broken === 0 ? dim(faces.top, 9) : shadeOf(faces.top)}
+              left={shadeOf(faces.left)}
+              right={shadeOf(faces.right)}
+            />
+          </Shaded>
         )}
         <BoardTide x={x} y={y} faces={faces} tide={tide} />
         {sluice.channel && (
@@ -319,14 +361,23 @@ const BoardFloor = ({
           />
         ))}
         {goal && sluice.sunk === 0 && (
-          <BoardGoal
-            x={x}
-            y={y - sunkLift(water.depth)}
-            top={baseFaces.top}
-            sunk={sluice.sunk}
-            depth={water.depth}
-            film={surfaceShown(water.depth)}
-          />
+          // 어둠 칸의 골 구멍은 칸 어둠 값만큼 어둡게 칠함
+          <g className={shade ? 'deco-day' : undefined}>
+            <g
+              ref={shade ? shadeFade : undefined}
+              className={shade ? 'deco-night' : undefined}
+              style={shade ? ({ '--deco-veil': goalVeil } as CSSProperties) : undefined}
+            >
+              <BoardGoal
+                x={x}
+                y={y - sunkLift(water.depth)}
+                top={baseFaces.top}
+                sunk={sluice.sunk}
+                depth={water.depth}
+                film={surfaceShown(water.depth)}
+              />
+            </g>
+          </g>
         )}
       </g>
     </>

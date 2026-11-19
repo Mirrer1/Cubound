@@ -6,6 +6,8 @@ import {
   coverPath,
   edgeFade,
   lightVeil,
+  shadeShapes,
+  veilFootprint,
   veilMiddle,
   veilShapes,
 } from './nightView'
@@ -38,10 +40,14 @@ describe('cellVeil', () => {
     expect(veil[7]).toBeGreaterThan(0.9)
   })
 
-  it('빛이 여럿이면 가장 옅은 값', () => {
-    expect(cellVeil([CUBE, { ...CUBE, x: 4 }], 3, 2)).toEqual(
-      cellVeil([CUBE], 3, 2).map((v, i) => Math.min(v, cellVeil([{ ...CUBE, x: 4 }], 3, 2)[i])),
-    )
+  it('서로 다른 빛이 겹치면 더해 밝고, 큐브 빛 한 벌은 밝은 쪽만', () => {
+    const a = cellVeil([CUBE], 3, 2)
+    const b = cellVeil([{ ...CUBE, x: 4 }], 3, 2)
+    const both = cellVeil([CUBE, { ...CUBE, x: 4 }], 3, 2)
+    both.forEach((v, i) => expect(v).toBeLessThanOrEqual(Math.min(a[i], b[i])))
+    expect(both.some((v, i) => v < Math.min(a[i], b[i]))).toBe(true)
+    const cube = { ...CUBE, cube: true }
+    expect(cellVeil([cube, { ...cube, x: 4 }], 3, 2)).toEqual(a.map((v, i) => Math.min(v, b[i])))
   })
 
   it('켜지는 빛은 무게만큼 옅게 한다', () => {
@@ -153,5 +159,42 @@ describe('edgeFade', () => {
     expect(faded).toHaveLength(64)
     expect(faded[7]).toBeGreaterThan(0.8)
     expect(faded[0]).toBe(0.2)
+  })
+})
+
+describe('veilFootprint', () => {
+  const corners = (points: string) => points.split(' ').map((p) => p.split(',').map(Number))
+  const shut = { left: false, right: false, backLeft: false, backRight: false }
+  const open = { left: true, right: true, backLeft: true, backRight: true }
+
+  it('안쪽 둘레는 옆 칸과 맞닿은 변을 칸 끝에 맞춤', () => {
+    const [left, top] = corners(veilFootprint(0, 0, 10, shut, 'inner'))
+    expect(left).toEqual([-TILE.width / 2, 0])
+    expect(top).toEqual([0, -TILE.height / 2])
+  })
+
+  it('바깥 둘레는 판 끝 변을 칸 끝에 맞추고 옆 칸 쪽은 넉넉히', () => {
+    expect(corners(veilFootprint(0, 0, 10, open, 'outer'))[1]).toEqual([0, -TILE.height / 2])
+    expect(corners(veilFootprint(0, 0, 10, shut, 'outer'))[1][1]).toBeLessThan(-TILE.height / 2)
+  })
+})
+
+describe('shadeShapes', () => {
+  it('빛이 안 닿아 다 어두운 칸은 조각 없음', () => {
+    expect(shadeShapes(0, 0, 16, [1])).toEqual([])
+  })
+
+  it('고른 윗면은 조각 하나, 옆면과 받침 띠는 따로', () => {
+    const pieces = shadeShapes(0, 0, 40, [0.5])
+    expect(pieces.filter((p) => p.face === 'top')).toHaveLength(1)
+    expect(pieces.filter((p) => p.face === 'left').length).toBeGreaterThan(0)
+  })
+})
+
+describe('shadeShapes 빛 지도', () => {
+  it('고르지 않은 윗면은 여덟 줄 모두 칠함', () => {
+    const values = Array.from({ length: 64 }, (_, k) => (k % 8) / 8)
+    const tops = shadeShapes(0, 0, 16, values).filter((p) => p.face === 'top')
+    expect(tops).toHaveLength(64)
   })
 })

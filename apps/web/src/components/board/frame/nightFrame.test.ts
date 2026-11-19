@@ -120,7 +120,7 @@ describe('nightScene', () => {
 })
 
 describe('nightCellOf', () => {
-  it('큐브 칸은 칸 덮개 없이 빛 지도를 쉼표로 잇고, 큐브 덮개는 큐브 그림이 따라간다', () => {
+  it('큐브 칸은 칸 덮개 없이 판 끝 옆면 빛 지도를 쉼표로 잇고, 큐브 덮개는 큐브 그림이 따라간다', () => {
     const game = at(4)
     const night = nightScene({ prev: at(3), game, events: [], t: 1, cube: { x: 0, y: 0 } })!
     const cell = nightCellOf(night, game, { x: 0, y: 0 }, 0, [])
@@ -131,7 +131,8 @@ describe('nightCellOf', () => {
       cubeSink: 2,
     })
 
-    expect(cell.veil.split(',')).toHaveLength(64)
+    expect(cell.veil).toBe('0.2')
+    expect(cell.sides.split(',')).toHaveLength(64)
     expect(cell.cover).toBe('')
     expect(cover.d).toBe('M0,2 10,7 0,12Z')
     expect(nightCellOf(night, game, { x: 0, y: 0 }, 0, [cover]).hole).toBe(cover.d)
@@ -146,7 +147,7 @@ describe('nightVeils', () => {
 
     expect(veils?.front.opacity).toBeCloseTo(0.22)
     expect(veils?.back.backgroundColor).toBe('var(--color-base-bg)')
-    expect(veils?.front.transition).toBe(`opacity ${veils?.seconds}s ease-in 0s`)
+    expect(veils?.front.transition).toBe(`opacity ${veils?.seconds}s ease-out 0s`)
     expect(veils?.seconds).toBeGreaterThan(0.2)
   })
 
@@ -201,13 +202,14 @@ describe('guideNightOf', () => {
 })
 
 describe('nightScene', () => {
-  it('판 끝에 닿은 빛 칸은 끝 변 쪽으로 어두워진다', () => {
+  it('판 끝에 닿은 빛 칸은 윗면이 끝까지 밝고 옆면만 끝 변 쪽으로 어두워진다', () => {
     const game = at(4)
     const night = nightScene({ prev: at(3), game, events: [], t: 1, cube: { x: 0, y: 0 } })!
-    const top = night.veilOf({ x: 0, y: 0 }, 0).top
+    const { top, sides } = night.veilOf({ x: 0, y: 0 }, 0)
 
-    expect(Math.max(...top)).toBeGreaterThan(0.8)
-    expect(Math.min(...top)).toBeLessThan(0.5)
+    expect(top).toEqual([0.2])
+    expect(Math.max(...sides)).toBeGreaterThan(0.8)
+    expect(Math.min(...sides)).toBeLessThan(0.5)
   })
 })
 
@@ -273,5 +275,40 @@ describe('bridgeLight', () => {
     expect(bridgeLight(night, { x: 0, y: 0 }, 0)).toBeGreaterThan(0.5)
     expect(bridgeLight(night, { x: 2, y: 0 }, 0)).toBeLessThan(0.1)
     expect(bridgeLight(null, { x: 0, y: 0 }, 0)).toBe(0)
+  })
+})
+
+describe('nightVeils 어둠 세기', () => {
+  it('어둠이 내리는 수는 바탕과 같은 시간에 ease-out으로 0에서 1', () => {
+    const veils = nightVeils(at(3), at(4), [
+      { type: 'moved', from: { x: 0, y: 0 }, to: { x: 1, y: 0 } },
+    ])
+
+    expect(veils?.field).toEqual({
+      from: 0,
+      to: 1,
+      seconds: veils?.seconds,
+      delay: 0,
+      ease: 'ease-out',
+    })
+    expect(veils?.back['--night-ease']).toBe('ease-out')
+    expect(veils?.back.transition).toBe(
+      `background-color ${veils?.seconds}s ease-out 0s, border-color ${veils?.seconds}s ease-out 0s`,
+    )
+  })
+
+  it('걷히는 수는 ease-out으로 1에서 0, 앞 상태가 없으면 그대로', () => {
+    expect(nightVeils(at(5), at(6), [])?.field).toMatchObject({ from: 1, to: 0, ease: 'ease-out' })
+    expect(nightVeils(null, at(4), [])?.field).toMatchObject({ from: 1, to: 1 })
+  })
+})
+
+describe('nightVeils 1수 전 막', () => {
+  it('어둠이 내리는 수에는 칸 어둠과 같은 ease-out으로 걷힌다', () => {
+    const veils = nightVeils(at(3), at(4), [
+      { type: 'moved', from: { x: 0, y: 0 }, to: { x: 1, y: 0 } },
+    ])
+
+    expect(veils?.front.transition).toBe(`opacity ${veils?.seconds}s ease-out 0s`)
   })
 })

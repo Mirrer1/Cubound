@@ -348,6 +348,8 @@ const GuideOverlay = ({ guides, step, limit, containerRef, onNext, onSkip }: Gui
             mask="url(#guide-holes)"
             style={{
               fill: 'var(--guide-scrim, color-mix(in srgb, var(--color-ink) 55%, transparent))',
+              // 어둠 판에서 가이드를 닫을 때 가림막 색이 밤에서 낮으로 툭 바뀌면 강조 칸만 검게 보임, 판 바탕과 같은 박자로
+              transition: 'fill var(--night-seconds, 0.3s) ease-out',
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

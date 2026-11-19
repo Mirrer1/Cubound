@@ -6,6 +6,8 @@ const EASE_SOFT = 'cubic-bezier(0.37, 0, 0.63, 1)'
 // grow는 옅을 때의 크기 비, 진해지며 커지고 옅어지며 줄어드는 전환
 export const useFade = (opacity: number, duration = 320, from = opacity, grow = 1) => {
   const elements = useRef(new Set<Element>())
+  // 요소마다 이 훅이 건 전환, getAnimations는 매번 스타일 계산을 강제하는 탓
+  const fades = useRef(new WeakMap<Element, Animation>())
   const last = useRef(from)
 
   useLayoutEffect(() => {
@@ -14,11 +16,12 @@ export const useFade = (opacity: number, duration = 320, from = opacity, grow = 
     if (from === opacity || matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const rising = opacity > from
     for (const element of elements.current) {
-      const running = element.getAnimations()
-      const style = getComputedStyle(element)
-      const start = running.length > 0 ? Number(style.opacity) : from
-      const scaled = running.length > 0 ? style.transform : `scale(${rising ? grow : 1})`
-      running.forEach((animation) => animation.cancel())
+      const fade = fades.current.get(element)
+      const running = fade !== undefined && fade.playState === 'running'
+      const style = running ? getComputedStyle(element) : null
+      const start = style ? Number(style.opacity) : from
+      const scaled = style ? style.transform : `scale(${rising ? grow : 1})`
+      fade?.cancel()
       const frames =
         grow === 1
           ? [{ opacity: start }, { opacity }]
@@ -26,7 +29,7 @@ export const useFade = (opacity: number, duration = 320, from = opacity, grow = 
               { opacity: start, transform: scaled },
               { opacity, transform: `scale(${rising ? 1 : grow})` },
             ]
-      element.animate(frames, { duration, easing: EASE_SOFT })
+      fades.current.set(element, element.animate(frames, { duration, easing: EASE_SOFT }))
     }
   }, [opacity, duration, grow])
 
