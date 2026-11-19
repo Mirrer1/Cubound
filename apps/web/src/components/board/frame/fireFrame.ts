@@ -1,6 +1,7 @@
 import { clamp01, lerp, smooth } from './curveFrame'
 import { SECONDS, type Segment, has, same, totalSeconds } from './pathFrame'
 import { burnFire } from '@/game/rules'
+import { hasBox } from '@/game/rules/cellRule'
 import type { GameEvent, GameState, Point, Stage } from '@/game/types'
 
 // 불씨가 켜지는 초, 숯이 재로 부서지는 초, 덮여 못 붙은 숯이 올랐다 꺼지는 초
@@ -168,6 +169,7 @@ export interface FireLook {
   kind: FireKind | null
   heat: number // 0 평소, 0.5 달아오름, 1 불붙음
   lit: number // 불씨 칸 켜짐
+  glide: boolean // 불씨 켜짐을 화면에서 천천히 바꿈(그림만 켜고 끄는 때)
   stand: number // 숯이 서 있는 정도, 0이면 재 자국만
   crumble: number // 재로 부서진 정도
   mark: number // 재 자국 진하기
@@ -178,6 +180,7 @@ export const NO_FIRE: FireLook = {
   kind: null,
   heat: 0,
   lit: 0,
+  glide: false,
   stand: 1,
   crumble: 0,
   mark: 0,
@@ -187,21 +190,36 @@ export const NO_FIRE: FireLook = {
 const heatOf = (state: GameState, warm: Point[], p: Point) =>
   has(state.burning, p) ? 1 : has(warm, p) ? WARM : 0
 
+// 떠나는 불씨가 꺼지기 시작하는 큐브 걸음 진행도, 큐브가 비켜 불씨가 보일 때
+const SPARK_LEAVE = 0.15
+
 // 칸 하나의 불 모습
 export const fireLookOf = (fire: FireScene, p: Point): FireLook => {
   const { before, game, back, spread, boss } = fire
   const kind = fireKindAt(game.stage, p)
   if (!kind) return NO_FIRE
 
+  // 쓴 불씨는 큐브가 그 위에 있는 동안만 켜져 있고, 떠나는 걸음에 꺼짐
   if (kind === 'spark') {
-    const was = has(before.sparks, p) ? 0 : 1
-    const now = has(game.sparks, p) ? 0 : 1
-    return {
-      ...NO_FIRE,
-      kind,
-      boss,
-      lit: fire.dropping ? was * (1 - back) : was === now ? now : spread,
-    }
+    // 쓴 불씨도 밟을 때마다 켜져 보임(그림만, 번지는 건 처음 한 번)
+    const litOf = (state: GameState) =>
+      !has(state.sparks, p) && same(state.player, p) && !hasBox(state, p) ? 1 : 0
+    const kindled = has(before.sparks, p) && !has(game.sparks, p)
+    const was = litOf(before)
+    const now = litOf(game)
+    // 큐브가 오가며 켜고 끄는 건 화면에서 천천히 바꿈, 처음 켜기와 재시작은 연출 시간대로
+    const glide = !fire.dropping && !kindled
+    // 다시 밟는 불씨는 큐브가 다 닿은 뒤 켜짐, 그 전엔 꺼진 채
+    const lit = fire.dropping
+      ? was * (1 - back)
+      : kindled
+        ? spread
+        : !was && now && spread < 1
+          ? 0
+          : was && !now && spread < SPARK_LEAVE
+            ? 1
+            : now
+    return { ...NO_FIRE, kind, boss, lit, glide }
   }
 
   const heatBefore = heatOf(before, fire.warmBefore, p)

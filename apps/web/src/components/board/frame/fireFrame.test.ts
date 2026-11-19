@@ -209,6 +209,17 @@ describe('fireLookOf', () => {
     expect(fireLookOf(scene, FAR).heat).toBe(0)
   })
 
+  it('불씨는 큐브가 떠나면 천천히 꺼지고 다시 밟아 닿으면 천천히 켜진다', () => {
+    const lit = move(createState(LINE_STAGE), 'down').state
+    const left = move(lit, 'up').state
+
+    expect(fireLookOf(sceneAt(lit, lit, [], 1), SPARK)).toMatchObject({ lit: 1, glide: true })
+    expect(lookAt(lit, ['up'], 0, SPARK)).toMatchObject({ lit: 1, glide: true })
+    expect(lookAt(lit, ['up'], 0.9, SPARK)).toMatchObject({ lit: 0, glide: true })
+    expect(fireLookOf(sceneAt(left, left, [], 1), SPARK).lit).toBe(0)
+    expect(lookAt(left, ['down'], 1, SPARK)).toMatchObject({ lit: 1, glide: true })
+  })
+
   it('켜는 수는 큐브가 닿기 전에 꺼져 있다가 닿은 뒤 이어서 켜진다', () => {
     const start = createState(LINE_STAGE)
     const { events } = move(start, 'down')
@@ -317,7 +328,7 @@ describe('fireLookOf', () => {
       })
 
     expect(fireLookOf(restartAt(0), WALL)).toMatchObject({ stand: 0, mark: 1 })
-    expect(fireLookOf(restartAt(0), SPARK).lit).toBe(1)
+    expect(fireLookOf(restartAt(0), SPARK).lit).toBe(0)
     expect(fireLookOf(restartAt(0), NEAR).heat).toBe(1)
     const mid = fireLookOf(restartAt(0.5), WALL)
     expect(mid.stand).toBeGreaterThan(0)
