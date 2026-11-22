@@ -34,4 +34,5 @@ CLAUDE.local.md
 # Playwright
 **/e2e/.results
 **/e2e/.screenshots
+**/e2e/.probe
 .claude/local/
