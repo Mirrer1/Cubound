@@ -30,6 +30,7 @@ import {
   crackShards,
   crackSplit,
   dim,
+  nightTone,
   spotPoints,
   sunkLift,
   surfaceRise,
@@ -149,32 +150,47 @@ const BoardFloor = ({
   const collar = swamp.risen >= 0 ? swampCollar(swamp.risen) * swamp.deep : 0
   const shadeFade = useNightFade(shade?.beat ?? null)
   const goalVeil = shade ? veilMiddle(shade.veil.split(',').map(Number)) : 0
+  // 무너져 구덩이로 가라앉는 조각은 한 층 내려가는 동안 칸 빛에서 까만 어둠까지, 구덩이 속은 빛이 안 닿음
+  const sinkVeil = shade ? goalVeil + (1 - goalVeil) * Math.min(1, crack.fall / TILE.layer) : null
   // 빛 조각 밑 타일은 다 어두운 색, 조각 가장자리로 밝은 타일이 비치는 선 막기
   const shadeOf = (color: string) =>
     shade ? `color-mix(in srgb, var(--color-night) calc(var(--veil) * 100%), ${color})` : color
+  // 조각 사이 줄눈으로 보이는 무너지는 칸 윗면
+  const grooved = crack.on && crack.broken === 0
+  const floorFaces = grooved ? { ...faces, top: dim(faces.top, 9) } : faces
+  const veilGrid = shade ? shade.veil.split(',').map(Number) : null
 
   return (
     <>
       {crack.shadow > 0 && (
-        <polygon
-          points={blockFaces(x, y - crack.fall, TILE.width, 0).top}
-          style={{ fill: 'var(--color-crack-shadow)', opacity: crack.shadow }}
-        />
+        // 어둠 칸에서는 무너진 자리 그림자를 다 어둡게, 아래 까만 구덩이보다 밝으면 어둠 속에 회색 판으로 보임
+        <g ref={shade ? shadeFade : undefined}>
+          <polygon
+            points={blockFaces(x, y - crack.fall, TILE.width, 0).top}
+            style={{
+              fill: nightTone('var(--color-crack-shadow)', shade ? 1 : null),
+              opacity: crack.shadow,
+            }}
+          />
+        </g>
       )}
       <g opacity={ground.blockOpacity}>
         {shards.length > 0 ? (
-          shards.map((shard) => (
-            <BoardBlock
-              key={shard.key}
-              x={shard.x}
-              y={shard.y}
-              width={TILE.width * SHARD.scale}
-              depth={shard.depth}
-              top={faces.top}
-              left={faces.left}
-              right={faces.right}
-            />
-          ))
+          // 무너지는 동안 어둠 칸의 조각은 가라앉는 만큼 어둡게 고르게 칠함
+          <g ref={shade ? shadeFade : undefined}>
+            {shards.map((shard) => (
+              <BoardBlock
+                key={shard.key}
+                x={shard.x}
+                y={shard.y}
+                width={TILE.width * SHARD.scale}
+                depth={shard.depth}
+                top={nightTone(faces.top, sinkVeil)}
+                left={nightTone(faces.left, sinkVeil)}
+                right={nightTone(faces.right, sinkVeil)}
+              />
+            ))}
+          </g>
         ) : seed.land > 0 ? (
           <>
             <BoardBlock
@@ -211,14 +227,27 @@ const BoardFloor = ({
             left={faces.left}
             right={faces.right}
           />
-        ) : (
-          <Shaded fade={shadeFade} on={shade !== null} pieces={pieces} faces={faces}>
+        ) : shade && (crack.on || device.lift) ? (
+          // 어둠의 무너지는 칸과 엘리베이터는 상자처럼 칸째로 칸 가운데 값 한 색, 줄무늬(빛 층)는 평범한 바닥만
+          <g ref={shadeFade}>
             <BoardBlock
               x={x}
               y={y}
               width={TILE.width}
               depth={depth}
-              top={crack.on && crack.broken === 0 ? dim(faces.top, 9) : shadeOf(faces.top)}
+              top={nightTone(floorFaces.top, goalVeil)}
+              left={nightTone(faces.left, goalVeil)}
+              right={nightTone(faces.right, goalVeil)}
+            />
+          </g>
+        ) : (
+          <Shaded fade={shadeFade} on={shade !== null} pieces={pieces} faces={floorFaces}>
+            <BoardBlock
+              x={x}
+              y={y}
+              width={TILE.width}
+              depth={depth}
+              top={shadeOf(floorFaces.top)}
               left={shadeOf(faces.left)}
               right={shadeOf(faces.right)}
             />
@@ -333,8 +362,23 @@ const BoardFloor = ({
         {mushroom.on && (
           <BoardMushroom x={x} y={y} press={mushroom.press} wither={mushroom.wither} />
         )}
-        {(device.lift || device.warp) && <BoardPlate x={x} y={y} warp={device.warp} />}
-        {ambient.kind === 'warp' && <BoardAmbient x={x} y={y} {...ambient} kind="warp" />}
+        {(device.lift || device.warp) &&
+          (shade ? (
+            <g ref={shadeFade}>
+              <BoardPlate x={x} y={y} warp={device.warp} grid={veilGrid} />
+            </g>
+          ) : (
+            <BoardPlate x={x} y={y} warp={device.warp} />
+          ))}
+        {ambient.kind === 'warp' &&
+          (shade ? (
+            // 짝 칸 반짝임은 까마귀처럼 어둠이 내리는 만큼 사라짐, 막 위에 그려져 어둠 속에서 하얗게 보임
+            <g ref={shadeFade} style={{ opacity: 'calc(1 - var(--veil))' }}>
+              <BoardAmbient x={x} y={y} {...ambient} kind="warp" />
+            </g>
+          ) : (
+            <BoardAmbient x={x} y={y} {...ambient} kind="warp" />
+          ))}
         {tether.post > 0 && <BoardTether part="post" x={x} y={y} bands={tether.post} />}
         {icy && (
           <polygon
@@ -348,18 +392,36 @@ const BoardFloor = ({
             style={{ fill: 'var(--color-ice-gloss)', opacity: ice.frost * FROST_OPACITY }}
           />
         )}
-        {quarters.map((quarter) => (
-          <BoardBlock
-            key={quarter.key}
-            x={quarter.x}
-            y={quarter.y}
-            width={quarter.width}
-            depth={quarter.depth}
-            top={faces.top}
-            left={faces.left}
-            right={faces.right}
-          />
-        ))}
+        {shade ? (
+          // 어둠 칸의 조각도 칸과 같은 한 색
+          <g ref={shadeFade}>
+            {quarters.map((quarter) => (
+              <BoardBlock
+                key={quarter.key}
+                x={quarter.x}
+                y={quarter.y}
+                width={quarter.width}
+                depth={quarter.depth}
+                top={nightTone(faces.top, goalVeil)}
+                left={nightTone(faces.left, goalVeil)}
+                right={nightTone(faces.right, goalVeil)}
+              />
+            ))}
+          </g>
+        ) : (
+          quarters.map((quarter) => (
+            <BoardBlock
+              key={quarter.key}
+              x={quarter.x}
+              y={quarter.y}
+              width={quarter.width}
+              depth={quarter.depth}
+              top={faces.top}
+              left={faces.left}
+              right={faces.right}
+            />
+          ))
+        )}
         {goal && sluice.sunk === 0 && (
           // 어둠 칸의 골 구멍은 칸 어둠 값만큼 어둡게 칠함
           <g className={shade ? 'deco-day' : undefined}>

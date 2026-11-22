@@ -1,10 +1,7 @@
 import BoardBlock from './BoardBlock'
-import { blend } from './view'
+import { TRAM, blend, nightTone } from './view'
 import { TILE, blockFaces, isoDelta } from '@/game/iso'
 
-// 칸 크기에 대한 비율, 틀 없이 칸보다 작아 승강 발판과 구별되는 판
-const DECK = { scale: 0.92, thickness: 9 }
-const SKIRT = { scale: 0.62, drop: 6 }
 const SHADOW = 0.56
 // 진행 방향 모서리에 붙는 범퍼의 폭
 const NOSE = 9 / (TILE.width / 2)
@@ -18,7 +15,7 @@ const isoPoints = (x: number, y: number, spots: [number, number][]) =>
     .join(' ')
 
 const noseSpots = (dx: number, dy: number): [number, number][] => {
-  const edge = DECK.scale / 2
+  const edge = TRAM.deck / 2
   const inner = edge - NOSE
   return dx !== 0
     ? [
@@ -41,36 +38,38 @@ interface BoardTramProps {
   depth: number // 판 윗면에서 구덩이 바닥까지 화면 거리
   dx: number // 코가 붙는 모서리 방향
   dy: number
+  dim?: number | null // 어둠에서 상자처럼 한 색으로 칠할 어둠 값, 막은 발판 모양만큼 비움
 }
 
-const BoardTram = ({ x, y, depth, dx, dy }: BoardTramProps) => {
+const BoardTram = ({ x, y, depth, dx, dy, dim = null }: BoardTramProps) => {
+  const tone = (color: string) => nightTone(color, dim)
   return (
     <g>
       <polygon
         points={blockFaces(x, y + depth, TILE.width * SHADOW, 0).top}
-        style={{ fill: 'var(--color-tram-shadow)' }}
+        style={{ fill: tone('var(--color-tram-shadow)') }}
       />
       <BoardBlock
         x={x}
-        y={y + SKIRT.drop}
-        width={TILE.width * SKIRT.scale}
-        depth={depth - SKIRT.drop}
-        top="var(--color-tram-skirt)"
-        left="var(--color-tram-skirt)"
-        right={blend('var(--color-tram-skirt)', 'white', 0.12)}
+        y={y + TRAM.drop}
+        width={TILE.width * TRAM.skirt}
+        depth={depth - TRAM.drop}
+        top={tone('var(--color-tram-skirt)')}
+        left={tone('var(--color-tram-skirt)')}
+        right={tone(blend('var(--color-tram-skirt)', 'white', 0.12))}
       />
       <BoardBlock
         x={x}
         y={y}
-        width={TILE.width * DECK.scale}
-        depth={DECK.thickness}
-        top="var(--color-tram-top)"
-        left="var(--color-tram-left)"
-        right="var(--color-tram-right)"
+        width={TILE.width * TRAM.deck}
+        depth={TRAM.thickness}
+        top={tone('var(--color-tram-top)')}
+        left={tone('var(--color-tram-left)')}
+        right={tone('var(--color-tram-right)')}
       />
       <polygon
         points={isoPoints(x, y, noseSpots(dx, dy))}
-        style={{ fill: 'var(--color-tram-nose)' }}
+        style={{ fill: tone('var(--color-tram-nose)') }}
       />
     </g>
   )

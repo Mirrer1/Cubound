@@ -55,6 +55,8 @@ export const bridgeLooks = (stage: Stage) =>
     ),
   )
 
-// 어둠에 새로 앉지 않는 까마귀
+// 어둠에 새로 앉지 않는 까마귀, 어둠 1수 전부터 새로 반짝이지 않는 짝 칸
+// 짝 칸 반짝임이 어두워지는 도중에 나오면 판 둘레 빛 테두리가 잠깐 보였다 꺼짐
 export const quietAmbient = (game: GameState, kind: AmbientKind) =>
-  kind === 'crow' && isNightStage(game.stage) && nightBeat(game) >= 4
+  isNightStage(game.stage) &&
+  ((kind === 'crow' && nightBeat(game) >= 4) || (kind === 'warp' && nightBeat(game) >= 3))

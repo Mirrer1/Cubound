@@ -15,6 +15,9 @@ const QUARTERS: [number, number][] = [
 // 밟기 전과 한 번 밟은 뒤 조각 크기, 들린 조각의 밟기 전과 한 번 밟은 뒤 높이
 export const QUARTER = { scale: 0.485, worn: 0.47, lower: 2, rise: 4 }
 
+// 움직이는 발판, 칸 크기에 대한 비율, 틀 없이 칸보다 작아 승강 발판과 구별되는 판(deck)과 그 밑 몸통(skirt)
+export const TRAM = { deck: 0.92, thickness: 9, skirt: 0.62, drop: 6 }
+
 // 무너질 때만 갈라지는 네 조각, 가만히 있을 때 갈라 두면 붙은 칸이 줄눈처럼 보이는 탓
 const SHARDS: [number, number][] = [
   [-0.25, -0.25],

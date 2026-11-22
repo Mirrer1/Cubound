@@ -81,6 +81,18 @@ describe('quietAmbient', () => {
     ])
     expect(quietAmbient(night(4), 'mote')).toBe(false)
   })
+
+  it('짝 칸은 어둠 1수 전부터 새로 반짝이지 않는다', () => {
+    const night = (moves: number) => ({ ...createState(SHADOW), moves })
+
+    expect([2, 3, 4, 5, 6].map((m) => quietAmbient(night(m), 'warp'))).toEqual([
+      false,
+      true,
+      true,
+      true,
+      false,
+    ])
+  })
 })
 
 describe('sinkingNow', () => {

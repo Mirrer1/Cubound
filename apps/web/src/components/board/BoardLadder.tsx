@@ -1,4 +1,4 @@
-import { LADDER_TIP, type TopTilt, darken, shade } from './view'
+import { LADDER_TIP, type TopTilt, darken, nightTone, shade } from './view'
 import { TILE, isoDelta } from '@/game/iso'
 import type { Direction, Point } from '@/game/types'
 
@@ -21,6 +21,7 @@ interface BoardLadderProps {
   scale?: number
   direction?: Direction // 있으면 그 방향 높은 칸에 기댄 모습
   tilt?: TopTilt // 들고 있는 사다리가 기운 큐브를 따라 기울 때
+  dim?: number | null // 어둠 칸에서 색을 직접 어둡게 할 칸 어둠 값, 상자와 같음
 }
 
 const add = (a: Point, b: Point) => ({ x: a.x + b.x, y: a.y + b.y })
@@ -61,18 +62,18 @@ const leaningSegments = (center: Point, direction: Direction) => {
   }
 }
 
-const BoardLadder = ({ x, y, scale = 1, direction, tilt }: BoardLadderProps) => {
+const BoardLadder = ({ x, y, scale = 1, direction, tilt, dim = null }: BoardLadderProps) => {
   const { rails, rungs } = direction
     ? leaningSegments({ x, y }, direction)
     : flatSegments({ x, y }, scale, tilt)
   // 바닥에 놓인 사다리의 빛을 받는 옆대와 그 아래로 내려앉는 가로대
   const railStyle = {
-    stroke: direction ? shade('tool', 'left') : shade('tool', 'top'),
+    stroke: nightTone(direction ? shade('tool', 'left') : shade('tool', 'top'), dim),
     strokeWidth: (direction ? 4.5 : 7) * scale,
     strokeLinecap: 'round' as const,
   }
   const rungStyle = {
-    stroke: direction ? shade('tool', 'top') : darken('tool', 16),
+    stroke: nightTone(direction ? shade('tool', 'top') : darken('tool', 16), dim),
     strokeWidth: (direction ? 3.5 : 5) * scale,
     strokeLinecap: 'round' as const,
   }
