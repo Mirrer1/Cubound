@@ -278,6 +278,9 @@ export const sceneFrame = ({
       y: kegScreen.y + standSink(crackView, pushedKeg.x, pushedKeg.y),
       clip: crackClip(crackView, before.heights, pushedKeg.x, pushedKeg.y),
       to: pushedKeg.to,
+      from: pushedKeg.event.from,
+      grid: { x: pushedKeg.x, y: pushedKeg.y }, // 어둠 덮개 세기를 고르는 지금 자리(칸 좌표)
+      level: pushedKeg.level,
       look: pushedKeg.look,
       // 앞쪽 높은 칸에서 뒤 칸으로 떨어지는 동안은 뒤 칸 순서, 떠난 칸 턱에 가리는 화약통
       cell: pushedKeg.sunk && same(kegFront, pushedKeg.event.from) ? pushedKeg.event.to : kegFront,

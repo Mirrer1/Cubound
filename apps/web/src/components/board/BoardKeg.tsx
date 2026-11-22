@@ -13,6 +13,7 @@ import {
   kegCordSpan,
   kegCords,
   kegTrail,
+  nightTone,
   shade,
 } from './view'
 import { TILE, blockFaces } from '@/game/iso'
@@ -72,6 +73,7 @@ interface KegProps {
   ash?: number
   trailU?: number // 밀리는 동안 불티가 처지는 칸 쪽
   trailV?: number
+  night?: number | null // 어둠에서 상자처럼 한 색으로 칠할 칸 어둠 값, --veil과 곱함
 }
 
 interface BurstProps {
@@ -89,6 +91,7 @@ interface DustProps {
   s: number
   du: number
   dv: number
+  night?: number | null // 어둠에서 바닥처럼 칸 빛만큼 어둡게, --veil과 곱함
 }
 
 type BoardKegProps = KegProps | BurstProps | DustProps
@@ -104,12 +107,19 @@ const Keg = ({
   ash = 0,
   trailU = 0,
   trailV = 0,
+  night = null,
 }: Omit<KegProps, 'part'>) => {
   const { body, hoops, lid, plug } = kegBlocks(x, y, swell)
-  const tone = heated('keg', heat)
-  const lidTone = heated('keg-lid', heat)
-  const hoopLeft = dim(tone.left, 16)
-  const hoopRight = dim(tone.right, 16)
+  const dark = (t: { top: string; left: string; right: string }) => ({
+    top: nightTone(t.top, night),
+    left: nightTone(t.left, night),
+    right: nightTone(t.right, night),
+  })
+  const raw = heated('keg', heat)
+  const tone = dark(raw)
+  const lidTone = dark(heated('keg-lid', heat))
+  const hoopLeft = nightTone(dim(raw.left, 16), night)
+  const hoopRight = nightTone(dim(raw.right, 16), night)
   const fuse = kegCords(x, y, cords, swell)
   const glow = heat / 0.72
   const flicker = useLoop(EMBER_LOOP, EMBER_MS)
@@ -133,9 +143,9 @@ const Keg = ({
       <BoardBlock {...lid} top={lidTone.top} left={lidTone.left} right={lidTone.right} />
       <BoardBlock
         {...plug}
-        top={shade('keg-plug', 'top')}
-        left={shade('keg-plug', 'left')}
-        right={shade('keg-plug', 'right')}
+        top={nightTone(shade('keg-plug', 'top'), night)}
+        left={nightTone(shade('keg-plug', 'left'), night)}
+        right={nightTone(shade('keg-plug', 'right'), night)}
       />
       {fuse.parts.map((cord) => (
         <g key={cord.top}>
@@ -245,7 +255,7 @@ const Burst = ({ x, y, s }: Omit<BurstProps, 'part'>) => {
   )
 }
 
-const Dust = ({ x, y, tier, s, du, dv }: Omit<DustProps, 'part'>) => (
+const Dust = ({ x, y, tier, s, du, dv, night = null }: Omit<DustProps, 'part'>) => (
   <g>
     {dustPuffs(x, y, du, dv, s).map((puff, i) =>
       puff.opacity > 0 ? (
@@ -257,9 +267,12 @@ const Dust = ({ x, y, tier, s, du, dv }: Omit<DustProps, 'part'>) => (
           ry={puff.ry}
           opacity={puff.opacity}
           style={{
-            fill: puff.light
-              ? blend(floorFaces(tier, false).left, 'var(--color-ash-top)', 0.45)
-              : blend(floorFaces(tier, false).top, 'var(--color-ash-top)', 0.35),
+            fill: nightTone(
+              puff.light
+                ? blend(floorFaces(tier, false).left, 'var(--color-ash-top)', 0.45)
+                : blend(floorFaces(tier, false).top, 'var(--color-ash-top)', 0.35),
+              night,
+            ),
           }}
         />
       ) : null,
