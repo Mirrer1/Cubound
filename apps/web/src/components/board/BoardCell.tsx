@@ -246,21 +246,24 @@ const BoardCell = ({
   return (
     <g>
       {pit && (
-        <BoardPit
-          x={x}
-          y={y}
-          rail={pitLook.rail}
-          railNext={pitLook.railNext}
-          pitWallLeft={pitLook.wallLeft}
-          pitWallRight={pitLook.wallRight}
-          pitWallLeftShown={pitLook.wallLeftShown}
-          pitWallRightShown={pitLook.wallRightShown}
-          vine={vine.kind}
-          grownVine={grownVine}
-          vineRise={vine.rise}
-          vineProps={vineProps}
-          faces={faces}
-        />
+        <g ref={cellVeil !== null ? shadeFade : undefined}>
+          <BoardPit
+            x={x}
+            y={y}
+            rail={pitLook.rail}
+            railNext={pitLook.railNext}
+            pitWallLeft={pitLook.wallLeft}
+            pitWallRight={pitLook.wallRight}
+            pitWallLeftShown={pitLook.wallLeftShown}
+            pitWallRightShown={pitLook.wallRightShown}
+            vine={vine.kind}
+            grownVine={grownVine}
+            vineRise={vine.rise}
+            vineProps={vineProps}
+            faces={faces}
+            dim={cellVeil}
+          />
+        </g>
       )}
       {!pit && !hidden && (
         <g ref={fadeRef} style={fade}>
@@ -388,13 +391,16 @@ const BoardCell = ({
         </g>
       )}
       {device.entity && (
-        <BoardSwitch
-          x={x}
-          y={y}
-          entity={device.entity}
-          switchDepth={device.switchDepth}
-          doorDepth={device.doorDepth}
-        />
+        <g ref={cellVeil !== null ? shadeFade : undefined}>
+          <BoardSwitch
+            x={x}
+            y={y}
+            entity={device.entity}
+            switchDepth={device.switchDepth}
+            doorDepth={device.doorDepth}
+            grid={shade ? shade.veil.split(',').map(Number) : null}
+          />
+        </g>
       )}
       {sluice.device && (
         <BoardSluice part="plate" x={x} y={y} depth={sluice.plate} open={sluice.open} />
@@ -449,12 +455,25 @@ const BoardCell = ({
         </g>
       )}
       {keg.dust >= 0 && (
-        <BoardKeg part="dust" x={x} y={y} tier={tier} s={keg.dust} du={keg.dustU} dv={keg.dustV} />
+        // 어둠에서 먼지도 칸 빛만큼 어둡게, 빛 밖에서 회색 얼룩으로 떠 보였음
+        <g ref={cellVeil !== null ? shadeFade : undefined}>
+          <BoardKeg
+            part="dust"
+            x={x}
+            y={y}
+            tier={tier}
+            s={keg.dust}
+            du={keg.dustU}
+            dv={keg.dustV}
+            night={cellVeil}
+          />
+        </g>
       )}
       {keg.on && (
-        <g opacity={keg.opacity}>
+        <g ref={cellVeil !== null ? shadeFade : undefined} opacity={keg.opacity}>
           <BoardKeg
             part="keg"
+            night={cellVeil}
             x={x}
             y={y - keg.lift * TILE.layer}
             swell={keg.swell}
@@ -495,13 +514,13 @@ const BoardCell = ({
         </g>
       )}
       {ladder.flat > 0 && (
-        <g opacity={ladder.flat}>
-          <BoardLadder x={x} y={y} />
+        <g ref={cellVeil !== null ? shadeFade : undefined} opacity={ladder.flat}>
+          <BoardLadder x={x} y={y} dim={cellVeil} />
         </g>
       )}
       {ladders.map(({ direction, opacity }) => (
-        <g key={direction} opacity={opacity}>
-          <BoardLadder x={x} y={y} direction={direction} />
+        <g key={direction} ref={cellVeil !== null ? shadeFade : undefined} opacity={opacity}>
+          <BoardLadder x={x} y={y} direction={direction} dim={cellVeil} />
         </g>
       ))}
       {seed.on > 0 && (
@@ -523,13 +542,23 @@ const BoardCell = ({
         ambient.kind === 'brazierSmoke' ||
         ambient.kind === 'brazierSpark' ||
         ambient.kind === 'crow') && (
-        <BoardAmbient
-          x={x}
-          y={ambient.kind === 'mist' ? Math.min(y, iceTop) : y}
-          {...ambient}
-          kind={ambient.kind}
-          beat={beat}
-        />
+        // 어둠에서 연기와 재 같은 배경 연출은 칸 빛만큼 옅어져 빛 밖에서는 안 보임, 까마귀는 따로
+        <g
+          ref={cellVeil !== null && ambient.kind !== 'crow' ? shadeFade : undefined}
+          style={
+            cellVeil !== null && ambient.kind !== 'crow'
+              ? { opacity: `calc(1 - var(--veil) * ${cellVeil})` }
+              : undefined
+          }
+        >
+          <BoardAmbient
+            x={x}
+            y={ambient.kind === 'mist' ? Math.min(y, iceTop) : y}
+            {...ambient}
+            kind={ambient.kind}
+            beat={beat}
+          />
+        </g>
       )}
       {sunk ? (
         <>

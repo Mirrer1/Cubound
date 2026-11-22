@@ -7,10 +7,12 @@ import {
   bridgeLight,
   cubeCover,
   movingBoxCover,
+  movingKegCover,
   nightCellOf,
   nightScene,
   sinkingBoxCovers,
   stillBoxCover,
+  tramCover,
 } from './nightFrame'
 import { same } from './pathFrame'
 import { type sceneFrame } from './sceneFrame'
@@ -62,8 +64,10 @@ export interface SlotFrame {
   taps: Tap[]
   sunkGoal: BehindGoal | null
   boxCover: MovingCover | null
+  kegCover: MovingCover | null // 밀려 가는 화약통을 따라가는 덮개
   playerCover: MovingCover | null
   sinkCovers: MovingCover[]
+  tramCovers: MovingCover[] // 움직이는 발판, to는 발판을 그리는 칸
   covers: MovingCover[] // 바닥 막에서 모양을 잘라 내는 지나가는 것 모두
 }
 
@@ -135,8 +139,10 @@ export const slotFrame = ({
   const movingFrame = scene.box && scene.boxFrames.find((frame) => same(frame.to, scene.box!.to))
   const boxCover =
     night && movingFrame ? movingBoxCover(night, movingFrame, scene.box!, events) : null
+  const kegCover = night && scene.kegFrame ? movingKegCover(night, scene.kegFrame) : null
   const playerCover = night ? cubeCover(night, prevGame, game, scene) : null
   const sinkCovers = night && night.sink < 1 ? sinkingBoxCovers(night, game) : []
+  const tramCovers = night ? scene.tramFrames.map((frame) => tramCover(night, frame)) : []
   return {
     guideShift: guideFrom !== null,
     game,
@@ -148,9 +154,13 @@ export const slotFrame = ({
     taps,
     sunkGoal,
     boxCover,
+    kegCover,
     playerCover,
     sinkCovers,
-    covers: [boxCover, playerCover, ...sinkCovers].flatMap((c) => (c ? [c] : [])),
+    tramCovers,
+    covers: [boxCover, kegCover, playerCover, ...sinkCovers, ...tramCovers].flatMap((c) =>
+      c ? [c] : [],
+    ),
   }
 }
 
@@ -162,10 +172,11 @@ const frontOfGoal = (goal: Point, p: Point) =>
   p.y - goal.y <= 1
 
 // 타일 블록 하나로 그리고 바닥 장식이 없는 칸, 그 밖 칸은 막으로
+// 무너지는 칸, 엘리베이터 발판, 짝 칸도 칠함, 막은 칸 윗면보다 솟은 조각과 판 테두리를 못 덮어 밝게 샘
+// 발판 길 구덩이 칸도 칠함(상자처럼 한 색), 막은 전환 중 칸 둘레로 잘려 구덩이 테두리가 하얗게 샘
 const plainFloor = (cell: Cell, look: Look['look']) =>
-  !cell.pit &&
+  (!cell.pit || cell.rail !== '') &&
   (!look.goal || look.sluice.sunk === 0) &&
-  !look.crack.on &&
   look.seed.land === 0 &&
   look.seed.leaves === 0 &&
   (!look.ground.filled || look.h <= 0) &&
@@ -175,8 +186,6 @@ const plainFloor = (cell: Cell, look: Look['look']) =>
   look.ice.frost === 0 &&
   look.iceStone.cover === 0 &&
   !look.mushroom.on &&
-  !look.device.lift &&
-  !look.device.warp &&
   look.tether.post === 0 &&
   look.vine.kind === null &&
   look.whirl.eye === 0 &&
@@ -215,12 +224,18 @@ export const slotOf = (frame: SlotFrame, cell: Cell): Slot => {
     night && !cell.bare && !sinkingBox
       ? nightCellOf(night, game, cell.p, drawn.look.h, covers, frame.scene.dropping)
       : null
-  const shade =
+  const floorShade =
     nightVeil && plainFloor(cell, drawn.look) ? shadeOf(nightVeil, drawn.look, frame.beat) : null
-  // 칠하는 칸의 가만히 놓인 상자는 덮개 없이 상자 색을 직접 어둡게(BoardBox dim)
+  // 엘리베이터는 요소라 상자, 문처럼 칸 바닥 높이 빛으로 한 색, 빛보다 높은 칸 규칙(윗면 까맘)은 벽 같은 바닥만
+  const shade =
+    floorShade && night && drawn.look.device.lift
+      ? { ...floorShade, veil: night.veilOf(cell.p, 0).top.join(',') }
+      : floorShade
+  // 칠하는 칸의 가만히 놓인 상자와 화약통은 덮개 없이 제 색을 직접 어둡게(BoardBox dim, BoardKeg night)
+  // 화약통에 상자 크기 덮개를 씌우면 둘레 바닥이 한 번 더 덮여 검은 네모가 보임
   const painted =
     shade !== null &&
-    drawn.look.box &&
+    (drawn.look.box || drawn.look.keg.on) &&
     !drawn.look.iceStone.iced &&
     drawn.look.iceStone.boat === 0 &&
     drawn.look.water.depth === 0

@@ -36,11 +36,13 @@ import {
   pullLanes,
 } from './view'
 import { TILE, blockFaces } from '@/game/iso'
+import { isDark } from '@/game/rules'
 import type { GameEvent, GameState, Point } from '@/game/types'
 import { useAmbient } from '@/hooks/useAmbient'
 import { useBoardAnimation } from '@/hooks/useBoardAnimation'
 import { useBoardCamera } from '@/hooks/useBoardCamera'
 import { useLoop } from '@/hooks/useLoop'
+import { useNightFade } from '@/hooks/useNightFade'
 import { cycleOf, parseStageId } from '@/stages'
 
 interface BoardProps {
@@ -198,7 +200,7 @@ const Board = ({
     cells,
   })
   const view: SlotScene = { ...frame, leanLoop }
-  const ordered = railsUnder(
+  const drawOrder = railsUnder(
     cubeFirst(
       underWall(scene.tramFrames, heights).reduce(
         (ordered, p) => cubeFirst(ordered, p),
@@ -213,6 +215,25 @@ const Board = ({
     ),
     scene.tramFrames,
   )
+  // 어둠에서 무너지는 칸은 맨 먼저 그려 옆 칸 옆면 뒤로 떨어짐, 까만 조각이 옆면을 가려 벽이 혼자 자라 보이는 탓
+  // 밝을 때는 조각이 벽 앞에서 떨어지는 게 보여 그대로, 큐브가 아직 그 칸에서 그려지는 동안도 그대로(큐브가 바닥에 가려짐)
+  const cubeKey = `${scene.cube.cell.x}-${scene.cube.cell.y}`
+  const falling = isDark(game)
+    ? new Set(
+        events.flatMap((e) =>
+          e.type === 'cracked' && e.gone && `${e.at.x}-${e.at.y}` !== cubeKey
+            ? [`${e.at.x}-${e.at.y}`]
+            : [],
+        ),
+      )
+    : null
+  const ordered =
+    falling && falling.size > 0
+      ? [
+          ...drawOrder.filter((cell) => falling.has(cell.key)),
+          ...drawOrder.filter((cell) => !falling.has(cell.key)),
+        ]
+      : drawOrder
   const slots = ordered.map((cell) => slotOf(frame, cell))
   // 예고와 어둠 동안 그림자 다리를 땅과 상자 위에 그림
   const bridgesOnTop = frame.night !== null && (frame.night.bridge > 0 || frame.guideShift)
@@ -243,36 +264,41 @@ const Board = ({
   )
 
   useEffect(() => onShowsAll(showsAll), [showsAll, onShowsAll])
+  // 판 전체의 어둠 세기, 칸을 넘어 다니며 새로 그려지는 막대와 화약통 조각은 이 값을 물려받음
+  // 조각마다 전환을 따로 틀면 새로 그려진 조각이 한 프레임 늦어 잠깐 밝게 보임
+  const boardFade = useNightFade(beat)
 
   return (
     <svg ref={ref} viewBox={viewBox} className="h-full w-full">
-      {ordered.map((cell, i) => (
-        <BoardSlot
-          key={cell.key}
-          slot={slots[i]}
-          frame={view}
-          layer={layered ? 'base' : 'all'}
-          lifted={lifted[i]}
-          bridgesAbove={bridgesOnTop}
-        />
-      ))}
-      {bridgesOnTop &&
-        ordered.map((cell, i) => (
+      <g ref={boardFade}>
+        {ordered.map((cell, i) => (
           <BoardSlot
-            key={`bridge-${cell.key}`}
+            key={cell.key}
             slot={slots[i]}
             frame={view}
-            layer="bridge"
-            under={bridgesOnTop ? underOf(slots[i]) : ''}
-            cut={bridgesOnTop && behindCube(cell.p) ? cubeCut : ''}
+            layer={layered ? 'base' : 'all'}
+            lifted={lifted[i]}
+            bridgesAbove={bridgesOnTop}
           />
         ))}
-      {layered &&
-        ordered.map((cell, i) =>
-          lifted[i] ? (
-            <BoardSlot key={`top-${cell.key}`} slot={slots[i]} frame={view} layer="top" />
-          ) : null,
-        )}
+        {bridgesOnTop &&
+          ordered.map((cell, i) => (
+            <BoardSlot
+              key={`bridge-${cell.key}`}
+              slot={slots[i]}
+              frame={view}
+              layer="bridge"
+              under={bridgesOnTop ? underOf(slots[i]) : ''}
+              cut={bridgesOnTop && behindCube(cell.p) ? cubeCut : ''}
+            />
+          ))}
+        {layered &&
+          ordered.map((cell, i) =>
+            lifted[i] ? (
+              <BoardSlot key={`top-${cell.key}`} slot={slots[i]} frame={view} layer="top" />
+            ) : null,
+          )}
+      </g>
       <defs>
         <mask id="rope-behind-scene.cube" maskUnits="userSpaceOnUse" {...scene.ropeMask}>
           <rect {...scene.ropeMask} fill="white" />

@@ -15,7 +15,7 @@ import BoardTram from './BoardTram'
 import BoardWater from './BoardWater'
 import BoardWhirlpool from './BoardWhirlpool'
 import { type Slot, type SlotFrame, same } from './frame'
-import { WATER, leanShift } from './view'
+import { WATER, leanShift, veilMiddle } from './view'
 import { TILE } from '@/game/iso'
 import type { Point } from '@/game/types'
 import { useNightFade } from '@/hooks/useNightFade'
@@ -129,9 +129,21 @@ const BoardSlot = ({
   )
 }
 
+// 막대 한 색 어둠 값, 수 처음 자리 빛에서 끝 자리 빛으로 큐브가 간 몫만큼 곧게 바꿈
+const barNight = (
+  night: NonNullable<SlotFrame['night']>,
+  ends: { from: Point[]; to: Point[] },
+  level: number,
+) => {
+  const at = (list: Point[], settled: number) =>
+    Math.min(...list.map((p) => veilMiddle(night.settledVeilOf(settled)(p, level).top)))
+  const [a, b] = [at(ends.from, 0), at(ends.to, 1)]
+  return a + (b - a) * night.arrived
+}
+
 const SlotContent = ({ slot, frame }: { slot: Slot; frame: SlotScene }) => {
   const { cell, cellY, look, over, taps, sinkingBox } = slot
-  const { scene, night, sinkCovers, boxCover, playerCover, leanLoop } = frame
+  const { scene, night, sinkCovers, boxCover, kegCover, playerCover, leanLoop } = frame
   const coverFade = useNightFade(frame.beat)
   const dark = frame.night !== null
   const cubeLean = scene.cubeLean
@@ -164,18 +176,27 @@ const SlotContent = ({ slot, frame }: { slot: Slot; frame: SlotScene }) => {
         </clipPath>
       )}
       <g clipPath={over.barClip ? `url(#crack-bar-clip-${cell.p.x}-${cell.p.y})` : undefined}>
-        {over.bars.map((bar, i) => (
-          <BoardBar key={i} {...bar} />
+        {over.bars.map(({ ends, level, ...bar }, i) => (
+          // 어둠에서 막대는 상자처럼 한 색, 양 끝 칸 중 더 밝은 쪽 빛(큐브 옆 막대가 까맣게 구멍처럼 보였음)
+          <g key={i}>
+            <BoardBar {...bar} dim={night ? barNight(night, ends, Math.round(level)) : null} />
+          </g>
         ))}
       </g>
       {over.tram && (
-        <g opacity={over.tram.opacity}>
+        // 어둠에서 발판은 상자처럼 한 색, 지나는 칸 막은 발판 모양만큼 비움(tramCover)
+        <g ref={dark ? coverFade : undefined} opacity={over.tram.opacity}>
           <BoardTram
             x={over.tram.x}
             y={over.tram.y}
             depth={over.tram.depth}
             dx={over.tram.dx}
             dy={over.tram.dy}
+            dim={
+              dark
+                ? (frame.tramCovers.find((cover) => same(cover.to, cell.p))?.opacity ?? null)
+                : null
+            }
           />
         </g>
       )}
@@ -233,19 +254,23 @@ const SlotContent = ({ slot, frame }: { slot: Slot; frame: SlotScene }) => {
               <polygon points={keg.clip} />
             </clipPath>
           )}
-          <BoardKeg
-            part="keg"
-            x={keg.x}
-            y={keg.y}
-            swell={keg.look.swell}
-            heat={keg.look.heat}
-            cords={keg.look.cords}
-            ember={keg.look.ember}
-            ashTo={keg.look.ashTo}
-            ash={keg.look.ash}
-            trailU={keg.look.trail.u}
-            trailV={keg.look.trail.v}
-          />
+          {/* 어둠에 밀리는 화약통은 상자처럼 지금 자리 빛으로 제 색을 직접 어둡게, 어둠 세기는 판 전체 값(Board) */}
+          <g>
+            <BoardKeg
+              part="keg"
+              x={keg.x}
+              y={keg.y}
+              swell={keg.look.swell}
+              heat={keg.look.heat}
+              cords={keg.look.cords}
+              ember={keg.look.ember}
+              ashTo={keg.look.ashTo}
+              ash={keg.look.ash}
+              trailU={keg.look.trail.u}
+              trailV={keg.look.trail.v}
+              night={dark && kegCover && same(keg.to, kegCover.to) ? kegCover.opacity : null}
+            />
+          </g>
         </g>
       ))}
       {over.whirlBoxes.map((boat) => (
