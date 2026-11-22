@@ -171,10 +171,10 @@
     return out;
   };
   // 갈고리: low iron plate 0.8칸 × 1.5px (4장 쇠막대 흑철 #4C5259, tone()), one round hole for the chain, and ONE hook standing on a small cuff at the right corner
-  // (outside a standing cube's silhouette). three silhouettes (hv): 'a' 둥근 막대 · 'b' 블록 굽이 · 'c' 초승달 날. single accent = dark red rust on the point.
+  // (outside a standing cube's silhouette). silhouettes (hv): 'a' 둥근 막대 · 'b' 블록 굽이 · 'c' 초승달 날 · 'd' 상자 J · 'e' 가는 상자 갈고리 (지금 쓰는 모양). single accent = dark red rust on the point.
   // 쇠: 4장 흑철 #4C5259의 밝기 그대로, 색만 hue 302°(5장 세계) · chroma 0.034 쪽으로 돌린 보랏빛 짙은 쇠
   const HI = (() => { const q = lab('#4C5259'), hr = 302 * Math.PI / 180, b = hex([q[0], 0.034 * Math.cos(hr), 0.034 * Math.sin(hr)]), k = tone(b); return { b, k, hi: mix(b, '#ffffff', 0.34), mid: mix(k.l, k.r, 0.5), hole: '#1C1922', rust: { t: '#8E2450', l: mix('#8E2450', '#000000', 0.4), r: mix('#8E2450', '#000000', 0.22), mid: mix('#8E2450', '#000000', 0.3) } }; })();
-  let HV = 'a';
+  let HV = 'e';
   const arcP = (x0, y0, R, a0, a1, n) => Array.from({ length: n + 1 }, (_, i) => { const t = (a0 + (a1 - a0) * i / n) * Math.PI / 180; return [x0 + R * Math.cos(t), y0 + R * Math.sin(t)]; });
   const ribbon = (cl, ws) => { const L = [], Rr = [];
     cl.forEach((q, i) => { const p0 = cl[Math.max(0, i - 1)], p1 = cl[Math.min(cl.length - 1, i + 1)], dx = p1[0] - p0[0], dy = p1[1] - p0[1], m = Math.hypot(dx, dy) || 1, h = ws[i] / 2;
@@ -187,17 +187,31 @@
       return { polys: [{ p: rb(0, k) }, { p: rb(k, n - 1), r: 1 }], dd: 0.085, cuff: 0.055, name: '둥근 막대 + 날 끝' }; })(),
     b: { polys: [{ p: [[-2.75, 0], [2.75, 0], [2.75, 16], [-2.75, 16]] }, { p: [[0, 16], [12, 16], [12, 21.5], [0, 21.5]] }, { p: [[9, 8], [14.5, 8], [14.5, 18.5], [9, 18.5]] }, { p: [[6.5, 8], [14.5, 8], [14.5, 6.5], [8.5, 3.5]], r: 1 }], dd: 0.09, cuff: 0.055, name: '블록 굽이' },
     c: (() => { const cl = [[0, 0], [0, 4], ...arcP(8, 9, 8, 180, -40, 16), [10.6, 2.6]], n = cl.length, ws = cl.map((_, i) => 9 * (1 - i / (n - 1)) + 0.4), rb = ribbon(cl, ws), k = n - 5;
-      return { polys: [{ p: rb(0, k) }, { p: rb(k, n - 1), r: 1 }], dd: 0.05, cuff: 0.06, name: '초승달 날' }; })()
+      return { polys: [{ p: rb(0, k) }, { p: rb(k, n - 1), r: 1 }], dd: 0.05, cuff: 0.06, name: '초승달 날' }; })(),
+    // 'd' 상자 J (2026-11-23): the same J (shank up, bar over, short leg down) as three straight 8px boxes bent at right angles,
+    // depth 0.11칸 so top / left / right faces read at cell size like the skull and eye blocks. point = two rust steps narrowing down and inward.
+    d: { polys: [{ p: [[-4, 0], [4, 0], [4, 15], [10, 15], [10, 6], [18, 6], [18, 23], [-4, 23]] },
+      { p: [[10, 6], [18, 6], [18, 3], [13, 3], [13, 0], [7.5, 0], [7.5, 3], [10, 3]], r: 1 }], dd: 0.11, cuff: 0.075, block: 1, name: '상자 J' },
+    // 'e' 가는 상자 갈고리 (2026-11-23, 지금 쓰는 모양): inside a's frame. thin 5px shank 22px tall, short bar, short leg (≈ ⅓ of the shank)
+    // so the middle stays open and reads as a hook. point = three rust boxes (4 · 3 · 2px) stepping down and inward on a diagonal, pixel-art sharp.
+    // (2nd pass) opening 7.5px: leg 3.5px (thinner than the shank, bar length unchanged). point = ONE rust wedge of two boxes with a 2.5px step
+    // drawn as a single polygon, so no seam faces → it reads as one sharp piece, not stripes.
+    e: { polys: [{ p: [[-2.5, 0], [2.5, 0], [2.5, 17], [10, 17], [10, 13.5], [13.5, 13.5], [13.5, 22], [-2.5, 22]] },
+      { p: [[8.5, 13.5], [13.5, 13.5], [13.5, 9.5], [11, 9.5], [11, 6], [8.5, 6]], r: 1 }],
+      dd: 0.085, cuff: 0.06, block: 1, name: '가는 상자 갈고리' }
   };
+  const inPoly = (x, y, p) => { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const a = p[i], b = p[j]; if ((a[1] > y) !== (b[1] > y) && x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; };
   const area = p => p.reduce((s2, q, i) => { const r = p[(i + 1) % p.length]; return s2 + q[0] * r[1] - r[0] * q[1]; }, 0);
   const clipA = (p, amax) => { const out = []; for (let i = 0; i < p.length; i++) { const A = p[i], B = p[(i + 1) % p.length], ia = A[0] <= amax, ib = B[0] <= amax;
       if (ia) out.push(A); if (ia !== ib) { const t = (amax - A[0]) / (B[0] - A[0]); out.push([amax, A[1] + (B[1] - A[1]) * t]); } } return out; };
   // render polygons lying in a vertical plane. M(a, h, side) -> screen; N(nx, ny) -> [nu, nv, nz]; front = {iron, rust} face colours
+  // edges shared with another polygon of the same hook (iron ↔ rust joint) get no rim, so no sliver of the hidden face shows
   const hookDraw = (polys, M, N, front, op, amax) => { const rims = [], fr = [];
-    polys.forEach(({ p, r }) => { if (amax !== undefined) p = clipA(p, amax); if (p.length < 3) return; const cw = area(p) < 0;
+    polys.forEach(({ p, r }, pi) => { if (amax !== undefined) p = clipA(p, amax); if (p.length < 3) return; const cw = area(p) < 0;
       p.forEach((A, i) => { const B = p[(i + 1) % p.length], dx = B[0] - A[0], dy = B[1] - A[1], m = Math.hypot(dx, dy); if (m < 1e-6) return;
         if (amax !== undefined && Math.abs(A[0] - amax) < 1e-6 && Math.abs(B[0] - amax) < 1e-6) return;
         const nx = (cw ? -dy : dy) / m, ny = (cw ? dx : -dx) / m, [nu, nv, nz] = N(nx, ny); if (nu + nv + 1.2 * nz <= 0.02) return;
+        const ox = (A[0] + B[0]) / 2 + nx * 0.4, oy = (A[1] + B[1]) / 2 + ny * 0.4; if (polys.some((o, j) => j !== pi && inPoly(ox, oy, o.p))) return;
         const c = nz > 0.55 ? (r ? HI.rust.t : HI.hi) : nu >= nv ? (r ? HI.rust.r : HI.k.r) : (r ? HI.rust.l : HI.k.l);
         rims.push({ top: nz > 0.55, s: sh(P([M(A[0], A[1], 1), M(B[0], B[1], 1), M(B[0], B[1], -1), M(A[0], A[1], -1)]), c, op) }); });
       fr.push(sh(P(p.map(q => M(q[0], q[1], 1))), r ? front.rust : front.iron, op)); });
@@ -205,6 +219,10 @@
   const HPOS = [0.33, -0.33];
   const standHook = (cx, cy, hv) => { const H = HPROF[hv] || HPROF.a, [u0, v0] = HPOS, c = H.cuff, zb = 5.5, q = H.dd * 0.354;
     const out = box3(cx, cy, u0 - c, u0 + c, v0 - c, v0 + c, zb, 4, HI.k.t, HI.k.l, HI.k.r);
+    // block hooks: same diagonal silhouette at the same spot, but the depth runs along u so the side facing the camera-left shows
+    // as a third face (top = light, front = mid, side = left tone), the way the skull's boxes read
+    if (H.block) { const qb = H.dd / 2, Mb = (A, h, sd) => pt(cx, cy, u0 + A / 104 + sd * qb, v0 - A / 104, zb + h), Nb = (nx, ny) => [0, -nx, ny];
+      return out.concat(hookDraw(H.polys, Mb, Nb, { iron: HI.mid, rust: HI.rust.mid }, 1)); }
     const M = (A, h, sd) => pt(cx, cy, u0 + A / 104 + sd * q, v0 - A / 104 + sd * q, zb + h), N = (nx, ny) => [nx * 0.707, -nx * 0.707, ny];
     return out.concat(hookDraw(H.polys, M, N, { iron: HI.mid, rust: HI.rust.mid }, 1)); };
   // in darkness the lit cell would show a thin pale floor ring around the plate: the plate fills the cell there
