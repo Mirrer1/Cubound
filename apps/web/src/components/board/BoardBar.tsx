@@ -1,7 +1,7 @@
 import { useId } from 'react'
 
 import { Pool } from './BoardFire'
-import { type BarPiece, barTone, flatLook } from './view'
+import { type BarPiece, barTone, flatLook, nightTone } from './view'
 import { useLoop } from '@/hooks/useLoop'
 
 // 달궈진 채 기다리는 막대의 아주 약한 숨쉬기
@@ -16,9 +16,10 @@ interface BoardBarProps {
   opacity: number
   heat: number
   waiting: boolean
+  dim?: number | null // 어둠에서 상자처럼 한 색으로 칠할 칸 어둠 값, --veil과 곱함
 }
 
-const BoardBar = ({ piece, opacity, heat, waiting }: BoardBarProps) => {
+const BoardBar = ({ piece, opacity, heat, waiting, dim = null }: BoardBarProps) => {
   const breath = useLoop(BREATH, BREATH_MS)
   const clipId = useId()
   const flats = piece.flats.map(flatLook)
@@ -31,7 +32,7 @@ const BoardBar = ({ piece, opacity, heat, waiting }: BoardBarProps) => {
           key={i}
           points={piece.flats[i].points}
           opacity={look.opacity}
-          style={{ fill: look.fill }}
+          style={{ fill: nightTone(look.fill, dim) }}
         />
       ))}
       {piece.pool && heat > 0 && (
@@ -44,13 +45,21 @@ const BoardBar = ({ piece, opacity, heat, waiting }: BoardBarProps) => {
       )}
       <g clipPath={piece.clip ? `url(#${clipId})` : undefined}>
         {piece.faces.map((face, i) => (
-          <polygon key={i} points={face.points} style={{ fill: barTone(face, under) }} />
+          <polygon
+            key={i}
+            points={face.points}
+            style={{ fill: nightTone(barTone(face, under), dim) }}
+          />
         ))}
       </g>
       {waiting && heat > 0 && (
         <g ref={breath} clipPath={piece.clip ? `url(#${clipId})` : undefined}>
           {piece.faces.map((face, i) => (
-            <polygon key={i} points={face.points} style={{ fill: barTone(face, heat) }} />
+            <polygon
+              key={i}
+              points={face.points}
+              style={{ fill: nightTone(barTone(face, heat), dim) }}
+            />
           ))}
         </g>
       )}

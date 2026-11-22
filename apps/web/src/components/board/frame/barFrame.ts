@@ -323,6 +323,19 @@ export interface BarDraw {
   opacity: number
   heat: number // 숯불빛이 스민 정도
   waiting: boolean // 달궈진 채 늘어날 자리를 기다리는 막대
+  // 어둠에서 막대 한 색을 고르는 양 끝 칸 가운데 자리(칸 좌표), 수 처음과 끝 자리, 더 밝은 쪽 빛
+  // 움직이는 순간 자리로 재면 큐브 빛이 두 칸에 함께 켜지는 수 중간에 막대가 잠깐 밝아짐
+  ends: { from: Point[]; to: Point[] }
+  level: number // 막대가 얹힌 높이
+}
+
+// 막대 양 끝 칸 가운데 자리, 움직이는 동안은 그 순간 자리
+const barEnds = (pose: BarPose): Point[] => {
+  const [dx, dy] = [(Math.cos(pose.angle) * pose.span) / 2, (Math.sin(pose.angle) * pose.span) / 2]
+  return [
+    { x: pose.x - dx, y: pose.y - dy },
+    { x: pose.x + dx, y: pose.y + dy },
+  ]
 }
 
 interface BarView {
@@ -473,6 +486,8 @@ export const barScene = (view: BarView) => {
                 opacity: 1 - clamp01(back / 0.6),
                 heat: 0,
                 waiting: false,
+                ends: { from: barEnds(was), to: barEnds(was) },
+                level: before.bars[i].level,
               },
             ]
           : []),
@@ -481,6 +496,8 @@ export const barScene = (view: BarView) => {
           opacity: touched ? drop.opacity : 1,
           heat: 0,
           waiting: false,
+          ends: { from: barEnds(now), to: barEnds(now) },
+          level: bar.level,
         },
       ]
     })
@@ -589,7 +606,14 @@ export const barScene = (view: BarView) => {
         ]),
       }
     else if (tilted) pose = { ...pose, hold: frontCell(footprintCells(pose)) }
-    return { pieces: barPieces(pose), opacity: 1, heat, waiting: bar.heat !== null }
+    return {
+      pieces: barPieces(pose),
+      opacity: 1,
+      heat,
+      waiting: bar.heat !== null,
+      ends: { from: barEnds(restPose(before, was)), to: barEnds(final) },
+      level: bar.level,
+    }
   })
 
   const center = wobble && restPose(game, wobble.bar)
@@ -608,7 +632,14 @@ export const barScene = (view: BarView) => {
 export type BarScene = ReturnType<typeof barScene>
 
 // 칸 하나에 그릴 막대 조각
-type BarDrawPiece = { piece: BarPiece; opacity: number; heat: number; waiting: boolean }
+type BarDrawPiece = {
+  piece: BarPiece
+  opacity: number
+  heat: number
+  waiting: boolean
+  ends: { from: Point[]; to: Point[] }
+  level: number
+}
 
 const pieceMemo = new WeakMap<BarScene, Map<string, BarDrawPiece[]>>()
 
@@ -622,7 +653,13 @@ const piecesOf = (scene: BarScene) => {
   for (const draw of scene.draws)
     for (const piece of draw.pieces) {
       const key = `${piece.cell.x},${piece.cell.y}`
-      const look = { opacity: draw.opacity, heat: draw.heat, waiting: draw.waiting }
+      const look = {
+        opacity: draw.opacity,
+        heat: draw.heat,
+        waiting: draw.waiting,
+        ends: draw.ends,
+        level: draw.level,
+      }
       bars.set(key, [...(bars.get(key) ?? []), { ...look, piece }])
     }
   pieceMemo.set(scene, bars)

@@ -18,6 +18,8 @@ export const BAR_HEIGHT = BAR.base.height + BAR.body.height + BAR.sheen
 
 // 칸 경계에서 자른 조각끼리 겹치는 길이, 이음매 실금 방지
 const OVERLAP = 0.01
+// 도는 막대의 나중 칸 조각을 자르는 경계가 먼저 그린 조각 쪽으로 겹치는 길이(칸 배수)
+const TURN_OVERLAP = 0.04
 
 export interface BarPose {
   x: number // 가운데의 칸 좌표
@@ -285,12 +287,15 @@ export const barPieces = (pose: BarPose): BarPiece[] => {
         ? side *
           (pose.span / 2 - (Math.abs(Math.cos(pose.angle)) + Math.abs(Math.sin(pose.angle))) / 2)
         : cut
-      const far = edge + (same(lead, pivot) ? side : -side) * 4
+      const toward = same(lead, pivot) ? side : -side
+      const far = edge + toward * 4
+      // 자른 경계를 먼저 그린 막대 쪽으로 조금 겹침, 칸 경계에 딱 맞추면 그 틈으로 밝은 바닥이 가는 선처럼 비침
+      const near = edge - toward * TURN_OVERLAP
       const ground = placer({ ...pose, sag: null })
       pieceAt(lead).faces = whole
       pieceAt(lead).clip = join([
-        ground(edge, -4, 0),
-        ground(edge, 4, 0),
+        ground(near, -4, 0),
+        ground(near, 4, 0),
         ground(far, 4, 0),
         ground(far, -4, 0),
       ])
