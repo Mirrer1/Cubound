@@ -6,6 +6,9 @@ import Stars from './Stars'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { useText } from '@/hooks/useText'
 
+// 골에 들어간 뒤 카드가 나타나기까지 초
+const APPEAR_DELAY = 1.3
+
 interface ClearCardProps {
   stageNumber: number
   moves: number
@@ -22,9 +25,11 @@ const ClearCard = ({ stageNumber, moves, stars, onNext, onRetry, onSelect }: Cle
 
   useFocusTrap(cardRef)
 
-  // Enter로 바로 다음 스테이지에 가는 포커스 자리
+  // Enter로 바로 다음 스테이지에 가는 포커스 자리, 카드가 나타날 때 줌
+  // 골에 들어가는 첫 프레임에 주면 브라우저가 판 전체 스타일을 그 자리에서 다시 계산해 어둠 판에서 툭 끊김
   useEffect(() => {
-    firstRef.current?.focus()
+    const wait = window.setTimeout(() => firstRef.current?.focus(), APPEAR_DELAY * 1000)
+    return () => window.clearTimeout(wait)
   }, [])
 
   return (
@@ -33,14 +38,14 @@ const ClearCard = ({ stageNumber, moves, stars, onNext, onRetry, onSelect }: Cle
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.2 } }}
-      transition={{ duration: 0.35, delay: 1.3 }}
+      transition={{ duration: 0.35, delay: APPEAR_DELAY }}
     >
       <motion.div
         ref={cardRef}
         className="flex w-full flex-col items-center gap-5 rounded-t-[1.375rem] border border-line bg-base-bg p-7 shadow-[0_20px_60px_-20px_rgb(0_0_0/0.18)] short:w-[320px] short:gap-3 short:rounded-[1.375rem] short:p-5 wide:w-[27.5rem] wide:rounded-[1.375rem] wide:p-9 narrow:max-w-[320px] narrow:gap-4 narrow:rounded-[1.375rem] narrow:p-5"
         initial={{ y: 12, scale: 0.98 }}
         animate={{ y: 0, scale: 1 }}
-        transition={{ duration: 0.4, delay: 1.3, ease: 'easeOut' }}
+        transition={{ duration: 0.4, delay: APPEAR_DELAY, ease: 'easeOut' }}
       >
         <span className="font-mono text-[0.6875rem] tracking-[0.22em] text-mute">
           STAGE {String(stageNumber).padStart(2, '0')} · CLEAR
