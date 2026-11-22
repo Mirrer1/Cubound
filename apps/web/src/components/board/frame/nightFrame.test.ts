@@ -91,6 +91,34 @@ describe('nightScene', () => {
     expect(scene(2).veilOf({ x: 2, y: 1 }, 0).top).toEqual([0.2])
   })
 
+  it('낮은 칸으로 떨어지는 수는 큐브가 바닥에 닿을 때 도착 칸이 다 켜진다', () => {
+    const STEP: Stage = { ...WIDE, heights: [ROW, [1, 1, 0, 0, 0, 0, 0], ROW] }
+    const prev = at(3, STEP)
+    const game = { ...at(4, STEP), player: { x: 2, y: 1 } }
+    const scene = (level: number) =>
+      nightScene({ prev, game, events: [], t: 0.5, cube: { x: 2, y: 1, level } })!
+
+    expect(scene(1).veilOf({ x: 2, y: 1 }, 0).top[0]).toBeGreaterThan(0.2)
+    expect(scene(0).veilOf({ x: 2, y: 1 }, 0).top).toEqual([0.2])
+  })
+
+  it('폭발에 옆 칸으로 밀리는 수는 터지는 칸에 선 동안 밀려갈 칸을 미리 켜지 않는다', () => {
+    const prev = at(3, WIDE)
+    const game = { ...at(4, WIDE), player: { x: 2, y: 0 } }
+    const events = [
+      {
+        type: 'blasted' as const,
+        from: { x: 2, y: 1 },
+        to: { x: 2, y: 0 },
+        direction: 'up' as const,
+      },
+    ]
+    const scene = (y: number) => nightScene({ prev, game, events, t: 0.5, cube: { x: 2, y } })!
+
+    expect(scene(1).veilOf({ x: 2, y: 0 }, 0).top[0]).toBeGreaterThan(0.5)
+    expect(scene(0).veilOf({ x: 2, y: 0 }, 0).top).toEqual([0.2])
+  })
+
   it('빛보다 높은 칸은 윗면이 까맣고 옆면만 빛을 받는다', () => {
     const dark = scene(3, 4, 1)
     const wall = dark?.veilOf({ x: 2, y: 1 }, 2)
@@ -210,6 +238,15 @@ describe('nightScene', () => {
     expect(top).toEqual([0.2])
     expect(Math.max(...sides)).toBeGreaterThan(0.8)
     expect(Math.min(...sides)).toBeLessThan(0.5)
+  })
+
+  it('판 안쪽을 보는 옆면은 뒤가 판 끝이어도 사그라지지 않는다', () => {
+    const game = at(4)
+    const night = nightScene({ prev: at(3), game, events: [], t: 1, cube: { x: 0, y: 0 } })!
+    const { sides } = night.veilOf({ x: 0, y: 0 }, 0)
+    const right = [0, 1, 2, 3, 4, 5, 6].map((k) => sides[k * 8 + 7])
+
+    expect(right).toEqual(Array(7).fill(0.2))
   })
 })
 

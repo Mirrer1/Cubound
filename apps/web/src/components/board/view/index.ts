@@ -31,6 +31,7 @@ export {
   PIT_FLOOR,
   PLATE,
   QUARTER,
+  TRAM,
   railLayout,
   SHARD,
   spotPoints,
@@ -197,6 +198,7 @@ export {
   type NightLight,
   VEIL_STEPS,
   type VeilBlock,
+  type VeilEdges,
   type VeilOpen,
   type ShadePiece,
   type VeilShape,
@@ -206,6 +208,7 @@ export {
   cellVeil,
   veilFootprint,
   veilMiddle,
+  nightTone,
   veilShapes,
   shadeShapes,
 } from './nightView'

@@ -114,6 +114,7 @@ export {
   cubeCover,
   guideNightOf,
   movingBoxCover,
+  movingKegCover,
   nightCellOf,
   nightDisplay,
   nightScene,

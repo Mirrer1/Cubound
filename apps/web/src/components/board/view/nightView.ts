@@ -186,6 +186,13 @@ export const coverOutline = (cx: number, cy: number, blocks: VeilBlock[]) => {
 export const veilMiddle = (values: number[]) =>
   values.length === 1 ? values[0] : values[(VEIL_STEPS / 2) * (VEIL_STEPS + 1)]
 
+// 어둠 칸의 물건은 덮개 대신 색을 직접 어둡게, dim은 칸 어둠 값이고 --veil과 곱함, null이면 제 색
+// 덮개는 물건 테두리가 반쯤 덮여 밝게 샘
+export const nightTone = (color: string, dim: number | null) =>
+  dim === null
+    ? color
+    : `color-mix(in srgb, var(--color-night) calc(var(--veil) * ${dim * 100}%), ${color})`
+
 // 판 테두리 받침 띠, 빛과 상관없이 까맣게
 // 앞이 트인 변은 윗면으로 살짝 올려 테두리 틈을 덮음
 const lipShape = (
