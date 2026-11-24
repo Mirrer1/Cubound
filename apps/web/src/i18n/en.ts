@@ -84,7 +84,7 @@ export const en = {
   'guide.forge': 'An iron bar touched by fire grows one tile longer',
   'guide.trail': 'Tiles you pass stay on fire for a while',
   'guide.trailBlock': "Burning tiles can't be crossed",
-  'guide.night': 'When the count runs out, the board goes dark for a while',
+  'guide.night': 'When the count runs out, it goes dark for a while',
   'guide.nightLight': 'In the dark, you can only see around the light',
   'guide.shadow': 'Shadow bridges appear when it gets dark',
   'guide.shadowFade': 'Shadow bridges vanish when the dark lifts',

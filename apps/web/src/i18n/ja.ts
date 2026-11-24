@@ -86,7 +86,7 @@ export const ja: Partial<Texts> = {
   'guide.forge': '火が届いた鉄の棒は一マス伸びます',
   'guide.trail': '通ったマスはしばらく燃え続けます',
   'guide.trailBlock': '燃えているマスは通れません',
-  'guide.night': '数字がなくなると、盤面がしばらく暗くなります',
+  'guide.night': '数字がなくなると、しばらく暗くなります',
   'guide.nightLight': '暗いときは明かりのまわりだけ見えます',
   'guide.shadow': '暗くなると影の橋が現れます',
   'guide.shadowFade': '影の橋は闇が晴れると消えます',

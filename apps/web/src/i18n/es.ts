@@ -86,7 +86,7 @@ export const es: Partial<Texts> = {
   'guide.forge': 'Una barra de hierro tocada por el fuego crece una casilla',
   'guide.trail': 'Las casillas por las que pasas arden un rato',
   'guide.trailBlock': 'No se puede pasar por casillas en llamas',
-  'guide.night': 'Cuando la cuenta se acaba, el tablero se oscurece un momento',
+  'guide.night': 'Cuando la cuenta se acaba, todo se oscurece un momento',
   'guide.nightLight': 'En la oscuridad solo se ve alrededor de la luz',
   'guide.shadow': 'Al oscurecer aparecen puentes de sombra',
   'guide.shadowFade': 'Los puentes de sombra desaparecen cuando se va la oscuridad',

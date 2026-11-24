@@ -86,7 +86,7 @@ export const zhHans: Partial<Texts> = {
   'guide.forge': '碰到火的铁棒会伸长一格',
   'guide.trail': '走过的格子会燃烧一阵子',
   'guide.trailBlock': '燃烧的格子无法通过',
-  'guide.night': '数字走完后，棋盘会暂时变暗',
+  'guide.night': '数字走完后，会暂时变暗',
   'guide.nightLight': '黑暗中只能看到光的周围',
   'guide.shadow': '天黑时会出现影之桥',
   'guide.shadowFade': '黑暗散去时，影之桥就会消失',
