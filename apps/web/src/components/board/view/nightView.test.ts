@@ -184,6 +184,15 @@ describe('shadeShapes', () => {
     expect(shadeShapes(0, 0, 16, [1])).toEqual([])
   })
 
+  it('판 안쪽을 보는 옆면은 받침 띠까지 옆면 빛대로, 바깥 받침 띠는 윗면 그 변의 빛', () => {
+    // 바깥 옆면은 판 끝 쪽으로 사그라져 까맣지만 받침 띠는 윗면 변 빛을 따라 빛 받는 칸 테두리가 보임
+    const pieces = shadeShapes(0, 0, TILE.lip, [0.2], [1], { left: true, right: false })
+    const sides = (face: string) => pieces.filter((p) => p.face === face).map((p) => p.value)
+
+    expect(sides('left')).toEqual([1])
+    expect(sides('right')).toEqual([0.2])
+  })
+
   it('고른 윗면은 조각 하나, 옆면과 받침 띠는 따로', () => {
     const pieces = shadeShapes(0, 0, 40, [0.5])
     expect(pieces.filter((p) => p.face === 'top')).toHaveLength(1)

@@ -237,6 +237,7 @@ const BoardCell = ({
             shade.depth,
             shade.veil.split(',').map(Number),
             (shade.sides || shade.veil).split(',').map(Number),
+            { left: shade.inner.includes('L'), right: shade.inner.includes('R') },
           )
         : [],
     [shade, x, y],

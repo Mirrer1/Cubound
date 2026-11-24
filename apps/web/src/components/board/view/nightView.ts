@@ -377,6 +377,7 @@ export const shadeShapes = (
   depth: number,
   values: number[],
   sideValues = values,
+  inner = { left: false, right: false }, // 판 안쪽 칸을 보는 옆면, 받침 띠도 빛대로
 ): ShadePiece[] => {
   const n = VEIL_STEPS
   const e = 0.02
@@ -415,30 +416,42 @@ export const shadeShapes = (
     const value = (k: number) => (left ? sides[(n - 1) * n + k] : sides[k * n + n - 1])
     const edge = (k: number) => (left ? xy(at(k), 0.5) : xy(0.5, at(k)))
     const face = left ? 'left' : 'right'
+    // 판 안쪽을 보는 면은 받침 띠까지 옆면 빛으로, 금 간 칸처럼 작게 그린 옆 칸 틈으로 드러나는 테두리
+    // 까맣게 두면 빛을 받는 칸이 테두리 없이 떠 보였음, 판 바깥 테두리는 하얗게 뜨지 않게 까맣게
+    const lit = left ? inner.left : inner.right
+    const reach = lit ? depth : side
     let start = 0
     for (let k = 1; k <= n; k++) {
       if (k < n && value(k) === value(start)) continue
       const [p, q] = [edge(start > 0 ? start - e * n : start), edge(k < n ? k + e * n : k)]
-      if (side > 0)
+      if (reach > 0)
         pieces.push({
-          points: text([p, q, [q[0], q[1] + side], [p[0], p[1] + side]]),
+          points: text([p, q, [q[0], q[1] + reach], [p[0], p[1] + reach]]),
           value: value(start),
           face,
         })
       start = k
     }
-    // 받침 띠
-    const [a, b] = [edge(0), edge(n)]
-    pieces.push({
-      points: text([
-        [a[0], a[1] + side],
-        [b[0], b[1] + side],
-        [b[0], b[1] + depth],
-        [a[0], a[1] + depth],
-      ]),
-      value: 1,
-      face,
-    })
+    if (lit) return
+    // 구덩이나 판 밖을 보는 받침 띠는 윗면 그 변의 빛, 빛을 받는 칸은 테두리가 보이고 빛 밖 칸은 까맘
+    // 판 끝 쪽으로 사그라진 옆면 값을 쓰면 빛을 받는 칸도 테두리가 까매 칸이 떠 보였음
+    const rim = (k: number) => (left ? top[(n - 1) * n + k] : top[k * n + n - 1])
+    let from = 0
+    for (let k = 1; k <= n; k++) {
+      if (k < n && rim(k) === rim(from)) continue
+      const [p, q] = [edge(from > 0 ? from - e * n : from), edge(k < n ? k + e * n : k)]
+      pieces.push({
+        points: text([
+          [p[0], p[1] + side],
+          [q[0], q[1] + side],
+          [q[0], q[1] + depth],
+          [p[0], p[1] + depth],
+        ]),
+        value: rim(from),
+        face,
+      })
+      from = k
+    }
   }
   strip(true)
   strip(false)
