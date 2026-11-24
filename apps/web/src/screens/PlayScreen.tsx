@@ -12,7 +12,13 @@ import {
 } from 'react'
 
 import Board from '@/components/board/Board'
-import { cameraGuideStep, guideNightOf, lockFocus, nightVeils } from '@/components/board/frame'
+import {
+  cameraGuideStep,
+  followGuide,
+  guideNightOf,
+  lockFocus,
+  nightVeils,
+} from '@/components/board/frame'
 import GuideOverlay from '@/components/guide/GuideOverlay'
 import Button from '@/components/ui/Button'
 import ClearCard from '@/components/ui/ClearCard'
@@ -79,12 +85,14 @@ const PlayScreen = ({ stageId: currentId }: PlayScreenProps) => {
   const guides = game?.stage.guides ?? []
   const hasGuide = guides.length > 0
   // 화면 요소 단계도 앞 칸 자리를 지키는 가이드 카메라
-  const guideTarget =
-    guideStep !== null ? guides[cameraGuideStep(guides, guideStep)]?.target : undefined
+  const cameraGuide = guideStep !== null ? guides[cameraGuideStep(guides, guideStep)] : undefined
+  const guideTarget = cameraGuide?.target
   // 갑문 가이드는 두 웅덩이 사이 장치 칸으로 맞추는 카메라
   const guideCell =
     typeof guideTarget === 'object'
-      ? guideTarget
+      ? game && cameraGuide
+        ? followGuide(game, cameraGuide)
+        : guideTarget
       : guideTarget === 'lock' && game
         ? (lockFocus(game.stage) ?? undefined)
         : undefined

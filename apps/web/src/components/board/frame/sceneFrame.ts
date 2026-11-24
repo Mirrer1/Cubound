@@ -14,7 +14,7 @@ import { barClip, crackClip, crackPhases, crackProgress, standSink } from './cra
 import { SLIDE_DEG, playerFrame, squashTransform } from './cubeFrame'
 import { type Chain, easeOut, smooth } from './curveFrame'
 import { fireScene } from './fireFrame'
-import { burnRect, guideRect, lockRect, pairRect } from './guideFrame'
+import { burnRect, cubeRect, guideRect, isCubeGuide, lockRect, pairRect } from './guideFrame'
 import { slideChain } from './iceFrame'
 import {
   iceCovers,
@@ -69,6 +69,7 @@ interface SceneView {
   filled: Point[]
   lanes: Map<string, Lane>
   guideCell?: Point
+  guideId?: string
 }
 
 // 그 순간 판 전체의 연출 값
@@ -85,6 +86,7 @@ export const sceneFrame = ({
   filled,
   lanes,
   guideCell,
+  guideId,
 }: SceneView) => {
   const moving = t < 1 && prevGame !== null
   const before = moving ? prevGame : game
@@ -386,7 +388,11 @@ export const sceneFrame = ({
   const boxShown = box ? floatShownAt(stage, box, sluice.waterAt) : null
   const tethers = tetherFrames({ prev: moving ? prevGame : null, game, box, t, dropping })
   const moor = moorLooks(stage, tethers)
-  const guide = guideCell ? (stage.rules?.burnBox ? burnRect : guideRect)(game, guideCell) : null
+  // 큐브를 비추는 가이드는 큐브가 그 칸에 있을 때 큐브 중심으로
+  const cubeGuide = guideCell && isCubeGuide(guideId) && same(game.player, guideCell)
+  const guide = guideCell
+    ? (cubeGuide ? cubeRect : stage.rules?.burnBox ? burnRect : guideRect)(game, guideCell)
+    : null
   const pairGuide = guideCell ? pairRect(game, guideCell) : null
   const lockGuide = guideCell && stage.rules?.lock ? lockRect(game) : null
   const still = (list: Point[], moved: Point[]) =>

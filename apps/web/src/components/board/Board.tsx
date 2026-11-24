@@ -116,6 +116,7 @@ const Board = ({
     filled,
     lanes,
     guideCell,
+    guideId,
   })
   const lookCell = guideCell && !guideNearCube(game, guideCell, scene.cube) ? guideCell : undefined
   // 카메라가 따라가는 지금 그려지는 자리, 순간이동은 나온 뒤

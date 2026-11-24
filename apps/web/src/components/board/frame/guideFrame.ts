@@ -25,6 +25,7 @@ import { has, same } from './pathFrame'
 import { TILE, toScreen } from '@/game/iso'
 import {
   barCells,
+  createState,
   isDoorOpen,
   isLiftRaised,
   readMushrooms,
@@ -203,6 +204,55 @@ const liftRect = (game: GameState, p: Point) => {
   const right = Math.max(...rects.map((r) => r.x + r.width))
   const bottom = Math.max(...rects.map((r) => r.y + r.height))
   return { x, y, width: right - x, height: bottom - y }
+}
+
+// 큐브를 비추는 가이드(이동, 어둠의 불빛), 칸이 아니라 큐브가 주인공
+const CUBE_GUIDES = new Set(['move', 'nightLight'])
+
+export const isCubeGuide = (id: string | undefined) => id !== undefined && CUBE_GUIDES.has(id)
+
+// 큐브만 가운데에 두고 감싼 사각형, 칸 전체(마름모 폭과 드러난 옆면)로 감싸면 옆으로 길고 밑이 넓어 보였음
+export const cubeRect = (game: GameState, p: Point) => {
+  const center = toScreen(p, 0)
+  const y = center.y - (surfaceOf(game, p) ?? 0)
+  const width = TILE.width * CUBE
+  const top = y - TILE.layer - halfTop(width) - GUIDE_MARGIN
+  const bottom = y + halfTop(width) + GUIDE_MARGIN
+  return {
+    x: center.x - width / 2 - GUIDE_MARGIN,
+    y: top,
+    width: width + GUIDE_MARGIN * 2,
+    height: bottom - top,
+  }
+}
+
+// 가이드가 비추는 칸의 지금 자리, 판 중간에 가이드를 다시 열면 움직인 큐브와 물건을 따라감
+// 처음 판에서 그 칸에 있던 물건의 순서로 찾고, 물건 수가 바뀌어(타거나 터지거나 빠져) 못 찾으면 처음 칸
+export const followGuide = (game: GameState, guide: Guide): Point | undefined => {
+  if (typeof guide.target !== 'object') return undefined
+  const p = guide.target
+  if (isCubeGuide(guide.id)) return game.player
+  const start = createState(game.stage)
+  const track = (was: Point[], now: Point[]) => {
+    const i = was.findIndex((q) => same(q, p))
+    return i >= 0 && was.length === now.length ? { x: now[i].x, y: now[i].y } : null
+  }
+  const ladder = start.ladders.some((q) => same(q, p))
+  if (ladder && game.carrying) return game.player
+  const bar = start.bars.findIndex((b) => has(barCells(b), p))
+  const tram = game.stage.entities.find((e) => e.type === 'tram' && same(e, p))
+  const spot = tram?.type === 'tram' ? game.trams.find((t) => t.id === tram.id) : undefined
+  return (
+    track(start.boxes, game.boxes) ??
+    track(start.kegs, game.kegs) ??
+    track(start.stones, game.stones) ??
+    (ladder ? track(start.ladders, game.ladders) : null) ??
+    (bar >= 0 && start.bars.length === game.bars.length
+      ? { x: game.bars[bar].x, y: game.bars[bar].y }
+      : null) ??
+    (tram?.type === 'tram' && spot ? tram.cells[spot.at] : null) ??
+    p
+  )
 }
 
 // 막대 칸은 막대가 차지한 칸 전부를 감싸고 좌우는 받침 네 모서리까지인 사각형

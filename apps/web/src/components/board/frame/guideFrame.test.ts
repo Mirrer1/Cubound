@@ -5,6 +5,7 @@ import { TAP } from '../view'
 import {
   burnRect,
   cameraGuideStep,
+  followGuide,
   guideNearCube,
   guideRect,
   lockFocus,
@@ -554,5 +555,26 @@ describe('guideNearCube', () => {
 
   it('큐브에서 화면 가로로 두 칸 넘게 떨어진 칸은 먼 칸이다', () => {
     expect(guideNearCube(game, { x: 2, y: 0 }, { x: 0, y: 2, level: 0 })).toBe(false)
+  })
+})
+
+describe('followGuide', () => {
+  const BOXED: Stage = { ...FLAT, entities: [{ type: 'box', x: 1, y: 1 }] }
+
+  it('큐브 가이드는 지금 큐브 자리, 물건 가이드는 옮겨진 물건 자리를 비춘다', () => {
+    const game: GameState = {
+      ...createState(BOXED),
+      player: { x: 1, y: 0 },
+      boxes: [{ x: 2, y: 1 }],
+    }
+
+    expect(followGuide(game, { id: 'move', target: { x: 0, y: 0 } })).toEqual({ x: 1, y: 0 })
+    expect(followGuide(game, { id: 'box', target: { x: 1, y: 1 } })).toEqual({ x: 2, y: 1 })
+  })
+
+  it('물건이 사라져 찾을 수 없으면 처음 칸', () => {
+    const game: GameState = { ...createState(BOXED), boxes: [] }
+
+    expect(followGuide(game, { id: 'box', target: { x: 1, y: 1 } })).toEqual({ x: 1, y: 1 })
   })
 })
